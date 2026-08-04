@@ -6,7 +6,7 @@
       <p>
         This page reuses the working UDP-to-browser telemetry stream and presents the five I2C
         device groups requested for the demo: MCU temperature, PV input, MPPT switch health,
-        BMS cell voltages, and load telemetry.
+        BMS cell voltages, and optional load telemetry when a second INA226 is available.
       </p>
     </div>
     <div id="i2cBusStatus" class="status-pill offline">Mock data active</div>
@@ -24,7 +24,7 @@
           <strong id="summaryMcuTemp">-- °C</strong>
         </div>
         <div class="metric-tile">
-          <span>MPPT Switch</span>
+          <span>Input Select</span>
           <strong id="summaryMpptState">--</strong>
         </div>
         <div class="metric-tile">
@@ -108,7 +108,7 @@
       <div class="card-body">
         <div class="pack-summary">
           <div class="metric-tile">
-            <span>Switch State</span>
+            <span>Selected Input</span>
             <strong id="mpptStateValue">--</strong>
           </div>
           <div class="metric-tile">
@@ -151,7 +151,7 @@
     <section class="card">
       <div class="card-header">
         <h3 class="card-title">Load</h3>
-        <span class="status-pill">INA226 #2</span>
+        <span class="status-pill">Optional INA226 #2</span>
       </div>
       <div class="card-body">
         <div class="pack-summary">
@@ -208,8 +208,8 @@
               value="/telemetry/command"
               aria-label="Telemetry command endpoint URL"
             />
-            <button class="button" id="mpptOnButton" type="button">MPPT On</button>
-            <button class="button secondary" id="mpptOffButton" type="button">MPPT Off</button>
+            <button class="button" id="mpptOnButton" type="button">Select ACDRV1</button>
+            <button class="button secondary" id="mpptOffButton" type="button">Select ACDRV2</button>
             <button class="button" id="ledOnButton" type="button">LED On</button>
             <button class="button secondary" id="ledOffButton" type="button">LED Off</button>
           </div>
@@ -217,7 +217,7 @@
             <input
               id="customCommandInput"
               class="input"
-              placeholder='Optional raw payload, for example {"type":"command","target":"led","state":"on"}'
+              placeholder='Optional raw payload, for example {"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}'
               aria-label="Custom command payload"
             />
             <button class="button secondary" id="sendCustomCommandButton" type="button">Send Custom</button>
@@ -233,7 +233,7 @@
 
   <p class="footer-note">
     Expected live payload groups: <code>mcu</code>, <code>pv</code>, <code>mppt</code>,
-    <code>bms</code>, and <code>load</code>. This page listens to the existing same-origin
+    <code>bms</code>, and optional <code>load</code>. This page listens to the existing same-origin
     event stream so the current droplet transport can stay in place for the Tuesday demo.
   </p>
 </section>

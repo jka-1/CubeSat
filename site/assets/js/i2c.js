@@ -156,6 +156,16 @@ function normalizeFaults(value) {
   return [];
 }
 
+function hasPowerTelemetry(section) {
+  if (!section || typeof section !== 'object') return false;
+
+  return [
+    numericValue(section.shuntVoltageMv),
+    numericValue(section.powerW),
+    numericValue(section.currentA)
+  ].some((value) => value !== null);
+}
+
 function summarizeCellVoltage(voltage) {
   const number = numericValue(voltage);
   if (number === null) return 'idle';
@@ -206,15 +216,20 @@ function renderMetadata(metadata) {
 
 function renderSystemSummary(telemetry) {
   const pvPower = numericValue(telemetry.pv.powerW);
-  const loadPower = numericValue(telemetry.load.powerW);
+  const loadAvailable = hasPowerTelemetry(telemetry.load);
+  const loadPower = loadAvailable ? numericValue(telemetry.load.powerW) : null;
   const netPower =
     pvPower !== null && loadPower !== null ? (pvPower - loadPower).toFixed(2) : '--';
 
   document.getElementById('summaryMcuTemp').textContent = formatValue(telemetry.mcu.temperatureC, '°C', 1);
   document.getElementById('summaryMpptState').textContent = String(telemetry.mppt.switchState || '--').toUpperCase();
   document.getElementById('summaryPvPower').textContent = formatValue(telemetry.pv.powerW, 'W', 2);
-  document.getElementById('summaryLoadPower').textContent = formatValue(telemetry.load.powerW, 'W', 2);
-  document.getElementById('summaryNetPower').textContent = `${netPower} W`;
+  document.getElementById('summaryLoadPower').textContent = loadAvailable
+    ? formatValue(telemetry.load.powerW, 'W', 2)
+    : 'Not wired';
+  document.getElementById('summaryNetPower').textContent = loadAvailable
+    ? `${netPower} W`
+    : 'PV only';
 }
 
 function renderMcuCard(telemetry) {
@@ -243,6 +258,21 @@ function renderPowerCard(prefix, label, telemetrySection) {
   const metersId = `${prefix}Meters`;
   const metersElement = document.getElementById(metersId);
   if (!metersElement) return;
+
+  if (!hasPowerTelemetry(telemetrySection)) {
+    document.getElementById(shuntValueId).textContent = '-- mV';
+    document.getElementById(powerValueId).textContent = '-- W';
+    document.getElementById(currentValueId).textContent = '-- A';
+
+    metersElement.innerHTML = meterRow(
+      `${label} Telemetry`,
+      'UNAVAILABLE',
+      0,
+      'idle',
+      'This sensor is not present in the current validated hardware build.'
+    );
+    return;
+  }
 
   const shuntVoltageMv = telemetrySection.shuntVoltageMv;
   const powerW = telemetrySection.powerW;
@@ -283,17 +313,27 @@ function renderMpptCard(telemetry) {
   const faults = normalizeFaults(telemetry.mppt.faults);
   const isFaulted = faults.length > 0;
   const switchStatus =
-    switchState === 'unknown' ? 'idle' : isFaulted ? 'fault' : switchState === 'on' ? 'nominal' : 'watch';
+    switchState === 'unknown'
+      ? 'idle'
+      : isFaulted
+        ? 'fault'
+        : ['on', 'acdrv1', 'acdrv2'].includes(switchState)
+          ? 'nominal'
+          : 'watch';
+  const switchLabel =
+    switchState === 'acdrv1' ? 'ACDRV1' :
+    switchState === 'acdrv2' ? 'ACDRV2' :
+    switchState.toUpperCase();
 
-  document.getElementById('mpptStateValue').textContent = switchState.toUpperCase();
+  document.getElementById('mpptStateValue').textContent = switchLabel;
   document.getElementById('mpptFaultCount').textContent = String(faults.length);
 
   const switchRow = meterRow(
-    'Switch State',
-    switchState.toUpperCase(),
+    'Selected Input',
+    switchLabel,
     switchState === 'on' ? 100 : 0,
     switchStatus,
-    isFaulted ? 'Faults active below.' : 'No active faults reported.'
+    isFaulted ? 'Faults active below.' : 'ACDRV1 or ACDRV2 selection reported by firmware.'
   );
 
   const faultRows = faults.length
@@ -447,6 +487,12 @@ function normalizeFromCandidate(candidate) {
     candidate?.load_current_a
   );
 
+  const hasLoadTelemetry = [
+    loadShuntVoltageMv,
+    loadPowerW,
+    loadCurrentA
+  ].some((value) => value !== undefined);
+
   const normalizedCells = normalizeCellArray(bmsCells);
 
   if (
@@ -456,9 +502,11 @@ function normalizeFromCandidate(candidate) {
     pvCurrentA === undefined ||
     mpptSwitchState === undefined ||
     normalizedCells.filter((value) => value !== null).length < 4 ||
-    loadShuntVoltageMv === undefined ||
-    loadPowerW === undefined ||
-    loadCurrentA === undefined
+    (hasLoadTelemetry && (
+      loadShuntVoltageMv === undefined ||
+      loadPowerW === undefined ||
+      loadCurrentA === undefined
+    ))
   ) {
     return null;
   }
@@ -479,11 +527,13 @@ function normalizeFromCandidate(candidate) {
     bms: {
       cellVoltagesV: normalizedCells
     },
-    load: {
-      shuntVoltageMv: numericValue(loadShuntVoltageMv),
-      powerW: numericValue(loadPowerW),
-      currentA: numericValue(loadCurrentA)
-    }
+    load: hasLoadTelemetry
+      ? {
+          shuntVoltageMv: numericValue(loadShuntVoltageMv),
+          powerW: numericValue(loadPowerW),
+          currentA: numericValue(loadCurrentA)
+        }
+      : null
   };
 }
 
@@ -539,7 +589,7 @@ function applyTelemetryPacket(packetEnvelope) {
 
   if (!normalizedPacket) {
     writeLog(
-      'Rejected packet: expected I2C telemetry groups { mcu, pv, mppt, bms, load }.'
+      'Rejected packet: expected I2C telemetry groups { mcu, pv, mppt, bms } with optional load.'
     );
     return;
   }
@@ -711,11 +761,21 @@ async function sendCommandRequest(payload) {
 }
 
 function onMpptOnClick() {
-  sendCommandRequest({ target: 'mppt', state: 'on' });
+  sendCommandRequest({
+    type: 'i2c_write',
+    addr: '0x6B',
+    reg: '0x13',
+    data: ['0x1D']
+  });
 }
 
 function onMpptOffClick() {
-  sendCommandRequest({ target: 'mppt', state: 'off' });
+  sendCommandRequest({
+    type: 'i2c_write',
+    addr: '0x6B',
+    reg: '0x13',
+    data: ['0x2D']
+  });
 }
 
 function onLedOnClick() {
@@ -733,6 +793,16 @@ function onSendCustomCommandClick() {
   if (!payload) {
     writeLog('Enter a custom payload before sending.');
     return;
+  }
+
+  try {
+    const parsed = JSON.parse(payload);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      sendCommandRequest(parsed);
+      return;
+    }
+  } catch (error) {
+    // Fall back to forwarding the raw string payload.
   }
 
   sendCommandRequest({ payload });

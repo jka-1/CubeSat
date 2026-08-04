@@ -1,113 +1,253 @@
-# CubeSat Demo Repo
+# CubeSat Demo Telemetry Dashboard
 
-This bundle is set up to become the private GitHub repo for the demo-facing telemetry system.
+This branch contains the working demo telemetry stack for Tuesday, August 4, 2026:
 
-It contains:
+- the static dashboard site
+- the UDP-to-SSE telemetry bridge
+- deploy / backup / rollback scripts
+- the ESP-side packet format used by the droplet
 
-- `site/` — the static web files that should live at `/var/www/html`
-- `telemetry-bridge/server.js` — the Node UDP-to-SSE bridge that should live at `/opt/cubesat-telemetry/server.js`
-- `TELEMETRY_PACKET_V1.md` — the fixed 16-bit packet layout notes for the ESP-to-droplet stream
-- `scripts/backup-live.sh` — backs up the currently deployed site and bridge on the droplet
-- `scripts/deploy-live.sh` — copies this repo's files into the live droplet paths
-- `scripts/rollback-live.sh` — restores a previous backup
+For the current validated `pass/` firmware, the recommended immediate test format is the `0x0003`
+combined raw packet. The bridge decodes those raw register values into the dashboard view.
 
-The bridge currently accepts:
+## What this version covers
 
-- the older JSON packet shapes
-- the legacy raw INA226 hex packet (`0x0001`)
-- the recommended engineering-units hex packet (`0x0002`)
-- dashboard command requests at `/command` and `/api/demo/command`
+The dashboard is set up to display these five groups:
 
-## Recommended GitHub model
+- MCU temperature
+- PV telemetry
+- MPPT input select state and faults
+- BMS cell voltages
+- optional load telemetry when a second INA226 is available
 
-- Keep this repo private.
-- Treat `main` as "what we are comfortable deploying."
-- Make changes on short-lived branches like `feature/i2c-demo-dashboard`.
-- Merge into `main` only after you are ready to deploy.
-- Add a tag before each live deploy, for example `deploy-2026-08-03-01`.
+The bridge also supports high-level commands for:
 
-## Recommended local workflow
+- ACDRV1 / ACDRV2 input selection
+- LED on / off
 
-1. Clone the private GitHub repo on your laptop.
-2. Make changes locally first.
-3. Commit and push to a feature branch.
-4. Merge into `main` when ready.
-5. On the droplet, pull the latest `main`.
-6. Run `scripts/backup-live.sh`.
-7. Run `scripts/deploy-live.sh`.
+## Repository layout
 
-## Suggested repo bootstrap
+- `main/` - ESP firmware scaffold and packet generation
+- `site/` - static web dashboard deployed to Apache
+- `telemetry-bridge/server.js` - Node UDP bridge deployed on the droplet
+- `scripts/` - backup, deploy, and rollback helpers
+- `TELEMETRY_PACKET_V1.md` - packet reference
 
-After you create the private GitHub repo, from your laptop:
+## Live deployment values
 
-```bash
-git init
-git branch -M main
-git remote add origin <your-private-github-repo-url>
-git add .
-git commit -m "Initial telemetry dashboard and bridge import"
-git push -u origin main
-```
+- branch: `demo-telemetry-dashboard`
+- repo checkout on droplet: `/opt/cubesat-demo/repo`
+- live site root: `/var/www/html`
+- live bridge file: `/opt/cubesat-telemetry/server.js`
+- service name: `cubesat-telemetry.service`
+- UDP telemetry port: `3333`
+- bridge HTTP bind: `127.0.0.1:8080`
+- SSE endpoint through Apache: `/telemetry/events`
+- health endpoint through Apache: `/telemetry/health`
+- command endpoint through Apache: `/telemetry/command`
 
-## Suggested droplet checkout
+## Recommended immediate test packet format
 
-Do not use `/var/www/html` itself as the Git checkout.
+Use one combined UDP packet once per second.
 
-Instead, clone the repo into a separate working folder on the droplet, for example:
+- magic: `0x4353`
+- version: `0x0003`
+- transport: ASCII hex preferred
+- word count: `16`
+- word order: big-endian
+
+Field order:
+
+1. `0x4353`
+2. `0x0003`
+3. sequence
+4. MCU temp in centi-C, or `0x8000` when not supplied
+5. PV INA226 calibration raw (`0x05`)
+6. PV INA226 shunt raw (`0x01`)
+7. PV INA226 bus raw (`0x02`)
+8. PV INA226 power raw (`0x03`)
+9. PV INA226 current raw (`0x04`)
+10. BMS cell 1 raw
+11. BMS cell 2 raw
+12. BMS cell 3 raw
+13. BMS cell 10 raw
+14. BQ25798 register `0x13` raw
+15. BQ25798 fault register `0x20` raw
+16. reserved
+
+Known-good example packet:
+
+`4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D006100000000`
+
+Expected decoded values from that example:
+
+- MCU temp: not supplied yet
+- PV calibration raw: `0x0A00`
+- PV shunt raw: `0x0028`
+- PV bus raw: `0x0FA3`
+- PV power raw: `0x000A`
+- PV current raw: `0x0032`
+- BMS cells: `0x0EE5`, `0x0EDF`, `0x0E5C`, `0x0E5D`
+- MPPT register `0x13`: `0x61` -> `ACDRV1`
+- MPPT faults: none
+- load: unavailable in the current validated hardware
+
+## Droplet deploy flow
+
+Initial checkout:
 
 ```bash
 mkdir -p /opt/cubesat-demo
 cd /opt/cubesat-demo
-git clone <your-private-github-repo-url> repo
+git clone https://github.com/jka-1/CubeSat.git repo
+cd repo
+git checkout demo-telemetry-dashboard
 ```
 
-Then deploy from:
+Deploy with backup:
 
 ```bash
 cd /opt/cubesat-demo/repo
-SERVICE_NAME=<your-service-name> ./scripts/backup-live.sh
-SERVICE_NAME=<your-service-name> ./scripts/deploy-live.sh
+SERVICE_NAME=cubesat-telemetry.service ./scripts/deploy-live.sh
 ```
 
-## Paths assumed by the scripts
+The deploy script automatically:
 
-- live site root: `/var/www/html`
-- live bridge file: `/opt/cubesat-telemetry/server.js`
+- creates a backup under `/root/cubesat-live-backups/<timestamp>`
+- copies `site/` into `/var/www/html`
+- copies `telemetry-bridge/server.js` into `/opt/cubesat-telemetry/server.js`
+- restarts `cubesat-telemetry.service`
 
-You can override them with environment variables:
+## Verification
+
+Bridge health:
 
 ```bash
-SITE_ROOT=/var/www/html
-BRIDGE_FILE=/opt/cubesat-telemetry/server.js
-SERVICE_NAME=<your-service-name>
-HEX_DEVICE_ID=esp32-telemetry
-PV_INA226_CURRENT_LSB_A=0.001
-LOAD_INA226_CURRENT_LSB_A=0.001
-MPPT_FAULT_BIT_NAMES=bit0,bit1,bit2,bit3
-COMMAND_TARGET_HOST=<optional-fixed-esp32-ip>
-COMMAND_TARGET_PORT=<optional-fixed-esp32-port>
+curl http://127.0.0.1:8080/health
 ```
 
-`PV_INA226_CURRENT_LSB_A` and `LOAD_INA226_CURRENT_LSB_A` are only needed when using the legacy raw INA226 packet format (`0x0001`). The recommended engineering packet (`0x0002`) does not depend on them.
-
-## Finding the service name
-
-On the droplet:
+Live stream:
 
 ```bash
-systemctl list-units --type=service | grep -i cubesat
+curl -N --max-time 5 http://localhost/telemetry/events
 ```
 
-Use the service name shown there when running the scripts.
+Inject a known-good test packet locally:
 
-## Firmware follow-up
+```bash
+printf '%s\n' '4353000200010E3800DC130604D8000100000FB40FAA0F960FA000B4085203D4' | nc -u -w1 127.0.0.1 3333
+printf '%s\n' '4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D006100000000' | nc -u -w1 127.0.0.1 3333
+```
 
-The current front-end and bridge can move forward now. Firmware still needs to confirm:
+When telemetry is working, health should show:
 
-- one real sample packet
-- the real shunt value if it is not `100 mΩ`
-- MPPT fault meanings
-- the dev-board LED test pin or the exact LED demo file
-- whether commands will be parsed as the bridge JSON command payloads or a custom raw payload
+- `"telemetry_connected": true`
+- `"command_ready": true`
 
-That is no longer a blocker for setting up the repo and deployment workflow.
+## Command path
+
+The bridge accepts:
+
+- `POST /command`
+- `POST /api/demo/command`
+
+Legacy high-level command payloads still supported by the bridge:
+
+```json
+{"target":"mppt","state":"on"}
+{"target":"mppt","state":"off"}
+{"target":"led","state":"on"}
+{"target":"led","state":"off"}
+```
+
+For the current validated hardware, the dashboard uses direct I2C write commands for MPPT input
+selection instead:
+
+```json
+{"type":"i2c_write","addr":"0x6B","reg":"0x13","data":["0x1D"]}
+{"type":"i2c_write","addr":"0x6B","reg":"0x13","data":["0x2D"]}
+```
+
+The bridge also accepts direct JSON I2C command payloads for firmware that exposes generic
+register access over UDP:
+
+```json
+{"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}
+{"type":"i2c_write","addr":"0x08","reg":"0x20","data":["0x1D"]}
+```
+
+Example local command test:
+
+```bash
+curl -X POST http://127.0.0.1:8080/command \
+  -H 'Content-Type: application/json' \
+  -d '{"target":"led","state":"on"}'
+```
+
+Important behavior:
+
+- the bridge sends commands to the last telemetry source by default
+- firmware should keep the UDP socket open so the same source can receive commands
+- a fixed command target can also be configured with:
+  - `COMMAND_TARGET_HOST`
+  - `COMMAND_TARGET_PORT`
+
+## Rollback
+
+If a deploy breaks, use the backup printed by the deploy script:
+
+```bash
+/opt/cubesat-demo/repo/scripts/rollback-live.sh /root/cubesat-live-backups/<timestamp>
+```
+
+## Exact values already known
+
+- service: `cubesat-telemetry.service`
+- bridge UDP port: `3333`
+- bridge HTTP port: `8080`
+- magic word: `0x4353`
+- recommended packet version: `0x0003`
+- packet length: `16` words
+- update rate target: `1 Hz`
+- shunt value : `100 ohms`
+
+Important note on the shunt value:
+
+For the new `0x0003` raw packet, the droplet resolves INA226 current and power using the packet's
+calibration register and the server setting `PV_INA226_SHUNT_OHMS`. The default bridge decode
+assumes `0.1` ohms (`100 mΩ`). If telemetry values look physically wrong, confirm whether
+"100 ohms" actually means `100 ohms` or `100 milliohms`.
+
+## Current firmware status from `main/pass`
+
+The `pass/` code on `origin/main` validates the current hardware-side I2C reads for:
+
+- INA226 at `0x40`
+- BQ76942 at `0x08`
+- BQ25798 at `0x6B`
+
+It also confirms the BMS cell register map starting at `0x14`, and the BQ25798 status reads at
+registers `0x13` and `0x20`.
+
+Current confirmed hardware mapping:
+
+- INA226 `0x40` is the PV sensor
+- dashboard BMS cells should show raw BQ76942 cells `1`, `2`, `3`, and `10`
+- BQ25798 control is a switch between `ACDRV1` and `ACDRV2`
+- BQ25798 register `0x20` bit names are:
+  - bit 0: `VAC1_OVP_STAT`
+  - bit 1: `VAC2_OVP_STAT`
+  - bit 2: `CONV_OCP_STAT`
+  - bit 3: `BAT_OCP_STAT`
+  - bit 4: `IBUS_OCP_STAT`
+  - bit 5: `VBAT_OVP_STAT`
+  - bit 6: `VBUS_OVP_STAT`
+  - bit 7: `BAT_REG_STAT`
+
+That firmware is a validated bus monitor. This repo now defines a matching `0x0003` packet format
+for it, so firmware can start streaming to the dashboard without waiting for an externally defined
+packet.
+
+## Legacy packet support
+
+The bridge still supports the older `0x0001` raw INA226 packet, but that format is not the recommended default. Use `0x0002` unless there is a strong reason to keep raw register words.

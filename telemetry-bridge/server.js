@@ -11,16 +11,32 @@ const hexDeviceId = process.env.HEX_DEVICE_ID || 'esp32-telemetry';
 const hexPacketMagic = 0x4353;
 const hexPacketVersionRawIna226 = 0x0001;
 const hexPacketVersionEngineering = 0x0002;
+const hexPacketVersionValidatedRaw = 0x0003;
 const hexPacketWordCount = 16;
 const hexPacketByteCount = hexPacketWordCount * 2;
 const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
+const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 0.1);
 const loadCurrentLsbA = readFiniteNumber('LOAD_INA226_CURRENT_LSB_A', 0.001);
 const commandTargetHost = String(process.env.COMMAND_TARGET_HOST || '').trim();
 const commandTargetPort = readOptionalPort('COMMAND_TARGET_PORT');
-const mpptFaultBitNames = String(process.env.MPPT_FAULT_BIT_NAMES || '')
-  .split(',')
-  .map((name) => name.trim())
-  .filter(Boolean);
+const defaultMpptFaultBitNames = [
+  'VAC1_OVP_STAT',
+  'VAC2_OVP_STAT',
+  'CONV_OCP_STAT',
+  'BAT_OCP_STAT',
+  'IBUS_OCP_STAT',
+  'VBAT_OVP_STAT',
+  'VBUS_OVP_STAT',
+  'BAT_REG_STAT'
+];
+const mpptFaultBitNames = (() => {
+  const configured = String(process.env.MPPT_FAULT_BIT_NAMES || '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+
+  return configured.length > 0 ? configured : defaultMpptFaultBitNames;
+})();
 
 let latestEnvelope = null;
 let lastTelemetryEndpoint = null;
@@ -168,6 +184,23 @@ function decodeIna226PowerW(word, currentLsbA) {
   return word * 25 * currentLsbA;
 }
 
+function decodeIna226CurrentLsbA(calibrationWord, shuntOhms, fallbackCurrentLsbA) {
+  if (
+    Number.isInteger(calibrationWord) &&
+    calibrationWord > 0 &&
+    Number.isFinite(shuntOhms) &&
+    shuntOhms > 0
+  ) {
+    return 0.00512 / (calibrationWord * shuntOhms);
+  }
+
+  return fallbackCurrentLsbA;
+}
+
+function decodeOptionalTemperatureC(word) {
+  return word === 0x8000 ? null : decodeSignedWord(word) / 100;
+}
+
 function decodeCentiMilliVolts(word) {
   return decodeSignedWord(word) / 100;
 }
@@ -194,6 +227,17 @@ function decodeFaultMask(mask) {
   }
 
   return faults;
+}
+
+function decodeMpptSwitchStateFromReg13(word) {
+  const registerValue = word & 0xff;
+  const acdrv2Enabled = (registerValue & 0x80) !== 0;
+  const acdrv1Enabled = (registerValue & 0x40) !== 0;
+
+  if (acdrv1Enabled && !acdrv2Enabled) return 'acdrv1';
+  if (acdrv2Enabled && !acdrv1Enabled) return 'acdrv2';
+  if (acdrv1Enabled && acdrv2Enabled) return 'both';
+  return 'off';
 }
 
 function looksLikeHexPacketText(text) {
@@ -329,6 +373,63 @@ function normalizeHexPacketWords(words) {
           powerW: decodeCentiWatts(words[14]),
           currentA: decodeMilliamps(words[15])
         }
+      }
+    };
+  }
+
+  if (versionWord === hexPacketVersionValidatedRaw) {
+    const pvCalibrationWord = words[4];
+    const pvResolvedCurrentLsbA = decodeIna226CurrentLsbA(
+      pvCalibrationWord,
+      pvShuntOhms,
+      pvCurrentLsbA
+    );
+
+    return {
+      version: 1,
+      type: 'telemetry',
+      packet_format: 'hex-v3-validated-raw',
+      device_id: hexDeviceId,
+      seq: words[2],
+      device_uptime_ms: 0,
+      sample_counter: words[2],
+      transmitted_at: null,
+      telemetry: {
+        mcu: {
+          temperatureC: decodeOptionalTemperatureC(words[3])
+        },
+        pv: {
+          shuntVoltageMv: decodeIna226ShuntMv(words[5]),
+          powerW: decodeIna226PowerW(words[7], pvResolvedCurrentLsbA),
+          currentA: decodeIna226CurrentA(words[8], pvResolvedCurrentLsbA)
+        },
+        mppt: {
+          switchState: decodeMpptSwitchStateFromReg13(words[13]),
+          faults: decodeFaultMask(words[14] & 0x00ff)
+        },
+        bms: {
+          cellVoltagesV: [
+            words[9] / 1000,
+            words[10] / 1000,
+            words[11] / 1000,
+            words[12] / 1000
+          ]
+        },
+        load: null
+      },
+      raw: {
+        pv: {
+          calibration: pvCalibrationWord,
+          shunt: words[5],
+          bus: words[6],
+          power: words[7],
+          current: words[8]
+        },
+        mppt: {
+          reg13: words[13] & 0x00ff,
+          fault20: words[14] & 0x00ff
+        },
+        reserved: words[15]
       }
     };
   }
@@ -661,6 +762,57 @@ function buildCommandMessage(body) {
       payloadBuffer: Buffer.from(compact, 'hex'),
       payloadPreview: compact.toUpperCase(),
       summary: 'raw hex command payload'
+    };
+  }
+
+  const directCommandType = String(body?.type || '')
+    .trim()
+    .toLowerCase();
+
+  if (['i2c_read', 'i2c_write'].includes(directCommandType)) {
+    const normalizedBody = {
+      ...body,
+      type: directCommandType,
+      issued_at: pickFirst(body?.issued_at, body?.issuedAt, issuedAt)
+    };
+
+    const deviceAddress = pickFirst(
+      body?.addr,
+      body?.address,
+      body?.device_address,
+      body?.deviceAddress
+    );
+    const registerAddress = pickFirst(
+      body?.reg,
+      body?.register,
+      body?.register_address,
+      body?.registerAddress
+    );
+
+    if (deviceAddress === undefined || registerAddress === undefined) {
+      throw new Error('Direct I2C commands must include both addr and reg');
+    }
+
+    if (directCommandType === 'i2c_read') {
+      const requestedLength = Number(pickFirst(body?.len, body?.length, 1));
+      if (!Number.isInteger(requestedLength) || requestedLength < 1 || requestedLength > 32) {
+        throw new Error('i2c_read len must be an integer from 1 through 32');
+      }
+      normalizedBody.len = requestedLength;
+    } else {
+      const writePayload = pickFirst(body?.data, body?.value, body?.values);
+      if (writePayload === undefined) {
+        throw new Error('i2c_write must include data, value, or values');
+      }
+    }
+
+    const payloadPreview = JSON.stringify(normalizedBody);
+
+    return {
+      transport: 'json',
+      payloadBuffer: Buffer.from(payloadPreview, 'utf8'),
+      payloadPreview,
+      summary: `${directCommandType.toUpperCase()} ${String(deviceAddress)} reg ${String(registerAddress)}`
     };
   }
 
