@@ -89,7 +89,9 @@ function writeLog(message) {
   const telemetryLog = document.getElementById('telemetryLog');
   if (!telemetryLog) return;
   const timestamp = new Date().toLocaleTimeString();
+  
   telemetryLog.textContent = `[${timestamp}] ${message}\n${telemetryLog.textContent}`;
+  telemetryLog.textContent = nextText.split('\n').slice(0, 300).join('\n');
 }
 
 function setStreamStatus(text, online = false) {
