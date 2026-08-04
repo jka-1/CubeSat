@@ -697,7 +697,11 @@ h1 {
 .telemetry-log {
   margin: 0;
   padding: 16px;
-  min-height: 118px;
+  height: 220px;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
   color: #f1ebdb;
   font-size: 0.86rem;
   line-height: 1.55;
