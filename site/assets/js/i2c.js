@@ -3,6 +3,7 @@ const initialTelemetry = {
     temperatureC: 36.4
   },
   pv: {
+    busVoltageV: 5.0,
     shuntVoltageMv: 2.2,
     powerW: 48.7,
     currentA: 1.24
@@ -23,6 +24,7 @@ const initialTelemetry = {
 
 const meterRanges = {
   mcuTemperatureC: { min: 0, max: 100 },
+  busVoltageV: { min: 0, max: 10 },
   shuntVoltageMv: { min: 0, max: 10 },
   powerW: { min: 0, max: 100 },
   currentA: { min: 0, max: 5 },
@@ -252,6 +254,7 @@ function renderMcuCard(telemetry) {
 }
 
 function renderPowerCard(prefix, label, telemetrySection) {
+  const busValueId = `${prefix}BusValue`;
   const shuntValueId = `${prefix}ShuntValue`;
   const powerValueId = `${prefix}PowerValue`;
   const currentValueId = `${prefix}CurrentValue`;
@@ -260,6 +263,8 @@ function renderPowerCard(prefix, label, telemetrySection) {
   if (!metersElement) return;
 
   if (!hasPowerTelemetry(telemetrySection)) {
+    const busValueElement = document.getElementById(busValueId);
+    if (busValueElement) busValueElement.textContent = '-- V';
     document.getElementById(shuntValueId).textContent = '-- mV';
     document.getElementById(powerValueId).textContent = '-- W';
     document.getElementById(currentValueId).textContent = '-- A';
@@ -274,35 +279,60 @@ function renderPowerCard(prefix, label, telemetrySection) {
     return;
   }
 
+  const busVoltageV = telemetrySection.busVoltageV;
   const shuntVoltageMv = telemetrySection.shuntVoltageMv;
   const powerW = telemetrySection.powerW;
   const currentA = telemetrySection.currentA;
 
+  const busValueElement = document.getElementById(busValueId);
+  if (busValueElement) {
+    busValueElement.textContent = formatValue(busVoltageV, 'V', 2);
+  }
   document.getElementById(shuntValueId).textContent = formatValue(shuntVoltageMv, 'mV', 2);
   document.getElementById(powerValueId).textContent = formatValue(powerW, 'W', 2);
   document.getElementById(currentValueId).textContent = formatValue(currentA, 'A', 2);
 
-  metersElement.innerHTML = [
+  const meterRows = [];
+
+  if (numericValue(busVoltageV) !== null) {
+    meterRows.push(
+      meterRow(
+        `${label} Bus Voltage`,
+        formatValue(busVoltageV, 'V', 2),
+        normalizePercent(busVoltageV, meterRanges.busVoltageV),
+        summarizeMeter(busVoltageV, meterRanges.busVoltageV),
+        'INA226 bus-voltage register.'
+      )
+    );
+  }
+
+  meterRows.push(
     meterRow(
       `${label} Shunt Voltage`,
       formatValue(shuntVoltageMv, 'mV', 2),
       normalizePercent(shuntVoltageMv, meterRanges.shuntVoltageMv),
       summarizeMeter(shuntVoltageMv, meterRanges.shuntVoltageMv),
       'Reported directly from INA226 telemetry.'
-    ),
+    )
+  );
+  meterRows.push(
     meterRow(
       `${label} Power`,
       formatValue(powerW, 'W', 2),
       normalizePercent(powerW, meterRanges.powerW),
       summarizeMeter(powerW, meterRanges.powerW)
-    ),
+    )
+  );
+  meterRows.push(
     meterRow(
       `${label} Current`,
       formatValue(currentA, 'A', 2),
       normalizePercent(currentA, meterRanges.currentA),
       summarizeMeter(currentA, meterRanges.currentA)
     )
-  ].join('');
+  );
+
+  metersElement.innerHTML = meterRows.join('');
 }
 
 function renderMpptCard(telemetry) {
@@ -430,6 +460,13 @@ function normalizeFromCandidate(candidate) {
     candidate?.pv_shunt_voltage_mv
   );
 
+  const pvBusVoltageV = firstDefined(
+    candidate?.pv?.busVoltageV,
+    candidate?.pv?.bus_voltage_v,
+    candidate?.pv?.busVoltage,
+    candidate?.pv_bus_voltage_v
+  );
+
   const pvPowerW = firstDefined(
     candidate?.pv?.powerW,
     candidate?.pv?.power_w,
@@ -475,6 +512,13 @@ function normalizeFromCandidate(candidate) {
     candidate?.load_shunt_voltage_mv
   );
 
+  const loadBusVoltageV = firstDefined(
+    candidate?.load?.busVoltageV,
+    candidate?.load?.bus_voltage_v,
+    candidate?.load?.busVoltage,
+    candidate?.load_bus_voltage_v
+  );
+
   const loadPowerW = firstDefined(
     candidate?.load?.powerW,
     candidate?.load?.power_w,
@@ -516,6 +560,7 @@ function normalizeFromCandidate(candidate) {
       temperatureC: numericValue(mcuTemperature)
     },
     pv: {
+      busVoltageV: numericValue(pvBusVoltageV),
       shuntVoltageMv: numericValue(pvShuntVoltageMv),
       powerW: numericValue(pvPowerW),
       currentA: numericValue(pvCurrentA)
@@ -529,6 +574,7 @@ function normalizeFromCandidate(candidate) {
     },
     load: hasLoadTelemetry
       ? {
+          busVoltageV: numericValue(loadBusVoltageV),
           shuntVoltageMv: numericValue(loadShuntVoltageMv),
           powerW: numericValue(loadPowerW),
           currentA: numericValue(loadCurrentA)

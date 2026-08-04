@@ -176,6 +176,10 @@ function decodeIna226ShuntMv(word) {
   return decodeSignedWord(word) * 0.0025;
 }
 
+function decodeIna226BusVoltageV(word) {
+  return (word & 0x7fff) * 0.00125;
+}
+
 function decodeIna226CurrentA(word, currentLsbA) {
   return decodeSignedWord(word) * currentLsbA;
 }
@@ -379,11 +383,6 @@ function normalizeHexPacketWords(words) {
 
   if (versionWord === hexPacketVersionValidatedRaw) {
     const pvCalibrationWord = words[4];
-    const pvResolvedCurrentLsbA = decodeIna226CurrentLsbA(
-      pvCalibrationWord,
-      pvShuntOhms,
-      pvCurrentLsbA
-    );
 
     return {
       version: 1,
@@ -399,9 +398,10 @@ function normalizeHexPacketWords(words) {
           temperatureC: decodeOptionalTemperatureC(words[3])
         },
         pv: {
+          busVoltageV: decodeIna226BusVoltageV(words[6]),
           shuntVoltageMv: decodeIna226ShuntMv(words[5]),
-          powerW: decodeIna226PowerW(words[7], pvResolvedCurrentLsbA),
-          currentA: decodeIna226CurrentA(words[8], pvResolvedCurrentLsbA)
+          powerW: words[7] * 0.025,
+          currentA: decodeMilliamps(words[8])
         },
         mppt: {
           switchState: decodeMpptSwitchStateFromReg13(words[13]),
