@@ -5,9 +5,12 @@ idf_component_register(
         "sensor_provider.c"
         "udp_transport.c"
         "console_input.c"
+        "../pass/i2c_bus_monitor.c"
+        "../pass/telemetry_packet_v3.c"
 
     INCLUDE_DIRS
         "."
+        "../pass"
 
     REQUIRES
         esp_wifi
@@ -18,4 +21,5 @@ idf_component_register(
 
     PRIV_REQUIRES
         esp_driver_tsens
+        esp_driver_i2c
 )
