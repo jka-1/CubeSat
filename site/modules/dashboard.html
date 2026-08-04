@@ -1,0 +1,112 @@
+<section id="dashboard" class="page active">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span> Telemetry Dashboard</div>
+      <h2>Power system health view</h2>
+      <p>
+        Displays the four aggregate measurements currently transmitted by the telemetry system.
+        Detailed battery-cell and solar-panel channels remain available as clearly marked mock data
+        until those individual measurements are added to the live packet.
+      </p>
+    </div>
+    <div id="streamStatus" class="status-pill offline">Mock data active</div>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <h3 class="card-title">Live System Summary</h3>
+      <span class="status-pill">UDP → SSE Bridge</span>
+    </div>
+    <div class="card-body">
+      <div class="pack-summary">
+        <div class="metric-tile">
+          <span>Solar Panel Current</span>
+          <strong id="liveSolarCurrent">-- A</strong>
+        </div>
+        <div class="metric-tile">
+          <span>Battery Voltage</span>
+          <strong id="liveBatteryVoltage">-- V</strong>
+        </div>
+        <div class="metric-tile">
+          <span>MPPT Switch Temp.</span>
+          <strong id="liveMpptTemp">-- °C</strong>
+        </div>
+        <div class="metric-tile">
+          <span>ESP32 Temp.</span>
+          <strong id="liveEsp32Temp">-- °C</strong>
+        </div>
+      </div>
+      <div class="panel-meta">
+        <span>Device: <strong id="liveDeviceId">Waiting for data</strong></span>
+        <span>Sequence: <strong id="liveSequence">--</strong></span>
+        <span>Transmitted: <strong id="liveTransmittedAt">Not supplied</strong></span>
+        <span>Received by Droplet: <strong id="liveReceivedAt">Waiting for data</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <p id="detailDataNote" class="footer-note">
+    Detailed cell and panel channels are simulated in mock mode.
+  </p>
+
+  <div class="dashboard-grid">
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Battery Pack Detail</h3>
+        <span class="status-pill">Demo Channels</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Pack Voltage</span>
+            <strong id="packVoltage">-- V</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Avg. SOC</span>
+            <strong id="packSoc">--%</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Max Cell Temp</span>
+            <strong id="packTemp">-- °C</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Cell Delta</span>
+            <strong id="cellDelta">-- mV</strong>
+          </div>
+        </div>
+
+        <div id="cells" class="cells" aria-label="Battery cell health"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Solar Array Detail: 8 Panels / 4 Parallel Strings</h3>
+        <span class="status-pill">Demo Channels</span>
+      </div>
+      <div class="card-body">
+        <div id="panels" class="panel-grid" aria-label="Solar panel telemetry"></div>
+        <div class="string-summary" id="strings" aria-label="Solar string summary"></div>
+
+        <div class="telemetry-box">
+          <div class="telemetry-toolbar">
+            <input
+              id="streamUrl"
+              class="input"
+              value="/telemetry/events"
+              aria-label="Telemetry event stream URL"
+            />
+            <button class="button" id="connectButton" type="button">Connect Live</button>
+            <button class="button secondary" id="mockButton" type="button">Use Mock Data</button>
+          </div>
+          <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <p class="footer-note">
+    Live transport: UDP JSON packets arrive at the Droplet on port 3333 and are forwarded to this
+    browser through a same-origin Server-Sent Events stream.
+  </p>
+</section>

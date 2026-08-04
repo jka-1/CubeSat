@@ -60,14 +60,21 @@ static void telemetry_task(void *argument)
 
                 ESP_LOGI(
                     TAG,
-                    "Streamed sequence=%" PRIu32
-                    " pv=%.3fA battery=%.3fV"
-                    " mppt=%.2fC esp32=%.2fC",
+                    "Streamed hex sequence=%" PRIu32
+                    " mcu=%.2fC"
+                    " pv=%.3fW/%.3fA"
+                    " mppt=%s fault=0x%04X"
+                    " load=%.3fW/%.3fA",
                     sequence,
-                    sample.solar_panel_current_a,
-                    sample.battery_voltage_v,
-                    sample.mppt_switch_temperature_c,
-                    sample.esp32_temperature_c);
+                    sample.mcu_temperature_c,
+                    sample.pv_power_w,
+                    sample.pv_current_a,
+                    sample.mppt_switch_enabled
+                        ? "on"
+                        : "off",
+                    sample.mppt_fault_mask,
+                    sample.load_power_w,
+                    sample.load_current_a);
             } else {
                 ++consecutive_errors;
 

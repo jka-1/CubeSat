@@ -1,0 +1,239 @@
+<section id="communication" class="page active">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span> I2C Telemetry Dashboard</div>
+      <h2>Live power-path demo view</h2>
+      <p>
+        This page reuses the working UDP-to-browser telemetry stream and presents the five I2C
+        device groups requested for the demo: MCU temperature, PV input, MPPT switch health,
+        BMS cell voltages, and load telemetry.
+      </p>
+    </div>
+    <div id="i2cBusStatus" class="status-pill offline">Mock data active</div>
+  </div>
+
+  <section class="card span-full">
+    <div class="card-header">
+      <h3 class="card-title">System Snapshot</h3>
+      <span class="status-pill">Demo Overview</span>
+    </div>
+    <div class="card-body">
+      <div class="pack-summary summary-grid">
+        <div class="metric-tile">
+          <span>MCU Temp</span>
+          <strong id="summaryMcuTemp">-- °C</strong>
+        </div>
+        <div class="metric-tile">
+          <span>MPPT Switch</span>
+          <strong id="summaryMpptState">--</strong>
+        </div>
+        <div class="metric-tile">
+          <span>PV Power</span>
+          <strong id="summaryPvPower">-- W</strong>
+        </div>
+        <div class="metric-tile">
+          <span>Load Power</span>
+          <strong id="summaryLoadPower">-- W</strong>
+        </div>
+        <div class="metric-tile">
+          <span>Net Power</span>
+          <strong id="summaryNetPower">-- W</strong>
+        </div>
+      </div>
+
+      <div class="panel-meta summary-meta">
+        <span>Device: <strong id="summaryDeviceId">Mock source</strong></span>
+        <span>Sequence: <strong id="summarySequence">--</strong></span>
+        <span>Transmitted: <strong id="summaryTransmittedAt">Mock mode</strong></span>
+        <span>Received by Droplet: <strong id="summaryReceivedAt">Local render</strong></span>
+      </div>
+    </div>
+  </section>
+
+  <p id="detailDataNote" class="footer-note">
+    Mock data is active by default. As soon as the firmware starts sending the new packet fields,
+    this page can switch to the live stream without changing the front-end layout.
+  </p>
+
+  <div class="dashboard-grid telemetry-grid">
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">MCU Temperature</h3>
+        <span class="status-pill">ESP32 Sensor</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Temperature</span>
+            <strong id="mcuTemperatureValue">-- °C</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Status</span>
+            <strong id="mcuTemperatureStatus">--</strong>
+          </div>
+        </div>
+        <div id="mcuMeters" class="cells" aria-label="MCU temperature telemetry"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">PV Panels</h3>
+        <span class="status-pill">INA226 #1</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Shunt Voltage</span>
+            <strong id="pvShuntValue">-- mV</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Power</span>
+            <strong id="pvPowerValue">-- W</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Current</span>
+            <strong id="pvCurrentValue">-- A</strong>
+          </div>
+        </div>
+        <div id="pvMeters" class="cells" aria-label="PV telemetry"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">MPPT Switch</h3>
+        <span class="status-pill">BQ25EVM</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Switch State</span>
+            <strong id="mpptStateValue">--</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Fault Count</span>
+            <strong id="mpptFaultCount">--</strong>
+          </div>
+        </div>
+        <div id="mpptFaults" class="cells" aria-label="MPPT fault status"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Battery Management</h3>
+        <span class="status-pill">BQ79EVM</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Pack Voltage</span>
+            <strong id="bmsPackVoltage">-- V</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Average Cell</span>
+            <strong id="bmsAverageVoltage">-- V</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Lowest Cell</span>
+            <strong id="bmsLowestCell">-- V</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Cell Delta</span>
+            <strong id="bmsCellDelta">-- mV</strong>
+          </div>
+        </div>
+        <div id="bmsCells" class="cells" aria-label="Battery cell voltages"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Load</h3>
+        <span class="status-pill">INA226 #2</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Shunt Voltage</span>
+            <strong id="loadShuntValue">-- mV</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Power</span>
+            <strong id="loadPowerValue">-- W</strong>
+          </div>
+          <div class="metric-tile">
+            <span>Current</span>
+            <strong id="loadCurrentValue">-- A</strong>
+          </div>
+        </div>
+        <div id="loadMeters" class="cells" aria-label="Load telemetry"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Telemetry Stream</h3>
+        <span class="status-pill">UDP → SSE Bridge</span>
+      </div>
+      <div class="card-body">
+        <div class="telemetry-box stream-box">
+          <div class="telemetry-toolbar">
+            <input
+              id="streamUrl"
+              class="input"
+              value="/telemetry/events"
+              aria-label="Telemetry event stream URL"
+            />
+            <button class="button" id="connectButton" type="button">Connect Live</button>
+            <button class="button secondary" id="mockButton" type="button">Use Mock Data</button>
+          </div>
+          <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Command Console</h3>
+        <span class="status-pill">Server → ESP32</span>
+      </div>
+      <div class="card-body">
+        <div class="telemetry-box stream-box">
+          <div class="telemetry-toolbar">
+            <input
+              id="commandUrl"
+              class="input"
+              value="/telemetry/command"
+              aria-label="Telemetry command endpoint URL"
+            />
+            <button class="button" id="mpptOnButton" type="button">MPPT On</button>
+            <button class="button secondary" id="mpptOffButton" type="button">MPPT Off</button>
+            <button class="button" id="ledOnButton" type="button">LED On</button>
+            <button class="button secondary" id="ledOffButton" type="button">LED Off</button>
+          </div>
+          <div class="telemetry-toolbar">
+            <input
+              id="customCommandInput"
+              class="input"
+              placeholder='Optional raw payload, for example {"type":"command","target":"led","state":"on"}'
+              aria-label="Custom command payload"
+            />
+            <button class="button secondary" id="sendCustomCommandButton" type="button">Send Custom</button>
+          </div>
+        </div>
+        <p id="commandTargetNote" class="footer-note">
+          Commands are sent through the droplet bridge to the last telemetry source unless a fixed
+          command target is configured on the server.
+        </p>
+      </div>
+    </section>
+  </div>
+
+  <p class="footer-note">
+    Expected live payload groups: <code>mcu</code>, <code>pv</code>, <code>mppt</code>,
+    <code>bms</code>, and <code>load</code>. This page listens to the existing same-origin
+    event stream so the current droplet transport can stay in place for the Tuesday demo.
+  </p>
+</section>

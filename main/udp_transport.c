@@ -2,8 +2,10 @@
 
 #include <errno.h>
 #include <inttypes.h>
+#include <math.h>
 #include <netdb.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -79,60 +81,165 @@ static esp_err_t open_udp_socket(
     return ESP_OK;
 }
 
-static char *build_telemetry_json(
-    const udp_transport_t *transport,
-    const telemetry_sample_t *sample,
-    uint32_t sequence)
+static int16_t clamp_int16_from_float(
+    float value
+)
 {
-    cJSON *root = cJSON_CreateObject();
-    cJSON *telemetry = cJSON_CreateObject();
+    if (!isfinite(value)) {
+        return 0;
+    }
 
-    if (root == NULL || telemetry == NULL) {
-        cJSON_Delete(root);
-        cJSON_Delete(telemetry);
+    if (value > 32767.0f) {
+        value = 32767.0f;
+    } else if (value < -32768.0f) {
+        value = -32768.0f;
+    }
+
+    return (int16_t)lroundf(value);
+}
+
+static uint16_t clamp_uint16_from_float(
+    float value
+)
+{
+    if (!isfinite(value) || value < 0.0f) {
+        return 0u;
+    }
+
+    if (value > 65535.0f) {
+        value = 65535.0f;
+    }
+
+    return (uint16_t)lroundf(value);
+}
+
+static uint16_t encode_mcu_temperature(
+    float temperature_c
+)
+{
+    return (uint16_t)clamp_int16_from_float(
+        temperature_c * 100.0f
+    );
+}
+
+static uint16_t encode_centi_millivolts(
+    float shunt_voltage_mv
+)
+{
+    return (uint16_t)clamp_int16_from_float(
+        shunt_voltage_mv * 100.0f
+    );
+}
+
+static uint16_t encode_milliamps(
+    float current_a
+)
+{
+    return (uint16_t)clamp_int16_from_float(
+        current_a * 1000.0f
+    );
+}
+
+static uint16_t encode_centi_watts(
+    float power_w
+)
+{
+    return clamp_uint16_from_float(
+        power_w * 100.0f
+    );
+}
+
+static uint16_t next_sequence_word(
+    udp_transport_t *transport
+)
+{
+    uint16_t sequence = (uint16_t)(
+        transport->next_sequence & 0xFFFFu
+    );
+
+    transport->next_sequence += 1u;
+
+    if (sequence == 0u) {
+        sequence = (uint16_t)(
+            transport->next_sequence & 0xFFFFu
+        );
+        transport->next_sequence += 1u;
+    }
+
+    return sequence;
+}
+
+static char *build_telemetry_hex_packet(
+    const telemetry_sample_t *sample,
+    uint16_t sequence)
+{
+    const uint16_t words[TELEMETRY_PACKET_WORD_COUNT] = {
+        TELEMETRY_PACKET_MAGIC,
+        TELEMETRY_PACKET_VERSION,
+        sequence,
+        encode_mcu_temperature(
+            sample->mcu_temperature_c
+        ),
+        encode_centi_millivolts(
+            sample->pv_shunt_voltage_mv
+        ),
+        encode_centi_watts(
+            sample->pv_power_w
+        ),
+        encode_milliamps(
+            sample->pv_current_a
+        ),
+        sample->mppt_switch_enabled ? 1u : 0u,
+        sample->mppt_fault_mask,
+        clamp_uint16_from_float(
+            sample->bms_cell_voltages_v[0] * 1000.0f
+        ),
+        clamp_uint16_from_float(
+            sample->bms_cell_voltages_v[1] * 1000.0f
+        ),
+        clamp_uint16_from_float(
+            sample->bms_cell_voltages_v[2] * 1000.0f
+        ),
+        clamp_uint16_from_float(
+            sample->bms_cell_voltages_v[3] * 1000.0f
+        ),
+        encode_centi_millivolts(
+            sample->load_shunt_voltage_mv
+        ),
+        encode_centi_watts(
+            sample->load_power_w
+        ),
+        encode_milliamps(
+            sample->load_current_a
+        )
+    };
+
+    char *serialized = malloc(
+        TELEMETRY_PACKET_HEX_CHARS + 1u
+    );
+
+    if (serialized == NULL) {
         return NULL;
     }
 
-    cJSON_AddNumberToObject(root, "version", 1);
-    cJSON_AddStringToObject(root, "type", "telemetry");
-    cJSON_AddStringToObject(root, "device_id", transport->device_id);
-    cJSON_AddNumberToObject(root, "seq", sequence);
-    cJSON_AddNumberToObject(
-        root,
-        "device_uptime_ms",
-        (double)sample->device_uptime_ms);
-    cJSON_AddNumberToObject(
-        root,
-        "sample_counter",
-        sample->sample_counter);
+    size_t offset = 0u;
 
-    cJSON_AddNumberToObject(
-        telemetry,
-        "solar_panel_current_a",
-        sample->solar_panel_current_a);
-    cJSON_AddNumberToObject(
-        telemetry,
-        "battery_voltage_v",
-        sample->battery_voltage_v);
-    cJSON_AddNumberToObject(
-        telemetry,
-        "mppt_switch_temperature_c",
-        sample->mppt_switch_temperature_c);
-    cJSON_AddNumberToObject(
-        telemetry,
-        "esp32_temperature_c",
-        sample->esp32_temperature_c);
+    for (size_t i = 0; i < TELEMETRY_PACKET_WORD_COUNT; ++i) {
+        offset += (size_t)snprintf(
+            serialized + offset,
+            (TELEMETRY_PACKET_HEX_CHARS + 1u) - offset,
+            "%04X",
+            words[i]
+        );
+    }
 
-    cJSON_AddItemToObject(root, "telemetry", telemetry);
-
-    char *serialized = cJSON_PrintUnformatted(root);
-    cJSON_Delete(root);
+    serialized[TELEMETRY_PACKET_HEX_CHARS] = '\0';
     return serialized;
 }
 
 static esp_err_t validate_ack(
     const char *ack_text,
-    uint32_t expected_sequence)
+    uint16_t expected_sequence)
 {
     cJSON *root = cJSON_Parse(ack_text);
     if (root == NULL) {
@@ -146,7 +253,7 @@ static esp_err_t validate_ack(
         cJSON_IsString(type) &&
         strcmp(type->valuestring, "ack") == 0 &&
         cJSON_IsNumber(sequence) &&
-        (uint32_t)sequence->valuedouble == expected_sequence;
+        (uint16_t)sequence->valuedouble == expected_sequence;
 
     cJSON_Delete(root);
     return valid ? ESP_OK : ESP_ERR_INVALID_RESPONSE;
@@ -223,9 +330,11 @@ esp_err_t udp_transport_send_sample(
         }
     }
 
-    const uint32_t sequence = transport->next_sequence++;
-    char *payload = build_telemetry_json(
-        transport,
+    const uint16_t sequence = next_sequence_word(
+        transport
+    );
+
+    char *payload = build_telemetry_hex_packet(
         sample,
         sequence);
 
@@ -244,7 +353,7 @@ esp_err_t udp_transport_send_sample(
         destination->ai_addr,
         destination->ai_addrlen);
 
-    cJSON_free(payload);
+    free(payload);
     freeaddrinfo(destination);
 
     if (bytes_sent < 0) {
@@ -267,7 +376,7 @@ esp_err_t udp_transport_send_sample(
             ESP_LOGW(
                 TAG,
                 "ACK timeout for sequence %" PRIu32,
-                sequence);
+                (uint32_t)sequence);
             return ESP_ERR_TIMEOUT;
         }
 
@@ -286,7 +395,7 @@ esp_err_t udp_transport_send_sample(
         ESP_LOGW(
             TAG,
             "Invalid ACK for sequence %" PRIu32 ": %s",
-            sequence,
+            (uint32_t)sequence,
             ack_buffer);
         return ack_result;
     }
@@ -306,7 +415,7 @@ esp_err_t udp_transport_send_sample(
     ESP_LOGI(
         TAG,
         "ACK sequence=%" PRIu32 " RTT=%" PRIu32 " ms",
-        sequence,
+        (uint32_t)sequence,
         round_trip_ms);
 
     return ESP_OK;
