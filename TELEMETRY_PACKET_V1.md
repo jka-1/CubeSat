@@ -54,6 +54,7 @@ How the bridge decodes version `0x0003`:
 - PV current from INA226 current raw register using:
   - calibration word from packet
   - `PV_INA226_SHUNT_OHMS` on the server
+  - current deployment default: `100` ohms
 - PV power from INA226 power raw register using the same resolved current LSB
 - BMS voltages from raw words divided by `1000`
 - MPPT state from BQ25798 register `0x13`:

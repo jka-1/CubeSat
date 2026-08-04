@@ -215,8 +215,8 @@ Important note on the shunt value:
 
 For the new `0x0003` raw packet, the droplet resolves INA226 current and power using the packet's
 calibration register and the server setting `PV_INA226_SHUNT_OHMS`. The default bridge decode
-assumes `0.1` ohms (`100 mΩ`). If telemetry values look physically wrong, confirm whether
-"100 ohms" actually means `100 ohms` or `100 milliohms`.
+assumes `100` ohms. If telemetry values look physically wrong on the bench, re-check that the
+confirmed shunt value is truly `100 Ω` and not `100 mΩ`.
 
 ## Current firmware status from `main/pass`
 
