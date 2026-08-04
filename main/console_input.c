@@ -1,9 +1,14 @@
 #include "console_input.h"
 
+#include <errno.h>
+#include <inttypes.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 
 #include "esp_err.h"
 #include "esp_log.h"
@@ -29,11 +34,25 @@ static void trim_newline(char *text)
         return;
     }
 
-    /*
-     * Replace the first CR or LF with a null terminator.
-     * Handles \n, \r, and \r\n line endings.
-     */
     text[strcspn(text, "\r\n")] = '\0';
+}
+
+static void print_fields(void)
+{
+    printf("\nSupported telemetry fields:\n");
+    printf("  pv_shunt_mv\n");
+    printf("  pv_power_w\n");
+    printf("  pv_current_a\n");
+    printf("  mppt_switch        (on/off or 1/0)\n");
+    printf("  mppt_fault_mask    (decimal or 0x....)\n");
+    printf("  cell1_v\n");
+    printf("  cell2_v\n");
+    printf("  cell3_v\n");
+    printf("  cell4_v\n");
+    printf("  load_shunt_mv\n");
+    printf("  load_power_w\n");
+    printf("  load_current_a\n");
+    printf("  mcu_temp_c         (read-only hardware sensor)\n\n");
 }
 
 static void print_help(void)
@@ -42,28 +61,25 @@ static void print_help(void)
     printf("  help\n");
     printf("      Display this command list.\n\n");
 
+    printf("  fields\n");
+    printf("      Display the supported settable field names.\n\n");
+
     printf("  send\n");
     printf("      Immediately transmit the current telemetry sample.\n\n");
 
     printf("  status\n");
     printf("      Read and display the current telemetry values.\n\n");
 
-    printf("  set pv_current <amps>\n");
-    printf("      Example: set pv_current 0.825\n\n");
+    printf("  profile nominal\n");
+    printf("      Load the default healthy demo telemetry values.\n\n");
 
-    printf("  set battery_voltage <volts>\n");
-    printf("      Example: set battery_voltage 16.420\n\n");
+    printf("  profile fault\n");
+    printf("      Load a demo fault profile with MPPT disabled.\n\n");
 
-    printf("  set mppt_temp <degrees_C>\n");
-    printf("      Example: set mppt_temp 33.5\n\n");
-
-    printf("  sample <pv_current> <battery_voltage> <mppt_temp>\n");
-    printf("      Example: sample 0.825 16.420 33.5\n\n");
-
-    printf(
-        "  ESP32 temperature is read-only and comes from the "
-        "internal temperature sensor.\n\n"
-    );
+    printf("  set <field> <value>\n");
+    printf("      Example: set pv_current_a 1.240\n");
+    printf("      Example: set mppt_switch on\n");
+    printf("      Example: set mppt_fault_mask 0x0004\n\n");
 }
 
 static void print_status(void)
@@ -84,47 +100,222 @@ static void print_status(void)
 
     printf("\nCurrent telemetry:\n");
     printf(
-        "  Solar-panel current:   %.3f A\n",
-        sample.solar_panel_current_a
+        "  MCU temperature:      %.2f C\n",
+        sample.mcu_temperature_c
     );
     printf(
-        "  Battery voltage:       %.3f V\n",
-        sample.battery_voltage_v
+        "  PV shunt voltage:     %.3f mV\n",
+        sample.pv_shunt_voltage_mv
     );
     printf(
-        "  MPPT temperature:      %.2f C\n",
-        sample.mppt_switch_temperature_c
+        "  PV power/current:     %.3f W / %.3f A\n",
+        sample.pv_power_w,
+        sample.pv_current_a
     );
     printf(
-        "  ESP32 temperature:     %.2f C (hardware sensor)\n\n",
-        sample.esp32_temperature_c
+        "  MPPT switch:          %s\n",
+        sample.mppt_switch_enabled ? "on" : "off"
     );
+    printf(
+        "  MPPT fault mask:      0x%04X\n",
+        sample.mppt_fault_mask
+    );
+    printf(
+        "  BMS cell voltages:    %.3f V / %.3f V / %.3f V / %.3f V\n",
+        sample.bms_cell_voltages_v[0],
+        sample.bms_cell_voltages_v[1],
+        sample.bms_cell_voltages_v[2],
+        sample.bms_cell_voltages_v[3]
+    );
+    printf(
+        "  Load shunt voltage:   %.3f mV\n",
+        sample.load_shunt_voltage_mv
+    );
+    printf(
+        "  Load power/current:   %.3f W / %.3f A\n",
+        sample.load_power_w,
+        sample.load_current_a
+    );
+    printf(
+        "  Sample counter:       %" PRIu32 "\n\n",
+        sample.sample_counter
+    );
+}
+
+static bool parse_float_value(
+    const char *text,
+    float *out_value
+)
+{
+    if (text == NULL || out_value == NULL) {
+        return false;
+    }
+
+    errno = 0;
+    char *end = NULL;
+    const float value = strtof(text, &end);
+
+    if (
+        errno != 0 ||
+        end == text ||
+        end == NULL ||
+        *end != '\0' ||
+        !isfinite(value)
+    ) {
+        return false;
+    }
+
+    *out_value = value;
+    return true;
+}
+
+static bool parse_uint16_value(
+    const char *text,
+    uint16_t *out_value
+)
+{
+    if (text == NULL || out_value == NULL) {
+        return false;
+    }
+
+    errno = 0;
+    char *end = NULL;
+    const unsigned long value = strtoul(text, &end, 0);
+
+    if (
+        errno != 0 ||
+        end == text ||
+        end == NULL ||
+        *end != '\0' ||
+        value > 0xFFFFul
+    ) {
+        return false;
+    }
+
+    *out_value = (uint16_t)value;
+    return true;
+}
+
+static bool parse_switch_state(
+    const char *text,
+    bool *out_enabled
+)
+{
+    if (text == NULL || out_enabled == NULL) {
+        return false;
+    }
+
+    if (
+        strcasecmp(text, "1") == 0 ||
+        strcasecmp(text, "on") == 0 ||
+        strcasecmp(text, "true") == 0 ||
+        strcasecmp(text, "enabled") == 0
+    ) {
+        *out_enabled = true;
+        return true;
+    }
+
+    if (
+        strcasecmp(text, "0") == 0 ||
+        strcasecmp(text, "off") == 0 ||
+        strcasecmp(text, "false") == 0 ||
+        strcasecmp(text, "disabled") == 0
+    ) {
+        *out_enabled = false;
+        return true;
+    }
+
+    return false;
 }
 
 static esp_err_t set_single_field(
     const char *field_name,
-    float value
+    const char *value_text
 )
 {
-    if (field_name == NULL || !isfinite(value)) {
+    if (field_name == NULL || value_text == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    if (strcmp(field_name, "pv_current") == 0) {
-        return sensor_provider_set_solar_panel_current(value);
+    float float_value = 0.0f;
+    uint16_t uint16_value = 0;
+    bool enabled = false;
+
+    if (strcmp(field_name, "pv_shunt_mv") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_pv_shunt_voltage(float_value)
+            : ESP_ERR_INVALID_ARG;
     }
 
-    if (strcmp(field_name, "battery_voltage") == 0) {
-        return sensor_provider_set_battery_voltage(value);
+    if (strcmp(field_name, "pv_power_w") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_pv_power(float_value)
+            : ESP_ERR_INVALID_ARG;
     }
 
-    if (strcmp(field_name, "mppt_temp") == 0) {
-        return sensor_provider_set_mppt_temperature(value);
+    if (strcmp(field_name, "pv_current_a") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_pv_current(float_value)
+            : ESP_ERR_INVALID_ARG;
     }
 
-    if (strcmp(field_name, "esp32_temp") == 0) {
+    if (strcmp(field_name, "mppt_switch") == 0) {
+        return parse_switch_state(value_text, &enabled)
+            ? sensor_provider_set_mppt_switch_enabled(enabled)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "mppt_fault_mask") == 0) {
+        return parse_uint16_value(value_text, &uint16_value)
+            ? sensor_provider_set_mppt_fault_mask(uint16_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "cell1_v") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_bms_cell_voltage(0u, float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "cell2_v") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_bms_cell_voltage(1u, float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "cell3_v") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_bms_cell_voltage(2u, float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "cell4_v") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_bms_cell_voltage(3u, float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "load_shunt_mv") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_load_shunt_voltage(float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "load_power_w") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_load_power(float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "load_current_a") == 0) {
+        return parse_float_value(value_text, &float_value)
+            ? sensor_provider_set_load_current(float_value)
+            : ESP_ERR_INVALID_ARG;
+    }
+
+    if (strcmp(field_name, "mcu_temp_c") == 0) {
         printf(
-            "esp32_temp is read-only. It comes from the "
+            "mcu_temp_c is read-only. It comes from the "
             "ESP32-S3 internal temperature sensor.\n"
         );
 
@@ -132,53 +323,50 @@ static esp_err_t set_single_field(
     }
 
     printf("Unknown telemetry field: %s\n", field_name);
-
     return ESP_ERR_NOT_FOUND;
 }
 
 static void process_set_command(const char *line)
 {
     char field_name[48] = {0};
-    float value = 0.0f;
+    char value_text[48] = {0};
     char extra_character = '\0';
 
-    /*
-     * The final %c detects unexpected trailing arguments.
-     * A valid command produces exactly two assignments.
-     */
     const int parsed_fields = sscanf(
         line,
-        "set %47s %f %c",
+        "set %47s %47s %c",
         field_name,
-        &value,
+        value_text,
         &extra_character
     );
 
     if (parsed_fields != 2) {
         printf(
             "Usage: set <field> <value>\n"
-            "Example: set pv_current 0.825\n"
+            "Example: set pv_current_a 1.240\n"
+            "Example: set mppt_fault_mask 0x0004\n"
         );
 
-        return;
-    }
-
-    if (!isfinite(value)) {
-        printf("The supplied value must be a finite number.\n");
         return;
     }
 
     const esp_err_t err =
-        set_single_field(field_name, value);
+        set_single_field(field_name, value_text);
 
     if (err == ESP_OK) {
         printf(
-            "Updated %s to %.3f\n",
+            "Updated %s to %s\n",
             field_name,
-            value
+            value_text
         );
 
         request_immediate_send();
+    } else if (err == ESP_ERR_INVALID_ARG) {
+        printf(
+            "Invalid value for %s: %s\n",
+            field_name,
+            value_text
+        );
     } else if (
         err != ESP_ERR_NOT_SUPPORTED &&
         err != ESP_ERR_NOT_FOUND
@@ -191,90 +379,51 @@ static void process_set_command(const char *line)
     }
 }
 
-static void process_sample_command(const char *line)
+static void process_profile_command(const char *line)
 {
-    float pv_current = 0.0f;
-    float battery_voltage = 0.0f;
-    float mppt_temperature = 0.0f;
+    char profile_name[32] = {0};
     char extra_character = '\0';
 
-    /*
-     * ESP32 temperature is intentionally not included.
-     */
     const int parsed_fields = sscanf(
         line,
-        "sample %f %f %f %c",
-        &pv_current,
-        &battery_voltage,
-        &mppt_temperature,
+        "profile %31s %c",
+        profile_name,
         &extra_character
     );
 
-    if (parsed_fields != 3) {
-        printf(
-            "Usage: sample <pv_current> "
-            "<battery_voltage> <mppt_temp>\n"
-            "Example: sample 0.825 16.420 33.5\n"
-        );
-
+    if (parsed_fields != 1) {
+        printf("Usage: profile <nominal|fault>\n");
         return;
     }
+
+    const bool faulted =
+        strcmp(profile_name, "fault") == 0;
 
     if (
-        !isfinite(pv_current) ||
-        !isfinite(battery_voltage) ||
-        !isfinite(mppt_temperature)
+        !faulted &&
+        strcmp(profile_name, "nominal") != 0
     ) {
-        printf("All sample values must be finite numbers.\n");
+        printf(
+            "Unknown profile: %s\n"
+            "Valid options: nominal, fault\n",
+            profile_name
+        );
         return;
     }
 
-    esp_err_t err =
-        sensor_provider_set_solar_panel_current(pv_current);
+    const esp_err_t err =
+        sensor_provider_load_demo_profile(faulted);
 
     if (err != ESP_OK) {
         printf(
-            "Could not set PV current: %s\n",
+            "Could not load profile %s: %s\n",
+            profile_name,
             esp_err_to_name(err)
         );
-
         return;
     }
 
-    err = sensor_provider_set_battery_voltage(
-        battery_voltage
-    );
-
-    if (err != ESP_OK) {
-        printf(
-            "Could not set battery voltage: %s\n",
-            esp_err_to_name(err)
-        );
-
-        return;
-    }
-
-    err = sensor_provider_set_mppt_temperature(
-        mppt_temperature
-    );
-
-    if (err != ESP_OK) {
-        printf(
-            "Could not set MPPT temperature: %s\n",
-            esp_err_to_name(err)
-        );
-
-        return;
-    }
-
-    printf(
-        "Updated sample: "
-        "pv=%.3f A, battery=%.3f V, mppt=%.2f C\n",
-        pv_current,
-        battery_voltage,
-        mppt_temperature
-    );
-
+    printf("Loaded profile: %s\n", profile_name);
     request_immediate_send();
 }
 
@@ -291,12 +440,6 @@ static void console_task(void *argument)
     bool prompt_is_visible = false;
 
     while (true) {
-        /*
-         * Print the prompt only once. Without this flag, a
-         * temporarily unavailable stdin stream can produce:
-         *
-         * demo> demo> demo> demo>
-         */
         if (!prompt_is_visible) {
             printf("demo> ");
             fflush(stdout);
@@ -304,12 +447,7 @@ static void console_task(void *argument)
         }
 
         if (fgets(line, sizeof(line), stdin) == NULL) {
-            /*
-             * Clear EOF/error indicators so the console can recover
-             * when another line becomes available.
-             */
             clearerr(stdin);
-
             vTaskDelay(pdMS_TO_TICKS(100));
             continue;
         }
@@ -326,6 +464,11 @@ static void console_task(void *argument)
             continue;
         }
 
+        if (strcmp(line, "fields") == 0) {
+            print_fields();
+            continue;
+        }
+
         if (strcmp(line, "send") == 0) {
             printf("Immediate telemetry transmission requested.\n");
             request_immediate_send();
@@ -337,13 +480,21 @@ static void console_task(void *argument)
             continue;
         }
 
+        if (strncmp(line, "profile ", 8) == 0) {
+            process_profile_command(line);
+            continue;
+        }
+
         if (strncmp(line, "set ", 4) == 0) {
             process_set_command(line);
             continue;
         }
 
-        if (strncmp(line, "sample ", 7) == 0) {
-            process_sample_command(line);
+        if (strncmp(line, "sample", 6) == 0) {
+            printf(
+                "The old sample command has been replaced.\n"
+                "Use profile nominal, profile fault, or set <field> <value>.\n"
+            );
             continue;
         }
 
@@ -359,20 +510,11 @@ void console_input_start(
     TaskHandle_t telemetry_task_handle
 )
 {
-    if (telemetry_task_handle == NULL) {
-        ESP_LOGE(
-            TAG,
-            "Cannot start console without a telemetry task handle"
-        );
-
-        return;
-    }
-
     s_telemetry_task_handle = telemetry_task_handle;
 
     const BaseType_t task_result = xTaskCreate(
         console_task,
-        "demo_console",
+        "console_input",
         4096,
         NULL,
         4,
@@ -380,15 +522,6 @@ void console_input_start(
     );
 
     if (task_result != pdPASS) {
-        s_telemetry_task_handle = NULL;
-
-        ESP_LOGE(
-            TAG,
-            "Could not start console task"
-        );
-
-        return;
+        ESP_LOGE(TAG, "Could not create console task");
     }
-
-    ESP_LOGI(TAG, "Telemetry console started");
 }
