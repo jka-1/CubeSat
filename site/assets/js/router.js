@@ -1,9 +1,11 @@
-import { initI2CPage, destroyI2CPage } from './i2c.js';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20260805d';
+
+const assetVersion = '20260805d';
 
 const routes = {
-  home: './modules/home.html',
-  communication: './modules/communication.html',
-  partners: './modules/partners.html'
+  home: `./modules/home.html?v=${assetVersion}`,
+  communication: `./modules/communication.html?v=${assetVersion}`,
+  partners: `./modules/partners.html?v=${assetVersion}`
 };
 
 const pageInitializers = {
