@@ -363,7 +363,7 @@ function renderMpptCard(telemetry) {
   const switchRow = meterRow(
     'Selected Input',
     switchLabel,
-    switchState === 'on' ? 100 : 0,
+    ['on', 'acdrv1', 'acdrv2', 'both'].includes(switchState) ? 100 : 0,
     switchStatus,
     isFaulted ? 'Faults active below.' : 'ACDRV1 or ACDRV2 selection reported by firmware.'
   );
