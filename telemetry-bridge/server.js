@@ -240,14 +240,7 @@ function decodeMpptSwitchStateFromReg13(word) {
   if (registerValue === 0x2d) return 'acdrv2';
   if (registerValue === 0x61) return 'acdrv1';
 
-  const acdrv2Enabled = (registerValue & 0x80) !== 0;
-  const acdrv1Enabled = (registerValue & 0x40) !== 0;
-
-  if (acdrv1Enabled && !acdrv2Enabled) return 'acdrv1';
-  if (acdrv2Enabled && !acdrv1Enabled) return 'acdrv2';
-  if (acdrv1Enabled && acdrv2Enabled) return 'both';
-  
-  return 'off';
+  return 'unknown';
 }
 
 function looksLikeHexPacketText(text) {

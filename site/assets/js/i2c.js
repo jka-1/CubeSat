@@ -9,7 +9,7 @@ const initialTelemetry = {
     currentA: 1.24
   },
   mppt: {
-    switchState: 'on',
+    switchState: 'acdrv1',
     faults: []
   },
   bms: {
@@ -349,7 +349,7 @@ function renderMpptCard(telemetry) {
       ? 'idle'
       : isFaulted
         ? 'fault'
-        : ['on', 'acdrv1', 'acdrv2'].includes(switchState)
+        : ['acdrv1', 'acdrv2'].includes(switchState)
           ? 'nominal'
           : 'watch';
   const switchLabel =
@@ -363,7 +363,7 @@ function renderMpptCard(telemetry) {
   const switchRow = meterRow(
     'Selected Input',
     switchLabel,
-    ['on', 'acdrv1', 'acdrv2', 'both'].includes(switchState) ? 100 : 0,
+    ['acdrv1', 'acdrv2'].includes(switchState) ? 100 : 0,
     switchStatus,
     isFaulted ? 'Faults active below.' : 'ACDRV1 or ACDRV2 selection reported by firmware.'
   );
@@ -673,7 +673,7 @@ function randomizeMockTelemetry() {
   if (numericValue(packet.mcu.temperatureC) > 55) faults.push('THERMAL_WARNING');
   if (numericValue(packet.pv.powerW) < 35) faults.push('PV_INPUT_LOW');
 
-  packet.mppt.switchState = faults.includes('THERMAL_WARNING') ? 'off' : 'on';
+  packet.mppt.switchState = numericValue(packet.pv.powerW) < 35 ? 'acdrv2' : 'acdrv1';
   packet.mppt.faults = faults;
 
   streamMetadata = { ...mockMetadata };
