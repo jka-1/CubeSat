@@ -448,6 +448,8 @@ h1 {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: var(--stream-panel-height, 630px);
+  max-height: var(--stream-panel-height, 630px);
 }
 
 .stream-panel-card .card-body {

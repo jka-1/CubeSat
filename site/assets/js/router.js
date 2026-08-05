@@ -1,6 +1,6 @@
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20260805d';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20260805e';
 
-const assetVersion = '20260805d';
+const assetVersion = '20260805e';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,

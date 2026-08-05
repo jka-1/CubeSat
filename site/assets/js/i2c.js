@@ -43,6 +43,57 @@ let streamMetadata = { ...mockMetadata };
 let mockTimer = null;
 let eventSource = null;
 let streamErrorLogged = false;
+let streamPanelResizeObserver = null;
+
+function findTelemetryCard(title) {
+  return Array.from(document.querySelectorAll('#communication section.card'))
+    .find((section) => section.querySelector('.card-title')?.textContent?.trim() === title) || null;
+}
+
+function syncTelemetryStreamHeight() {
+  const streamCard = findTelemetryCard('Telemetry Stream');
+  if (!streamCard) return;
+
+  const loadCard = findTelemetryCard('Load');
+  const targetHeight = loadCard ? Math.ceil(loadCard.getBoundingClientRect().height) : 0;
+
+  if (targetHeight > 0) {
+    streamCard.style.setProperty('--stream-panel-height', `${targetHeight}px`);
+  } else {
+    streamCard.style.removeProperty('--stream-panel-height');
+  }
+}
+
+function queueTelemetryStreamHeightSync() {
+  window.requestAnimationFrame(syncTelemetryStreamHeight);
+}
+
+function handleTelemetryResize() {
+  queueTelemetryStreamHeightSync();
+}
+
+function setupTelemetryStreamHeightSync() {
+  window.addEventListener('resize', handleTelemetryResize);
+
+  const loadCard = findTelemetryCard('Load');
+  if (loadCard && typeof ResizeObserver !== 'undefined') {
+    streamPanelResizeObserver = new ResizeObserver(() => {
+      queueTelemetryStreamHeightSync();
+    });
+    streamPanelResizeObserver.observe(loadCard);
+  }
+
+  queueTelemetryStreamHeightSync();
+}
+
+function teardownTelemetryStreamHeightSync() {
+  window.removeEventListener('resize', handleTelemetryResize);
+
+  if (streamPanelResizeObserver) {
+    streamPanelResizeObserver.disconnect();
+    streamPanelResizeObserver = null;
+  }
+}
 
 function deriveCommandUrl(streamUrl) {
   if (typeof streamUrl !== 'string' || !streamUrl.trim()) {
@@ -418,6 +469,7 @@ function renderTelemetry(telemetry, metadata = streamMetadata) {
   renderMpptCard(telemetry);
   renderBmsCard(telemetry);
   renderPowerCard('load', 'Load', telemetry.load);
+  queueTelemetryStreamHeightSync();
 }
 
 function normalizeCellArray(candidate) {
@@ -860,6 +912,7 @@ export function initI2CPage() {
   state = structuredClone(initialTelemetry);
   streamMetadata = { ...mockMetadata };
   renderTelemetry(state, streamMetadata);
+  setupTelemetryStreamHeightSync();
 
   const streamUrlElement = document.getElementById('streamUrl');
   const commandUrlElement = document.getElementById('commandUrl');
@@ -882,6 +935,8 @@ export function initI2CPage() {
 }
 
 export function destroyI2CPage() {
+  teardownTelemetryStreamHeightSync();
+
   document.getElementById('connectButton')?.removeEventListener('click', onConnectClick);
   document.getElementById('mockButton')?.removeEventListener('click', onMockClick);
   document.getElementById('mpptOnButton')?.removeEventListener('click', onMpptOnClick);
