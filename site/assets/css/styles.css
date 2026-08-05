@@ -434,6 +434,9 @@ h1 {
 
 .stream-box {
   margin-top: 0;
+  min-height: 360px;
+  display: flex;
+  flex-direction: column;
 }
 
 .card {
@@ -697,8 +700,8 @@ h1 {
 .telemetry-log {
   margin: 0;
   padding: 16px;
-  height: 220px;
-  max-height: 220px;
+  flex: 1;
+  max-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
