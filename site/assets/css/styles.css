@@ -418,6 +418,11 @@ h1 {
 
 .telemetry-grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.telemetry-grid > .card {
+  height: 100%;
 }
 
 .span-full {
@@ -437,6 +442,21 @@ h1 {
   min-height: 360px;
   display: flex;
   flex-direction: column;
+}
+
+.stream-panel-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.stream-panel-card .card-body {
+  flex: 1;
+  display: flex;
+}
+
+.stream-panel-card .stream-box {
+  flex: 1;
+  min-height: 0;
 }
 
 .card {
@@ -701,7 +721,7 @@ h1 {
   margin: 0;
   padding: 16px;
   flex: 1;
-  max-height: 0;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
