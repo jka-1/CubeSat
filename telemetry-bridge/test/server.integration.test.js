@@ -420,6 +420,10 @@ test('dashboard command controls match the hardened interface', async () => {
     path.join(repositoryRoot, 'site/assets/js/i2c.js'),
     'utf8'
   );
+  const styles = await readFile(
+    path.join(repositoryRoot, 'site/assets/css/styles.css'),
+    'utf8'
+  );
 
   const requiredIds = [
     'commandUrl',
@@ -447,6 +451,17 @@ test('dashboard command controls match the hardened interface', async () => {
 
   assert.doesNotMatch(html, /mpptOnButton|mpptOffButton|sendCustomCommandButton/);
   assert.doesNotMatch(script, /onMpptOnClick|onMpptOffClick|onSendCustomCommandClick/);
+  assert.match(
+    html,
+    /<section class=["']card stream-panel-card["']>[\s\S]*?<h3 class=["']card-title["']>Telemetry Stream<\/h3>/
+  );
+  assert.match(html, /id=["']commandResultLog["'] class=["']telemetry-log command-result-log["']/);
+  assert.match(script, /setupTelemetryStreamHeightSync/);
+  assert.match(styles, /\.stream-panel-card\s*\{/);
+  assert.match(
+    styles,
+    /\.command-result-log\s*\{[^}]*height:\s*150px;[^}]*max-height:\s*150px;[^}]*\}/
+  );
 });
 
 test('configured hostname targets accept correlated replies from their resolved IP', async (context) => {
