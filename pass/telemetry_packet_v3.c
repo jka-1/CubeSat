@@ -70,7 +70,9 @@ esp_err_t telemetry_packet_v3_build_words(
 
     out_words[13] = (uint16_t)telemetry->bq25798_reg13;
     out_words[14] = (uint16_t)telemetry->bq25798_fault_status_0;
-    out_words[15] = 0u;
+    out_words[15] = (uint16_t)(
+        TELEMETRY_PACKET_V3_SENSOR_MASK_TAG |
+        (telemetry->enabled_sensor_mask & I2C_SENSOR_GROUP_ALL));
 
     return ESP_OK;
 }

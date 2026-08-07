@@ -10,6 +10,7 @@ fi
 backup_dir="$1"
 site_root="${SITE_ROOT:-/var/www/html}"
 bridge_file="${BRIDGE_FILE:-/opt/cubesat-telemetry/server.js}"
+bridge_package_file="${BRIDGE_PACKAGE_FILE:-$(dirname "$bridge_file")/package.json}"
 service_name="${SERVICE_NAME:-}"
 
 if [ ! -f "$backup_dir/site.tar.gz" ]; then
@@ -24,6 +25,10 @@ fi
 
 tar -xzf "$backup_dir/site.tar.gz" -C "$site_root"
 cp "$backup_dir/server.js" "$bridge_file"
+
+if [ -f "$backup_dir/package.json" ]; then
+  cp "$backup_dir/package.json" "$bridge_package_file"
+fi
 
 if [ -n "$service_name" ] && command -v systemctl >/dev/null 2>&1; then
   systemctl restart "$service_name"

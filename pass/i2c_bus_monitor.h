@@ -23,6 +23,14 @@ extern "C" {
 #define BQ76942_CELL_DATA_LENGTH       2
 #define BQ76942_CELL_1_REGISTER        0x14
 
+#define I2C_SENSOR_GROUP_PV            (1u << 0)
+#define I2C_SENSOR_GROUP_BMS           (1u << 1)
+#define I2C_SENSOR_GROUP_MPPT          (1u << 2)
+#define I2C_SENSOR_GROUP_ALL           \
+    (I2C_SENSOR_GROUP_PV |            \
+     I2C_SENSOR_GROUP_BMS |           \
+     I2C_SENSOR_GROUP_MPPT)
+
 typedef struct
 {
     /*
@@ -73,7 +81,25 @@ typedef struct
     esp_err_t bq25798_fault_status;
 
     uint32_t sample_number;
+    uint32_t enabled_sensor_mask;
 } power_telemetry_t;
+
+typedef enum
+{
+    I2C_ACDRV_DISABLED = 0,
+    I2C_ACDRV1_SELECTED,
+    I2C_ACDRV2_SELECTED
+} i2c_acdrv_state_t;
+
+typedef struct
+{
+    uint8_t register_12_before;
+    uint8_t register_12_after;
+    uint8_t register_13_before;
+    uint8_t register_13_after;
+    uint8_t acrb_status;
+    bool verified;
+} i2c_acdrv_result_t;
 
 /**
  * @brief Initialize the I2C master bus and device handles.
@@ -147,6 +173,31 @@ esp_err_t i2c_bus_write_register(
  * @brief Copy the latest telemetry snapshot.
  */
 esp_err_t i2c_bus_monitor_get_latest(power_telemetry_t *telemetry);
+
+/**
+ * @brief Enable or disable automatic polling for one or more sensor groups.
+ *
+ * Manual register reads and writes still work while a group is disabled.
+ */
+esp_err_t i2c_bus_monitor_set_sensor_enabled(
+    uint32_t sensor_mask,
+    bool enabled);
+
+/**
+ * @brief Copy the current automatic-polling sensor mask.
+ */
+esp_err_t i2c_bus_monitor_get_sensor_mask(
+    uint32_t *out_sensor_mask);
+
+/**
+ * @brief Select or disable BQ25798 ACDRV using masked, verified updates.
+ *
+ * Only REG12.DIS_ACDRV and REG13.EN_ACDRV1/2 are changed. All unrelated
+ * control bits are preserved and read back before success is reported.
+ */
+esp_err_t i2c_bus_monitor_set_acdrv_state(
+    i2c_acdrv_state_t state,
+    i2c_acdrv_result_t *out_result);
 
 #ifdef __cplusplus
 }

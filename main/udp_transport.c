@@ -13,6 +13,7 @@
 #include <unistd.h>
 
 #include "app_config.h"
+#include "board_led.h"
 #include "cJSON.h"
 #include "esp_check.h"
 #include "esp_log.h"
@@ -20,8 +21,186 @@
 
 static const char *TAG = "udp_transport";
 
-#define MAX_COMMAND_BYTES            256
+#define MAX_COMMAND_BYTES            1024
 #define MAX_I2C_COMMAND_DATA_LENGTH  32
+
+static void add_hex_string_field(
+    cJSON *root,
+    const char *field_name,
+    uint8_t value)
+{
+    if (root == NULL || field_name == NULL) {
+        return;
+    }
+
+    char buffer[8] = {0};
+    snprintf(buffer, sizeof(buffer), "0x%02X", value);
+    cJSON_AddStringToObject(root, field_name, buffer);
+}
+
+static cJSON *create_hex_byte_array(
+    const uint8_t *data,
+    size_t data_length)
+{
+    cJSON *array = cJSON_CreateArray();
+    if (array == NULL) {
+        return NULL;
+    }
+
+    for (size_t index = 0; index < data_length; index++) {
+        char buffer[8] = {0};
+        snprintf(buffer, sizeof(buffer), "0x%02X", data[index]);
+
+        cJSON *entry = cJSON_CreateString(buffer);
+        if (entry == NULL) {
+            cJSON_Delete(array);
+            return NULL;
+        }
+
+        cJSON_AddItemToArray(array, entry);
+    }
+
+    return array;
+}
+
+static void copy_optional_string_field(
+    const cJSON *source_root,
+    const char *source_name,
+    cJSON *destination_root,
+    const char *destination_name)
+{
+    if (source_root == NULL ||
+        source_name == NULL ||
+        destination_root == NULL ||
+        destination_name == NULL) {
+        return;
+    }
+
+    const cJSON *item =
+        cJSON_GetObjectItemCaseSensitive(source_root, source_name);
+
+    if (cJSON_IsString(item) &&
+        item->valuestring != NULL &&
+        item->valuestring[0] != '\0') {
+        cJSON_AddStringToObject(
+            destination_root,
+            destination_name,
+            item->valuestring);
+    }
+}
+
+static cJSON *create_debug_response_root(
+    const udp_transport_t *transport,
+    const cJSON *request_root,
+    const char *command_type)
+{
+    cJSON *root = cJSON_CreateObject();
+    if (root == NULL) {
+        return NULL;
+    }
+
+    cJSON_AddNumberToObject(root, "version", 1);
+    cJSON_AddStringToObject(root, "type", "debug_result");
+    cJSON_AddStringToObject(
+        root,
+        "device_id",
+        transport != NULL ? transport->device_id : DEMO_DEVICE_ID);
+    cJSON_AddStringToObject(
+        root,
+        "command_type",
+        command_type != NULL ? command_type : "unknown");
+    cJSON_AddNumberToObject(
+        root,
+        "device_time_ms",
+        (double)(esp_timer_get_time() / 1000));
+
+    copy_optional_string_field(
+        request_root,
+        "request_id",
+        root,
+        "request_id");
+    copy_optional_string_field(
+        request_root,
+        "issued_at",
+        root,
+        "issued_at");
+
+    return root;
+}
+
+static esp_err_t send_json_payload_to_server(
+    udp_transport_t *transport,
+    const char *payload_text)
+{
+    if (transport == NULL || payload_text == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (transport->socket_fd < 0) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    char port_text[8] = {0};
+    snprintf(
+        port_text,
+        sizeof(port_text),
+        "%u",
+        (unsigned int)transport->server_port);
+
+    const struct addrinfo hints = {
+        .ai_family = AF_INET,
+        .ai_socktype = SOCK_DGRAM,
+        .ai_protocol = IPPROTO_IP,
+    };
+
+    struct addrinfo *destination = NULL;
+    const int lookup_status = getaddrinfo(
+        transport->server_host,
+        port_text,
+        &hints,
+        &destination);
+
+    if (lookup_status != 0 || destination == NULL) {
+        return ESP_ERR_NOT_FOUND;
+    }
+
+    const ssize_t bytes_sent = sendto(
+        transport->socket_fd,
+        payload_text,
+        strlen(payload_text),
+        0,
+        destination->ai_addr,
+        destination->ai_addrlen);
+
+    freeaddrinfo(destination);
+
+    if (bytes_sent < 0) {
+        ESP_LOGW(TAG, "sendto(debug_result) failed: errno=%d", errno);
+        return ESP_FAIL;
+    }
+
+    return ESP_OK;
+}
+
+static esp_err_t send_debug_response(
+    udp_transport_t *transport,
+    cJSON *response_root)
+{
+    if (response_root == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    char *response_text = cJSON_PrintUnformatted(response_root);
+    if (response_text == NULL) {
+        return ESP_ERR_NO_MEM;
+    }
+
+    const esp_err_t status =
+        send_json_payload_to_server(transport, response_text);
+
+    cJSON_free(response_text);
+    return status;
+}
 
 static esp_err_t set_socket_receive_timeout(
     int socket_fd,
@@ -266,8 +445,113 @@ static esp_err_t parse_length_field(
     return ESP_OK;
 }
 
+static esp_err_t parse_boolean_field(
+    const cJSON *item,
+    bool *out_value)
+{
+    if (item == NULL || out_value == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (cJSON_IsBool(item)) {
+        *out_value = cJSON_IsTrue(item);
+        return ESP_OK;
+    }
+
+    if (cJSON_IsNumber(item)) {
+        *out_value = item->valuedouble != 0.0;
+        return ESP_OK;
+    }
+
+    if (cJSON_IsString(item) && item->valuestring != NULL) {
+        if (strcasecmp(item->valuestring, "true") == 0 ||
+            strcasecmp(item->valuestring, "on") == 0 ||
+            strcasecmp(item->valuestring, "enable") == 0 ||
+            strcasecmp(item->valuestring, "enabled") == 0 ||
+            strcasecmp(item->valuestring, "resume") == 0 ||
+            strcasecmp(item->valuestring, "resumed") == 0) {
+            *out_value = true;
+            return ESP_OK;
+        }
+
+        if (strcasecmp(item->valuestring, "false") == 0 ||
+            strcasecmp(item->valuestring, "off") == 0 ||
+            strcasecmp(item->valuestring, "disable") == 0 ||
+            strcasecmp(item->valuestring, "disabled") == 0 ||
+            strcasecmp(item->valuestring, "pause") == 0 ||
+            strcasecmp(item->valuestring, "paused") == 0) {
+            *out_value = false;
+            return ESP_OK;
+        }
+    }
+
+    return ESP_ERR_INVALID_ARG;
+}
+
+static esp_err_t parse_sensor_mask_field(
+    const cJSON *sensor_item,
+    const cJSON *addr_item,
+    uint32_t *out_sensor_mask)
+{
+    if (out_sensor_mask == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (cJSON_IsString(sensor_item) &&
+        sensor_item->valuestring != NULL) {
+        if (strcasecmp(sensor_item->valuestring, "pv") == 0 ||
+            strcasecmp(sensor_item->valuestring, "ina226") == 0) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_PV;
+            return ESP_OK;
+        }
+
+        if (strcasecmp(sensor_item->valuestring, "bms") == 0 ||
+            strcasecmp(sensor_item->valuestring, "bq76942") == 0) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_BMS;
+            return ESP_OK;
+        }
+
+        if (strcasecmp(sensor_item->valuestring, "mppt") == 0 ||
+            strcasecmp(sensor_item->valuestring, "bq25798") == 0) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_MPPT;
+            return ESP_OK;
+        }
+
+        if (strcasecmp(sensor_item->valuestring, "all") == 0) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_ALL;
+            return ESP_OK;
+        }
+    }
+
+    if (addr_item != NULL) {
+        uint8_t address = 0;
+        ESP_RETURN_ON_ERROR(
+            parse_byte_field(addr_item, "addr", &address),
+            TAG,
+            "Invalid sensor-control address");
+
+        if (address == INA226_I2C_ADDRESS) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_PV;
+            return ESP_OK;
+        }
+
+        if (address == BQ76942_I2C_ADDRESS) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_BMS;
+            return ESP_OK;
+        }
+
+        if (address == BQ25798_I2C_ADDRESS) {
+            *out_sensor_mask = I2C_SENSOR_GROUP_MPPT;
+            return ESP_OK;
+        }
+    }
+
+    return ESP_ERR_INVALID_ARG;
+}
+
 static esp_err_t handle_i2c_write_command(
-    const cJSON *root)
+    const cJSON *root,
+    cJSON *response_root)
 {
     const cJSON *addr_item =
         cJSON_GetObjectItemCaseSensitive(root, "addr");
@@ -287,11 +571,13 @@ static esp_err_t handle_i2c_write_command(
         parse_byte_field(addr_item, "addr", &address),
         TAG,
         "Invalid I2C address");
+    add_hex_string_field(response_root, "addr", address);
 
     ESP_RETURN_ON_ERROR(
         parse_byte_field(reg_item, "reg", &register_address),
         TAG,
         "Invalid I2C register");
+    add_hex_string_field(response_root, "reg", register_address);
 
     uint8_t write_data[MAX_I2C_COMMAND_DATA_LENGTH] = {0};
     size_t write_length = 0u;
@@ -342,6 +628,17 @@ static esp_err_t handle_i2c_write_command(
         write_length = 1u;
     }
 
+    if (response_root != NULL) {
+        cJSON_AddNumberToObject(
+            response_root,
+            "len",
+            (double)write_length);
+        cJSON_AddItemToObject(
+            response_root,
+            "write_data",
+            create_hex_byte_array(write_data, write_length));
+    }
+
     const esp_err_t status =
         i2c_bus_write_register(
             address,
@@ -362,7 +659,8 @@ static esp_err_t handle_i2c_write_command(
 }
 
 static esp_err_t handle_i2c_read_command(
-    const cJSON *root)
+    const cJSON *root,
+    cJSON *response_root)
 {
     const cJSON *addr_item =
         cJSON_GetObjectItemCaseSensitive(root, "addr");
@@ -381,11 +679,13 @@ static esp_err_t handle_i2c_read_command(
         parse_byte_field(addr_item, "addr", &address),
         TAG,
         "Invalid I2C address");
+    add_hex_string_field(response_root, "addr", address);
 
     ESP_RETURN_ON_ERROR(
         parse_byte_field(reg_item, "reg", &register_address),
         TAG,
         "Invalid I2C register");
+    add_hex_string_field(response_root, "reg", register_address);
 
     if (len_item != NULL || length_item != NULL) {
         ESP_RETURN_ON_ERROR(
@@ -394,6 +694,13 @@ static esp_err_t handle_i2c_read_command(
                 &read_length),
             TAG,
             "Invalid I2C read length");
+    }
+
+    if (response_root != NULL) {
+        cJSON_AddNumberToObject(
+            response_root,
+            "len",
+            (double)read_length);
     }
 
     uint8_t read_data[MAX_I2C_COMMAND_DATA_LENGTH] = {0};
@@ -428,46 +735,269 @@ static esp_err_t handle_i2c_read_command(
         register_address,
         response_text);
 
+    if (response_root != NULL) {
+        cJSON_AddItemToObject(
+            response_root,
+            "data",
+            create_hex_byte_array(read_data, read_length));
+        cJSON_AddStringToObject(
+            response_root,
+            "note",
+            response_text);
+    }
+
     return ESP_OK;
 }
 
-static esp_err_t handle_legacy_target_state(
-    const cJSON *root)
+static esp_err_t handle_sensor_control_command(
+    const cJSON *root,
+    cJSON *response_root)
 {
-    const cJSON *target_item =
-        cJSON_GetObjectItemCaseSensitive(root, "target");
+    const cJSON *sensor_item =
+        cJSON_GetObjectItemCaseSensitive(root, "sensor");
+    const cJSON *addr_item =
+        cJSON_GetObjectItemCaseSensitive(root, "addr");
+    const cJSON *enabled_item =
+        cJSON_GetObjectItemCaseSensitive(root, "enabled");
     const cJSON *state_item =
         cJSON_GetObjectItemCaseSensitive(root, "state");
 
-    if (!cJSON_IsString(target_item) ||
-        !cJSON_IsString(state_item) ||
-        target_item->valuestring == NULL ||
-        state_item->valuestring == NULL) {
+    uint32_t sensor_mask = 0u;
+    bool enabled = false;
+
+    ESP_RETURN_ON_ERROR(
+        parse_sensor_mask_field(
+            sensor_item,
+            addr_item,
+            &sensor_mask),
+        TAG,
+        "Invalid sensor group");
+
+    const cJSON *control_item =
+        enabled_item != NULL ? enabled_item : state_item;
+
+    ESP_RETURN_ON_ERROR(
+        parse_boolean_field(control_item, &enabled),
+        TAG,
+        "Invalid sensor-control state");
+
+    ESP_RETURN_ON_ERROR(
+        i2c_bus_monitor_set_sensor_enabled(
+            sensor_mask,
+            enabled),
+        TAG,
+        "Could not update sensor polling state");
+
+    uint32_t active_mask = 0u;
+    ESP_RETURN_ON_ERROR(
+        i2c_bus_monitor_get_sensor_mask(&active_mask),
+        TAG,
+        "Could not read sensor polling state");
+
+    if (response_root != NULL) {
+        if (cJSON_IsString(sensor_item) &&
+            sensor_item->valuestring != NULL) {
+            cJSON_AddStringToObject(
+                response_root,
+                "sensor",
+                sensor_item->valuestring);
+        } else if (addr_item != NULL) {
+            uint8_t address = 0u;
+            if (parse_byte_field(addr_item, "addr", &address) == ESP_OK) {
+                add_hex_string_field(
+                    response_root,
+                    "addr",
+                    address);
+            }
+        }
+
+        cJSON_AddBoolToObject(
+            response_root,
+            "enabled",
+            enabled);
+        cJSON_AddNumberToObject(
+            response_root,
+            "sensor_mask",
+            (double)sensor_mask);
+        cJSON_AddNumberToObject(
+            response_root,
+            "active_sensor_mask",
+            (double)active_mask);
+        cJSON_AddStringToObject(
+            response_root,
+            "note",
+            enabled
+                ? "Automatic polling resumed for the selected sensor group."
+                : "Automatic polling paused for the selected sensor group.");
+    }
+
+    return ESP_OK;
+}
+
+static const char *acdrv_state_name(
+    i2c_acdrv_state_t state)
+{
+    switch (state) {
+        case I2C_ACDRV1_SELECTED:
+            return "acdrv1";
+
+        case I2C_ACDRV2_SELECTED:
+            return "acdrv2";
+
+        case I2C_ACDRV_DISABLED:
+        default:
+            return "disabled";
+    }
+}
+
+static esp_err_t parse_acdrv_state(
+    const cJSON *item,
+    i2c_acdrv_state_t *out_state)
+{
+    if (!cJSON_IsString(item) ||
+        item->valuestring == NULL ||
+        out_state == NULL) {
         return ESP_ERR_INVALID_ARG;
     }
 
-    if (strcasecmp(target_item->valuestring, "mppt") != 0) {
-        return ESP_ERR_NOT_SUPPORTED;
+    if (strcasecmp(item->valuestring, "acdrv1") == 0) {
+        *out_state = I2C_ACDRV1_SELECTED;
+        return ESP_OK;
     }
 
-    uint8_t register_value = 0;
-
-    if (strcasecmp(state_item->valuestring, "on") == 0) {
-        register_value = 0x1D;
-    } else if (strcasecmp(state_item->valuestring, "off") == 0) {
-        register_value = 0x2D;
-    } else {
-        return ESP_ERR_INVALID_ARG;
+    if (strcasecmp(item->valuestring, "acdrv2") == 0) {
+        *out_state = I2C_ACDRV2_SELECTED;
+        return ESP_OK;
     }
 
-    return i2c_bus_write_register(
-        BQ25798_I2C_ADDRESS,
-        0x13,
-        &register_value,
-        sizeof(register_value));
+    if (strcasecmp(item->valuestring, "disabled") == 0 ||
+        strcasecmp(item->valuestring, "off") == 0) {
+        *out_state = I2C_ACDRV_DISABLED;
+        return ESP_OK;
+    }
+
+    return ESP_ERR_INVALID_ARG;
+}
+
+static esp_err_t handle_acdrv_control_command(
+    const cJSON *root,
+    cJSON *response_root)
+{
+    const cJSON *state_item =
+        cJSON_GetObjectItemCaseSensitive(root, "state");
+    i2c_acdrv_state_t state = I2C_ACDRV_DISABLED;
+
+    ESP_RETURN_ON_ERROR(
+        parse_acdrv_state(state_item, &state),
+        TAG,
+        "Invalid ACDRV state");
+
+    i2c_acdrv_result_t result = {0};
+    const esp_err_t status =
+        i2c_bus_monitor_set_acdrv_state(
+            state,
+            &result);
+
+    if (response_root != NULL) {
+        cJSON_AddStringToObject(
+            response_root,
+            "state",
+            acdrv_state_name(state));
+        add_hex_string_field(
+            response_root,
+            "register_12_before",
+            result.register_12_before);
+        add_hex_string_field(
+            response_root,
+            "register_12_after",
+            result.register_12_after);
+        add_hex_string_field(
+            response_root,
+            "register_13_before",
+            result.register_13_before);
+        add_hex_string_field(
+            response_root,
+            "register_13_after",
+            result.register_13_after);
+        add_hex_string_field(
+            response_root,
+            "acrb_status",
+            result.acrb_status);
+        cJSON_AddBoolToObject(
+            response_root,
+            "acrb1_present",
+            (result.acrb_status & 0x40u) != 0u);
+        cJSON_AddBoolToObject(
+            response_root,
+            "acrb2_present",
+            (result.acrb_status & 0x80u) != 0u);
+        cJSON_AddBoolToObject(
+            response_root,
+            "verified",
+            result.verified);
+        cJSON_AddStringToObject(
+            response_root,
+            "note",
+            status == ESP_OK
+                ? "ACDRV control bits were preserved and verified by readback; confirm the physical PACK voltage separately."
+                : "ACDRV control was not verified; no physical power-path success is claimed.");
+    }
+
+    return status;
+}
+
+static esp_err_t handle_led_control_command(
+    const cJSON *root,
+    cJSON *response_root)
+{
+    const cJSON *enabled_item =
+        cJSON_GetObjectItemCaseSensitive(root, "enabled");
+    const cJSON *state_item =
+        cJSON_GetObjectItemCaseSensitive(root, "state");
+    const cJSON *control_item =
+        enabled_item != NULL ? enabled_item : state_item;
+    bool enabled = false;
+
+    ESP_RETURN_ON_ERROR(
+        parse_boolean_field(control_item, &enabled),
+        TAG,
+        "Invalid LED state");
+
+    ESP_RETURN_ON_ERROR(
+        board_led_set_enabled(enabled),
+        TAG,
+        "Could not update RGB LED");
+
+    bool confirmed_enabled = false;
+    ESP_RETURN_ON_ERROR(
+        board_led_get_enabled(&confirmed_enabled),
+        TAG,
+        "Could not read RGB LED state");
+
+    if (response_root != NULL) {
+        cJSON_AddBoolToObject(
+            response_root,
+            "enabled",
+            confirmed_enabled);
+        cJSON_AddNumberToObject(
+            response_root,
+            "gpio",
+            DEMO_RGB_LED_GPIO);
+        cJSON_AddStringToObject(
+            response_root,
+            "note",
+            confirmed_enabled
+                ? "Addressable RGB status LED is on."
+                : "Addressable RGB status LED is off.");
+    }
+
+    return confirmed_enabled == enabled
+        ? ESP_OK
+        : ESP_ERR_INVALID_RESPONSE;
 }
 
 static esp_err_t handle_command_payload(
+    udp_transport_t *transport,
     const char *payload_text,
     bool *out_handled)
 {
@@ -483,7 +1013,9 @@ static esp_err_t handle_command_payload(
     const cJSON *type_item =
         cJSON_GetObjectItemCaseSensitive(root, "type");
     esp_err_t status = ESP_ERR_NOT_SUPPORTED;
+    esp_err_t response_status = ESP_OK;
     bool handled = false;
+    cJSON *response_root = NULL;
 
     if (cJSON_IsString(type_item) &&
         type_item->valuestring != NULL) {
@@ -491,23 +1023,82 @@ static esp_err_t handle_command_payload(
             status = ESP_OK;
             handled = false;
         } else if (strcmp(type_item->valuestring, "i2c_write") == 0) {
-            status = handle_i2c_write_command(root);
+            response_root =
+                create_debug_response_root(
+                    transport,
+                    root,
+                    "i2c_write");
+            status = handle_i2c_write_command(root, response_root);
             handled = true;
         } else if (strcmp(type_item->valuestring, "i2c_read") == 0) {
-            status = handle_i2c_read_command(root);
+            response_root =
+                create_debug_response_root(
+                    transport,
+                    root,
+                    "i2c_read");
+            status = handle_i2c_read_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "sensor_control") == 0) {
+            response_root =
+                create_debug_response_root(
+                    transport,
+                    root,
+                    "sensor_control");
+            status = handle_sensor_control_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "mppt_acdrv_control") == 0) {
+            response_root =
+                create_debug_response_root(
+                    transport,
+                    root,
+                    "mppt_acdrv_control");
+            status = handle_acdrv_control_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "led_control") == 0) {
+            response_root =
+                create_debug_response_root(
+                    transport,
+                    root,
+                    "led_control");
+            status = handle_led_control_command(root, response_root);
             handled = true;
         }
-    } else if (
-        cJSON_GetObjectItemCaseSensitive(root, "target") != NULL &&
-        cJSON_GetObjectItemCaseSensitive(root, "state") != NULL) {
-        status = handle_legacy_target_state(root);
-        handled = true;
+    }
+
+    if (handled && response_root != NULL) {
+        cJSON_AddBoolToObject(response_root, "ok", status == ESP_OK);
+        cJSON_AddStringToObject(
+            response_root,
+            "status",
+            status == ESP_OK ? "ok" : "error");
+
+        if (status != ESP_OK) {
+            cJSON_AddStringToObject(
+                response_root,
+                "error",
+                esp_err_to_name(status));
+        }
+
+        response_status =
+            send_debug_response(transport, response_root);
+
+        if (response_status != ESP_OK) {
+            ESP_LOGW(
+                TAG,
+                "Could not send debug response: %s",
+                esp_err_to_name(response_status));
+        }
     }
 
     cJSON_Delete(root);
+    cJSON_Delete(response_root);
 
     if (out_handled != NULL) {
         *out_handled = handled;
+    }
+
+    if (status == ESP_OK && response_status != ESP_OK) {
+        return response_status;
     }
 
     return status;
@@ -660,6 +1251,7 @@ esp_err_t udp_transport_send_power_telemetry(
         bool handled_command = false;
         const esp_err_t command_status =
             handle_command_payload(
+                transport,
                 incoming,
                 &handled_command);
 
@@ -749,6 +1341,7 @@ esp_err_t udp_transport_poll_command(
 
     const esp_err_t status =
         handle_command_payload(
+            transport,
             incoming,
             out_handled);
 

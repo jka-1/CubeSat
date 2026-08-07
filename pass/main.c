@@ -33,36 +33,6 @@ void app_main(void)
     }
 
     /*
-     * Choose only one of these BQ25798 commands.
-     *
-     * EN_ACDRV1:
-     * i2cset -c 0x6B -r 0x13 0x1D
-     */
-    const uint8_t enable_acdrv1 = 0x1D;
-
-    status = i2c_bus_write_register(
-        BQ25798_I2C_ADDRESS,
-        0x13,
-        &enable_acdrv1,
-        sizeof(enable_acdrv1));
-
-    if (status != ESP_OK) {
-        ESP_LOGW(
-            TAG,
-            "BQ25798 EN_ACDRV1 write failed: %s",
-            esp_err_to_name(status));
-    }
-
-    /*
-     * Do not issue 0x1D and 0x2D sequentially unless you intentionally
-     * want the second value to replace the first.
-     *
-     * To use EN_ACDRV2 instead, replace enable_acdrv1 above with:
-     *
-     * const uint8_t enable_acdrv2 = 0x2D;
-     */
-
-    /*
      * Equivalent to:
      *
      * i2cset -c 0x08 -r 0x14

@@ -38,7 +38,7 @@ Field order for version `0x0003`:
 13. `bms_cell10_raw`
 14. `bq25798_reg13_raw`
 15. `bq25798_fault20_raw`
-16. `reserved`
+16. tagged sensor polling mask (`0xA500 | active_mask`)
 
 Confirmed current hardware mapping:
 
@@ -122,7 +122,11 @@ The bridge exposes:
 Recommended direct I2C command payloads:
 
 - `{"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}`
-- `{"type":"i2c_write","addr":"0x6B","reg":"0x13","data":["0x1D"]}`
-- `{"type":"i2c_write","addr":"0x6B","reg":"0x13","data":["0x2D"]}`
+- `{"type":"i2c_write","addr":"0x40","reg":"0x05","data":["0x0A","0x00"]}`
+
+Do not use a full-register write to BQ25798 register `0x13` for ACDRV selection. That control needs a
+masked read/modify/write command so unrelated control bits are preserved. The typed
+`mppt_acdrv_control` command uses `REG13.EN_ACDRV1/2` for selection and `REG12.DIS_ACDRV` to disable
+both paths, then verifies both registers by readback. Physical PACK voltage must be measured separately.
 
 The bridge forwards those commands over UDP to the last telemetry source, or to a fixed command target if configured on the server.

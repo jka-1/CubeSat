@@ -1,6 +1,7 @@
 idf_component_register(
     SRCS
         "main.c"
+        "board_led.c"
         "wifi_station.c"
         "sensor_provider.c"
         "udp_transport.c"
@@ -22,4 +23,5 @@ idf_component_register(
     PRIV_REQUIRES
         esp_driver_tsens
         esp_driver_i2c
+        led_strip
 )

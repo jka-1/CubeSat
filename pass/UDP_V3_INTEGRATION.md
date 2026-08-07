@@ -27,13 +27,13 @@ The formatter builds this 16-word ASCII hex packet:
 13. BQ76942 cell 10 raw
 14. BQ25798 register `0x13` raw
 15. BQ25798 register `0x20` raw
-16. reserved
+16. tagged sensor polling mask (`0xA500 | active_mask`)
 
 ## Example from the validated sample
 
 Using the sample output that was already confirmed in the lab, the formatted packet is:
 
-`4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D006100000000`
+`4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507`
 
 ## Example usage
 
@@ -70,3 +70,4 @@ Then send `packet_hex` over UDP to the droplet on port `3333`.
   - BQ25798 register `0x13` as the ACDRV1 / ACDRV2 selector
   - BQ25798 register `0x20` as the MPPT fault bitmask
 - There is currently no second INA226, so load telemetry is intentionally unavailable.
+- Sensor polling mask bits are PV=`0x01`, BMS=`0x02`, and MPPT=`0x04`.

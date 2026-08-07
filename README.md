@@ -1,6 +1,6 @@
 # CubeSat Demo Telemetry Dashboard
 
-This branch contains the working demo telemetry stack for Tuesday, August 4, 2026:
+This branch contains the hardened 1-4 telemetry handoff for Saturday, August 8, 2026:
 
 - the static dashboard site
 - the UDP-to-SSE telemetry bridge
@@ -9,6 +9,8 @@ This branch contains the working demo telemetry stack for Tuesday, August 4, 202
 
 For the current validated `pass/` firmware, the recommended immediate test format is the `0x0003`
 combined raw packet. The bridge decodes those raw register values into the dashboard view.
+
+Use [`LAB_HANDOFF.md`](LAB_HANDOFF.md) for the deployment and hardware acceptance checklist.
 
 ## What this version covers
 
@@ -20,10 +22,13 @@ The dashboard is set up to display these five groups:
 - BMS cell voltages
 - optional load telemetry when a second INA226 is available
 
-The bridge also supports high-level commands for:
+The bridge supports these test-ready command paths for this firmware build:
 
-- ACDRV1 / ACDRV2 input selection
-- LED on / off
+- direct I2C register reads and writes
+- sensor polling pause / resume for PV, BMS, MPPT, or all sensors
+- verified BQ25798 ACDRV1 / ACDRV2 / disable control
+- ESP32-S3-DevKitC-1 addressable RGB LED on / off control
+- correlated ESP32 command results with explicit timeout reporting
 
 ## Repository layout
 
@@ -35,7 +40,7 @@ The bridge also supports high-level commands for:
 
 ## Live deployment values
 
-- branch: `demo-telemetry-dashboard`
+- branch: `telemetry-fixes-addons`
 - repo checkout on droplet: `/opt/cubesat-demo/repo`
 - live site root: `/var/www/html`
 - live bridge file: `/opt/cubesat-telemetry/server.js`
@@ -73,11 +78,11 @@ Field order:
 13. BMS cell 10 raw
 14. BQ25798 register `0x13` raw
 15. BQ25798 fault register `0x20` raw
-16. reserved
+16. tagged sensor polling mask (`0xA500 | active_mask`)
 
 Known-good example packet:
 
-`4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D006100000000`
+`4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507`
 
 Expected decoded values from that example:
 
@@ -91,6 +96,7 @@ Expected decoded values from that example:
 - MPPT register `0x13`: `0x61` -> `ACDRV1`
 - MPPT faults: none
 - load: unavailable in the current validated hardware
+- automatic polling mask: `0x07` (PV, BMS, and MPPT enabled)
 
 ## Droplet deploy flow
 
@@ -101,14 +107,16 @@ mkdir -p /opt/cubesat-demo
 cd /opt/cubesat-demo
 git clone https://github.com/jka-1/CubeSat.git repo
 cd repo
-git checkout demo-telemetry-dashboard
+git checkout telemetry-fixes-addons
 ```
 
 Deploy with backup:
 
 ```bash
 cd /opt/cubesat-demo/repo
-SERVICE_NAME=cubesat-telemetry.service ./scripts/deploy-live.sh
+SERVICE_NAME=cubesat-telemetry.service \
+EXPECTED_BRANCH=telemetry-fixes-addons \
+./scripts/deploy-live.sh
 ```
 
 The deploy script automatically:
@@ -117,6 +125,17 @@ The deploy script automatically:
 - copies `site/` into `/var/www/html`
 - copies `telemetry-bridge/server.js` into `/opt/cubesat-telemetry/server.js`
 - restarts `cubesat-telemetry.service`
+- requires the bridge health check to pass before reporting success
+
+Before deploying, configure a temporary lab command token in the service environment:
+
+```ini
+[Service]
+Environment="COMMAND_TOKEN=replace-with-a-random-lab-token"
+```
+
+Use `systemctl edit cubesat-telemetry.service` to add the override, then run
+`systemctl daemon-reload`. Communicate the token to the lab operator separately; do not commit it.
 
 ## Verification
 
@@ -136,13 +155,14 @@ Inject a known-good test packet locally:
 
 ```bash
 printf '%s\n' '4353000200010E3800DC130604D8000100000FB40FAA0F960FA000B4085203D4' | nc -u -w1 127.0.0.1 3333
-printf '%s\n' '4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D006100000000' | nc -u -w1 127.0.0.1 3333
+printf '%s\n' '4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507' | nc -u -w1 127.0.0.1 3333
 ```
 
 When telemetry is working, health should show:
 
 - `"telemetry_connected": true`
 - `"command_ready": true`
+- `"command_auth_configured": true`
 
 ## Command path
 
@@ -151,29 +171,19 @@ The bridge accepts:
 - `POST /command`
 - `POST /api/demo/command`
 
-Legacy high-level command payloads still supported by the bridge:
-
-```json
-{"target":"mppt","state":"on"}
-{"target":"mppt","state":"off"}
-{"target":"led","state":"on"}
-{"target":"led","state":"off"}
-```
-
-For the current validated hardware, the dashboard uses direct I2C write commands for MPPT input
-selection instead:
-
-```json
-{"type":"i2c_write","addr":"0x6B","reg":"0x13","data":["0x1D"]}
-{"type":"i2c_write","addr":"0x6B","reg":"0x13","data":["0x2D"]}
-```
-
 The bridge also accepts direct JSON I2C command payloads for firmware that exposes generic
 register access over UDP:
 
 ```json
 {"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}
-{"type":"i2c_write","addr":"0x08","reg":"0x20","data":["0x1D"]}
+{"type":"i2c_write","addr":"0x40","reg":"0x05","data":["0x0A","0x00"]}
+{"type":"sensor_control","sensor":"bms","enabled":false}
+{"type":"sensor_control","sensor":"bms","enabled":true}
+{"type":"mppt_acdrv_control","state":"acdrv1"}
+{"type":"mppt_acdrv_control","state":"acdrv2"}
+{"type":"mppt_acdrv_control","state":"disabled"}
+{"type":"led_control","enabled":true}
+{"type":"led_control","enabled":false}
 ```
 
 Example local command test:
@@ -181,13 +191,27 @@ Example local command test:
 ```bash
 curl -X POST http://127.0.0.1:8080/command \
   -H 'Content-Type: application/json' \
-  -d '{"target":"led","state":"on"}'
+  -H 'X-Command-Token: replace-with-the-lab-token' \
+  -d '{"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}'
 ```
+
+Current branch note:
+
+- ACDRV commands update only BQ25798 `REG12.DIS_ACDRV` and `REG13.EN_ACDRV1/2`, preserve unrelated
+  bits, and require readback before reporting success. PACK voltage still requires physical measurement.
+- The addressable RGB LED defaults to GPIO 38 for ESP32-S3-DevKitC-1 v1.1 and boots off. Initial
+  board revisions use GPIO 48 and require changing `DEMO_RGB_LED_GPIO` before flashing.
+- The command page now shows the live ESP32 UDP endpoint at the bottom once telemetry is seen.
+- When sensor polling is paused, the dashboard keeps showing the last held values for that group
+  until polling is resumed; the page now calls this out explicitly.
 
 Important behavior:
 
-- the bridge sends commands to the last telemetry source by default
+- the bridge sends commands only to a fresh telemetry source by default
 - firmware should keep the UDP socket open so the same source can receive commands
+- commands become timed out when the ESP32 does not return a matching result within four seconds
+- only BMS `0x08`, PV `0x40`, and MPPT `0x6B` are accepted by the structured debug interface
+- raw command payloads and browser-selected target hosts remain intentionally unavailable
 - a fixed command target can also be configured with:
   - `COMMAND_TARGET_HOST`
   - `COMMAND_TARGET_PORT`
@@ -250,4 +274,5 @@ packet.
 
 ## Legacy packet support
 
-The bridge still supports the older `0x0001` raw INA226 packet, but that format is not the recommended default. Use `0x0002` unless there is a strong reason to keep raw register words.
+The bridge still supports the older `0x0001` and `0x0002` packets, but neither carries authoritative
+sensor polling state. Use `0x0003` for the current firmware.

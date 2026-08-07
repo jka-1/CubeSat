@@ -15,6 +15,15 @@
 #define DEMO_DEVICE_ID               "esp32-telemetry"
 
 /*
+ * ESP32-S3-DevKitC-1 v1.1 uses GPIO38 for its addressable RGB LED.
+ * The initial board revision uses GPIO48 instead.
+ */
+#define DEMO_RGB_LED_GPIO            38
+#define DEMO_RGB_LED_RED             0u
+#define DEMO_RGB_LED_GREEN           24u
+#define DEMO_RGB_LED_BLUE            0u
+
+/*
  * Demo timing and retry behavior.
  */
 #define DEMO_STREAM_PERIOD_MS        1000u

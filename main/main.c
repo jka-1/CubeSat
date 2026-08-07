@@ -2,6 +2,7 @@
 #include <inttypes.h>
 
 #include "app_config.h"
+#include "board_led.h"
 #include "esp_log.h"
 #include "i2c_bus_monitor.h"
 #include "sensor_provider.h"
@@ -146,6 +147,7 @@ static void telemetry_task(void *argument)
             DEMO_DEVICE_ID));
 
     uint32_t consecutive_errors = 0;
+    uint32_t sample_number = 0;
 
     while (true) {
         xEventGroupWaitBits(
@@ -162,6 +164,7 @@ static void telemetry_task(void *argument)
             pdMS_TO_TICKS(DEMO_STREAM_PERIOD_MS);
 
         power_telemetry_t telemetry = {0};
+        telemetry.sample_number = ++sample_number;
         telemetry_packet_v3_meta_t meta = {
             .sequence = 0,
             .has_mcu_temperature = false,
@@ -250,6 +253,7 @@ void app_main(void)
         TAG,
         "Starting CubeSat live telemetry demo firmware");
 
+    ESP_ERROR_CHECK(board_led_init());
     ESP_ERROR_CHECK(sensor_provider_init());
     ESP_ERROR_CHECK(i2c_bus_monitor_init());
     apply_startup_hardware_configuration();

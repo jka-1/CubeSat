@@ -208,24 +208,94 @@
               value="/telemetry/command"
               aria-label="Telemetry command endpoint URL"
             />
-            <button class="button" id="mpptOnButton" type="button">Select ACDRV1</button>
-            <button class="button secondary" id="mpptOffButton" type="button">Select ACDRV2</button>
-            <button class="button" id="ledOnButton" type="button">LED On</button>
-            <button class="button secondary" id="ledOffButton" type="button">LED Off</button>
+            <input
+              id="commandTokenInput"
+              class="input"
+              type="password"
+              autocomplete="off"
+              placeholder="Temporary lab command token"
+              aria-label="Temporary lab command token"
+            />
           </div>
           <div class="telemetry-toolbar">
+            <select id="debugCommandType" class="input" aria-label="Debug command type">
+              <option value="i2c_read">I2C Read</option>
+              <option value="i2c_write">I2C Write</option>
+            </select>
             <input
-              id="customCommandInput"
+              id="debugAddrInput"
               class="input"
-              placeholder='Optional raw payload, for example {"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}'
-              aria-label="Custom command payload"
+              value="0x6B"
+              placeholder="Device address"
+              aria-label="I2C device address"
             />
-            <button class="button secondary" id="sendCustomCommandButton" type="button">Send Custom</button>
+            <input
+              id="debugRegInput"
+              class="input"
+              value="0x13"
+              placeholder="Register"
+              aria-label="I2C register address"
+            />
+            <input
+              id="debugLenInput"
+              class="input"
+              value="1"
+              placeholder="Read size"
+              aria-label="I2C read size"
+            />
+            <input
+              id="debugDataInput"
+              class="input"
+              placeholder="Write bytes, for example 0x0A 0x00"
+              aria-label="I2C write data"
+            />
+            <button class="button secondary" id="sendDebugCommandButton" type="button">Send Debug</button>
           </div>
+          <div class="telemetry-toolbar">
+            <select id="sensorControlSelect" class="input" aria-label="Sensor polling control">
+              <option value="pv">PV / INA226</option>
+              <option value="bms">BMS / BQ76942</option>
+              <option value="mppt">MPPT / BQ25798</option>
+              <option value="all">All Sensors</option>
+            </select>
+            <button class="button secondary" id="pauseSensorButton" type="button">Pause Polling</button>
+            <button class="button" id="resumeSensorButton" type="button">Resume Polling</button>
+          </div>
+          <div class="telemetry-toolbar">
+            <select id="acdrvControlSelect" class="input" aria-label="BQ25798 ACDRV control">
+              <option value="acdrv1">Select ACDRV1</option>
+              <option value="acdrv2">Select ACDRV2</option>
+              <option value="disabled">Disable Both ACDRV Paths</option>
+            </select>
+            <button class="button secondary" id="applyAcdrvButton" type="button">
+              Apply Verified ACDRV Control
+            </button>
+            <button class="button" id="ledOnButton" type="button">RGB LED On</button>
+            <button class="button secondary" id="ledOffButton" type="button">RGB LED Off</button>
+          </div>
+          <pre id="commandResultLog" class="telemetry-log">Debug results will appear here.</pre>
         </div>
         <p id="commandTargetNote" class="footer-note">
           Commands are sent through the droplet bridge to the last telemetry source unless a fixed
           command target is configured on the server.
+        </p>
+        <p id="commandAvailabilityNote" class="footer-note">
+          Debug controls are locked until the bridge has a fresh ESP32 command target.
+        </p>
+        <p class="footer-note">
+          Supported debug devices: BMS <code>0x08</code>, PV <code>0x40</code>, and MPPT
+          <code>0x6B</code>. ACDRV commands preserve unrelated register bits and require readback;
+          physical PACK voltage must still be confirmed at the hardware.
+        </p>
+        <p class="footer-note">
+          RGB LED control targets the ESP32-S3-DevKitC-1 v1.1 addressable LED on GPIO 38. Initial
+          board revisions require changing the firmware setting to GPIO 48 before flashing.
+        </p>
+        <p id="nodeAddressNote" class="footer-note">
+          ESP32 node address will appear here once live telemetry arrives.
+        </p>
+        <p id="sensorPollingNote" class="footer-note">
+          Sensor polling status will appear here once live telemetry arrives.
         </p>
       </div>
     </section>
@@ -234,6 +304,6 @@
   <p class="footer-note">
     Expected live payload groups: <code>mcu</code>, <code>pv</code>, <code>mppt</code>,
     <code>bms</code>, and optional <code>load</code>. This page listens to the existing same-origin
-    event stream so the current droplet transport can stay in place for the Tuesday demo.
+    event stream so the current droplet transport can stay in place for the lab handoff.
   </p>
 </section>

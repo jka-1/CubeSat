@@ -36,11 +36,38 @@ const mockMetadata = {
   receivedAt: 'Local render'
 };
 
+const sensorDefaults = {
+  pv: '0x40',
+  bms: '0x08',
+  mppt: '0x6B',
+  all: ''
+};
+const sensorGroups = [
+  { key: 'pv', label: 'PV / INA226', mask: 0x01 },
+  { key: 'bms', label: 'BMS / BQ76942', mask: 0x02 },
+  { key: 'mppt', label: 'MPPT / BQ25798', mask: 0x04 }
+];
+const allSensorMask = sensorGroups.reduce((mask, group) => mask | group.mask, 0);
+
 let state = structuredClone(initialTelemetry);
 let streamMetadata = { ...mockMetadata };
 let mockTimer = null;
 let eventSource = null;
 let streamErrorLogged = false;
+let sensorPollingState = null;
+let bridgeCommandReady = false;
+let commandAuthRequired = true;
+const pendingCommandIds = new Set();
+const finishedCommandIds = new Set();
+
+const commandButtonIds = [
+  'sendDebugCommandButton',
+  'pauseSensorButton',
+  'resumeSensorButton',
+  'applyAcdrvButton',
+  'ledOnButton',
+  'ledOffButton'
+];
 
 function deriveCommandUrl(streamUrl) {
   if (typeof streamUrl !== 'string' || !streamUrl.trim()) {
@@ -90,6 +117,13 @@ function writeLog(message) {
   telemetryLog.textContent = `[${timestamp}] ${message}\n${telemetryLog.textContent}`;
 }
 
+function writeCommandResult(message) {
+  const commandResultLog = document.getElementById('commandResultLog');
+  if (!commandResultLog) return;
+  const timestamp = new Date().toLocaleTimeString();
+  commandResultLog.textContent = `[${timestamp}] ${message}\n${commandResultLog.textContent}`;
+}
+
 function setStreamStatus(text, online = false) {
   const streamStatus = document.getElementById('i2cBusStatus');
   if (!streamStatus) return;
@@ -106,6 +140,161 @@ function setDetailNote(text) {
 function setCommandTargetNote(text) {
   const commandTargetNote = document.getElementById('commandTargetNote');
   if (commandTargetNote) commandTargetNote.textContent = text;
+}
+
+function setNodeAddressNote(text) {
+  const nodeAddressNote = document.getElementById('nodeAddressNote');
+  if (nodeAddressNote) nodeAddressNote.textContent = text;
+}
+
+function setSensorPollingNote(text) {
+  const sensorPollingNote = document.getElementById('sensorPollingNote');
+  if (sensorPollingNote) sensorPollingNote.textContent = text;
+}
+
+function setCommandAvailabilityNote(text) {
+  const commandAvailabilityNote = document.getElementById('commandAvailabilityNote');
+  if (commandAvailabilityNote) commandAvailabilityNote.textContent = text;
+}
+
+function commandTokenValue() {
+  return document.getElementById('commandTokenInput')?.value?.trim() || '';
+}
+
+function updateCommandControls() {
+  const credentialReady = !commandAuthRequired || commandTokenValue().length > 0;
+  const noCommandPending = pendingCommandIds.size === 0;
+  const enabled = bridgeCommandReady && credentialReady && noCommandPending;
+
+  commandButtonIds.forEach((buttonId) => {
+    const button = document.getElementById(buttonId);
+    if (button) button.disabled = !enabled;
+  });
+
+  if (!bridgeCommandReady) {
+    setCommandAvailabilityNote(
+      'Debug controls are locked until the bridge has a fresh ESP32 command target.'
+    );
+  } else if (!credentialReady) {
+    setCommandAvailabilityNote(
+      'Enter the temporary lab command token to unlock pause, resume, read, and write controls.'
+    );
+  } else if (!noCommandPending) {
+    setCommandAvailabilityNote(
+      'Waiting for the ESP32 to finish the current command before another command is sent.'
+    );
+  } else {
+    setCommandAvailabilityNote(
+      'Debug, verified ACDRV, and GPIO-38 RGB LED controls are ready.'
+    );
+  }
+}
+
+function trackPendingCommand(requestId, summary) {
+  if (!requestId) return;
+  if (finishedCommandIds.has(requestId)) return;
+  if (pendingCommandIds.has(requestId)) {
+    updateCommandControls();
+    return;
+  }
+  pendingCommandIds.add(requestId);
+  writeCommandResult(`${summary || 'Command'} request ${requestId} pending ESP32 response.`);
+  updateCommandControls();
+}
+
+function finishPendingCommand(requestId) {
+  if (requestId) {
+    pendingCommandIds.delete(requestId);
+    finishedCommandIds.add(requestId);
+    if (finishedCommandIds.size > 100) {
+      finishedCommandIds.delete(finishedCommandIds.values().next().value);
+    }
+  }
+  updateCommandControls();
+}
+
+function formatEndpoint(endpoint) {
+  if (!endpoint?.address || !endpoint?.port) return null;
+  return `${endpoint.address}:${endpoint.port}`;
+}
+
+function normalizeSensorMask(value) {
+  if (value === undefined || value === null || value === '') return null;
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) return null;
+  return parsed & allSensorMask;
+}
+
+function createSensorPollingState(activeMask, source = 'node-response', updatedAt = null) {
+  const normalizedMask = activeMask & allSensorMask;
+  const pausedSensors = sensorGroups
+    .filter((group) => (normalizedMask & group.mask) === 0)
+    .map((group) => group.label);
+
+  return {
+    activeMask: normalizedMask,
+    pausedSensors,
+    allEnabled: pausedSensors.length === 0,
+    source,
+    updatedAt
+  };
+}
+
+function applySensorPollingState(candidate) {
+  const activeMask = normalizeSensorMask(
+    candidate?.active_sensor_mask ?? candidate?.activeSensorMask ?? candidate?.activeMask
+  );
+
+  if (activeMask === null) return;
+
+  sensorPollingState = createSensorPollingState(
+    activeMask,
+    candidate?.source || 'node-response',
+    candidate?.updated_at || candidate?.updatedAt || null
+  );
+
+  if (sensorPollingState.allEnabled) {
+    const suffix = sensorPollingState.source === 'firmware-default'
+      ? ' (firmware default after boot).'
+      : '.';
+    setSensorPollingNote(`Automatic polling is active for all sensor groups${suffix}`);
+    return;
+  }
+
+  setSensorPollingNote(
+    `Automatic polling is paused for ${sensorPollingState.pausedSensors.join(', ')}. ` +
+      'Displayed telemetry for paused groups is held until polling resumes.'
+  );
+}
+
+function applyDebugCommandMode() {
+  const commandType = document.getElementById('debugCommandType');
+  const lenInput = document.getElementById('debugLenInput');
+  const dataInput = document.getElementById('debugDataInput');
+
+  if (!commandType || !lenInput || !dataInput) return;
+
+  const isRead = commandType.value === 'i2c_read';
+  lenInput.disabled = !isRead;
+  dataInput.disabled = isRead;
+
+  if (isRead) {
+    dataInput.placeholder = 'Write data is not used for reads';
+  } else {
+    dataInput.placeholder = 'Write bytes, for example 0x0A 0x00';
+  }
+}
+
+function onSensorControlSelectChange() {
+  const sensorSelect = document.getElementById('sensorControlSelect');
+  const addrInput = document.getElementById('debugAddrInput');
+
+  if (!sensorSelect || !addrInput) return;
+
+  const defaultAddress = sensorDefaults[sensorSelect.value];
+  if (defaultAddress) {
+    addrInput.value = defaultAddress;
+  }
 }
 
 function statusColor(status) {
@@ -561,27 +750,132 @@ function normalizePacket(envelope) {
 function applyTelemetryPacket(packetEnvelope) {
   if (packetEnvelope?.type === 'status') {
     const telemetryConnected = Boolean(packetEnvelope.telemetry_connected);
+    bridgeCommandReady = Boolean(packetEnvelope.command_ready);
+    commandAuthRequired = packetEnvelope.command_auth_required !== false;
     setStreamStatus(
-      telemetryConnected ? 'Bridge ready for telemetry' : 'Waiting for telemetry source',
+      telemetryConnected ? 'Live ESP32 telemetry' : 'ESP32 telemetry stale or unavailable',
       telemetryConnected
     );
     if (packetEnvelope.telemetry_endpoint?.address && packetEnvelope.telemetry_endpoint?.port) {
-      setCommandTargetNote(
-        `Bridge command target: ${packetEnvelope.telemetry_endpoint.address}:${packetEnvelope.telemetry_endpoint.port}`
+      const ageText = Number.isFinite(Number(packetEnvelope.telemetry_age_ms))
+        ? `; last packet ${Math.round(Number(packetEnvelope.telemetry_age_ms) / 1000)}s ago`
+        : '';
+      setNodeAddressNote(
+        `ESP32 node: ${formatEndpoint(packetEnvelope.telemetry_endpoint)}${ageText}`
       );
+      setCommandTargetNote(packetEnvelope.command_target
+        ? `Bridge command target: ${formatEndpoint(packetEnvelope.command_target)} (${packetEnvelope.command_target.source})`
+        : 'Last ESP32 endpoint is stale; commands are locked until fresh telemetry arrives.');
     } else if (packetEnvelope.command_ready) {
+      setNodeAddressNote(
+        'ESP32 node address will appear here once live telemetry is received from the bridge target.'
+      );
       setCommandTargetNote(
         'Bridge command target is configured on the server and ready to use.'
       );
     } else {
+      setNodeAddressNote(
+        'ESP32 node address will appear here once live telemetry arrives.'
+      );
       setCommandTargetNote(
         'Commands will be sent to the last telemetry source once the ESP32 starts streaming.'
+      );
+    }
+    if (packetEnvelope.sensor_polling) {
+      applySensorPollingState(packetEnvelope.sensor_polling);
+      if (!telemetryConnected) {
+        setSensorPollingNote(
+          'ESP32 telemetry is stale. The polling state shown here is the last confirmed state.'
+        );
+      }
+    } else if (!telemetryConnected) {
+      sensorPollingState = null;
+      setSensorPollingNote(
+        'Sensor polling status will appear here once the ESP32 starts streaming.'
       );
     }
     writeLog(
       `Bridge status: ${telemetryConnected ? 'telemetry source seen' : 'waiting for telemetry source'}; ` +
         `${packetEnvelope.web_clients ?? 0} web client(s).`
     );
+    updateCommandControls();
+    return;
+  }
+
+  if (packetEnvelope?.type === 'command_status') {
+    const requestId = packetEnvelope.request_id || null;
+    const commandStatus = String(packetEnvelope.status || 'unknown');
+
+    if (commandStatus === 'pending') {
+      if (requestId && !pendingCommandIds.has(requestId)) {
+        trackPendingCommand(requestId, packetEnvelope.summary);
+      }
+      return;
+    }
+
+    if (commandStatus === 'timed_out') {
+      finishPendingCommand(requestId);
+      const message = `${packetEnvelope.summary || 'Command'} request ${requestId || 'unknown'} timed out: ` +
+        `${packetEnvelope.error || 'no ESP32 response received'}`;
+      writeCommandResult(message);
+      writeLog(message);
+      return;
+    }
+
+    if (['completed', 'failed'].includes(commandStatus)) {
+      finishPendingCommand(requestId);
+    }
+    return;
+  }
+
+  if (packetEnvelope?.type === 'debug_result') {
+    const packet = packetEnvelope?.packet || packetEnvelope;
+    const commandType = String(packet?.command_type || 'command');
+    const requestId = packet?.request_id ? ` request ${packet.request_id}` : '';
+    const status = packet?.ok === false || packet?.status === 'error' ? 'failed' : 'ok';
+    finishPendingCommand(packet?.request_id);
+    const targetText = commandType === 'sensor_control' && packet?.sensor
+      ? ` ${String(packet.sensor).toUpperCase()}`
+      : commandType === 'mppt_acdrv_control' && packet?.state
+        ? ` ${String(packet.state).toUpperCase()}`
+        : commandType === 'led_control' && Number.isInteger(packet?.gpio)
+          ? ` GPIO${packet.gpio}`
+      : packet?.addr && packet?.reg
+        ? ` ${packet.addr}/${packet.reg}`
+        : '';
+    const pollingMaskText = commandType === 'sensor_control' &&
+      normalizeSensorMask(packet?.active_sensor_mask) !== null
+      ? ` [active mask 0x${normalizeSensorMask(packet.active_sensor_mask).toString(16).toUpperCase()}]`
+      : '';
+    const byteText = Array.isArray(packet?.data) && packet.data.length > 0
+      ? ` -> ${packet.data.join(' ')}`
+      : Array.isArray(packet?.write_data) && packet.write_data.length > 0
+        ? ` (${packet.write_data.join(' ')})`
+        : '';
+    const acdrvText = commandType === 'mppt_acdrv_control'
+      ? ` [REG12 ${packet?.register_12_before || '?'} -> ${packet?.register_12_after || '?'}, ` +
+        `REG13 ${packet?.register_13_before || '?'} -> ${packet?.register_13_after || '?'}, ` +
+        `ACRB ${packet?.acrb_status || '?'}]`
+      : '';
+    const extraText = packet?.error
+      ? ` (${packet.error})`
+      : packet?.note
+        ? ` (${packet.note})`
+        : '';
+
+    if (commandType === 'sensor_control') {
+      applySensorPollingState({
+        active_sensor_mask: packet?.active_sensor_mask,
+        source: 'node-response',
+        updated_at: packetEnvelope?.received_at
+      });
+    }
+
+    const message =
+      `${commandType}${targetText}${requestId} ${status}${byteText}${pollingMaskText}${acdrvText}${extraText}`;
+
+    writeCommandResult(message);
+    writeLog(`Debug response: ${message}`);
     return;
   }
 
@@ -597,6 +891,11 @@ function applyTelemetryPacket(packetEnvelope) {
   state = normalizedPacket.telemetry;
   streamMetadata = normalizedPacket.metadata;
   renderTelemetry(state, streamMetadata);
+  if (packetEnvelope?.network?.remote_address && packetEnvelope?.network?.remote_port) {
+    setNodeAddressNote(
+      `ESP32 node: ${packetEnvelope.network.remote_address}:${packetEnvelope.network.remote_port}`
+    );
+  }
   setDetailNote('Live packet applied from the droplet event stream.');
   writeLog(
     `Telemetry packet applied from ${streamMetadata.deviceId} ` +
@@ -645,13 +944,20 @@ function startMockData() {
   if (mockTimer) clearInterval(mockTimer);
 
   streamMetadata = { ...mockMetadata };
+  bridgeCommandReady = false;
+  pendingCommandIds.clear();
+  finishedCommandIds.clear();
   setStreamStatus('Mock data active', false);
+  sensorPollingState = null;
   setDetailNote(
     'Mock data is active by default. Use Connect Live when the firmware begins sending the new I2C telemetry packet.'
   );
   setCommandTargetNote(
-    'Commands are idle in mock mode. Connect to the live bridge before using MPPT or LED controls.'
+    'Commands are idle in mock mode. Connect to the live bridge before using MPPT, pause/resume, or debug controls.'
   );
+  setNodeAddressNote('ESP32 node address is unavailable in mock mode.');
+  setSensorPollingNote('Sensor polling status is unavailable in mock mode.');
+  updateCommandControls();
   writeLog('Mock telemetry enabled.');
   randomizeMockTelemetry();
   mockTimer = setInterval(randomizeMockTelemetry, 2400);
@@ -716,6 +1022,8 @@ function connectTelemetryStream() {
 
   eventSource.addEventListener('error', () => {
     setStreamStatus('Stream reconnecting', false);
+    bridgeCommandReady = false;
+    updateCommandControls();
     if (!streamErrorLogged) {
       writeLog('Telemetry stream interrupted. The browser will retry automatically.');
       streamErrorLogged = true;
@@ -734,13 +1042,29 @@ function onMockClick() {
 async function sendCommandRequest(payload) {
   const commandUrlElement = document.getElementById('commandUrl');
   const commandUrl = commandUrlElement?.value?.trim() || '/telemetry/command';
+  const commandToken = commandTokenValue();
+
+  if (!bridgeCommandReady) {
+    writeLog('Command blocked: wait for a fresh ESP32 command target.');
+    updateCommandControls();
+    return;
+  }
+
+  if (commandAuthRequired && !commandToken) {
+    writeLog('Command blocked: enter the temporary lab command token.');
+    updateCommandControls();
+    return;
+  }
 
   try {
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+    if (commandToken) headers['X-Command-Token'] = commandToken;
+
     const response = await fetch(commandUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers,
       body: JSON.stringify(payload)
     });
 
@@ -753,64 +1077,163 @@ async function sendCommandRequest(payload) {
       ? `${result.target.address}:${result.target.port}`
       : 'bridge default target';
 
-    writeLog(`Command sent (${result.summary}) to ${targetText}.`);
+    const requestIdText = result?.request_id ? ` request ${result.request_id}` : '';
+    trackPendingCommand(result?.request_id, result?.summary);
+    writeLog(`Command accepted (${result.summary})${requestIdText} for ${targetText}; waiting for ESP32 execution.`);
     setCommandTargetNote(`Last command target: ${targetText}`);
   } catch (error) {
     writeLog(`Command send failed: ${error.message}`);
   }
 }
 
-function onMpptOnClick() {
-  sendCommandRequest({
-    type: 'i2c_write',
-    addr: '0x6B',
-    reg: '0x13',
-    data: ['0x1D']
-  });
+function parseByteInputTokens(value) {
+  return String(value || '')
+    .split(/[\s,]+/)
+    .map((token) => token.trim())
+    .filter(Boolean)
+    .map((token) => {
+      const parsed = token.toLowerCase().startsWith('0x')
+        ? Number.parseInt(token, 16)
+        : Number(token);
+
+      if (!Number.isInteger(parsed) || parsed < 0 || parsed > 0xff) {
+        throw new Error(`Invalid byte value: ${token}`);
+      }
+
+      return `0x${parsed.toString(16).toUpperCase().padStart(2, '0')}`;
+    });
 }
 
-function onMpptOffClick() {
-  sendCommandRequest({
-    type: 'i2c_write',
-    addr: '0x6B',
-    reg: '0x13',
-    data: ['0x2D']
-  });
-}
+function onSendDebugCommandClick() {
+  const type = document.getElementById('debugCommandType')?.value || 'i2c_read';
+  const addr = document.getElementById('debugAddrInput')?.value?.trim() || '';
+  const reg = document.getElementById('debugRegInput')?.value?.trim() || '';
+  const lenValue = document.getElementById('debugLenInput')?.value?.trim() || '1';
+  const dataValue = document.getElementById('debugDataInput')?.value?.trim() || '';
 
-function onLedOnClick() {
-  sendCommandRequest({ target: 'led', state: 'on' });
-}
+  if (!addr || !reg) {
+    writeLog('Debug command requires both device address and register address.');
+    return;
+  }
 
-function onLedOffClick() {
-  sendCommandRequest({ target: 'led', state: 'off' });
-}
+  let normalizedAddress;
+  let normalizedRegister;
 
-function onSendCustomCommandClick() {
-  const customInput = document.getElementById('customCommandInput');
-  const payload = customInput?.value?.trim() || '';
+  try {
+    normalizedAddress = parseByteInputTokens(addr);
+    normalizedRegister = parseByteInputTokens(reg);
 
-  if (!payload) {
-    writeLog('Enter a custom payload before sending.');
+    if (normalizedAddress.length !== 1 || normalizedRegister.length !== 1) {
+      throw new Error('Address and register must each contain exactly one byte.');
+    }
+
+    if (!['0x08', '0x40', '0x6B'].includes(normalizedAddress[0])) {
+      throw new Error('Supported device addresses are 0x08, 0x40, and 0x6B.');
+    }
+  } catch (error) {
+    writeLog(`Debug command is invalid: ${error.message}`);
+    return;
+  }
+
+  if (type === 'i2c_read') {
+    const requestedLength = Number(lenValue);
+    if (!Number.isInteger(requestedLength) || requestedLength < 1 || requestedLength > 32) {
+      writeLog('Debug read size must be an integer from 1 through 32.');
+      return;
+    }
+
+    sendCommandRequest({
+      type: 'i2c_read',
+      addr: normalizedAddress[0],
+      reg: normalizedRegister[0],
+      len: requestedLength
+    });
     return;
   }
 
   try {
-    const parsed = JSON.parse(payload);
-    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      sendCommandRequest(parsed);
+    const writeData = parseByteInputTokens(dataValue);
+    if (writeData.length === 0) {
+      writeLog('Debug write requires at least one data byte.');
       return;
     }
+    if (writeData.length > 32) {
+      writeLog('Debug write supports at most 32 data bytes.');
+      return;
+    }
+
+    sendCommandRequest({
+      type: 'i2c_write',
+      addr: normalizedAddress[0],
+      reg: normalizedRegister[0],
+      data: writeData
+    });
   } catch (error) {
-    // Fall back to forwarding the raw string payload.
+    writeLog(`Debug write data is invalid: ${error.message}`);
+  }
+}
+
+function sendSensorControl(enabled) {
+  const sensor = document.getElementById('sensorControlSelect')?.value || 'mppt';
+
+  sendCommandRequest({
+    type: 'sensor_control',
+    sensor,
+    enabled
+  });
+}
+
+function onPauseSensorClick() {
+  sendSensorControl(false);
+}
+
+function onResumeSensorClick() {
+  sendSensorControl(true);
+}
+
+function onApplyAcdrvClick() {
+  const requestedState =
+    document.getElementById('acdrvControlSelect')?.value || 'acdrv1';
+  const label = requestedState === 'disabled'
+    ? 'disable both ACDRV power paths'
+    : `select ${requestedState.toUpperCase()}`;
+
+  if (!window.confirm(
+    `Confirm ${label}. The ESP32 will preserve unrelated charger bits and verify register readback, ` +
+    'but PACK voltage must still be measured at the hardware.'
+  )) {
+    return;
   }
 
-  sendCommandRequest({ payload });
+  sendCommandRequest({
+    type: 'mppt_acdrv_control',
+    state: requestedState
+  });
+}
+
+function sendLedControl(enabled) {
+  sendCommandRequest({
+    type: 'led_control',
+    enabled
+  });
+}
+
+function onLedOnClick() {
+  sendLedControl(true);
+}
+
+function onLedOffClick() {
+  sendLedControl(false);
 }
 
 export function initI2CPage() {
   state = structuredClone(initialTelemetry);
   streamMetadata = { ...mockMetadata };
+  sensorPollingState = null;
+  bridgeCommandReady = false;
+  commandAuthRequired = true;
+  pendingCommandIds.clear();
+  finishedCommandIds.clear();
   renderTelemetry(state, streamMetadata);
 
   const streamUrlElement = document.getElementById('streamUrl');
@@ -822,13 +1245,22 @@ export function initI2CPage() {
     }
   }
 
+  setNodeAddressNote('ESP32 node address will appear here once live telemetry arrives.');
+  setSensorPollingNote('Sensor polling status will appear here once live telemetry arrives.');
+  applyDebugCommandMode();
+  onSensorControlSelectChange();
+
   document.getElementById('connectButton')?.addEventListener('click', onConnectClick);
   document.getElementById('mockButton')?.addEventListener('click', onMockClick);
-  document.getElementById('mpptOnButton')?.addEventListener('click', onMpptOnClick);
-  document.getElementById('mpptOffButton')?.addEventListener('click', onMpptOffClick);
+  document.getElementById('debugCommandType')?.addEventListener('change', applyDebugCommandMode);
+  document.getElementById('sensorControlSelect')?.addEventListener('change', onSensorControlSelectChange);
+  document.getElementById('commandTokenInput')?.addEventListener('input', updateCommandControls);
+  document.getElementById('sendDebugCommandButton')?.addEventListener('click', onSendDebugCommandClick);
+  document.getElementById('pauseSensorButton')?.addEventListener('click', onPauseSensorClick);
+  document.getElementById('resumeSensorButton')?.addEventListener('click', onResumeSensorClick);
+  document.getElementById('applyAcdrvButton')?.addEventListener('click', onApplyAcdrvClick);
   document.getElementById('ledOnButton')?.addEventListener('click', onLedOnClick);
   document.getElementById('ledOffButton')?.addEventListener('click', onLedOffClick);
-  document.getElementById('sendCustomCommandButton')?.addEventListener('click', onSendCustomCommandClick);
 
   startMockData();
 }
@@ -836,11 +1268,15 @@ export function initI2CPage() {
 export function destroyI2CPage() {
   document.getElementById('connectButton')?.removeEventListener('click', onConnectClick);
   document.getElementById('mockButton')?.removeEventListener('click', onMockClick);
-  document.getElementById('mpptOnButton')?.removeEventListener('click', onMpptOnClick);
-  document.getElementById('mpptOffButton')?.removeEventListener('click', onMpptOffClick);
+  document.getElementById('debugCommandType')?.removeEventListener('change', applyDebugCommandMode);
+  document.getElementById('sensorControlSelect')?.removeEventListener('change', onSensorControlSelectChange);
+  document.getElementById('commandTokenInput')?.removeEventListener('input', updateCommandControls);
+  document.getElementById('sendDebugCommandButton')?.removeEventListener('click', onSendDebugCommandClick);
+  document.getElementById('pauseSensorButton')?.removeEventListener('click', onPauseSensorClick);
+  document.getElementById('resumeSensorButton')?.removeEventListener('click', onResumeSensorClick);
+  document.getElementById('applyAcdrvButton')?.removeEventListener('click', onApplyAcdrvClick);
   document.getElementById('ledOnButton')?.removeEventListener('click', onLedOnClick);
   document.getElementById('ledOffButton')?.removeEventListener('click', onLedOffClick);
-  document.getElementById('sendCustomCommandButton')?.removeEventListener('click', onSendCustomCommandClick);
 
   if (mockTimer) {
     clearInterval(mockTimer);
