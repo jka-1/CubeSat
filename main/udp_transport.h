@@ -5,7 +5,7 @@
 
 #include "esp_err.h"
 #include "i2c_bus_monitor.h"
-#include "telemetry_packet_v3.h"
+#include "telemetry_packet_v4.h"
 
 typedef struct {
     int socket_fd;
@@ -24,7 +24,7 @@ esp_err_t udp_transport_init(
 esp_err_t udp_transport_send_power_telemetry(
     udp_transport_t *transport,
     const power_telemetry_t *telemetry,
-    const telemetry_packet_v3_meta_t *meta,
+    const telemetry_packet_v4_meta_t *meta,
     uint32_t *out_sequence,
     uint32_t *out_round_trip_ms);
 

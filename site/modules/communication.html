@@ -4,9 +4,9 @@
       <div class="eyebrow"><span class="pulse"></span> I2C Telemetry Dashboard</div>
       <h2>Live power-path demo view</h2>
       <p>
-        This page reuses the working UDP-to-browser telemetry stream and presents the five I2C
-        device groups requested for the demo: MCU temperature, PV input, MPPT switch health,
-        BMS cell voltages, and optional load telemetry when a second INA226 is available.
+        This page reuses the working UDP-to-browser telemetry stream and presents MCU temperature,
+        the new ADC peripheral sensors, PV input, MPPT switch health, BMS cell voltages, and
+        optional load telemetry when a second INA226 is available.
       </p>
     </div>
     <div id="i2cBusStatus" class="status-pill offline">Mock data active</div>
@@ -22,6 +22,14 @@
         <div class="metric-tile">
           <span>MCU Temp</span>
           <strong id="summaryMcuTemp">-- °C</strong>
+        </div>
+        <div class="metric-tile">
+          <span>Peripheral Temperature</span>
+          <strong id="summaryPeripheralTemp">Unavailable</strong>
+        </div>
+        <div class="metric-tile">
+          <span>Relative Light Level</span>
+          <strong id="summaryRelativeLight">Unavailable</strong>
         </div>
         <div class="metric-tile">
           <span>Input Select</span>
@@ -73,6 +81,31 @@
           </div>
         </div>
         <div id="mcuMeters" class="cells" aria-label="MCU temperature telemetry"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h3 class="card-title">Peripheral Sensors</h3>
+        <span class="status-pill">ADC1</span>
+      </div>
+      <div class="card-body">
+        <div class="pack-summary">
+          <div class="metric-tile">
+            <span>Peripheral Temperature</span>
+            <strong id="peripheralTemperatureValue">Unavailable</strong>
+            <small id="peripheralTemperatureStatus" class="metric-detail">UNAVAILABLE</small>
+          </div>
+          <div class="metric-tile">
+            <span>Relative Light Level</span>
+            <strong id="relativeLightValue">Unavailable</strong>
+            <small id="lightVoltageValue" class="metric-detail">Unavailable</small>
+          </div>
+        </div>
+        <p class="footer-note">
+          Relative light is the calibrated LIGHT_OUT voltage divided by 3100 mV and clamped to
+          0–100%. It is not a lux measurement. LIGHT_OUT uses the board's 10 kΩ resistor to ground.
+        </p>
       </div>
     </section>
 
@@ -303,7 +336,7 @@
 
   <p class="footer-note">
     Expected live payload groups: <code>mcu</code>, <code>pv</code>, <code>mppt</code>,
-    <code>bms</code>, and optional <code>load</code>. This page listens to the existing same-origin
+    <code>bms</code>, optional <code>load</code>, and optional <code>peripheral</code>. This page listens to the existing same-origin
     event stream so the current droplet transport can stay in place for the lab handoff.
   </p>
 </section>

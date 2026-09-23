@@ -1,3 +1,8 @@
+import {
+  normalizePeripheralTelemetry,
+  peripheralTelemetryForMode
+} from './telemetry-model.mjs?v=20260923b';
+
 const initialTelemetry = {
   mcu: {
     temperatureC: 36.4
@@ -18,7 +23,8 @@ const initialTelemetry = {
     shuntVoltageMv: 1.8,
     powerW: 21.3,
     currentA: 0.98
-  }
+  },
+  peripheral: peripheralTelemetryForMode('mock')
 };
 
 const meterRanges = {
@@ -58,6 +64,7 @@ let sensorPollingState = null;
 let bridgeCommandReady = false;
 let commandAuthRequired = true;
 let streamPanelResizeObserver = null;
+let dataMode = 'mock';
 const pendingCommandIds = new Set();
 const finishedCommandIds = new Set();
 
@@ -129,6 +136,7 @@ function clamp(value, min, max) {
 }
 
 function numericValue(value) {
+  if (value === null || value === undefined || value === '') return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 }
@@ -453,6 +461,14 @@ function renderSystemSummary(telemetry) {
     pvPower !== null && loadPower !== null ? (pvPower - loadPower).toFixed(2) : '--';
 
   document.getElementById('summaryMcuTemp').textContent = formatValue(telemetry.mcu.temperatureC, '°C', 1);
+  document.getElementById('summaryPeripheralTemp').textContent =
+    numericValue(telemetry.peripheral?.temperatureC) === null
+      ? 'Unavailable'
+      : formatValue(telemetry.peripheral.temperatureC, '°C', 1);
+  const relativeLight = numericValue(telemetry.peripheral?.relativeLightLevel);
+  document.getElementById('summaryRelativeLight').textContent = relativeLight === null
+    ? 'Unavailable'
+    : `${telemetry.peripheral.lightSaturated ? '≥' : ''}${formatNumber(relativeLight * 100, 1)}%`;
   document.getElementById('summaryMpptState').textContent = String(telemetry.mppt.switchState || '--').toUpperCase();
   document.getElementById('summaryPvPower').textContent = formatValue(telemetry.pv.powerW, 'W', 2);
   document.getElementById('summaryLoadPower').textContent = loadAvailable
@@ -461,6 +477,28 @@ function renderSystemSummary(telemetry) {
   document.getElementById('summaryNetPower').textContent = loadAvailable
     ? `${netPower} W`
     : 'PV only';
+}
+
+function renderPeripheralCard(telemetry) {
+  const peripheral = telemetry.peripheral || peripheralTelemetryForMode('live');
+  const temperature = numericValue(peripheral.temperatureC);
+  const relativeLight = numericValue(peripheral.relativeLightLevel);
+  const lightVoltageMv = numericValue(peripheral.lightVoltageMv);
+
+  document.getElementById('peripheralTemperatureValue').textContent = temperature === null
+    ? 'Unavailable'
+    : formatValue(temperature, '°C', 1);
+  document.getElementById('peripheralTemperatureStatus').textContent = temperature === null
+    ? 'UNAVAILABLE'
+    : peripheral.temperatureSaturated
+      ? 'ADC SATURATED'
+      : 'VALID';
+  document.getElementById('relativeLightValue').textContent = relativeLight === null
+    ? 'Unavailable'
+    : `${peripheral.lightSaturated ? '≥' : ''}${formatNumber(relativeLight * 100, 1)}%`;
+  document.getElementById('lightVoltageValue').textContent = lightVoltageMv === null
+    ? 'Unavailable'
+    : `${formatNumber(lightVoltageMv, 0)} mV${peripheral.lightSaturated ? ' (lower bound)' : ''}`;
 }
 
 function renderMcuCard(telemetry) {
@@ -613,6 +651,7 @@ function renderTelemetry(telemetry, metadata = streamMetadata) {
   renderSystemSummary(telemetry);
   renderMetadata(metadata);
   renderMcuCard(telemetry);
+  renderPeripheralCard(telemetry);
   renderPowerCard('pv', 'PV', telemetry.pv);
   renderMpptCard(telemetry);
   renderBmsCard(telemetry);
@@ -719,6 +758,8 @@ function normalizeFromCandidate(candidate) {
     candidate?.load_current_a
   );
 
+  const peripheral = normalizePeripheralTelemetry(candidate);
+
   const hasLoadTelemetry = [
     loadShuntVoltageMv,
     loadPowerW,
@@ -765,7 +806,8 @@ function normalizeFromCandidate(candidate) {
           powerW: numericValue(loadPowerW),
           currentA: numericValue(loadCurrentA)
         }
-      : null
+      : null,
+    peripheral
   };
 }
 
@@ -947,7 +989,10 @@ function applyTelemetryPacket(packetEnvelope) {
 }
 
 function randomizeMockTelemetry() {
+  if (dataMode !== 'mock') return;
   const packet = structuredClone(initialTelemetry);
+
+  packet.peripheral = peripheralTelemetryForMode('mock');
 
   packet.mcu.temperatureC += (Math.random() - 0.5) * 4.0;
   packet.pv.shuntVoltageMv += (Math.random() - 0.5) * 0.8;
@@ -986,6 +1031,7 @@ function startMockData() {
   closeLiveStream();
   if (mockTimer) clearInterval(mockTimer);
 
+  dataMode = 'mock';
   streamMetadata = { ...mockMetadata };
   bridgeCommandReady = false;
   pendingCommandIds.clear();
@@ -1038,6 +1084,21 @@ function connectTelemetryStream() {
 
   stopMockData();
   closeLiveStream();
+  dataMode = 'live';
+  state = {
+    mcu: { temperatureC: null },
+    pv: { shuntVoltageMv: null, powerW: null, currentA: null },
+    mppt: { switchState: 'unknown', faults: [] },
+    bms: { cellVoltagesV: [null, null, null, null] },
+    load: null,
+    peripheral: peripheralTelemetryForMode('live')
+  };
+  renderTelemetry(state, {
+    deviceId: 'Waiting for live data',
+    sequence: '--',
+    transmittedAt: 'Not supplied',
+    receivedAt: 'Not supplied'
+  });
   streamErrorLogged = false;
   setDetailNote('Waiting for live packets from the droplet event stream.');
 

@@ -293,13 +293,20 @@ static uint16_t next_sequence_word(
 
 static char *build_telemetry_hex_packet(
     const power_telemetry_t *telemetry,
-    const telemetry_packet_v3_meta_t *meta,
+    const telemetry_packet_v4_meta_t *meta,
     uint16_t sequence)
 {
-    telemetry_packet_v3_meta_t packet_meta = {
+    telemetry_packet_v4_meta_t packet_meta = {
         .sequence = sequence,
         .has_mcu_temperature = false,
-        .mcu_temperature_centi_c = 0
+        .mcu_temperature_centi_c = 0,
+        .has_peripheral_temperature = false,
+        .peripheral_temperature_saturated = false,
+        .peripheral_temperature_centi_c = 0,
+        .has_light = false,
+        .light_saturated = false,
+        .light_voltage_mv = 0,
+        .relative_light_basis_points = 0,
     };
 
     if (meta != NULL) {
@@ -307,10 +314,21 @@ static char *build_telemetry_hex_packet(
             meta->has_mcu_temperature;
         packet_meta.mcu_temperature_centi_c =
             meta->mcu_temperature_centi_c;
+        packet_meta.has_peripheral_temperature =
+            meta->has_peripheral_temperature;
+        packet_meta.peripheral_temperature_saturated =
+            meta->peripheral_temperature_saturated;
+        packet_meta.peripheral_temperature_centi_c =
+            meta->peripheral_temperature_centi_c;
+        packet_meta.has_light = meta->has_light;
+        packet_meta.light_saturated = meta->light_saturated;
+        packet_meta.light_voltage_mv = meta->light_voltage_mv;
+        packet_meta.relative_light_basis_points =
+            meta->relative_light_basis_points;
     }
 
     char *serialized = malloc(
-        TELEMETRY_PACKET_V3_HEX_CHARS + 1u
+        TELEMETRY_PACKET_V4_HEX_CHARS + 1u
     );
 
     if (serialized == NULL) {
@@ -318,11 +336,11 @@ static char *build_telemetry_hex_packet(
     }
 
     const esp_err_t status =
-        telemetry_packet_v3_format_hex(
+        telemetry_packet_v4_format_hex(
             telemetry,
             &packet_meta,
             serialized,
-            TELEMETRY_PACKET_V3_HEX_CHARS + 1u);
+            TELEMETRY_PACKET_V4_HEX_CHARS + 1u);
 
     if (status != ESP_OK) {
         free(serialized);
@@ -1137,7 +1155,7 @@ esp_err_t udp_transport_init(
 esp_err_t udp_transport_send_power_telemetry(
     udp_transport_t *transport,
     const power_telemetry_t *telemetry,
-    const telemetry_packet_v3_meta_t *meta,
+    const telemetry_packet_v4_meta_t *meta,
     uint32_t *out_sequence,
     uint32_t *out_round_trip_ms)
 {

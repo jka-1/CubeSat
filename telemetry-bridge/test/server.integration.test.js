@@ -411,6 +411,119 @@ test('bridge completes the hardened telemetry and debug command lifecycle', asyn
   assert.equal(staleCommand.status, 400);
 });
 
+test('bridge decodes v4 peripheral sensors and preserves missing values', async (context) => {
+  const httpPort = await reserveTcpPort();
+  const udpPort = await reserveUdpPort();
+  const baseUrl = `http://127.0.0.1:${httpPort}`;
+  const bridge = spawn(process.execPath, [bridgePath], {
+    cwd: bridgeDirectory,
+    env: {
+      ...process.env,
+      HTTP_PORT: String(httpPort),
+      UDP_PORT: String(udpPort),
+      HTTP_BIND_ADDRESS: '127.0.0.1',
+      UDP_BIND_ADDRESS: '127.0.0.1',
+      COMMAND_TOKEN: commandToken
+    },
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+
+  let bridgeOutput = '';
+  bridge.stdout.on('data', (chunk) => { bridgeOutput += chunk; });
+  bridge.stderr.on('data', (chunk) => { bridgeOutput += chunk; });
+  context.after(async () => {
+    if (bridge.exitCode === null) bridge.kill('SIGTERM');
+    if (bridge.exitCode === null) await once(bridge, 'exit');
+  });
+
+  await waitFor(async () => {
+    const response = await fetch(`${baseUrl}/health`);
+    return response.ok;
+  }).catch((error) => {
+    throw new Error(`${error.message}\nBridge output:\n${bridgeOutput}`);
+  });
+
+  const device = dgram.createSocket('udp4');
+  device.bind(0, '127.0.0.1');
+  await once(device, 'listening');
+  context.after(() => device.close());
+  const receiveDeviceJson = createJsonReceiver(device);
+
+  const packetWithSensors =
+    '4353000403B30A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507000F09C4060E1388';
+  await sendUdp(device, packetWithSensors, udpPort);
+  await receiveDeviceJson();
+
+  const decoded = await waitFor(async () => {
+    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+    return body.latest?.packet?.packet_format === 'hex-v4-peripheral-sensors'
+      ? body.latest.packet
+      : null;
+  });
+  assert.equal(decoded.telemetry.mcu.temperatureC, 26);
+  assert.deepEqual(decoded.telemetry.peripheral, {
+    temperatureC: 25,
+    temperatureSaturated: true,
+    lightVoltageMv: 1550,
+    relativeLightLevel: 0.5,
+    lightSaturated: true
+  });
+
+  const packetWithoutSensors =
+    '4353000403B40A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A5070000000000000000';
+  await sendUdp(device, Buffer.from(packetWithoutSensors, 'hex'), udpPort);
+  await receiveDeviceJson();
+
+  const missing = await waitFor(async () => {
+    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+    return body.latest?.packet?.seq === 0x03b4
+      ? body.latest.packet.telemetry.peripheral
+      : null;
+  });
+  assert.deepEqual(missing, {
+    temperatureC: null,
+    temperatureSaturated: null,
+    lightVoltageMv: null,
+    relativeLightLevel: null,
+    lightSaturated: null
+  });
+
+  const legacyV3 =
+    '4353000303B580000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507';
+  await sendUdp(device, legacyV3, udpPort);
+  await receiveDeviceJson();
+  const legacy = await waitFor(async () => {
+    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+    return body.latest?.packet?.seq === 0x03b5 ? body.latest.packet : null;
+  });
+  assert.equal(legacy.packet_format, 'hex-v3-validated-raw');
+  assert.equal(Object.hasOwn(legacy.telemetry, 'peripheral'), false);
+
+  const jsonResponse = await fetch(`${baseUrl}/input`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      type: 'telemetry',
+      device_id: 'legacy-json-test',
+      solar_panel_current_a: 0.5,
+      battery_voltage_v: 16,
+      mppt_switch_temperature_c: 30,
+      esp32_temperature_c: 31,
+      peripheral: {
+        temperatureC: null,
+        temperatureSaturated: null,
+        lightVoltageMv: null,
+        relativeLightLevel: null,
+        lightSaturated: null
+      }
+    })
+  });
+  assert.equal(jsonResponse.status, 200);
+  const normalizedJson = await jsonResponse.json();
+  assert.equal(normalizedJson.envelope.packet.telemetry.mppt_switch_temperature_c, 30);
+  assert.equal(normalizedJson.envelope.packet.telemetry.peripheral.temperatureC, null);
+});
+
 test('dashboard command controls match the hardened interface', async () => {
   const html = await readFile(
     path.join(repositoryRoot, 'site/modules/communication.html'),

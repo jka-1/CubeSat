@@ -1,12 +1,14 @@
 #include <stdbool.h>
 #include <inttypes.h>
+#include <math.h>
 
 #include "app_config.h"
 #include "board_led.h"
 #include "esp_log.h"
 #include "i2c_bus_monitor.h"
+#include "peripheral_sensors.h"
 #include "sensor_provider.h"
-#include "telemetry_packet_v3.h"
+#include "telemetry_packet_v4.h"
 #include "udp_transport.h"
 #include "wifi_station.h"
 
@@ -17,7 +19,7 @@
 static const char *TAG = "demo_main";
 
 static esp_err_t load_mcu_temperature_meta(
-    telemetry_packet_v3_meta_t *out_meta)
+    telemetry_packet_v4_meta_t *out_meta)
 {
     if (out_meta == NULL) {
         return ESP_ERR_INVALID_ARG;
@@ -38,6 +40,35 @@ static esp_err_t load_mcu_temperature_meta(
         temperature_sample.mcu_temperature_c * 100.0f);
 
     return ESP_OK;
+}
+
+static void load_peripheral_sensor_meta(
+    telemetry_packet_v4_meta_t *out_meta)
+{
+    if (out_meta == NULL) {
+        return;
+    }
+
+    peripheral_sensor_sample_t sample = {0};
+    if (peripheral_sensors_read(&sample) != ESP_OK) {
+        return;
+    }
+
+    if (sample.temperature_valid) {
+        out_meta->has_peripheral_temperature = true;
+        out_meta->peripheral_temperature_saturated =
+            sample.temperature_saturated;
+        out_meta->peripheral_temperature_centi_c = (int16_t)lroundf(
+            sample.temperature_c * 100.0f);
+    }
+
+    if (sample.light_valid) {
+        out_meta->has_light = true;
+        out_meta->light_saturated = sample.light_saturated;
+        out_meta->light_voltage_mv = (uint16_t)sample.light_voltage_mv;
+        out_meta->relative_light_basis_points = (uint16_t)lroundf(
+            sample.relative_light_level * 10000.0f);
+    }
 }
 
 static void apply_startup_hardware_configuration(void)
@@ -165,10 +196,17 @@ static void telemetry_task(void *argument)
 
         power_telemetry_t telemetry = {0};
         telemetry.sample_number = ++sample_number;
-        telemetry_packet_v3_meta_t meta = {
+        telemetry_packet_v4_meta_t meta = {
             .sequence = 0,
             .has_mcu_temperature = false,
-            .mcu_temperature_centi_c = 0
+            .mcu_temperature_centi_c = 0,
+            .has_peripheral_temperature = false,
+            .peripheral_temperature_saturated = false,
+            .peripheral_temperature_centi_c = 0,
+            .has_light = false,
+            .light_saturated = false,
+            .light_voltage_mv = 0,
+            .relative_light_basis_points = 0,
         };
 
         const esp_err_t temperature_status =
@@ -180,6 +218,8 @@ static void telemetry_task(void *argument)
                 "MCU temperature unavailable: %s",
                 esp_err_to_name(temperature_status));
         }
+
+        load_peripheral_sensor_meta(&meta);
 
         esp_err_t status =
             i2c_bus_monitor_read_all(&telemetry);
@@ -209,14 +249,18 @@ static void telemetry_task(void *argument)
 
                 ESP_LOGI(
                     TAG,
-                    "Streamed raw-v3 sequence=%" PRIu32
+                    "Streamed raw-v4 sequence=%" PRIu32
                     " temp=%s"
+                    " peripheral_temp=%s"
+                    " light=%s"
                     " pv_cal=0x%02X%02X"
                     " mppt=%s"
                     " fault=0x%02X"
                     " rtt=%" PRIu32 "ms",
                     sequence,
                     meta.has_mcu_temperature ? "yes" : "no",
+                    meta.has_peripheral_temperature ? "yes" : "no",
+                    meta.has_light ? "yes" : "no",
                     telemetry.ina226_calibration[0],
                     telemetry.ina226_calibration[1],
                     decode_mppt_state(
@@ -255,6 +299,7 @@ void app_main(void)
 
     ESP_ERROR_CHECK(board_led_init());
     ESP_ERROR_CHECK(sensor_provider_init());
+    ESP_ERROR_CHECK(peripheral_sensors_init());
     ESP_ERROR_CHECK(i2c_bus_monitor_init());
     apply_startup_hardware_configuration();
     ESP_ERROR_CHECK(wifi_station_init());

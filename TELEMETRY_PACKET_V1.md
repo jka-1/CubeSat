@@ -1,14 +1,49 @@
 # CubeSat Demo Telemetry Packet
 
-This branch now supports three fixed 16-word telemetry packet layouts over UDP:
+This branch supports four versioned telemetry packet layouts over UDP:
 
 - `0x0001` legacy raw INA226 packet
 - `0x0002` engineering-units packet
 - `0x0003` validated raw-pass packet for the current hardware test path
+- `0x0004` validated raw-pass packet with peripheral temperature and light sensors
 
-For the validated `pass/` firmware and immediate dashboard testing, use `0x0003`.
+New firmware emits `0x0004`. The bridge continues to accept `0x0001` through `0x0003` unchanged.
 
-## Recommended immediate test packet: v3 validated raw packet
+## Current packet: v4 peripheral sensors
+
+Version `0x0004` contains 20 16-bit words. Words 1-16 retain the v3 field order, with the version
+word set to `0x0004`. The four appended words are:
+
+17. `peripheral_status_flags`
+    - bit 0: peripheral temperature valid
+    - bit 1: light reading valid
+    - bit 2: peripheral temperature ADC saturated
+    - bit 3: light ADC saturated
+18. `peripheral_temperature_centi_c`, signed; ignored unless bit 0 is set
+19. `light_voltage_mv`; ignored unless bit 1 is set
+20. `relative_light_basis_points`, `0` through `10000`; ignored unless bit 1 is set
+
+Availability is controlled only by the validity flags. A zero data word is not interpreted as a
+measurement when its validity bit is clear.
+
+Relative light is defined as:
+
+`clamp(calibrated_LIGHT_OUT_mV / 3100, 0, 1)`
+
+The dashboard displays that fraction as `0%` through `100%`. This is a relative ADC level, not lux.
+The calibrated LIGHT_OUT voltage remains in telemetry for debugging. If the ADC saturates, the
+dashboard marks the percentage and voltage as a lower bound.
+
+Example with peripheral temperature `25.00 °C`, light voltage `1550 mV`, relative light `50.00%`,
+and both ADC saturation flags set for decoder testing:
+
+`4353000403B30A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507000F09C4060E1388`
+
+Example with both peripheral sensors unavailable:
+
+`4353000403B40A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A5070000000000000000`
+
+## Legacy v3 validated raw packet
 
 Each field is one 16-bit word rendered as 4 hex characters.
 

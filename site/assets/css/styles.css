@@ -537,6 +537,14 @@ h1 {
   letter-spacing: -0.03em;
 }
 
+.metric-detail {
+  display: block;
+  margin-top: 8px;
+  color: var(--white-soft);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
 .cells {
   display: grid;
   gap: 12px;

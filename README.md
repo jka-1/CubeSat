@@ -7,20 +7,22 @@ This branch contains the hardened 1-4 telemetry handoff for Saturday, August 8, 
 - deploy / backup / rollback scripts
 - the ESP-side packet format used by the droplet
 
-For the current validated `pass/` firmware, the recommended immediate test format is the `0x0003`
-combined raw packet. The bridge decodes those raw register values into the dashboard view.
+The current firmware emits the `0x0004` combined packet. The bridge decodes its raw I2C values and
+new ADC peripheral readings into the dashboard view while retaining v1-v3 compatibility.
 
 Use [`LAB_HANDOFF.md`](LAB_HANDOFF.md) for the deployment and hardware acceptance checklist.
 
 ## What this version covers
 
-The dashboard is set up to display these five groups:
+The dashboard is set up to display these telemetry groups:
 
 - MCU temperature
 - PV telemetry
 - MPPT input select state and faults
 - BMS cell voltages
 - optional load telemetry when a second INA226 is available
+- MCP9700 peripheral temperature when TEMP_OUT is configured
+- TEMT6000 relative light level and calibrated LIGHT_OUT voltage when configured
 
 The bridge supports these test-ready command paths for this firmware build:
 
@@ -51,20 +53,20 @@ The bridge supports these test-ready command paths for this firmware build:
 - health endpoint through Apache: `/telemetry/health`
 - command endpoint through Apache: `/telemetry/command`
 
-## Recommended immediate test packet format
+## Current packet format
 
 Use one combined UDP packet once per second.
 
 - magic: `0x4353`
-- version: `0x0003`
+- version: `0x0004`
 - transport: ASCII hex preferred
-- word count: `16`
+- word count: `20`
 - word order: big-endian
 
 Field order:
 
 1. `0x4353`
-2. `0x0003`
+2. `0x0004`
 3. sequence
 4. MCU temp in centi-C, or `0x8000` when not supplied
 5. PV INA226 calibration raw (`0x05`)
@@ -79,14 +81,26 @@ Field order:
 14. BQ25798 register `0x13` raw
 15. BQ25798 fault register `0x20` raw
 16. tagged sensor polling mask (`0xA500 | active_mask`)
+17. peripheral sensor validity and saturation flags
+18. peripheral temperature in signed centi-°C
+19. calibrated LIGHT_OUT voltage in mV
+20. relative light level in basis points (`0` through `10000`)
+
+Peripheral status flag bits are temperature valid, light valid, temperature ADC saturated, and
+light ADC saturated in bits 0 through 3 respectively. Data words are ignored when their validity
+flag is clear, so an unavailable input never appears as a real zero measurement.
+
+Relative light is `clamp(LIGHT_OUT_mV / 3100, 0, 1)` and is displayed as a percentage. It is not a
+lux measurement. The TEMT6000 circuit's 10 kΩ resistor converts phototransistor current to the
+LIGHT_OUT voltage; actual response and saturation still require hardware validation.
 
 Known-good example packet:
 
-`4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507`
+`4353000403B30A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507000309C4060E1388`
 
 Expected decoded values from that example:
 
-- MCU temp: not supplied yet
+- MCU temp: `26.00 °C`
 - PV calibration raw: `0x0A00`
 - PV shunt raw: `0x0028`
 - PV bus raw: `0x0FA3`
@@ -97,6 +111,23 @@ Expected decoded values from that example:
 - MPPT faults: none
 - load: unavailable in the current validated hardware
 - automatic polling mask: `0x07` (PV, BMS, and MPPT enabled)
+- peripheral temperature: `25.00 °C`
+- LIGHT_OUT: `1550 mV`, relative light `50.00%`
+- neither ADC reports saturation
+
+## Peripheral GPIO configuration
+
+Enter the confirmed GPIOs in `main/app_config.h`:
+
+```c
+#define DEMO_TEMP_OUT_GPIO  (-1)
+#define DEMO_LIGHT_OUT_GPIO (-1)
+```
+
+`-1` means unassigned. With both defaults unchanged, firmware builds and runs normally and v4 marks
+both peripheral readings unavailable. Assigned pins must be distinct ESP32-S3 ADC1-capable GPIOs
+and must not conflict with the existing GPIO4/GPIO5 I2C bus. Firmware validates these conditions at
+startup and disables invalid channels without substituting zero readings.
 
 ## Droplet deploy flow
 
@@ -156,6 +187,7 @@ Inject a known-good test packet locally:
 ```bash
 printf '%s\n' '4353000200010E3800DC130604D8000100000FB40FAA0F960FA000B4085203D4' | nc -u -w1 127.0.0.1 3333
 printf '%s\n' '4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507' | nc -u -w1 127.0.0.1 3333
+printf '%s\n' '4353000403B30A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507000309C4060E1388' | nc -u -w1 127.0.0.1 3333
 ```
 
 When telemetry is working, health should show:
@@ -230,8 +262,8 @@ If a deploy breaks, use the backup printed by the deploy script:
 - bridge UDP port: `3333`
 - bridge HTTP port: `8080`
 - magic word: `0x4353`
-- recommended packet version: `0x0003`
-- packet length: `16` words
+- current packet version: `0x0004`
+- packet length: `20` words (`0x0001`-`0x0003` remain 16 words)
 - update rate target: `1 Hz`
 - shunt value : `100 ohms`
 
@@ -274,5 +306,5 @@ packet.
 
 ## Legacy packet support
 
-The bridge still supports the older `0x0001` and `0x0002` packets, but neither carries authoritative
-sensor polling state. Use `0x0003` for the current firmware.
+The bridge still supports `0x0001`, `0x0002`, and `0x0003`. Only v4 carries the new peripheral
+sensor values; older packets leave those dashboard components unavailable.

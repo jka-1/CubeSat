@@ -15,6 +15,16 @@
 #define DEMO_DEVICE_ID               "esp32-telemetry"
 
 /*
+ * Peripheral analog sensor inputs.
+ *
+ * Leave these at -1 until the board GPIO assignments are confirmed. When
+ * assigned, both pins must resolve to distinct ESP32-S3 ADC1 channels and
+ * must not conflict with the I2C pins (GPIO4/GPIO5) or another board signal.
+ */
+#define DEMO_TEMP_OUT_GPIO            (-1)
+#define DEMO_LIGHT_OUT_GPIO           (-1)
+
+/*
  * ESP32-S3-DevKitC-1 v1.1 uses GPIO38 for its addressable RGB LED.
  * The initial board revision uses GPIO48 instead.
  */

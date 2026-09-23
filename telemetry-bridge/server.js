@@ -13,8 +13,13 @@ const hexPacketMagic = 0x4353;
 const hexPacketVersionRawIna226 = 0x0001;
 const hexPacketVersionEngineering = 0x0002;
 const hexPacketVersionValidatedRaw = 0x0003;
-const hexPacketWordCount = 16;
-const hexPacketByteCount = hexPacketWordCount * 2;
+const hexPacketVersionPeripheralSensors = 0x0004;
+const hexPacketLegacyWordCount = 16;
+const hexPacketPeripheralWordCount = 20;
+const hexPacketByteCounts = new Set([
+  hexPacketLegacyWordCount * 2,
+  hexPacketPeripheralWordCount * 2
+]);
 const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
 const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 100);
 const loadCurrentLsbA = readFiniteNumber('LOAD_INA226_CURRENT_LSB_A', 0.001);
@@ -509,10 +514,8 @@ function extractHexWordsFromText(text) {
     .replace(/0x/gi, '')
     .replace(/[^0-9a-fA-F]/g, '');
 
-  if (compact.length !== hexPacketWordCount * 4) {
-    throw new Error(
-      `hex packet must contain exactly ${hexPacketWordCount} words`
-    );
+  if (compact.length % 4 !== 0 || compact.length < 8) {
+    throw new Error('hex packet must contain complete 16-bit words');
   }
 
   const words = [];
@@ -525,10 +528,8 @@ function extractHexWordsFromText(text) {
 }
 
 function extractHexWordsFromRawBuffer(buffer) {
-  if (!Buffer.isBuffer(buffer) || buffer.length !== hexPacketByteCount) {
-    throw new Error(
-      `raw hex packet must contain exactly ${hexPacketByteCount} bytes`
-    );
+  if (!Buffer.isBuffer(buffer) || !hexPacketByteCounts.has(buffer.length)) {
+    throw new Error('raw hex packet must contain 32 or 40 bytes');
   }
 
   const words = [];
@@ -541,8 +542,8 @@ function extractHexWordsFromRawBuffer(buffer) {
 }
 
 function normalizeHexPacketWords(words) {
-  if (!Array.isArray(words) || words.length !== hexPacketWordCount) {
-    throw new Error(`hex packet must contain ${hexPacketWordCount} words`);
+  if (!Array.isArray(words) || words.length < 2) {
+    throw new Error('hex packet must contain a header');
   }
 
   if (words[0] !== hexPacketMagic) {
@@ -550,6 +551,16 @@ function normalizeHexPacketWords(words) {
   }
 
   const versionWord = words[1];
+  const expectedWordCount = versionWord === hexPacketVersionPeripheralSensors
+    ? hexPacketPeripheralWordCount
+    : hexPacketLegacyWordCount;
+
+  if (words.length !== expectedWordCount) {
+    throw new Error(
+      `hex packet version 0x${versionWord.toString(16).padStart(4, '0')} ` +
+      `must contain ${expectedWordCount} words`
+    );
+  }
 
   if (versionWord === hexPacketVersionRawIna226) {
     return {
@@ -694,6 +705,41 @@ function normalizeHexPacketWords(words) {
     };
   }
 
+  if (versionWord === hexPacketVersionPeripheralSensors) {
+    const v3Words = words.slice(0, hexPacketLegacyWordCount);
+    v3Words[1] = hexPacketVersionValidatedRaw;
+    const packet = normalizeHexPacketWords(v3Words);
+    const flags = words[16];
+    const temperatureValid = (flags & 0x0001) !== 0;
+    const lightValid = (flags & 0x0002) !== 0;
+
+    if (lightValid && words[19] > 10_000) {
+      throw new Error('v4 relative light level exceeds 10000 basis points');
+    }
+
+    packet.packet_format = 'hex-v4-peripheral-sensors';
+    packet.telemetry.peripheral = {
+      temperatureC: temperatureValid
+        ? decodeSignedWord(words[17]) / 100
+        : null,
+      temperatureSaturated: temperatureValid
+        ? (flags & 0x0004) !== 0
+        : null,
+      lightVoltageMv: lightValid ? words[18] : null,
+      relativeLightLevel: lightValid ? words[19] / 10_000 : null,
+      lightSaturated: lightValid
+        ? (flags & 0x0008) !== 0
+        : null
+    };
+    packet.raw.peripheral = {
+      flags,
+      temperature_centi_c: words[17],
+      light_voltage_mv: words[18],
+      relative_light_basis_points: words[19]
+    };
+    return packet;
+  }
+
   throw new Error(`unsupported hex packet version 0x${versionWord.toString(16).padStart(4, '0')}`);
 }
 
@@ -715,7 +761,52 @@ function normalizeLegacyTelemetry(value) {
     }
   }
 
-  return telemetry;
+  const peripheral = normalizeOptionalPeripheral(value.peripheral);
+  return peripheral === undefined ? telemetry : { ...telemetry, peripheral };
+}
+
+function normalizeOptionalPeripheral(value) {
+  if (value === undefined) return undefined;
+  if (value === null) {
+    return {
+      temperatureC: null,
+      temperatureSaturated: null,
+      lightVoltageMv: null,
+      relativeLightLevel: null,
+      lightSaturated: null
+    };
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    throw new Error('peripheral must be an object or null');
+  }
+
+  const optionalNumber = (fieldName) => {
+    const fieldValue = value[fieldName];
+    if (fieldValue === undefined || fieldValue === null) return null;
+    return asFiniteNumber(fieldValue, `peripheral.${fieldName}`);
+  };
+  const optionalBoolean = (fieldName) => {
+    const fieldValue = value[fieldName];
+    if (fieldValue === undefined || fieldValue === null) return null;
+    if (typeof fieldValue !== 'boolean') {
+      throw new Error(`peripheral.${fieldName} must be a boolean or null`);
+    }
+    return fieldValue;
+  };
+
+  const relativeLightLevel = optionalNumber('relativeLightLevel');
+  if (relativeLightLevel !== null &&
+      (relativeLightLevel < 0 || relativeLightLevel > 1)) {
+    throw new Error('peripheral.relativeLightLevel must be between 0 and 1');
+  }
+
+  return {
+    temperatureC: optionalNumber('temperatureC'),
+    temperatureSaturated: optionalBoolean('temperatureSaturated'),
+    lightVoltageMv: optionalNumber('lightVoltageMv'),
+    relativeLightLevel,
+    lightSaturated: optionalBoolean('lightSaturated')
+  };
 }
 
 function normalizeGroupedTelemetry(value) {
@@ -788,7 +879,7 @@ function normalizeGroupedTelemetry(value) {
     value?.load_current_a
   );
 
-  return {
+  const normalized = {
     mcu: {
       temperatureC: asFiniteNumber(mcuTemperature, 'mcu.temperatureC')
     },
@@ -810,6 +901,10 @@ function normalizeGroupedTelemetry(value) {
       currentA: asFiniteNumber(loadCurrentA, 'load.currentA')
     }
   };
+
+  const peripheral = normalizeOptionalPeripheral(value?.peripheral);
+  if (peripheral !== undefined) normalized.peripheral = peripheral;
+  return normalized;
 }
 
 function normalizeTelemetry(value) {
@@ -1013,7 +1108,7 @@ function decodeUdpPacket(message) {
     return normalizeHexPacketText(text);
   }
 
-  if (message.length === hexPacketByteCount) {
+  if (hexPacketByteCounts.has(message.length)) {
     return normalizeHexPacketWords(
       extractHexWordsFromRawBuffer(message)
     );
