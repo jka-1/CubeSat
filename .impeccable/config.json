@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "site/assets/css/styles.css"
+        ],
+        "createdAt": "2026-09-29T21:31:55.423Z",
+        "reason": "User confirmed the existing gradient heading should be ignored so hardware implementation can proceed"
+      }
+    ]
+  }
+}
