@@ -4,6 +4,7 @@ const bridgeUrl = String(
 const timeoutMs = readPositiveInteger('INA226_LIVE_TIMEOUT_MS', 60_000);
 const pollMs = readPositiveInteger('INA226_LIVE_POLL_MS', 500);
 const commandToken = String(process.env.COMMAND_TOKEN || '');
+const checkStartedAt = Date.now();
 
 function readPositiveInteger(name, fallback) {
   const value = Number(process.env[name] || fallback);
@@ -50,6 +51,8 @@ function validateTelemetry(body) {
   const envelope = body?.latest;
   const packet = envelope?.packet;
   if (packet?.packet_format !== 'ina226-load-v1') return null;
+  const receivedAt = Date.parse(envelope?.received_at || '');
+  if (!Number.isFinite(receivedAt) || receivedAt < checkStartedAt) return null;
   if (envelope?.network?.bytes !== 10) {
     throw new Error(`INA226 packet was ${envelope?.network?.bytes ?? 'unknown'} bytes, expected 10`);
   }
