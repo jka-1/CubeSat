@@ -1,342 +1,274 @@
-<section id="communication" class="page active">
-  <div class="section-header">
+<section id="communication" class="page active i2c-page">
+  <header class="i2c-page-header">
     <div>
-      <div class="eyebrow"><span class="pulse"></span> I2C Telemetry Dashboard</div>
-      <h2>Live power-path demo view</h2>
-      <p>
-        This page reuses the working UDP-to-browser telemetry stream and presents MCU temperature,
-        the new ADC peripheral sensors, PV input, MPPT switch health, BMS cell voltages, and
-        optional load telemetry when a second INA226 is available.
-      </p>
+      <h1>I²C power system</h1>
+      <p>Select any connected module to inspect its live telemetry without leaving the bus view.</p>
     </div>
-    <div id="i2cBusStatus" class="status-pill offline">Mock data active</div>
-  </div>
+    <div class="i2c-mode-key" aria-label="Bus view legend">
+      <span><i class="legend-line sda"></i>SDA data</span>
+      <span><i class="legend-line scl"></i>SCL clock</span>
+    </div>
+  </header>
 
-  <section class="card span-full">
-    <div class="card-header">
-      <h3 class="card-title">System Snapshot</h3>
-      <span class="status-pill">Demo Overview</span>
-    </div>
-    <div class="card-body">
-      <div class="pack-summary summary-grid">
-        <div class="metric-tile">
-          <span>MCU Temp</span>
-          <strong id="summaryMcuTemp">-- °C</strong>
-        </div>
-        <div class="metric-tile">
-          <span>Peripheral Temperature</span>
-          <strong id="summaryPeripheralTemp">Unavailable</strong>
-        </div>
-        <div class="metric-tile">
-          <span>Relative Light Level</span>
-          <strong id="summaryRelativeLight">Unavailable</strong>
-        </div>
-        <div class="metric-tile">
-          <span>Input Select</span>
-          <strong id="summaryMpptState">--</strong>
-        </div>
-        <div class="metric-tile">
-          <span>PV Power</span>
-          <strong id="summaryPvPower">-- W</strong>
-        </div>
-        <div class="metric-tile">
-          <span>Load Power</span>
-          <strong id="summaryLoadPower">-- W</strong>
-        </div>
-        <div class="metric-tile">
-          <span>Net Power</span>
-          <strong id="summaryNetPower">-- W</strong>
-        </div>
+  <p id="detailDataNote" class="i2c-data-note">
+    Mock data is active by default. Connect the live stream from System Overview when hardware is ready.
+  </p>
+
+  <section class="i2c-workspace" aria-label="Interactive I2C bus topology">
+    <div class="telemetry-page-bank" aria-label="Telemetry and peripheral pages">
+      <div class="page-bank-label">
+        <span>Telemetry pages</span>
+        <small>Physical bus branches shown individually</small>
       </div>
 
-      <div class="panel-meta summary-meta">
-        <span>Device: <strong id="summaryDeviceId">Mock source</strong></span>
-        <span>Sequence: <strong id="summarySequence">--</strong></span>
-        <span>Transmitted: <strong id="summaryTransmittedAt">Mock mode</strong></span>
-        <span>Received by Droplet: <strong id="summaryReceivedAt">Local render</strong></span>
+      <button class="topology-tile page-tile" type="button" data-detail-target="overview">
+        <strong>Overview</strong>
+        <span class="tile-meta">System telemetry</span>
+        <span id="overviewPreview" class="tile-value">PV -- W · LOAD -- W</span>
+        <span class="tile-action">
+          Open page
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
+        </span>
+      </button>
+
+      <button class="topology-tile page-tile bus-leader-tile" type="button" data-detail-target="mcu">
+        <span class="page-port" aria-hidden="true"><i></i><i></i></span>
+        <strong>ESP32-S3</strong>
+        <span class="tile-meta">Controller · I²C leader</span>
+        <span id="mcuPreview" class="tile-value">-- °C</span>
+        <span class="tile-action">
+          Open page
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
+        </span>
+      </button>
+
+      <button class="topology-tile page-tile non-i2c-tile" type="button" data-detail-target="environment">
+        <strong>Light + temperature</strong>
+        <span class="tile-meta">ADC1 · not on I²C</span>
+        <span id="environmentPreview" class="tile-value">Awaiting sensors</span>
+        <span class="tile-action">
+          Open page
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
+        </span>
+      </button>
+
+      <button class="topology-tile page-tile" type="button" data-detail-target="console">
+        <strong>Bus console</strong>
+        <span class="tile-meta">Lab access · logical view</span>
+        <span id="consolePreview" class="tile-value">Controls locked</span>
+        <span class="tile-action">
+          Open page
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
+        </span>
+      </button>
+    </div>
+
+    <div class="i2c-rails" aria-label="I2C bus lines">
+      <div class="rail rail-sda"><span>SDA · DATA</span></div>
+      <div class="rail rail-scl"><span>SCL · CLOCK</span></div>
+
+      <div class="bus-connection-status" aria-live="polite">
+        <span class="bus-status-lights" aria-hidden="true"><i></i><i></i></span>
+        <span>
+          <small>Bus connection</small>
+          <strong id="i2cBusStatus" class="offline">Mock data active</strong>
+        </span>
       </div>
+    </div>
+
+    <div class="device-bank" aria-label="I2C follower devices">
+      <button class="topology-tile device-tile" type="button" data-detail-target="pv">
+        <span class="device-port" aria-hidden="true"><i></i><i></i></span>
+        <strong>INA226</strong>
+        <span class="tile-meta">PV monitor · 0x40 follower</span>
+        <span id="pvPreview" class="tile-value">-- W · -- A</span>
+        <span class="device-ack">ACK · simulated</span>
+      </button>
+
+      <button class="topology-tile device-tile" type="button" data-detail-target="mppt">
+        <span class="device-port" aria-hidden="true"><i></i><i></i></span>
+        <strong>BQ25798</strong>
+        <span class="tile-meta">MPPT / BQ25 · 0x6B follower</span>
+        <span id="mpptPreview" class="tile-value">Input --</span>
+        <span class="device-ack">ACK · simulated</span>
+      </button>
+
+      <button class="topology-tile device-tile" type="button" data-detail-target="bms">
+        <span class="device-port" aria-hidden="true"><i></i><i></i></span>
+        <strong>BQ76942</strong>
+        <span class="tile-meta">Battery monitor · 0x08 follower</span>
+        <span id="bmsPreview" class="tile-value">Pack -- V</span>
+        <span class="device-ack">ACK · simulated</span>
+      </button>
+
+      <button class="topology-tile device-tile" type="button" data-detail-target="load">
+        <span class="device-port" aria-hidden="true"><i></i><i></i></span>
+        <strong>INA226</strong>
+        <span class="tile-meta">Load monitor · 0x41 optional</span>
+        <span id="loadPreview" class="tile-value">Not wired</span>
+        <span class="device-ack idle">IDLE · optional</span>
+      </button>
+    </div>
+
+    <div id="i2cDetailLayer" class="i2c-detail-layer" aria-hidden="true">
+      <section
+        class="i2c-detail-window"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="i2cDetailTitle"
+        tabindex="-1"
+      >
+        <header class="detail-window-header">
+          <div>
+            <span id="i2cDetailContext">I²C module</span>
+            <h2 id="i2cDetailTitle">Telemetry detail</h2>
+          </div>
+          <button class="detail-close" type="button" data-close-detail aria-label="Close telemetry detail">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+
+        <div class="detail-window-body">
+          <div class="detail-panel" data-detail-panel="overview" data-title="System overview" data-context="Telemetry page" hidden>
+            <div class="pack-summary summary-grid">
+              <div class="metric-tile"><span>MCU Temp</span><strong id="summaryMcuTemp">-- °C</strong></div>
+              <div class="metric-tile"><span>Peripheral Temp</span><strong id="summaryPeripheralTemp">Unavailable</strong></div>
+              <div class="metric-tile"><span>Relative Light</span><strong id="summaryRelativeLight">Unavailable</strong></div>
+              <div class="metric-tile"><span>Input Select</span><strong id="summaryMpptState">--</strong></div>
+              <div class="metric-tile"><span>PV Power</span><strong id="summaryPvPower">-- W</strong></div>
+              <div class="metric-tile"><span>Load Power</span><strong id="summaryLoadPower">-- W</strong></div>
+              <div class="metric-tile"><span>Net Power</span><strong id="summaryNetPower">-- W</strong></div>
+            </div>
+            <div class="panel-meta summary-meta">
+              <span>Device: <strong id="summaryDeviceId">Mock source</strong></span>
+              <span>Sequence: <strong id="summarySequence">--</strong></span>
+              <span>Transmitted: <strong id="summaryTransmittedAt">Mock mode</strong></span>
+              <span>Received: <strong id="summaryReceivedAt">Local render</strong></span>
+            </div>
+            <div class="telemetry-box stream-box">
+              <div class="telemetry-toolbar">
+                <input id="streamUrl" class="input" value="/telemetry/events" aria-label="Telemetry event stream URL" />
+                <button class="button" id="connectButton" type="button">Connect live</button>
+                <button class="button secondary" id="mockButton" type="button">Use mock data</button>
+              </div>
+              <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
+            </div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="mcu" data-title="ESP32-S3 controller" data-context="0x— · bus leader" hidden>
+            <div class="pack-summary">
+              <div class="metric-tile"><span>Temperature</span><strong id="mcuTemperatureValue">-- °C</strong></div>
+              <div class="metric-tile"><span>Status</span><strong id="mcuTemperatureStatus">--</strong></div>
+            </div>
+            <div id="mcuMeters" class="cells" aria-label="MCU temperature telemetry"></div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="environment" data-title="Light + temperature" data-context="ADC1 peripheral sensors · not connected to I²C" hidden>
+            <div class="pack-summary">
+              <div class="metric-tile">
+                <span>Peripheral Temperature</span>
+                <strong id="peripheralTemperatureValue">Unavailable</strong>
+                <small id="peripheralTemperatureStatus" class="metric-detail">UNAVAILABLE</small>
+              </div>
+              <div class="metric-tile">
+                <span>Relative Light Level</span>
+                <strong id="relativeLightValue">Unavailable</strong>
+                <small id="lightVoltageValue" class="metric-detail">Unavailable</small>
+              </div>
+            </div>
+            <p class="detail-explainer">
+              Relative light is calibrated LIGHT_OUT voltage divided by 3100 mV and clamped to 0–100%. It is not a lux measurement.
+            </p>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="pv" data-title="PV current monitor" data-context="INA226 · address 0x40" hidden>
+            <div class="pack-summary">
+              <div class="metric-tile"><span>Shunt Voltage</span><strong id="pvShuntValue">-- mV</strong></div>
+              <div class="metric-tile"><span>Power</span><strong id="pvPowerValue">-- W</strong></div>
+              <div class="metric-tile"><span>Current</span><strong id="pvCurrentValue">-- A</strong></div>
+            </div>
+            <div id="pvMeters" class="cells" aria-label="PV telemetry"></div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="mppt" data-title="MPPT switch" data-context="BQ25798 / BQ25 · address 0x6B" hidden>
+            <div class="pack-summary">
+              <div class="metric-tile"><span>Selected Input</span><strong id="mpptStateValue">--</strong></div>
+              <div class="metric-tile"><span>Fault Count</span><strong id="mpptFaultCount">--</strong></div>
+            </div>
+            <div id="mpptFaults" class="cells" aria-label="MPPT fault status"></div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="bms" data-title="Battery management" data-context="BQ76942 · address 0x08" hidden>
+            <div class="pack-summary summary-grid">
+              <div class="metric-tile"><span>Pack Voltage</span><strong id="bmsPackVoltage">-- V</strong></div>
+              <div class="metric-tile"><span>Average Cell</span><strong id="bmsAverageVoltage">-- V</strong></div>
+              <div class="metric-tile"><span>Lowest Cell</span><strong id="bmsLowestCell">-- V</strong></div>
+              <div class="metric-tile"><span>Cell Delta</span><strong id="bmsCellDelta">-- mV</strong></div>
+            </div>
+            <div id="bmsCells" class="cells" aria-label="Battery cell voltages"></div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="load" data-title="Load current monitor" data-context="Optional INA226 · address 0x41" hidden>
+            <div class="pack-summary">
+              <div class="metric-tile"><span>Shunt Voltage</span><strong id="loadShuntValue">-- mV</strong></div>
+              <div class="metric-tile"><span>Power</span><strong id="loadPowerValue">-- W</strong></div>
+              <div class="metric-tile"><span>Current</span><strong id="loadCurrentValue">-- A</strong></div>
+            </div>
+            <div id="loadMeters" class="cells" aria-label="Load telemetry"></div>
+          </div>
+
+          <div class="detail-panel" data-detail-panel="console" data-title="Bus console" data-context="Server → ESP32 laboratory controls" hidden>
+            <div class="console-stack">
+              <div class="telemetry-toolbar">
+                <input id="commandUrl" class="input" value="/telemetry/command" aria-label="Telemetry command endpoint URL" />
+                <input id="commandTokenInput" class="input" type="password" autocomplete="off" placeholder="Temporary lab command token" aria-label="Temporary lab command token" />
+              </div>
+              <div class="telemetry-toolbar">
+                <select id="debugCommandType" class="input" aria-label="Debug command type">
+                  <option value="i2c_read">I2C Read</option>
+                  <option value="i2c_write">I2C Write</option>
+                </select>
+                <input id="debugAddrInput" class="input" value="0x6B" placeholder="Device address" aria-label="I2C device address" />
+                <input id="debugRegInput" class="input" value="0x13" placeholder="Register" aria-label="I2C register address" />
+                <input id="debugLenInput" class="input" value="1" placeholder="Read size" aria-label="I2C read size" />
+                <input id="debugDataInput" class="input" placeholder="Write bytes, e.g. 0x0A 0x00" aria-label="I2C write data" />
+                <button class="button secondary" id="sendDebugCommandButton" type="button">Send debug</button>
+              </div>
+              <div class="telemetry-toolbar">
+                <select id="sensorControlSelect" class="input" aria-label="Sensor polling control">
+                  <option value="pv">PV / INA226</option>
+                  <option value="bms">BMS / BQ76942</option>
+                  <option value="mppt">MPPT / BQ25798</option>
+                  <option value="all">All sensors</option>
+                </select>
+                <button class="button secondary" id="pauseSensorButton" type="button">Pause polling</button>
+                <button class="button" id="resumeSensorButton" type="button">Resume polling</button>
+              </div>
+              <div class="telemetry-toolbar">
+                <select id="acdrvControlSelect" class="input" aria-label="BQ25798 ACDRV control">
+                  <option value="acdrv1">Select ACDRV1</option>
+                  <option value="acdrv2">Select ACDRV2</option>
+                  <option value="disabled">Disable both ACDRV paths</option>
+                </select>
+                <button class="button secondary" id="applyAcdrvButton" type="button">Apply verified ACDRV control</button>
+                <button class="button" id="ledOnButton" type="button">RGB LED on</button>
+                <button class="button secondary" id="ledOffButton" type="button">RGB LED off</button>
+              </div>
+              <pre id="commandResultLog" class="telemetry-log command-result-log">Debug results will appear here.</pre>
+            </div>
+            <p id="commandTargetNote" class="detail-explainer">Commands route through the droplet bridge to the last telemetry source.</p>
+            <p id="commandAvailabilityNote" class="detail-explainer">Debug controls are locked until the bridge has a fresh ESP32 command target.</p>
+            <p id="nodeAddressNote" class="detail-explainer">ESP32 node address will appear here once live telemetry arrives.</p>
+            <p id="sensorPollingNote" class="detail-explainer">Sensor polling status will appear here once live telemetry arrives.</p>
+          </div>
+        </div>
+      </section>
     </div>
   </section>
 
-  <p id="detailDataNote" class="footer-note">
-    Mock data is active by default. As soon as the firmware starts sending the new packet fields,
-    this page can switch to the live stream without changing the front-end layout.
-  </p>
-
-  <div class="dashboard-grid telemetry-grid">
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">MCU Temperature</h3>
-        <span class="status-pill">ESP32 Sensor</span>
-      </div>
-      <div class="card-body">
-        <div class="pack-summary">
-          <div class="metric-tile">
-            <span>Temperature</span>
-            <strong id="mcuTemperatureValue">-- °C</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Status</span>
-            <strong id="mcuTemperatureStatus">--</strong>
-          </div>
-        </div>
-        <div id="mcuMeters" class="cells" aria-label="MCU temperature telemetry"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">Peripheral Sensors</h3>
-        <span class="status-pill">ADC1</span>
-      </div>
-      <div class="card-body">
-        <div class="pack-summary">
-          <div class="metric-tile">
-            <span>Peripheral Temperature</span>
-            <strong id="peripheralTemperatureValue">Unavailable</strong>
-            <small id="peripheralTemperatureStatus" class="metric-detail">UNAVAILABLE</small>
-          </div>
-          <div class="metric-tile">
-            <span>Relative Light Level</span>
-            <strong id="relativeLightValue">Unavailable</strong>
-            <small id="lightVoltageValue" class="metric-detail">Unavailable</small>
-          </div>
-        </div>
-        <p class="footer-note">
-          Relative light is the calibrated LIGHT_OUT voltage divided by 3100 mV and clamped to
-          0–100%. It is not a lux measurement. LIGHT_OUT uses the board's 10 kΩ resistor to ground.
-        </p>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">PV Panels</h3>
-        <span class="status-pill">INA226 #1</span>
-      </div>
-      <div class="card-body">
-        <div class="pack-summary">
-          <div class="metric-tile">
-            <span>Shunt Voltage</span>
-            <strong id="pvShuntValue">-- mV</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Power</span>
-            <strong id="pvPowerValue">-- W</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Current</span>
-            <strong id="pvCurrentValue">-- A</strong>
-          </div>
-        </div>
-        <div id="pvMeters" class="cells" aria-label="PV telemetry"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">MPPT Switch</h3>
-        <span class="status-pill">BQ25EVM</span>
-      </div>
-      <div class="card-body">
-        <div class="pack-summary">
-          <div class="metric-tile">
-            <span>Selected Input</span>
-            <strong id="mpptStateValue">--</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Fault Count</span>
-            <strong id="mpptFaultCount">--</strong>
-          </div>
-        </div>
-        <div id="mpptFaults" class="cells" aria-label="MPPT fault status"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">Battery Management</h3>
-        <span class="status-pill">BQ79EVM</span>
-      </div>
-      <div class="card-body">
-        <div class="pack-summary">
-          <div class="metric-tile">
-            <span>Pack Voltage</span>
-            <strong id="bmsPackVoltage">-- V</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Average Cell</span>
-            <strong id="bmsAverageVoltage">-- V</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Lowest Cell</span>
-            <strong id="bmsLowestCell">-- V</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Cell Delta</span>
-            <strong id="bmsCellDelta">-- mV</strong>
-          </div>
-        </div>
-        <div id="bmsCells" class="cells" aria-label="Battery cell voltages"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">Load</h3>
-        <span class="status-pill">Optional INA226 #2</span>
-      </div>
-      <div class="card-body">
-        <div class="pack-summary">
-          <div class="metric-tile">
-            <span>Shunt Voltage</span>
-            <strong id="loadShuntValue">-- mV</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Power</span>
-            <strong id="loadPowerValue">-- W</strong>
-          </div>
-          <div class="metric-tile">
-            <span>Current</span>
-            <strong id="loadCurrentValue">-- A</strong>
-          </div>
-        </div>
-        <div id="loadMeters" class="cells" aria-label="Load telemetry"></div>
-      </div>
-    </section>
-
-    <section class="card stream-panel-card">
-      <div class="card-header">
-        <h3 class="card-title">Telemetry Stream</h3>
-        <span class="status-pill">UDP → SSE Bridge</span>
-      </div>
-      <div class="card-body">
-        <div class="telemetry-box stream-box">
-          <div class="telemetry-toolbar">
-            <input
-              id="streamUrl"
-              class="input"
-              value="/telemetry/events"
-              aria-label="Telemetry event stream URL"
-            />
-            <button class="button" id="connectButton" type="button">Connect Live</button>
-            <button class="button secondary" id="mockButton" type="button">Use Mock Data</button>
-          </div>
-          <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <div class="card-header">
-        <h3 class="card-title">Command Console</h3>
-        <span class="status-pill">Server → ESP32</span>
-      </div>
-      <div class="card-body">
-        <div class="telemetry-box stream-box">
-          <div class="telemetry-toolbar">
-            <input
-              id="commandUrl"
-              class="input"
-              value="/telemetry/command"
-              aria-label="Telemetry command endpoint URL"
-            />
-            <input
-              id="commandTokenInput"
-              class="input"
-              type="password"
-              autocomplete="off"
-              placeholder="Temporary lab command token"
-              aria-label="Temporary lab command token"
-            />
-          </div>
-          <div class="telemetry-toolbar">
-            <select id="debugCommandType" class="input" aria-label="Debug command type">
-              <option value="i2c_read">I2C Read</option>
-              <option value="i2c_write">I2C Write</option>
-            </select>
-            <input
-              id="debugAddrInput"
-              class="input"
-              value="0x6B"
-              placeholder="Device address"
-              aria-label="I2C device address"
-            />
-            <input
-              id="debugRegInput"
-              class="input"
-              value="0x13"
-              placeholder="Register"
-              aria-label="I2C register address"
-            />
-            <input
-              id="debugLenInput"
-              class="input"
-              value="1"
-              placeholder="Read size"
-              aria-label="I2C read size"
-            />
-            <input
-              id="debugDataInput"
-              class="input"
-              placeholder="Write bytes, for example 0x0A 0x00"
-              aria-label="I2C write data"
-            />
-            <button class="button secondary" id="sendDebugCommandButton" type="button">Send Debug</button>
-          </div>
-          <div class="telemetry-toolbar">
-            <select id="sensorControlSelect" class="input" aria-label="Sensor polling control">
-              <option value="pv">PV / INA226</option>
-              <option value="bms">BMS / BQ76942</option>
-              <option value="mppt">MPPT / BQ25798</option>
-              <option value="all">All Sensors</option>
-            </select>
-            <button class="button secondary" id="pauseSensorButton" type="button">Pause Polling</button>
-            <button class="button" id="resumeSensorButton" type="button">Resume Polling</button>
-          </div>
-          <div class="telemetry-toolbar">
-            <select id="acdrvControlSelect" class="input" aria-label="BQ25798 ACDRV control">
-              <option value="acdrv1">Select ACDRV1</option>
-              <option value="acdrv2">Select ACDRV2</option>
-              <option value="disabled">Disable Both ACDRV Paths</option>
-            </select>
-            <button class="button secondary" id="applyAcdrvButton" type="button">
-              Apply Verified ACDRV Control
-            </button>
-            <button class="button" id="ledOnButton" type="button">RGB LED On</button>
-            <button class="button secondary" id="ledOffButton" type="button">RGB LED Off</button>
-          </div>
-          <pre id="commandResultLog" class="telemetry-log command-result-log">Debug results will appear here.</pre>
-        </div>
-        <p id="commandTargetNote" class="footer-note">
-          Commands are sent through the droplet bridge to the last telemetry source unless a fixed
-          command target is configured on the server.
-        </p>
-        <p id="commandAvailabilityNote" class="footer-note">
-          Debug controls are locked until the bridge has a fresh ESP32 command target.
-        </p>
-        <p class="footer-note">
-          Supported debug devices: BMS <code>0x08</code>, PV <code>0x40</code>, and MPPT
-          <code>0x6B</code>. ACDRV commands preserve unrelated register bits and require readback;
-          physical PACK voltage must still be confirmed at the hardware.
-        </p>
-        <p class="footer-note">
-          RGB LED control targets the ESP32-S3-DevKitC-1 v1.1 addressable LED on GPIO 38. Initial
-          board revisions require changing the firmware setting to GPIO 48 before flashing.
-        </p>
-        <p id="nodeAddressNote" class="footer-note">
-          ESP32 node address will appear here once live telemetry arrives.
-        </p>
-        <p id="sensorPollingNote" class="footer-note">
-          Sensor polling status will appear here once live telemetry arrives.
-        </p>
-      </div>
-    </section>
-  </div>
-
-  <p class="footer-note">
-    Expected live payload groups: <code>mcu</code>, <code>pv</code>, <code>mppt</code>,
-    <code>bms</code>, optional <code>load</code>, and optional <code>peripheral</code>. This page listens to the existing same-origin
-    event stream so the current droplet transport can stay in place for the lab handoff.
+  <p class="i2c-footnote">
+    Demonstration values are simulated until a live packet is connected. Supported followers: PV INA226 <code>0x40</code>, BQ76942 <code>0x08</code>, and BQ25798 <code>0x6B</code>.
   </p>
 </section>

@@ -586,7 +586,6 @@ h1 {
   width: 50%;
   border-radius: inherit;
   background: linear-gradient(90deg, #8f6a16, #d4af37, #fff2b8);
-  transition: width 300ms ease;
 }
 
 .cell-meta,
@@ -1179,6 +1178,704 @@ h1 {
 .bus-stat strong {
   color: var(--gold-soft);
   font-size: 1.2rem;
+}
+
+/* I2C topology dashboard */
+.i2c-page {
+  --sda: #ef444f;
+  --scl: #54d98c;
+  --instrument: #0b0e0f;
+  --instrument-raised: #121617;
+  --instrument-line: rgba(242, 240, 232, 0.14);
+  max-width: 1220px;
+  margin: 0 auto;
+}
+
+.i2c-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 12px;
+}
+
+.i2c-page-header h1 {
+  margin: 0 0 8px;
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 0.96;
+  letter-spacing: -0.04em;
+}
+
+.i2c-page-header p {
+  max-width: 68ch;
+  margin: 0;
+  color: var(--white-soft);
+  line-height: 1.55;
+}
+
+.i2c-mode-key {
+  display: flex;
+  gap: 16px;
+  padding-bottom: 4px;
+  color: var(--white-soft);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.i2c-mode-key span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.legend-line {
+  display: inline-block;
+  width: 28px;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.legend-line.sda { background: var(--sda); }
+.legend-line.scl { background: var(--scl); }
+
+.i2c-data-note {
+  margin: 0 0 16px;
+  color: #b7bdb9;
+  font-size: 0.8rem;
+}
+
+.i2c-workspace {
+  position: relative;
+  min-height: 660px;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 16px;
+  background:
+    linear-gradient(rgba(242, 240, 232, 0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(242, 240, 232, 0.025) 1px, transparent 1px),
+    rgba(3, 5, 6, 0.94);
+  background-size: 32px 32px;
+  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
+  isolation: isolate;
+}
+
+.telemetry-page-bank {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: min(10in, calc(100% - 56px));
+  min-height: 166px;
+  padding: 34px 18px 16px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  transform: translateX(-50%);
+  border: 1px solid rgba(212, 175, 55, 0.24);
+  border-radius: 14px;
+  background: rgba(9, 12, 13, 0.97);
+}
+
+.page-bank-label {
+  position: absolute;
+  top: 9px;
+  left: 18px;
+  right: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--gold-soft);
+  font-size: 0.69rem;
+  font-weight: 850;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.page-bank-label small {
+  color: #8f9993;
+  font: inherit;
+  font-weight: 700;
+}
+
+.topology-tile {
+  position: relative;
+  min-width: 0;
+  min-height: 124px;
+  padding: 14px;
+  overflow: hidden;
+  border: 1px solid var(--instrument-line);
+  border-radius: 12px;
+  background: var(--instrument-raised);
+  color: var(--white);
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.24);
+  transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
+}
+
+.topology-tile:hover {
+  border-color: rgba(242, 200, 80, 0.62);
+  background: #171c1d;
+  transform: translateY(-2px);
+}
+
+.topology-tile:focus-visible,
+.detail-close:focus-visible {
+  outline: 3px solid rgba(242, 200, 80, 0.92);
+  outline-offset: 3px;
+}
+
+.topology-tile strong {
+  display: block;
+  margin-top: 0;
+  font-size: 1.08rem;
+  line-height: 1.16;
+  letter-spacing: -0.02em;
+}
+
+.tile-meta {
+  display: block;
+  margin-top: 5px;
+  color: #a7b0ab;
+  font-size: 0.69rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.tile-value {
+  display: block;
+  margin-top: 9px;
+  overflow: hidden;
+  color: #e7e9e5;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tile-action {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  color: #98a29c;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tile-action svg {
+  width: 13px;
+  height: 13px;
+  margin-left: 4px;
+  fill: none;
+  stroke: var(--gold-soft);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.5;
+  vertical-align: -2px;
+}
+
+.page-port i,
+.device-port i {
+  position: absolute;
+  top: 0;
+  width: 3px;
+  border-radius: 2px;
+}
+
+.i2c-rails {
+  position: absolute;
+  top: 268px;
+  left: 50%;
+  width: min(10in, calc(100% - 56px));
+  height: 0.5in;
+  transform: translateX(-50%);
+}
+
+.rail {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.rail::before {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+  opacity: 0.3;
+  filter: blur(8px);
+  background: inherit;
+}
+
+.rail span {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.rail-sda {
+  top: 0;
+  background: var(--sda);
+  color: #ff9da3;
+}
+
+.rail-scl {
+  bottom: 0;
+  background: var(--scl);
+  color: #94efb9;
+}
+
+.bus-connection-status {
+  position: absolute;
+  left: 0;
+  top: -68px;
+  min-width: 174px;
+  min-height: 56px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transform: none;
+  border: 1px solid rgba(242, 240, 232, 0.2);
+  border-radius: 12px;
+  background: #101415;
+  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.34);
+  z-index: 2;
+}
+
+.bus-status-lights {
+  display: grid;
+  gap: 5px;
+}
+
+.bus-status-lights i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: #e3bc57;
+  box-shadow: 0 0 9px rgba(227, 188, 87, 0.46);
+}
+
+.bus-connection-status small,
+.bus-connection-status strong {
+  display: block;
+}
+
+.bus-connection-status small {
+  margin-bottom: 3px;
+  color: #8f9993;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.bus-connection-status strong {
+  color: var(--warning);
+  font-size: 0.76rem;
+}
+
+.bus-connection-status strong.online { color: var(--success); }
+
+.i2c-workspace[data-stream-state="online"] .rail {
+  animation: busSignal 1.3s ease-in-out infinite alternate;
+}
+
+.i2c-workspace[data-stream-state="online"] .bus-status-lights i {
+  background: var(--success);
+  box-shadow: 0 0 12px rgba(84, 239, 120, 0.72);
+}
+
+@keyframes busSignal {
+  from { filter: brightness(0.9); }
+  to { filter: brightness(1.35); }
+}
+
+.device-bank {
+  position: absolute;
+  top: 396px;
+  left: 50%;
+  width: min(10in, calc(100% - 56px));
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  transform: translateX(-50%);
+}
+
+.device-tile {
+  min-height: 158px;
+  overflow: visible;
+}
+
+.bus-leader-tile {
+  overflow: visible;
+}
+
+.non-i2c-tile .tile-meta {
+  color: #b8c0bb;
+}
+
+.page-port {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  width: 34px;
+  height: 138px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.page-port i:first-child {
+  left: 6px;
+  height: 90px;
+  background: var(--sda);
+}
+
+.page-port i:last-child {
+  right: 6px;
+  height: 138px;
+  background: var(--scl);
+}
+
+.device-ack {
+  position: absolute;
+  left: 14px;
+  bottom: 11px;
+  color: var(--success);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.device-ack.idle { color: var(--warning); }
+
+.device-port {
+  position: absolute;
+  top: -128px;
+  left: 50%;
+  width: 34px;
+  height: 128px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.device-port i:first-child {
+  left: 6px;
+  height: 128px;
+  background: var(--sda);
+}
+
+.device-port i:last-child {
+  right: 6px;
+  top: 48px;
+  height: 80px;
+  background: var(--scl);
+}
+
+.i2c-detail-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: none;
+  place-items: center;
+  padding: 22px;
+  background: rgba(0, 0, 0, 0.78);
+}
+
+.i2c-detail-layer.is-open { display: grid; }
+
+.i2c-detail-window {
+  width: min(5in, calc(100% - 12px));
+  height: min(3in, calc(100% - 12px));
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid rgba(242, 200, 80, 0.52);
+  border-radius: 14px;
+  background: #0a0d0e;
+  box-shadow: 0 30px 100px rgba(0, 0, 0, 0.7);
+  outline: none;
+  animation: detailReveal 180ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes detailReveal {
+  from { opacity: 0.4; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.detail-window-header {
+  min-height: 58px;
+  padding: 10px 12px 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(242, 240, 232, 0.12);
+  background: #111516;
+}
+
+.detail-window-header span {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--gold-soft);
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.detail-window-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: -0.02em;
+}
+
+.detail-close {
+  width: 36px;
+  height: 36px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(242, 240, 232, 0.16);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--white-soft);
+  cursor: pointer;
+}
+
+.detail-close:hover {
+  border-color: rgba(239, 68, 79, 0.58);
+  color: #ff9da3;
+}
+
+.detail-close svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.8;
+}
+
+.detail-window-body {
+  flex: 1;
+  min-height: 0;
+  padding: 16px;
+  overflow: auto;
+  scrollbar-color: var(--gold-deep) #111516;
+  scrollbar-width: thin;
+}
+
+.detail-window-body::-webkit-scrollbar { width: 9px; }
+.detail-window-body::-webkit-scrollbar-track { background: #111516; }
+.detail-window-body::-webkit-scrollbar-thumb { background: var(--gold-deep); border-radius: 8px; }
+
+.detail-window-body .metric-tile {
+  min-width: 0;
+  padding: 12px;
+  border-radius: 10px;
+}
+
+.detail-window-body .metric-tile span { margin-bottom: 5px; font-size: 0.72rem; }
+.detail-window-body .metric-tile strong { font-size: 1.08rem; }
+.detail-window-body .pack-summary { gap: 9px; }
+.detail-window-body .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.detail-window-body .cells { margin-top: 12px; gap: 9px; }
+.detail-window-body .cell-row { padding: 12px; border-radius: 10px; }
+.detail-window-body .bar { height: 7px; }
+.detail-window-body .telemetry-box { margin-top: 12px; border-radius: 10px; }
+.detail-window-body .telemetry-toolbar { padding: 10px; }
+.detail-window-body .telemetry-log { min-height: 112px; font-size: 0.76rem; }
+
+.detail-explainer {
+  margin: 12px 0 0;
+  color: #aeb6b1;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.console-stack {
+  overflow: hidden;
+  border: 1px solid rgba(242, 240, 232, 0.12);
+  border-radius: 10px;
+}
+
+.console-stack .input {
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: 0.75rem;
+}
+
+.console-stack .button {
+  min-height: 38px;
+  border-radius: 9px;
+  font-size: 0.72rem;
+}
+
+.i2c-footnote {
+  max-width: 90ch;
+  margin: 12px auto 0;
+  color: #8f9993;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.i2c-page ::selection {
+  background: rgba(242, 200, 80, 0.82);
+  color: #050505;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .i2c-workspace[data-stream-state="online"] .rail,
+  .i2c-detail-window {
+    animation: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .i2c-page-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .i2c-mode-key {
+    padding-bottom: 0;
+  }
+
+  .i2c-workspace {
+    min-height: 0;
+    padding: 16px;
+    overflow: visible;
+  }
+
+  .telemetry-page-bank,
+  .i2c-rails,
+  .device-bank {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    transform: none;
+  }
+
+  .telemetry-page-bank {
+    min-height: 0;
+    padding: 38px 12px 12px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .i2c-rails {
+    height: 70px;
+    margin: 18px 0;
+  }
+
+  .rail-sda { top: 0; }
+  .rail-scl { bottom: 0; }
+
+  .bus-connection-status {
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+
+  .bus-leader-tile,
+  .device-tile {
+    padding-right: 76px;
+  }
+
+  .page-port,
+  .device-port {
+    position: absolute;
+    top: 14px;
+    right: 12px;
+    left: auto;
+    width: 48px;
+    height: 26px;
+    display: block;
+    transform: none;
+  }
+
+  .page-port i:first-child,
+  .device-port i:first-child,
+  .page-port i:last-child,
+  .device-port i:last-child {
+    left: 0;
+    right: auto;
+    width: 22px;
+    height: 3px;
+  }
+
+  .page-port i:first-child,
+  .device-port i:first-child { top: 2px; }
+
+  .page-port i:last-child,
+  .device-port i:last-child { top: 17px; }
+
+  .page-port i::after,
+  .device-port i::after {
+    position: absolute;
+    left: 27px;
+    top: -5px;
+    font-size: 0.56rem;
+    font-style: normal;
+    font-weight: 900;
+    letter-spacing: 0.05em;
+  }
+
+  .page-port i:first-child::after,
+  .device-port i:first-child::after {
+    content: "SDA";
+    color: #ff9da3;
+  }
+
+  .page-port i:last-child::after,
+  .device-port i:last-child::after {
+    content: "SCL";
+    color: #94efb9;
+  }
+
+  .device-bank {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .i2c-detail-layer {
+    position: fixed;
+    z-index: 80;
+  }
+
+  .i2c-detail-window {
+    width: min(5in, calc(100vw - 28px));
+    height: min(5.5in, calc(100vh - 44px));
+  }
+}
+
+@media (max-width: 480px) {
+  .telemetry-page-bank,
+  .device-bank {
+    grid-template-columns: 1fr;
+  }
+
+  .topology-tile,
+  .device-tile {
+    min-height: 132px;
+  }
+
+  .page-bank-label small {
+    display: none;
+  }
 }
 
 .partners-grid {

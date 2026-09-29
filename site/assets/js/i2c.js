@@ -65,6 +65,8 @@ let bridgeCommandReady = false;
 let commandAuthRequired = true;
 let streamPanelResizeObserver = null;
 let dataMode = 'mock';
+let communicationRoot = null;
+let activeDetailTrigger = null;
 const pendingCommandIds = new Set();
 const finishedCommandIds = new Set();
 
@@ -180,6 +182,14 @@ function setStreamStatus(text, online = false) {
   streamStatus.textContent = text;
   streamStatus.classList.toggle('offline', !online);
   streamStatus.classList.toggle('online', online);
+
+  const workspace = document.querySelector('.i2c-workspace');
+  if (workspace) workspace.dataset.streamState = online ? 'online' : 'offline';
+
+  document.querySelectorAll('.device-tile:not([data-detail-target="load"]) .device-ack')
+    .forEach((indicator) => {
+      indicator.textContent = online ? 'ACK · live' : 'ACK · simulated';
+    });
 }
 
 function setDetailNote(text) {
@@ -237,6 +247,130 @@ function updateCommandControls() {
     setCommandAvailabilityNote(
       'Debug, verified ACDRV, and GPIO-38 RGB LED controls are ready.'
     );
+  }
+
+  const consolePreview = document.getElementById('consolePreview');
+  if (consolePreview) {
+    consolePreview.textContent = enabled
+      ? 'Controls ready'
+      : bridgeCommandReady
+        ? 'Token required'
+        : 'Controls locked';
+  }
+}
+
+function setPreviewText(id, text) {
+  const element = document.getElementById(id);
+  if (element) element.textContent = text;
+}
+
+function renderTopologyPreviews(telemetry) {
+  const pvPower = numericValue(telemetry.pv?.powerW);
+  const pvCurrent = numericValue(telemetry.pv?.currentA);
+  const loadAvailable = hasPowerTelemetry(telemetry.load);
+  const loadPower = loadAvailable ? numericValue(telemetry.load?.powerW) : null;
+  const loadCurrent = loadAvailable ? numericValue(telemetry.load?.currentA) : null;
+  const temperature = numericValue(telemetry.mcu?.temperatureC);
+  const peripheralTemperature = numericValue(telemetry.peripheral?.temperatureC);
+  const relativeLight = numericValue(telemetry.peripheral?.relativeLightLevel);
+  const cells = Array.isArray(telemetry.bms?.cellVoltagesV)
+    ? telemetry.bms.cellVoltagesV.map(numericValue).filter((value) => value !== null)
+    : [];
+  const packVoltage = cells.length
+    ? cells.reduce((sum, value) => sum + value, 0)
+    : null;
+
+  setPreviewText(
+    'overviewPreview',
+    `PV ${formatNumber(pvPower, 1)} W · LOAD ${loadAvailable ? formatNumber(loadPower, 1) : '--'} W`
+  );
+  setPreviewText('mcuPreview', temperature === null ? 'Awaiting packet' : formatValue(temperature, '°C', 1));
+  setPreviewText(
+    'environmentPreview',
+    peripheralTemperature === null && relativeLight === null
+      ? 'Awaiting sensors'
+      : `${peripheralTemperature === null ? '-- °C' : formatValue(peripheralTemperature, '°C', 1)} · ` +
+        `${relativeLight === null ? '--%' : `${formatNumber(relativeLight * 100, 0)}% light`}`
+  );
+  setPreviewText('pvPreview', `${formatNumber(pvPower, 1)} W · ${formatNumber(pvCurrent, 2)} A`);
+  setPreviewText('mpptPreview', `Input ${String(telemetry.mppt?.switchState || '--').toUpperCase()}`);
+  setPreviewText('bmsPreview', `Pack ${formatNumber(packVoltage, 2)} V`);
+  setPreviewText(
+    'loadPreview',
+    loadAvailable
+      ? `${formatNumber(loadPower, 1)} W · ${formatNumber(loadCurrent, 2)} A`
+      : 'Not wired'
+  );
+}
+
+function closeDetailPanel() {
+  const layer = document.getElementById('i2cDetailLayer');
+  if (!layer?.classList.contains('is-open')) return;
+
+  layer.classList.remove('is-open');
+  layer.setAttribute('aria-hidden', 'true');
+  layer.querySelectorAll('[data-detail-panel]').forEach((panel) => {
+    panel.hidden = true;
+  });
+  activeDetailTrigger?.focus();
+  activeDetailTrigger = null;
+}
+
+function openDetailPanel(target, trigger) {
+  const layer = document.getElementById('i2cDetailLayer');
+  const panel = layer?.querySelector(`[data-detail-panel="${target}"]`);
+  const windowElement = layer?.querySelector('.i2c-detail-window');
+  if (!layer || !panel || !windowElement) return;
+
+  layer.querySelectorAll('[data-detail-panel]').forEach((candidate) => {
+    candidate.hidden = candidate !== panel;
+  });
+
+  document.getElementById('i2cDetailTitle').textContent = panel.dataset.title || 'Telemetry detail';
+  document.getElementById('i2cDetailContext').textContent = panel.dataset.context || 'I²C module';
+  activeDetailTrigger = trigger;
+  layer.classList.add('is-open');
+  layer.setAttribute('aria-hidden', 'false');
+  layer.querySelector('[data-close-detail]')?.focus();
+}
+
+function onCommunicationClick(event) {
+  const trigger = event.target.closest('[data-detail-target]');
+  if (trigger) {
+    openDetailPanel(trigger.dataset.detailTarget, trigger);
+    return;
+  }
+
+  if (event.target.closest('[data-close-detail]') || event.target.id === 'i2cDetailLayer') {
+    closeDetailPanel();
+  }
+}
+
+function onDetailKeydown(event) {
+  const layer = document.getElementById('i2cDetailLayer');
+  if (!layer?.classList.contains('is-open')) return;
+
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    closeDetailPanel();
+    return;
+  }
+
+  if (event.key !== 'Tab') return;
+
+  const focusable = Array.from(layer.querySelectorAll(
+    'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])'
+  )).filter((element) => !element.closest('[hidden]'));
+  if (!focusable.length) return;
+
+  const first = focusable[0];
+  const last = focusable[focusable.length - 1];
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault();
+    last.focus();
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault();
+    first.focus();
   }
 }
 
@@ -656,6 +790,7 @@ function renderTelemetry(telemetry, metadata = streamMetadata) {
   renderMpptCard(telemetry);
   renderBmsCard(telemetry);
   renderPowerCard('load', 'Load', telemetry.load);
+  renderTopologyPreviews(telemetry);
   queueTelemetryStreamHeightSync();
 }
 
@@ -1338,6 +1473,7 @@ export function initI2CPage() {
   commandAuthRequired = true;
   pendingCommandIds.clear();
   finishedCommandIds.clear();
+  communicationRoot = document.getElementById('communication');
   renderTelemetry(state, streamMetadata);
   setupTelemetryStreamHeightSync();
 
@@ -1366,6 +1502,8 @@ export function initI2CPage() {
   document.getElementById('applyAcdrvButton')?.addEventListener('click', onApplyAcdrvClick);
   document.getElementById('ledOnButton')?.addEventListener('click', onLedOnClick);
   document.getElementById('ledOffButton')?.addEventListener('click', onLedOffClick);
+  communicationRoot?.addEventListener('click', onCommunicationClick);
+  window.addEventListener('keydown', onDetailKeydown);
 
   startMockData();
 }
@@ -1384,6 +1522,10 @@ export function destroyI2CPage() {
   document.getElementById('applyAcdrvButton')?.removeEventListener('click', onApplyAcdrvClick);
   document.getElementById('ledOnButton')?.removeEventListener('click', onLedOnClick);
   document.getElementById('ledOffButton')?.removeEventListener('click', onLedOffClick);
+  communicationRoot?.removeEventListener('click', onCommunicationClick);
+  window.removeEventListener('keydown', onDetailKeydown);
+  communicationRoot = null;
+  activeDetailTrigger = null;
 
   if (mockTimer) {
     clearInterval(mockTimer);
