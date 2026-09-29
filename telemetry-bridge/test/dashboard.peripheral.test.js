@@ -102,10 +102,10 @@ test('production route loads the current communication dashboard assets', async 
     readFile(path.join(repositoryRoot, 'site/assets/js/router.js'), 'utf8')
   ]);
 
-  assert.match(index, /assets\/js\/app\.js\?v=20260929c/);
-  assert.match(index, /assets\/css\/styles\.css\?v=20260929c/);
-  assert.match(app, /router\.js\?v=20260929c/);
-  assert.match(router, /i2c\.js\?v=20260929c/);
+  assert.match(index, /assets\/js\/app\.js\?v=20260929d/);
+  assert.match(index, /assets\/css\/styles\.css\?v=20260929d/);
+  assert.match(app, /router\.js\?v=20260929d/);
+  assert.match(router, /i2c\.js\?v=20260929d/);
   assert.match(router, /communication:\s*`\.\/modules\/communication\.html/);
   assert.match(router, /communication:\s*initI2CPage/);
   assert.match(router, /route === 'dashboard'\) return 'communication'/);

@@ -1087,9 +1087,15 @@ function applyTelemetryPacket(packetEnvelope) {
     const requestId = packetEnvelope.request_id || null;
     const commandStatus = String(packetEnvelope.status || 'unknown');
 
-    if (commandStatus === 'pending') {
+    if (['pending', 'retrying'].includes(commandStatus)) {
       if (requestId && !pendingCommandIds.has(requestId)) {
         trackPendingCommand(requestId, packetEnvelope.summary);
+      }
+      if (commandStatus === 'retrying') {
+        writeCommandResult(
+          `${packetEnvelope.summary || 'Command'} request ${requestId || 'unknown'} ` +
+          `retry ${packetEnvelope.retry || 1} of ${packetEnvelope.max_retries || 1}.`
+        );
       }
       return;
     }
@@ -1429,8 +1435,8 @@ function onSendDebugCommandClick() {
       throw new Error('Address and register must each contain exactly one byte.');
     }
 
-    if (!['0x08', '0x40', '0x41', '0x6B'].includes(normalizedAddress[0])) {
-      throw new Error('Supported device addresses are 0x08, 0x40, 0x41, and 0x6B.');
+    if (!['0x08', '0x40', '0x6B'].includes(normalizedAddress[0])) {
+      throw new Error('Supported device addresses are 0x08, 0x40, and 0x6B.');
     }
   } catch (error) {
     writeLog(`Debug command is invalid: ${error.message}`);

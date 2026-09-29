@@ -9,91 +9,61 @@
 #include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/event_groups.h"
+#include "freertos/task.h"
 #include "ina226.h"
 #include "ina226_protocol.h"
 #include "udp_link.h"
 #include "wifi_station.h"
 
 static const char *TAG = "ina226_load_test";
+static ina226_t sensor;
 
-static void send_write_result(
-    const udp_link_t *link,
-    uint32_t request_id,
-    ina226_result_status_t status,
-    uint16_t requested_value,
-    uint16_t readback_value)
+static int32_t read_calibration(uint16_t *value)
 {
-    char packet[INA226_RESULT_HEX_LENGTH + 1];
-    const size_t packet_length = ina226_protocol_format_result(
-        packet,
-        sizeof(packet),
-        request_id,
-        status,
-        requested_value,
-        readback_value);
-
-    if (packet_length == 0 ||
-        udp_link_send(link, packet, packet_length) != ESP_OK) {
-        ESP_LOGE(TAG, "Unable to send calibration write result");
-    }
+    return ina226_read_register(&sensor, INA226_REG_CALIBRATION, value);
 }
 
-static void handle_calibration_command(
-    const ina226_t *ina226,
-    const udp_link_t *link,
-    const ina226_calibration_command_t *command)
+static int32_t write_calibration(uint16_t value)
 {
-    uint16_t readback = 0;
-    ina226_result_status_t status = INA226_RESULT_OK;
+    const esp_err_t status = ina226_write_register(
+        &sensor,
+        INA226_REG_CALIBRATION,
+        value);
+    if (status == ESP_OK) {
+        vTaskDelay(pdMS_TO_TICKS(INA226_TEST_SETTLE_MS) + 1);
+    }
+    return status;
+}
 
-    if (command->calibration == 0) {
-        status = INA226_RESULT_INVALID_VALUE;
-        (void)ina226_read_register(
-            ina226,
-            INA226_REG_CALIBRATION,
-            &readback);
-    } else {
-        const esp_err_t write_status = ina226_write_register(
-            ina226,
-            INA226_REG_CALIBRATION,
-            command->calibration);
-
-        if (write_status != ESP_OK) {
-            status = INA226_RESULT_I2C_WRITE_FAILED;
-        } else {
-            const esp_err_t read_status = ina226_read_register(
-                ina226,
-                INA226_REG_CALIBRATION,
-                &readback);
-
-            if (read_status != ESP_OK) {
-                status = INA226_RESULT_I2C_READBACK_FAILED;
-            } else if (readback != command->calibration) {
-                status = INA226_RESULT_VERIFY_MISMATCH;
-            }
-        }
+static esp_err_t configure_sensor(void)
+{
+    esp_err_t status = ina226_write_register(
+        &sensor,
+        INA226_REG_CONFIGURATION,
+        INA226_TEST_STARTUP_CONFIG);
+    if (status != ESP_OK) {
+        return status;
     }
 
-    ESP_LOGI(
-        TAG,
-        "Calibration request 0x%08" PRIX32
-        ": requested=0x%04X readback=0x%04X status=%u",
-        command->request_id,
-        (unsigned int)command->calibration,
-        (unsigned int)readback,
-        (unsigned int)status);
+    status = (esp_err_t)write_calibration(
+        INA226_TEST_STARTUP_CALIBRATION);
+    if (status != ESP_OK) {
+        return status;
+    }
 
-    send_write_result(
-        link,
-        command->request_id,
-        status,
-        command->calibration,
-        readback);
+    uint16_t readback = 0;
+    status = (esp_err_t)read_calibration(&readback);
+    if (status != ESP_OK) {
+        return status;
+    }
+    return readback == INA226_TEST_STARTUP_CALIBRATION
+        ? ESP_OK
+        : ESP_ERR_INVALID_RESPONSE;
 }
 
 void app_main(void)
 {
-    const ina226_config_t ina226_config = {
+    const ina226_config_t sensor_config = {
         .port = INA226_TEST_I2C_PORT,
         .sda_gpio = INA226_TEST_I2C_SDA_GPIO,
         .scl_gpio = INA226_TEST_I2C_SCL_GPIO,
@@ -102,32 +72,18 @@ void app_main(void)
         .timeout_ms = INA226_TEST_I2C_TIMEOUT_MS,
     };
 
-    ina226_t ina226;
-    ESP_ERROR_CHECK(ina226_init(&ina226, &ina226_config));
-
-#if INA226_TEST_APPLY_STARTUP_CALIBRATION
-    ESP_ERROR_CHECK(ina226_write_register(
-        &ina226,
-        INA226_REG_CALIBRATION,
-        INA226_TEST_STARTUP_CALIBRATION));
-
-    uint16_t startup_readback = 0;
-    ESP_ERROR_CHECK(ina226_read_register(
-        &ina226,
-        INA226_REG_CALIBRATION,
-        &startup_readback));
-
-    if (startup_readback != INA226_TEST_STARTUP_CALIBRATION) {
-        ESP_LOGE(
-            TAG,
-            "Startup calibration verify failed: wrote 0x%04X, read 0x%04X",
-            (unsigned int)INA226_TEST_STARTUP_CALIBRATION,
-            (unsigned int)startup_readback);
-        ESP_ERROR_CHECK(ESP_ERR_INVALID_RESPONSE);
-    }
-#endif
-
+    ESP_ERROR_CHECK(ina226_init(&sensor, &sensor_config));
     ESP_ERROR_CHECK(wifi_station_init());
+
+    esp_err_t status;
+    while ((status = configure_sensor()) != ESP_OK) {
+        ESP_LOGW(
+            TAG,
+            "INA226 setup failed: %s; retrying in 1 s",
+            esp_err_to_name(status));
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+
     xEventGroupWaitBits(
         wifi_station_event_group(),
         INA226_WIFI_CONNECTED_BIT,
@@ -143,13 +99,12 @@ void app_main(void)
         INA226_TEST_LOCAL_PORT,
         INA226_TEST_REQUIRE_SERVER_PORT != 0));
 
-    uint16_t sequence = 0;
+    ina226_command_state_t commands = {0};
     int64_t next_telemetry_us = 0;
 
     while (true) {
-        const EventBits_t wifi_bits = xEventGroupGetBits(
-            wifi_station_event_group());
-        if ((wifi_bits & INA226_WIFI_CONNECTED_BIT) == 0) {
+        if ((xEventGroupGetBits(wifi_station_event_group()) &
+             INA226_WIFI_CONNECTED_BIT) == 0) {
             xEventGroupWaitBits(
                 wifi_station_event_group(),
                 INA226_WIFI_CONNECTED_BIT,
@@ -162,35 +117,24 @@ void app_main(void)
         const int64_t now_us = esp_timer_get_time();
         if (now_us >= next_telemetry_us) {
             ina226_register_snapshot_t snapshot = {0};
-            const esp_err_t read_status = ina226_read_snapshot(
-                &ina226,
-                &snapshot);
-
-            if (read_status == ESP_OK) {
-                char packet[INA226_TELEMETRY_HEX_LENGTH + 1];
-                const size_t packet_length =
-                    ina226_protocol_format_telemetry(
-                        packet,
-                        sizeof(packet),
-                        sequence++,
-                        &snapshot);
-
-                if (packet_length == 0 ||
-                    udp_link_send(&link, packet, packet_length) != ESP_OK) {
+            status = ina226_read_snapshot(&sensor, &snapshot);
+            if (status == ESP_OK) {
+                uint8_t packet[INA226_TELEMETRY_BYTES];
+                ina226_protocol_encode_telemetry(&snapshot, packet);
+                if (udp_link_send(&link, packet, sizeof(packet)) != ESP_OK) {
                     ESP_LOGE(TAG, "Telemetry send failed");
                 }
             } else {
                 ESP_LOGW(
                     TAG,
                     "Snapshot skipped: %s",
-                    esp_err_to_name(read_status));
+                    esp_err_to_name(status));
             }
-
-            next_telemetry_us = now_us +
+            next_telemetry_us = esp_timer_get_time() +
                 ((int64_t)INA226_TEST_TELEMETRY_PERIOD_MS * 1000);
         }
 
-        const int64_t remaining_us = next_telemetry_us - esp_timer_get_time();
+        int64_t remaining_us = next_telemetry_us - esp_timer_get_time();
         int poll_ms = (int)(remaining_us / 1000);
         if (poll_ms < 0) {
             poll_ms = 0;
@@ -198,23 +142,35 @@ void app_main(void)
             poll_ms = INA226_TEST_COMMAND_POLL_MAX_MS;
         }
 
-        /* One extra byte ensures oversized datagrams cannot look valid. */
-        char command_packet[INA226_COMMAND_HEX_LENGTH + 1];
-        size_t command_length = 0;
+        uint8_t incoming[INA226_COMMAND_BYTES + 1];
+        size_t incoming_length = 0;
         const esp_err_t receive_status = udp_link_receive(
             &link,
-            command_packet,
-            sizeof(command_packet),
+            incoming,
+            sizeof(incoming),
             poll_ms,
-            &command_length);
+            &incoming_length);
 
         if (receive_status == ESP_OK) {
-            ina226_calibration_command_t command;
-            if (ina226_protocol_parse_calibration_command(
-                    command_packet,
-                    command_length,
-                    &command)) {
-                handle_calibration_command(&ina226, &link, &command);
+            uint8_t response[INA226_RESULT_BYTES];
+            if (ina226_protocol_process_command(
+                    &commands,
+                    incoming,
+                    incoming_length,
+                    response,
+                    read_calibration,
+                    write_calibration)) {
+                ESP_LOGI(
+                    TAG,
+                    "Command %u: status=%u readback_valid=%u value=0x%02X%02X",
+                    ((unsigned)response[4] << 8) | response[5],
+                    response[6],
+                    response[7],
+                    response[8],
+                    response[9]);
+                if (udp_link_send(&link, response, sizeof(response)) != ESP_OK) {
+                    ESP_LOGE(TAG, "Command response send failed");
+                }
                 next_telemetry_us = 0;
             } else {
                 ESP_LOGW(TAG, "Ignored malformed or unsupported command");
@@ -226,5 +182,7 @@ void app_main(void)
                 "UDP receive failed: %s",
                 esp_err_to_name(receive_status));
         }
+
+        vTaskDelay(1);
     }
 }

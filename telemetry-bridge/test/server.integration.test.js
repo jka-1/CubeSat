@@ -115,6 +115,38 @@ function createTextReceiver(socket) {
   };
 }
 
+function createBufferReceiver(socket) {
+  const queuedMessages = [];
+  const waiters = [];
+
+  socket.on('message', (message) => {
+    const copy = Buffer.from(message);
+    const waiter = waiters.shift();
+    if (waiter) waiter(copy);
+    else queuedMessages.push(copy);
+  });
+
+  return function receiveBuffer(timeoutMs = 1_000) {
+    if (queuedMessages.length > 0) {
+      return Promise.resolve(queuedMessages.shift());
+    }
+
+    return new Promise((resolve, reject) => {
+      const onMessage = (message) => {
+        clearTimeout(timeoutHandle);
+        resolve(message);
+      };
+      const timeoutHandle = setTimeout(() => {
+        const waiterIndex = waiters.indexOf(onMessage);
+        if (waiterIndex >= 0) waiters.splice(waiterIndex, 1);
+        reject(new Error(`Timed out waiting for UDP bytes after ${timeoutMs} ms`));
+      }, timeoutMs);
+
+      waiters.push(onMessage);
+    });
+  };
+}
+
 async function waitFor(check, timeoutMs = 2_000) {
   const deadline = Date.now() + timeoutMs;
   let lastError;
@@ -569,7 +601,7 @@ test('bridge supports the lightweight INA226 load telemetry and calibration life
       HTTP_BIND_ADDRESS: '127.0.0.1',
       UDP_BIND_ADDRESS: '127.0.0.1',
       COMMAND_TOKEN: commandToken,
-      COMMAND_TIMEOUT_MS: '500',
+      COMMAND_TIMEOUT_MS: '100',
       TELEMETRY_STALE_MS: '1000',
       LOAD_INA226_SHUNT_OHMS: '0.002'
     },
@@ -595,9 +627,9 @@ test('bridge supports the lightweight INA226 load telemetry and calibration life
   device.bind(0, '127.0.0.1');
   await once(device, 'listening');
   context.after(() => device.close());
-  const receiveDeviceText = createTextReceiver(device);
+  const receiveDeviceBytes = createBufferReceiver(device);
 
-  const telemetry = '494E000112340A00FF9C2EE00012FFF0';
+  const telemetry = Buffer.from('0A00FF9C2EE00012FFF0', 'hex');
   await sendUdp(device, telemetry, udpPort);
 
   const decoded = await waitFor(async () => {
@@ -607,7 +639,7 @@ test('bridge supports the lightweight INA226 load telemetry and calibration life
       : null;
   });
   assert.equal(decoded.device_id, 'ina226-load');
-  assert.equal(decoded.seq, 0x1234);
+  assert.equal(decoded.seq, 0);
   assert.deepEqual(decoded.raw.load, {
     calibration: 0x0a00,
     shunt: 0xff9c,
@@ -627,32 +659,66 @@ test('bridge supports the lightweight INA226 load telemetry and calibration life
   assert.equal(health.command_ready, true);
 
   const unsupportedRead = await postCommand(baseUrl, {
-    type: 'i2c_read', addr: '0x41', reg: '0x05', len: 2
+    type: 'i2c_read', addr: '0x40', reg: '0x05', len: 1
   });
   assert.equal(unsupportedRead.status, 400);
 
   const zeroCalibration = await postCommand(baseUrl, {
-    type: 'i2c_write', addr: '0x41', reg: '0x05', data: ['0x00', '0x00']
+    type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x00', '0x00']
   });
   assert.equal(zeroCalibration.status, 400);
 
+  const readResponse = await postCommand(baseUrl, {
+    type: 'i2c_read', addr: '0x40', reg: '0x05', len: 2
+  });
+  assert.equal(readResponse.status, 202);
+  const acceptedRead = await readResponse.json();
+  assert.equal(acceptedRead.transport, 'ina226-load-binary-v1');
+  assert.match(acceptedRead.request_id, /^[0-9A-F]{4}$/);
+
+  const readCommand = await receiveDeviceBytes();
+  assert.equal(
+    readCommand.toString('hex').toUpperCase(),
+    `49430101${acceptedRead.request_id}0000`
+  );
+
+  const overlappingCommand = await postCommand(baseUrl, {
+    type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x0A', '0x20']
+  });
+  assert.equal(overlappingCommand.status, 409);
+
+  const retriedReadCommand = await receiveDeviceBytes();
+  assert.deepEqual(retriedReadCommand, readCommand);
+
+  await sendUdp(
+    device,
+    Buffer.from(`49520101${acceptedRead.request_id}00010A000000`, 'hex'),
+    udpPort
+  );
+
+  await waitFor(async () => {
+    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+    return body.latest_debug?.packet?.request_id === acceptedRead.request_id &&
+      body.latest_debug.packet.command_type === 'i2c_read';
+  });
+
   const writeResponse = await postCommand(baseUrl, {
-    type: 'i2c_write', addr: '0x41', reg: '0x05', data: ['0x0A', '0x20']
+    type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x0A', '0x20']
   });
   assert.equal(writeResponse.status, 202);
   const accepted = await writeResponse.json();
-  assert.equal(accepted.transport, 'ina226-load-hex-v1');
-  assert.match(accepted.request_id, /^[0-9A-F]{8}$/);
+  assert.equal(accepted.transport, 'ina226-load-binary-v1');
+  assert.match(accepted.request_id, /^[0-9A-F]{4}$/);
 
-  const command = await receiveDeviceText();
+  const command = await receiveDeviceBytes();
   assert.equal(
-    command,
-    `494300010001${accepted.request_id}0A20`
+    command.toString('hex').toUpperCase(),
+    `49430102${accepted.request_id}0A20`
   );
 
   await sendUdp(
     device,
-    `495200010000${accepted.request_id}0A200A20`,
+    Buffer.from(`49520102${accepted.request_id}00010A200000`, 'hex'),
     udpPort
   );
 
@@ -663,7 +729,6 @@ test('bridge supports the lightweight INA226 load telemetry and calibration life
       : null;
   });
   assert.equal(completed.latest_debug.packet.ok, true);
-  assert.equal(completed.latest_debug.packet.requested_calibration, '0x0A20');
   assert.equal(completed.latest_debug.packet.readback_calibration, '0x0A20');
   assert.deepEqual(completed.latest_debug.packet.write_data, ['0x0A', '0x20']);
   assert.deepEqual(completed.latest_debug.packet.data, ['0x0A', '0x20']);
@@ -725,7 +790,7 @@ test('dashboard command controls match the hardened interface', async () => {
   assert.match(script, /openDetailPanel/);
   assert.match(script, /closeDetailPanel/);
   assert.match(script, /normalizeLoadOnlyPacket/);
-  assert.match(script, /0x41/);
+  assert.doesNotMatch(script, /0x41/);
   assert.match(styles, /\.i2c-detail-window\s*\{/);
   assert.match(
     styles,

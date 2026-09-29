@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 enum {
+    INA226_REG_CONFIGURATION = 0x00,
     INA226_REG_SHUNT_VOLTAGE = 0x01,
     INA226_REG_BUS_VOLTAGE = 0x02,
     INA226_REG_POWER = 0x03,

@@ -242,7 +242,7 @@ Important behavior:
 - the bridge sends commands only to a fresh telemetry source by default
 - firmware should keep the UDP socket open so the same source can receive commands
 - commands become timed out when the ESP32 does not return a matching result within four seconds
-- only BMS `0x08`, PV `0x40`, Load `0x41`, and MPPT `0x6B` are accepted by the structured debug interface
+- only BMS `0x08`, INA226 `0x40`, and MPPT `0x6B` are accepted by the structured debug interface
 - raw command payloads and browser-selected target hosts remain intentionally unavailable
 - a fixed command target can also be configured with:
   - `COMMAND_TARGET_HOST`
@@ -251,10 +251,11 @@ Important behavior:
 ## Lightweight Load INA226 bridge mode
 
 The bridge also accepts the standalone Load-box test packet produced by
-`ina226-load-test`:
+`ina226-load-test`. It is exactly 10 binary bytes containing five big-endian
+registers:
 
 ```text
-494E 0001 SSSS CCCC HHHH BBBB PPPP IIII
+CCCC HHHH BBBB PPPP IIII
 ```
 
 This packet updates only the dashboard's lower-right Load INA226. The bridge
@@ -262,10 +263,14 @@ uses calibration `CCCC` and `LOAD_INA226_SHUNT_OHMS` to decode current and
 power; set that environment value to the confirmed load shunt resistance.
 
 When the latest live endpoint uses this packet, an authenticated structured
-write to address `0x41`, register `0x05`, with exactly two nonzero calibration
-bytes is translated to the fixed-width `4943` command. The `4952` MCU result is
-correlated to the browser request and reports the hardware readback. All other
-commands are rejected for this lightweight endpoint.
+read or write to address `0x40`, register `0x05`, is translated to the supplied
+8-byte binary `IC` command. The 12-byte `IR` response is correlated to the
+browser request and reports the hardware readback and driver error. Calibration
+writes are limited to `0x0001` through `0x7FFF`. The bridge allows one command
+at a time and retries a lost command once with the identical request ID and
+payload; set `INA226_LOAD_COMMAND_RETRIES=0` to disable that retry.
+The in-memory 16-bit request counter restarts with the bridge process, so reset
+the MCU at the same time during this bench test to clear its stale-ID cache.
 
 For a fixed command target that has not sent telemetry yet, also set:
 
