@@ -281,6 +281,31 @@ Environment="COMMAND_PACKET_FORMAT=ina226-load-v1"
 The default remains `json`, preserving the existing v1-v4 firmware command
 path.
 
+### Real INA226 packet acceptance test
+
+After flashing `ina226-load-test` and deploying the bridge, run this on the
+droplet while the ESP32 is powered:
+
+```bash
+cd /opt/cubesat-demo/repo/telemetry-bridge
+npm run test:ina226-live
+```
+
+It waits up to 60 seconds for an actual 10-byte packet and prints both the five
+raw registers and the decoded Load values. To also verify the reverse UDP path
+with a non-destructive calibration-register read, supply the service's command
+token without placing it on the command line:
+
+```bash
+read -rsp 'Command token: ' COMMAND_TOKEN; echo
+export COMMAND_TOKEN
+npm run test:ina226-live
+unset COMMAND_TOKEN
+```
+
+The check exits nonzero if framing, decoding, or the optional command response
+does not match the supplied INA226 driver protocol.
+
 ## Rollback
 
 If a deploy breaks, use the backup printed by the deploy script:

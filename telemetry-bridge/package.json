@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:ina226-live": "node tools/wait-for-ina226.mjs",
     "test": "node --test"
   },
   "engines": {
