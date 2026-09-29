@@ -9,6 +9,7 @@ const udpBindAddress = process.env.UDP_BIND_ADDRESS || '0.0.0.0';
 const telemetryToken = process.env.TELEMETRY_TOKEN || '';
 const maxUdpBytes = Number(process.env.MAX_UDP_BYTES || 4096);
 const hexDeviceId = process.env.HEX_DEVICE_ID || 'esp32-telemetry';
+const ina226LoadDeviceId = process.env.INA226_LOAD_DEVICE_ID || 'ina226-load';
 const hexPacketMagic = 0x4353;
 const hexPacketVersionRawIna226 = 0x0001;
 const hexPacketVersionEngineering = 0x0002;
@@ -16,6 +17,15 @@ const hexPacketVersionValidatedRaw = 0x0003;
 const hexPacketVersionPeripheralSensors = 0x0004;
 const hexPacketLegacyWordCount = 16;
 const hexPacketPeripheralWordCount = 20;
+const ina226LoadTelemetryMagic = 0x494e;
+const ina226LoadCommandMagic = 0x4943;
+const ina226LoadResultMagic = 0x4952;
+const ina226LoadProtocolVersion = 0x0001;
+const ina226LoadWriteCalibrationOpcode = 0x0001;
+const ina226LoadTelemetryWordCount = 8;
+const ina226LoadResultWordCount = 7;
+const ina226LoadAddress = 0x41;
+const ina226CalibrationRegister = 0x05;
 const hexPacketByteCounts = new Set([
   hexPacketLegacyWordCount * 2,
   hexPacketPeripheralWordCount * 2
@@ -23,8 +33,15 @@ const hexPacketByteCounts = new Set([
 const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
 const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 100);
 const loadCurrentLsbA = readFiniteNumber('LOAD_INA226_CURRENT_LSB_A', 0.001);
+const loadShuntOhms = readFiniteNumber('LOAD_INA226_SHUNT_OHMS', 100);
 const commandTargetHost = String(process.env.COMMAND_TARGET_HOST || '').trim();
 const commandTargetPort = readOptionalPort('COMMAND_TARGET_PORT');
+const configuredCommandPacketFormat = String(
+  process.env.COMMAND_PACKET_FORMAT || 'json'
+).trim().toLowerCase();
+if (!['json', 'ina226-load-v1'].includes(configuredCommandPacketFormat)) {
+  throw new Error('COMMAND_PACKET_FORMAT must be json or ina226-load-v1');
+}
 const commandToken = String(process.env.COMMAND_TOKEN || '');
 const allowUnauthenticatedCommands = readBoolean(
   'ALLOW_UNAUTHENTICATED_COMMANDS',
@@ -41,6 +58,7 @@ const allSensorMask = sensorGroups.reduce((mask, group) => mask | group.mask, 0)
 const supportedI2cDevices = new Map([
   [0x08, 'BMS / BQ76942'],
   [0x40, 'PV / INA226'],
+  [ina226LoadAddress, 'Load / INA226'],
   [0x6b, 'MPPT / BQ25798']
 ]);
 const sensorMaskTag = 0xa500;
@@ -450,6 +468,152 @@ function decodeIna226CurrentLsbA(calibrationWord, shuntOhms, fallbackCurrentLsbA
   return fallbackCurrentLsbA;
 }
 
+function formatHexWord(value) {
+  return Number(value).toString(16).toUpperCase().padStart(4, '0');
+}
+
+function formatIna226RequestId(value) {
+  return Number(value).toString(16).toUpperCase().padStart(8, '0');
+}
+
+function createIna226RequestId() {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const requestId = crypto.randomBytes(4).readUInt32BE(0);
+    const formatted = formatIna226RequestId(requestId);
+    if (requestId !== 0 && !pendingCommands.has(formatted)) return formatted;
+  }
+
+  throw new Error('unable to allocate an INA226 request ID');
+}
+
+function normalizeIna226RequestId(value) {
+  if (value === undefined || value === null || String(value).trim() === '') {
+    return createIna226RequestId();
+  }
+
+  if (typeof value === 'number') {
+    if (!Number.isInteger(value) || value < 1 || value > 0xffffffff) {
+      throw new Error('request_id must be a nonzero 32-bit unsigned integer');
+    }
+    return formatIna226RequestId(value);
+  }
+
+  const compact = String(value).trim().replace(/^0x/i, '');
+  if (!/^[0-9a-fA-F]{1,8}$/.test(compact)) {
+    throw new Error('request_id must contain 1 through 8 hexadecimal digits');
+  }
+
+  const parsed = Number.parseInt(compact, 16);
+  if (parsed === 0) {
+    throw new Error('request_id must be nonzero');
+  }
+  return formatIna226RequestId(parsed);
+}
+
+function normalizeIna226LoadTelemetry(words) {
+  if (words.length !== ina226LoadTelemetryWordCount) {
+    throw new Error(
+      `INA226 load telemetry must contain ${ina226LoadTelemetryWordCount} words`
+    );
+  }
+  if (words[1] !== ina226LoadProtocolVersion) {
+    throw new Error(
+      `unsupported INA226 load telemetry version 0x${formatHexWord(words[1])}`
+    );
+  }
+
+  const calibration = words[3];
+  const resolvedCurrentLsbA = decodeIna226CurrentLsbA(
+    calibration,
+    loadShuntOhms,
+    loadCurrentLsbA
+  );
+
+  return {
+    version: 1,
+    type: 'telemetry',
+    packet_format: 'ina226-load-v1',
+    device_id: ina226LoadDeviceId,
+    seq: words[2],
+    device_uptime_ms: 0,
+    sample_counter: words[2],
+    transmitted_at: null,
+    telemetry: {
+      load: {
+        shuntVoltageMv: decodeIna226ShuntMv(words[4]),
+        busVoltageV: words[5] * 0.00125,
+        powerW: decodeIna226PowerW(words[6], resolvedCurrentLsbA),
+        currentA: decodeIna226CurrentA(words[7], resolvedCurrentLsbA)
+      }
+    },
+    raw: {
+      load: {
+        calibration,
+        shunt: words[4],
+        bus: words[5],
+        power: words[6],
+        current: words[7]
+      }
+    }
+  };
+}
+
+function normalizeIna226LoadResult(words) {
+  if (words.length !== ina226LoadResultWordCount) {
+    throw new Error(
+      `INA226 load result must contain ${ina226LoadResultWordCount} words`
+    );
+  }
+  if (words[1] !== ina226LoadProtocolVersion) {
+    throw new Error(
+      `unsupported INA226 load result version 0x${formatHexWord(words[1])}`
+    );
+  }
+
+  const statusCode = words[2];
+  const requestId = formatIna226RequestId(
+    ((words[3] << 16) | words[4]) >>> 0
+  );
+  const requested = words[5];
+  const readback = words[6];
+  const statusMessages = new Map([
+    [0, 'Calibration write verified'],
+    [1, 'Calibration value was rejected'],
+    [2, 'INA226 I2C write failed'],
+    [3, 'INA226 calibration readback failed'],
+    [4, 'INA226 calibration verification mismatch']
+  ]);
+  const message = statusMessages.get(statusCode) ||
+    `Unknown INA226 result status 0x${formatHexWord(statusCode)}`;
+
+  return {
+    version: 1,
+    type: 'debug_result',
+    packet_format: 'ina226-load-result-v1',
+    device_id: ina226LoadDeviceId,
+    request_id: requestId,
+    command_type: 'i2c_write',
+    status: statusCode === 0 ? 'ok' : 'error',
+    ok: statusCode === 0,
+    addr: formatHexByte(ina226LoadAddress),
+    reg: formatHexByte(ina226CalibrationRegister),
+    len: 2,
+    write_data: [
+      formatHexByte(requested >> 8),
+      formatHexByte(requested & 0xff)
+    ],
+    data: [
+      formatHexByte(readback >> 8),
+      formatHexByte(readback & 0xff)
+    ],
+    requested_calibration: `0x${formatHexWord(requested)}`,
+    readback_calibration: `0x${formatHexWord(readback)}`,
+    result_code: statusCode,
+    note: statusCode === 0 ? message : null,
+    error: statusCode === 0 ? null : message
+  };
+}
+
 function decodeOptionalTemperatureC(word) {
   return word === 0x8000 ? null : decodeSignedWord(word) / 100;
 }
@@ -544,6 +708,14 @@ function extractHexWordsFromRawBuffer(buffer) {
 function normalizeHexPacketWords(words) {
   if (!Array.isArray(words) || words.length < 2) {
     throw new Error('hex packet must contain a header');
+  }
+
+  if (words[0] === ina226LoadTelemetryMagic) {
+    return normalizeIna226LoadTelemetry(words);
+  }
+
+  if (words[0] === ina226LoadResultMagic) {
+    return normalizeIna226LoadResult(words);
   }
 
   if (words[0] !== hexPacketMagic) {
@@ -1156,13 +1328,15 @@ function createStatusMessage() {
     ? {
         address: commandTargetHost,
         port: commandTargetPort,
-        source: 'configured'
+        source: 'configured',
+        packet_format: configuredCommandPacketFormat
       }
     : telemetryConnected
       ? {
           address: lastTelemetryEndpoint.address,
           port: lastTelemetryEndpoint.port,
-          source: 'telemetry'
+          source: 'telemetry',
+          packet_format: lastTelemetryEndpoint.packet_format
         }
       : null;
 
@@ -1175,6 +1349,7 @@ function createStatusMessage() {
     telemetry_age_ms: telemetryAgeMs(),
     telemetry_stale_after_ms: telemetryStaleMs,
     telemetry_endpoint: lastTelemetryEndpoint,
+    telemetry_packet_format: latestEnvelope?.packet?.packet_format || null,
     sensor_polling: sensorPollingState,
     command_auth_required: !allowUnauthenticatedCommands,
     command_auth_configured: isCommandAuthorizationConfigured(),
@@ -1260,7 +1435,8 @@ function resolveCommandTarget() {
     return {
       address: commandTargetHost,
       port: commandTargetPort,
-      source: 'configured'
+      source: 'configured',
+      packet_format: configuredCommandPacketFormat
     };
   }
 
@@ -1272,7 +1448,8 @@ function resolveCommandTarget() {
     return {
       address: lastTelemetryEndpoint.address,
       port: lastTelemetryEndpoint.port,
-      source: 'telemetry'
+      source: 'telemetry',
+      packet_format: lastTelemetryEndpoint.packet_format
     };
   }
 
@@ -1281,7 +1458,7 @@ function resolveCommandTarget() {
   );
 }
 
-function buildCommandMessage(body) {
+function buildJsonCommandMessage(body) {
   const issuedAt = new Date().toISOString();
   const directCommandType = String(body?.type || '')
     .trim()
@@ -1397,6 +1574,89 @@ function buildCommandMessage(body) {
   };
 }
 
+function buildIna226LoadCommandMessage(body) {
+  const directCommandType = String(body?.type || '')
+    .trim()
+    .toLowerCase();
+
+  if (directCommandType !== 'i2c_write') {
+    throw new Error(
+      'The lightweight INA226 target only supports i2c_write to calibration register 0x05.'
+    );
+  }
+
+  const address = normalizeDeviceAddress(pickFirst(
+    body?.addr,
+    body?.address,
+    body?.device_address,
+    body?.deviceAddress
+  ));
+  const registerAddress = normalizeRegisterAddress(pickFirst(
+    body?.reg,
+    body?.register,
+    body?.register_address,
+    body?.registerAddress
+  ));
+  const writePayload = pickFirst(body?.data, body?.value, body?.values);
+  if (writePayload === undefined) {
+    throw new Error('i2c_write must include two calibration bytes');
+  }
+  const data = normalizeWriteData(writePayload);
+
+  if (asByte(address, 'addr') !== ina226LoadAddress ||
+      asByte(registerAddress, 'reg') !== ina226CalibrationRegister) {
+    throw new Error(
+      'The lightweight target only permits INA226 address 0x41 calibration register 0x05.'
+    );
+  }
+  if (data.length !== 2) {
+    throw new Error('INA226 calibration writes require exactly two bytes');
+  }
+
+  const calibration = (asByte(data[0], 'data[0]') << 8) |
+    asByte(data[1], 'data[1]');
+  if (calibration === 0) {
+    throw new Error('INA226 calibration value 0x0000 is not permitted');
+  }
+
+  const requestId = normalizeIna226RequestId(
+    pickFirst(body?.request_id, body?.requestId)
+  );
+  const requestIdNumber = Number.parseInt(requestId, 16);
+  const issuedAt = new Date().toISOString();
+  const payloadPreview = [
+    ina226LoadCommandMagic,
+    ina226LoadProtocolVersion,
+    ina226LoadWriteCalibrationOpcode,
+    requestIdNumber >>> 16,
+    requestIdNumber & 0xffff,
+    calibration
+  ].map(formatHexWord).join('');
+
+  return {
+    transport: 'ina226-load-hex-v1',
+    payloadBuffer: Buffer.from(payloadPreview, 'ascii'),
+    payloadPreview,
+    summary: `INA226_LOAD CALIBRATION 0x${formatHexWord(calibration)}`,
+    requestId,
+    commandType: 'i2c_write',
+    issuedAt,
+    expectedResult: {
+      type: 'i2c_write',
+      addr: address,
+      reg: registerAddress,
+      data,
+      calibration: `0x${formatHexWord(calibration)}`
+    }
+  };
+}
+
+function buildCommandMessage(body, target) {
+  return target?.packet_format === 'ina226-load-v1'
+    ? buildIna226LoadCommandMessage(body)
+    : buildJsonCommandMessage(body);
+}
+
 function sendUdpMessage(buffer, target) {
   return new Promise((resolve, reject) => {
     udpSocket.send(buffer, target.port, target.address, (error) => {
@@ -1452,6 +1712,7 @@ const httpServer = http.createServer(async (request, response) => {
         telemetry_age_ms: status.telemetry_age_ms,
         telemetry_stale_after_ms: telemetryStaleMs,
         telemetry_endpoint: lastTelemetryEndpoint,
+        telemetry_packet_format: status.telemetry_packet_format,
         sensor_polling: sensorPollingState,
         command_auth_required: status.command_auth_required,
         command_auth_configured: status.command_auth_configured,
@@ -1511,7 +1772,7 @@ const httpServer = http.createServer(async (request, response) => {
       assertCommandAuthorized(request);
       const body = await readJsonBody(request);
       const target = resolveCommandTarget();
-      const commandMessage = buildCommandMessage(body);
+      const commandMessage = buildCommandMessage(body, target);
       const pendingCommand = {
         ...commandMessage,
         target
@@ -1657,7 +1918,8 @@ udpSocket.on('message', (message, remoteInfo) => {
   lastTelemetryEndpoint = {
     address: remoteInfo.address,
     port: remoteInfo.port,
-    last_seen: new Date(serverReceiveTime).toISOString()
+    last_seen: new Date(serverReceiveTime).toISOString(),
+    packet_format: packet.packet_format || 'json'
   };
 
   if (Number.isInteger(packet.sensor_polling?.active_sensor_mask)) {
@@ -1680,23 +1942,25 @@ udpSocket.on('message', (message, remoteInfo) => {
     bytes: remoteInfo.size
   });
 
-  const acknowledgement = Buffer.from(JSON.stringify({
-    version: 1,
-    type: 'ack',
-    device_id: packet.device_id,
-    seq: packet.seq,
-    server_rx_ms: serverReceiveTime,
-    received_at: latestEnvelope.received_at
-  }));
+  if (packet.packet_format !== 'ina226-load-v1') {
+    const acknowledgement = Buffer.from(JSON.stringify({
+      version: 1,
+      type: 'ack',
+      device_id: packet.device_id,
+      seq: packet.seq,
+      server_rx_ms: serverReceiveTime,
+      received_at: latestEnvelope.received_at
+    }));
 
-  udpSocket.send(
-    acknowledgement,
-    remoteInfo.port,
-    remoteInfo.address,
-    (error) => {
-      if (error) console.error('[UDP] ACK send failed:', error);
-    }
-  );
+    udpSocket.send(
+      acknowledgement,
+      remoteInfo.port,
+      remoteInfo.address,
+      (error) => {
+        if (error) console.error('[UDP] ACK send failed:', error);
+      }
+    );
+  }
 
   broadcast(latestEnvelope);
   broadcastStatus();

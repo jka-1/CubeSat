@@ -176,7 +176,7 @@ function writeCommandResult(message) {
   commandResultLog.textContent = `[${timestamp}] ${message}\n${commandResultLog.textContent}`;
 }
 
-function setStreamStatus(text, online = false) {
+function setStreamStatus(text, online = false, packetFormat = null) {
   const streamStatus = document.getElementById('i2cBusStatus');
   if (!streamStatus) return;
   streamStatus.textContent = text;
@@ -186,10 +186,21 @@ function setStreamStatus(text, online = false) {
   const workspace = document.querySelector('.i2c-workspace');
   if (workspace) workspace.dataset.streamState = online ? 'online' : 'offline';
 
+  const loadOnly = packetFormat === 'ina226-load-v1';
+
   document.querySelectorAll('.device-tile:not([data-detail-target="load"]) .device-ack')
     .forEach((indicator) => {
-      indicator.textContent = online ? 'ACK · live' : 'ACK · simulated';
+      indicator.textContent = online && !loadOnly ? 'ACK · live' : 'ACK · simulated';
     });
+
+  const loadIndicator = document.querySelector(
+    '.device-tile[data-detail-target="load"] .device-ack'
+  );
+  if (loadIndicator) {
+    const loadLive = online && loadOnly;
+    loadIndicator.textContent = loadLive ? 'ACK · live' : 'IDLE · optional';
+    loadIndicator.classList.toggle('idle', !loadLive);
+  }
 }
 
 function setDetailNote(text) {
@@ -817,6 +828,55 @@ function extractMetadata(envelope) {
   };
 }
 
+function normalizeLoadOnlyPacket(envelope) {
+  const packet = envelope?.packet;
+  if (packet?.packet_format !== 'ina226-load-v1') return null;
+
+  const load = packet?.telemetry?.load;
+  const shuntVoltageMv = numericValue(load?.shuntVoltageMv);
+  const powerW = numericValue(load?.powerW);
+  const currentA = numericValue(load?.currentA);
+  if (shuntVoltageMv === null || powerW === null || currentA === null) {
+    return null;
+  }
+
+  return {
+    load: { shuntVoltageMv, powerW, currentA },
+    metadata: extractMetadata(envelope)
+  };
+}
+
+function applyLoadOnlyPacket(packetEnvelope) {
+  const normalized = normalizeLoadOnlyPacket(packetEnvelope);
+  if (!normalized) return false;
+
+  state = { ...state, load: normalized.load };
+  streamMetadata = normalized.metadata;
+  renderPowerCard('load', 'Load', normalized.load);
+  renderMetadata(streamMetadata);
+
+  setPreviewText(
+    'loadPreview',
+    `${formatNumber(normalized.load.powerW, 1)} W · ` +
+      `${formatNumber(normalized.load.currentA, 2)} A`
+  );
+  const summaryLoadPower = document.getElementById('summaryLoadPower');
+  const summaryNetPower = document.getElementById('summaryNetPower');
+  if (summaryLoadPower) {
+    summaryLoadPower.textContent = formatValue(normalized.load.powerW, 'W', 2);
+  }
+  if (summaryNetPower) summaryNetPower.textContent = 'Load-only stream';
+
+  setDetailNote(
+    'Live data is updating the Load INA226 only; the other modules remain in demonstration state.'
+  );
+  writeLog(
+    `Load INA226 packet applied from ${streamMetadata.deviceId} ` +
+      `(seq ${streamMetadata.sequence}).`
+  );
+  return true;
+}
+
 function normalizeFromCandidate(candidate) {
   if (!candidate || typeof candidate !== 'object') return null;
 
@@ -974,7 +1034,8 @@ function applyTelemetryPacket(packetEnvelope) {
     commandAuthRequired = packetEnvelope.command_auth_required !== false;
     setStreamStatus(
       telemetryConnected ? 'Live ESP32 telemetry' : 'ESP32 telemetry stale or unavailable',
-      telemetryConnected
+      telemetryConnected,
+      packetEnvelope.telemetry_packet_format
     );
     if (packetEnvelope.telemetry_endpoint?.address && packetEnvelope.telemetry_endpoint?.port) {
       const ageText = Number.isFinite(Number(packetEnvelope.telemetry_age_ms))
@@ -1098,6 +1159,8 @@ function applyTelemetryPacket(packetEnvelope) {
     writeLog(`Debug response: ${message}`);
     return;
   }
+
+  if (applyLoadOnlyPacket(packetEnvelope)) return;
 
   const normalizedPacket = normalizePacket(packetEnvelope);
 
@@ -1366,8 +1429,8 @@ function onSendDebugCommandClick() {
       throw new Error('Address and register must each contain exactly one byte.');
     }
 
-    if (!['0x08', '0x40', '0x6B'].includes(normalizedAddress[0])) {
-      throw new Error('Supported device addresses are 0x08, 0x40, and 0x6B.');
+    if (!['0x08', '0x40', '0x41', '0x6B'].includes(normalizedAddress[0])) {
+      throw new Error('Supported device addresses are 0x08, 0x40, 0x41, and 0x6B.');
     }
   } catch (error) {
     writeLog(`Debug command is invalid: ${error.message}`);

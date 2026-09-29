@@ -242,11 +242,39 @@ Important behavior:
 - the bridge sends commands only to a fresh telemetry source by default
 - firmware should keep the UDP socket open so the same source can receive commands
 - commands become timed out when the ESP32 does not return a matching result within four seconds
-- only BMS `0x08`, PV `0x40`, and MPPT `0x6B` are accepted by the structured debug interface
+- only BMS `0x08`, PV `0x40`, Load `0x41`, and MPPT `0x6B` are accepted by the structured debug interface
 - raw command payloads and browser-selected target hosts remain intentionally unavailable
 - a fixed command target can also be configured with:
   - `COMMAND_TARGET_HOST`
   - `COMMAND_TARGET_PORT`
+
+## Lightweight Load INA226 bridge mode
+
+The bridge also accepts the standalone Load-box test packet produced by
+`ina226-load-test`:
+
+```text
+494E 0001 SSSS CCCC HHHH BBBB PPPP IIII
+```
+
+This packet updates only the dashboard's lower-right Load INA226. The bridge
+uses calibration `CCCC` and `LOAD_INA226_SHUNT_OHMS` to decode current and
+power; set that environment value to the confirmed load shunt resistance.
+
+When the latest live endpoint uses this packet, an authenticated structured
+write to address `0x41`, register `0x05`, with exactly two nonzero calibration
+bytes is translated to the fixed-width `4943` command. The `4952` MCU result is
+correlated to the browser request and reports the hardware readback. All other
+commands are rejected for this lightweight endpoint.
+
+For a fixed command target that has not sent telemetry yet, also set:
+
+```ini
+Environment="COMMAND_PACKET_FORMAT=ina226-load-v1"
+```
+
+The default remains `json`, preserving the existing v1-v4 firmware command
+path.
 
 ## Rollback
 

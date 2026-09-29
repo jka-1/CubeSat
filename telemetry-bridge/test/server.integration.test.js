@@ -83,6 +83,38 @@ function createJsonReceiver(socket) {
   };
 }
 
+function createTextReceiver(socket) {
+  const queuedMessages = [];
+  const waiters = [];
+
+  socket.on('message', (message) => {
+    const text = message.toString('utf8');
+    const waiter = waiters.shift();
+    if (waiter) waiter(text);
+    else queuedMessages.push(text);
+  });
+
+  return function receiveText(timeoutMs = 1_000) {
+    if (queuedMessages.length > 0) {
+      return Promise.resolve(queuedMessages.shift());
+    }
+
+    return new Promise((resolve, reject) => {
+      const onMessage = (message) => {
+        clearTimeout(timeoutHandle);
+        resolve(message);
+      };
+      const timeoutHandle = setTimeout(() => {
+        const waiterIndex = waiters.indexOf(onMessage);
+        if (waiterIndex >= 0) waiters.splice(waiterIndex, 1);
+        reject(new Error(`Timed out waiting for UDP text after ${timeoutMs} ms`));
+      }, timeoutMs);
+
+      waiters.push(onMessage);
+    });
+  };
+}
+
 async function waitFor(check, timeoutMs = 2_000) {
   const deadline = Date.now() + timeoutMs;
   let lastError;
@@ -524,6 +556,120 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
   assert.equal(normalizedJson.envelope.packet.telemetry.peripheral.temperatureC, null);
 });
 
+test('bridge supports the lightweight INA226 load telemetry and calibration lifecycle', async (context) => {
+  const httpPort = await reserveTcpPort();
+  const udpPort = await reserveUdpPort();
+  const baseUrl = `http://127.0.0.1:${httpPort}`;
+  const bridge = spawn(process.execPath, [bridgePath], {
+    cwd: bridgeDirectory,
+    env: {
+      ...process.env,
+      HTTP_PORT: String(httpPort),
+      UDP_PORT: String(udpPort),
+      HTTP_BIND_ADDRESS: '127.0.0.1',
+      UDP_BIND_ADDRESS: '127.0.0.1',
+      COMMAND_TOKEN: commandToken,
+      COMMAND_TIMEOUT_MS: '500',
+      TELEMETRY_STALE_MS: '1000',
+      LOAD_INA226_SHUNT_OHMS: '0.002'
+    },
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+
+  let bridgeOutput = '';
+  bridge.stdout.on('data', (chunk) => { bridgeOutput += chunk; });
+  bridge.stderr.on('data', (chunk) => { bridgeOutput += chunk; });
+  context.after(async () => {
+    if (bridge.exitCode === null) bridge.kill('SIGTERM');
+    if (bridge.exitCode === null) await once(bridge, 'exit');
+  });
+
+  await waitFor(async () => {
+    const response = await fetch(`${baseUrl}/health`);
+    return response.ok;
+  }).catch((error) => {
+    throw new Error(`${error.message}\nBridge output:\n${bridgeOutput}`);
+  });
+
+  const device = dgram.createSocket('udp4');
+  device.bind(0, '127.0.0.1');
+  await once(device, 'listening');
+  context.after(() => device.close());
+  const receiveDeviceText = createTextReceiver(device);
+
+  const telemetry = '494E000112340A00FF9C2EE00012FFF0';
+  await sendUdp(device, telemetry, udpPort);
+
+  const decoded = await waitFor(async () => {
+    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+    return body.latest?.packet?.packet_format === 'ina226-load-v1'
+      ? body.latest.packet
+      : null;
+  });
+  assert.equal(decoded.device_id, 'ina226-load');
+  assert.equal(decoded.seq, 0x1234);
+  assert.deepEqual(decoded.raw.load, {
+    calibration: 0x0a00,
+    shunt: 0xff9c,
+    bus: 0x2ee0,
+    power: 0x0012,
+    current: 0xfff0
+  });
+  assert.equal(decoded.telemetry.load.shuntVoltageMv, -0.25);
+  assert.equal(decoded.telemetry.load.busVoltageV, 15);
+  assert.ok(Math.abs(decoded.telemetry.load.powerW - 0.45) < 1e-12);
+  assert.ok(Math.abs(decoded.telemetry.load.currentA - (-0.016)) < 1e-12);
+
+  const health = await fetch(`${baseUrl}/health`).then((response) => response.json());
+  assert.equal(health.telemetry_connected, true);
+  assert.equal(health.telemetry_packet_format, 'ina226-load-v1');
+  assert.equal(health.telemetry_endpoint.packet_format, 'ina226-load-v1');
+  assert.equal(health.command_ready, true);
+
+  const unsupportedRead = await postCommand(baseUrl, {
+    type: 'i2c_read', addr: '0x41', reg: '0x05', len: 2
+  });
+  assert.equal(unsupportedRead.status, 400);
+
+  const zeroCalibration = await postCommand(baseUrl, {
+    type: 'i2c_write', addr: '0x41', reg: '0x05', data: ['0x00', '0x00']
+  });
+  assert.equal(zeroCalibration.status, 400);
+
+  const writeResponse = await postCommand(baseUrl, {
+    type: 'i2c_write', addr: '0x41', reg: '0x05', data: ['0x0A', '0x20']
+  });
+  assert.equal(writeResponse.status, 202);
+  const accepted = await writeResponse.json();
+  assert.equal(accepted.transport, 'ina226-load-hex-v1');
+  assert.match(accepted.request_id, /^[0-9A-F]{8}$/);
+
+  const command = await receiveDeviceText();
+  assert.equal(
+    command,
+    `494300010001${accepted.request_id}0A20`
+  );
+
+  await sendUdp(
+    device,
+    `495200010000${accepted.request_id}0A200A20`,
+    udpPort
+  );
+
+  const completed = await waitFor(async () => {
+    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+    return body.latest_debug?.packet?.request_id === accepted.request_id
+      ? body
+      : null;
+  });
+  assert.equal(completed.latest_debug.packet.ok, true);
+  assert.equal(completed.latest_debug.packet.requested_calibration, '0x0A20');
+  assert.equal(completed.latest_debug.packet.readback_calibration, '0x0A20');
+  assert.deepEqual(completed.latest_debug.packet.write_data, ['0x0A', '0x20']);
+  assert.deepEqual(completed.latest_debug.packet.data, ['0x0A', '0x20']);
+  assert.equal(completed.latest_command.status, 'completed');
+});
+
 test('dashboard command controls match the hardened interface', async () => {
   const html = await readFile(
     path.join(repositoryRoot, 'site/modules/communication.html'),
@@ -566,11 +712,21 @@ test('dashboard command controls match the hardened interface', async () => {
   assert.doesNotMatch(script, /onMpptOnClick|onMpptOffClick|onSendCustomCommandClick/);
   assert.match(
     html,
-    /<section class=["']card stream-panel-card["']>[\s\S]*?<h3 class=["']card-title["']>Telemetry Stream<\/h3>/
+    /class=["']i2c-workspace["'][\s\S]*?class=["']rail rail-sda["'][\s\S]*?class=["']rail rail-scl["']/
   );
+  assert.match(html, /data-detail-target=["']console["']/);
+  assert.match(html, /data-detail-panel=["']console["']/);
+  assert.match(html, /id=["']i2cDetailLayer["']/);
+  assert.doesNotMatch(html, /class=["']bank-connection["']/);
+  assert.match(html, /ADC1 · not on I²C/);
+  assert.equal((html.match(/class=["']device-port["']/g) || []).length, 4);
+  assert.equal((html.match(/class=["']page-port["']/g) || []).length, 1);
   assert.match(html, /id=["']commandResultLog["'] class=["']telemetry-log command-result-log["']/);
-  assert.match(script, /setupTelemetryStreamHeightSync/);
-  assert.match(styles, /\.stream-panel-card\s*\{/);
+  assert.match(script, /openDetailPanel/);
+  assert.match(script, /closeDetailPanel/);
+  assert.match(script, /normalizeLoadOnlyPacket/);
+  assert.match(script, /0x41/);
+  assert.match(styles, /\.i2c-detail-window\s*\{/);
   assert.match(
     styles,
     /\.command-result-log\s*\{[^}]*height:\s*150px;[^}]*max-height:\s*150px;[^}]*\}/
