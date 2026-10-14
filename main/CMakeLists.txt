@@ -7,6 +7,7 @@ idf_component_register(
         "peripheral_sensor_math.c"
         "peripheral_sensors.c"
         "udp_transport.c"
+        "debug_mode.c"
         "console_input.c"
         "../pass/i2c_bus_monitor.c"
         "../pass/telemetry_packet_v3.c"
@@ -26,6 +27,7 @@ idf_component_register(
     PRIV_REQUIRES
         esp_driver_tsens
         esp_driver_i2c
+        esp_timer
         esp_adc
         led_strip
 )

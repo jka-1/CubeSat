@@ -1,6 +1,7 @@
 #ifndef I2C_BUS_MONITOR_H
 #define I2C_BUS_MONITOR_H
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -198,6 +199,39 @@ esp_err_t i2c_bus_monitor_get_sensor_mask(
 esp_err_t i2c_bus_monitor_set_acdrv_state(
     i2c_acdrv_state_t state,
     i2c_acdrv_result_t *out_result);
+
+/**
+ * @brief Probe one 7-bit address for an ACK (i2cdetect-style), holding the bus mutex.
+ *
+ * @return ESP_OK when the address ACKs, ESP_ERR_NOT_FOUND on NACK, or another error
+ *         (for example ESP_ERR_TIMEOUT when the bus is stuck).
+ */
+esp_err_t i2c_bus_probe(uint8_t device_address, uint32_t timeout_ms);
+
+/**
+ * @brief Probe every address in [first_address, last_address] and list the ones that ACK.
+ */
+esp_err_t i2c_bus_scan(
+    uint8_t first_address,
+    uint8_t last_address,
+    uint8_t *out_addresses,
+    size_t max_addresses,
+    size_t *out_count);
+
+/**
+ * @brief Set which sensor groups are physically present.
+ *
+ * Groups whose bit is clear are skipped by i2c_bus_monitor_read_all(): no bus
+ * transactions are issued and their status fields are set to ESP_ERR_NOT_FOUND.
+ * Defaults to I2C_SENSOR_GROUP_ALL (every group is attempted).
+ */
+void i2c_bus_monitor_set_present_mask(uint32_t present_mask);
+uint32_t i2c_bus_monitor_get_present_mask(void);
+
+/**
+ * @brief Duration of the most recent i2c_bus_monitor_read_all() bus phase in microseconds.
+ */
+uint32_t i2c_bus_monitor_last_read_duration_us(void);
 
 #ifdef __cplusplus
 }

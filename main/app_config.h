@@ -41,4 +41,24 @@
 #define DEMO_COMMAND_POLL_SLICE_MS   100u
 #define DEMO_MAX_CONSECUTIVE_ERRORS  5u
 
+/*
+ * Wireless debug mode (see debug_mode.h).
+ * DEMO_DEBUG_MODE_DEFAULT: 0 = boot in normal mode (v4 packets); the bridge can
+ * enable debug mode at runtime with {"type":"debug_control","enabled":true}.
+ * In debug mode the firmware sends v5 packets (v4 + link stats + device status).
+ */
+#define DEMO_DEBUG_MODE_DEFAULT      0
+/* Probe INA226/BQ76942/BQ25798 for an ACK at boot and every N ms; absent devices are skipped. */
+#define DEMO_PRESENCE_DETECTION      1
+#define DEMO_PRESENCE_PROBE_PERIOD_MS 5000u
+/* Bounds for the runtime set_scan_period command (the telemetry cycle period). */
+#define DEMO_SCAN_PERIOD_MIN_MS      200u
+#define DEMO_SCAN_PERIOD_MAX_MS      5000u
+/* 1 = also stream a v4 packet when the whole I2C cycle fails in normal mode
+ * (values would be zeros with no validity flag). 0 keeps the original skip. */
+#define DEMO_SEND_ON_I2C_FAILURE     0
+/* Wi-Fi reconnect back-off (replaces the old 10-attempt limit). */
+#define DEMO_WIFI_BACKOFF_MIN_MS     1000u
+#define DEMO_WIFI_BACKOFF_MAX_MS     30000u
+
 #endif

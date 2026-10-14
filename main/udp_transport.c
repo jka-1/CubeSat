@@ -15,14 +15,25 @@
 #include "app_config.h"
 #include "board_led.h"
 #include "cJSON.h"
+#include "debug_mode.h"
 #include "esp_check.h"
 #include "esp_log.h"
 #include "esp_timer.h"
+#include "wifi_station.h"
 
 static const char *TAG = "udp_transport";
 
 #define MAX_COMMAND_BYTES            1024
 #define MAX_I2C_COMMAND_DATA_LENGTH  32
+#define TELEMETRY_PACKET_V5_VERSION  0x0005u
+#define TELEMETRY_PACKET_V5_WORD_COUNT \
+    (TELEMETRY_PACKET_V4_WORD_COUNT + DEBUG_V5_EXTRA_WORDS)
+#define TELEMETRY_PACKET_V5_HEX_CHARS (TELEMETRY_PACKET_V5_WORD_COUNT * 4u)
+
+static uint16_t sat_inc16(uint16_t value)
+{
+    return value == 0xFFFFu ? value : (uint16_t)(value + 1u);
+}
 
 static void add_hex_string_field(
     cJSON *root,
@@ -292,6 +303,7 @@ static uint16_t next_sequence_word(
 }
 
 static char *build_telemetry_hex_packet(
+    const udp_transport_t *transport,
     const power_telemetry_t *telemetry,
     const telemetry_packet_v4_meta_t *meta,
     uint16_t sequence)
@@ -327,9 +339,12 @@ static char *build_telemetry_hex_packet(
             meta->relative_light_basis_points;
     }
 
-    char *serialized = malloc(
-        TELEMETRY_PACKET_V4_HEX_CHARS + 1u
-    );
+    const bool debug_packet = debug_mode_is_enabled();
+    const size_t hex_size = (debug_packet
+        ? TELEMETRY_PACKET_V5_HEX_CHARS
+        : TELEMETRY_PACKET_V4_HEX_CHARS) + 1u;
+
+    char *serialized = malloc(hex_size);
 
     if (serialized == NULL) {
         return NULL;
@@ -340,11 +355,40 @@ static char *build_telemetry_hex_packet(
             telemetry,
             &packet_meta,
             serialized,
-            TELEMETRY_PACKET_V4_HEX_CHARS + 1u);
+            hex_size);
 
     if (status != ESP_OK) {
         free(serialized);
         return NULL;
+    }
+
+    if (debug_packet) {
+        /* v5 = v4 words with version 0x0005 followed by the debug/link words. */
+        memcpy(&serialized[4], "0005", 4);
+
+        int8_t rssi = 0;
+        debug_link_stats_t link = {
+            .rssi_dbm = wifi_station_get_rssi(&rssi) == ESP_OK ? (int16_t)rssi : INT16_MIN,
+            .uptime_ms = (uint32_t)(esp_timer_get_time() / 1000),
+            .tx_errors = transport->tx_errors,
+            .ack_timeouts = transport->ack_timeouts,
+            .wifi_reconnects = (uint16_t)(wifi_station_reconnect_count() > 0xFFFFu
+                ? 0xFFFFu
+                : wifi_station_reconnect_count()),
+            .last_ack_rtt_ms = transport->last_ack_rtt_ms,
+        };
+        uint16_t extra[DEBUG_V5_EXTRA_WORDS];
+        debug_mode_build_v5_words(&link, extra);
+
+        size_t offset = TELEMETRY_PACKET_V4_HEX_CHARS;
+        for (size_t index = 0; index < DEBUG_V5_EXTRA_WORDS; index++) {
+            offset += (size_t)snprintf(
+                serialized + offset,
+                hex_size - offset,
+                "%04X",
+                extra[index]);
+        }
+        serialized[TELEMETRY_PACKET_V5_HEX_CHARS] = '\0';
     }
 
     return serialized;
@@ -1014,6 +1058,134 @@ static esp_err_t handle_led_control_command(
         : ESP_ERR_INVALID_RESPONSE;
 }
 
+static void add_debug_state_fields(cJSON *response_root)
+{
+    if (response_root == NULL) {
+        return;
+    }
+    cJSON_AddBoolToObject(response_root, "debug_enabled", debug_mode_is_enabled());
+    cJSON_AddNumberToObject(response_root, "scan_period_ms", (double)debug_mode_scan_period_ms());
+    cJSON_AddNumberToObject(response_root, "probe_period_ms", (double)debug_mode_probe_period_ms());
+    cJSON_AddNumberToObject(response_root, "present_mask", (double)debug_mode_present_mask());
+    cJSON_AddNumberToObject(response_root, "ack_timeout_ms", (double)udp_transport_ack_timeout_ms());
+}
+
+static esp_err_t handle_debug_control_command(
+    const cJSON *root,
+    cJSON *response_root)
+{
+    const cJSON *enabled_item =
+        cJSON_GetObjectItemCaseSensitive(root, "enabled");
+    bool enabled = false;
+
+    ESP_RETURN_ON_ERROR(
+        parse_boolean_field(enabled_item, &enabled),
+        TAG,
+        "Invalid debug_control state");
+
+    debug_mode_set_enabled(enabled);
+    if (enabled) {
+        debug_mode_probe_devices(true);
+    }
+
+    if (response_root != NULL) {
+        cJSON_AddBoolToObject(response_root, "enabled", enabled);
+        add_debug_state_fields(response_root);
+        cJSON_AddStringToObject(
+            response_root,
+            "note",
+            enabled ? "Debug mode on: v5 debug packets." : "Debug mode off: v4 packets.");
+    }
+
+    return ESP_OK;
+}
+
+static esp_err_t handle_set_scan_period_command(
+    const cJSON *root,
+    cJSON *response_root)
+{
+    const cJSON *period_item =
+        cJSON_GetObjectItemCaseSensitive(root, "period_ms");
+    uint32_t requested = 0u;
+
+    if (!parse_u32_json(period_item, 60000u, &requested)) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const uint32_t applied = debug_mode_set_scan_period_ms(requested);
+
+    if (response_root != NULL) {
+        cJSON_AddNumberToObject(response_root, "requested_period_ms", (double)requested);
+        cJSON_AddNumberToObject(response_root, "period_ms", (double)applied);
+        add_debug_state_fields(response_root);
+    }
+
+    return ESP_OK;
+}
+
+static esp_err_t handle_i2c_scan_command(
+    const cJSON *root,
+    cJSON *response_root)
+{
+    (void)root;
+    uint8_t found[112] = {0};
+    size_t count = 0u;
+    const int64_t start_us = esp_timer_get_time();
+
+    ESP_RETURN_ON_ERROR(
+        i2c_bus_scan(0x08u, 0x77u, found, sizeof(found), &count),
+        TAG,
+        "I2C scan failed");
+
+    /* A scan doubles as an on-demand presence probe. */
+    debug_mode_probe_devices(true);
+
+    if (response_root != NULL) {
+        cJSON *list = cJSON_CreateArray();
+        for (size_t index = 0; index < count && index < sizeof(found); index++) {
+            char text[8];
+            snprintf(text, sizeof(text), "0x%02X", found[index]);
+            cJSON_AddItemToArray(list, cJSON_CreateString(text));
+        }
+        cJSON_AddItemToObject(response_root, "addresses", list);
+        cJSON_AddNumberToObject(response_root, "count", (double)count);
+        cJSON_AddNumberToObject(
+            response_root,
+            "scan_us",
+            (double)(esp_timer_get_time() - start_us));
+        add_debug_state_fields(response_root);
+    }
+
+    return ESP_OK;
+}
+
+static esp_err_t handle_i2c_probe_command(
+    const cJSON *root,
+    cJSON *response_root)
+{
+    const cJSON *addr_item =
+        cJSON_GetObjectItemCaseSensitive(root, "addr");
+    uint8_t address = 0u;
+
+    ESP_RETURN_ON_ERROR(
+        parse_byte_field(addr_item, "addr", &address),
+        TAG,
+        "Invalid I2C address");
+
+    const esp_err_t status = i2c_bus_probe(address, 20u);
+    debug_mode_probe_devices(true);
+
+    if (response_root != NULL) {
+        add_hex_string_field(response_root, "addr", address);
+        cJSON_AddBoolToObject(response_root, "present", status == ESP_OK);
+        cJSON_AddStringToObject(response_root, "probe_result", esp_err_to_name(status));
+        add_debug_state_fields(response_root);
+    }
+
+    /* A NACK is a valid answer, not a command failure. */
+    return (status == ESP_OK || status == ESP_ERR_NOT_FOUND) ? ESP_OK : status;
+}
+
 static esp_err_t handle_command_payload(
     udp_transport_t *transport,
     const char *payload_text,
@@ -1071,6 +1243,26 @@ static esp_err_t handle_command_payload(
                     root,
                     "mppt_acdrv_control");
             status = handle_acdrv_control_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "debug_control") == 0) {
+            response_root =
+                create_debug_response_root(transport, root, "debug_control");
+            status = handle_debug_control_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "set_scan_period") == 0) {
+            response_root =
+                create_debug_response_root(transport, root, "set_scan_period");
+            status = handle_set_scan_period_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "i2c_scan") == 0) {
+            response_root =
+                create_debug_response_root(transport, root, "i2c_scan");
+            status = handle_i2c_scan_command(root, response_root);
+            handled = true;
+        } else if (strcmp(type_item->valuestring, "i2c_probe") == 0) {
+            response_root =
+                create_debug_response_root(transport, root, "i2c_probe");
+            status = handle_i2c_probe_command(root, response_root);
             handled = true;
         } else if (strcmp(type_item->valuestring, "led_control") == 0) {
             response_root =
@@ -1138,6 +1330,7 @@ esp_err_t udp_transport_init(
     transport->socket_fd = -1;
     transport->server_port = server_port;
     transport->next_sequence = 1u;
+    transport->last_ack_rtt_ms = 0xFFFFu;
 
     strlcpy(
         transport->server_host,
@@ -1150,6 +1343,13 @@ esp_err_t udp_transport_init(
         sizeof(transport->device_id));
 
     return ESP_OK;
+}
+
+uint32_t udp_transport_ack_timeout_ms(void)
+{
+    /* Never let the blocking ACK wait use more than a quarter of the scan period. */
+    const uint32_t quarter_period = debug_mode_scan_period_ms() / 4u;
+    return quarter_period < DEMO_ACK_TIMEOUT_MS ? quarter_period : DEMO_ACK_TIMEOUT_MS;
 }
 
 esp_err_t udp_transport_send_power_telemetry(
@@ -1168,6 +1368,7 @@ esp_err_t udp_transport_send_power_telemetry(
     if (transport->socket_fd < 0) {
         esp_err_t err = open_udp_socket(transport, &destination);
         if (err != ESP_OK) {
+            transport->tx_errors = sat_inc16(transport->tx_errors);
             return err;
         }
     } else {
@@ -1190,6 +1391,7 @@ esp_err_t udp_transport_send_power_telemetry(
                 &hints,
                 &destination) != 0 ||
             destination == NULL) {
+            transport->tx_errors = sat_inc16(transport->tx_errors);
             return ESP_ERR_NOT_FOUND;
         }
     }
@@ -1198,6 +1400,7 @@ esp_err_t udp_transport_send_power_telemetry(
         next_sequence_word(transport);
 
     char *payload = build_telemetry_hex_packet(
+        transport,
         telemetry,
         meta,
         sequence);
@@ -1210,7 +1413,7 @@ esp_err_t udp_transport_send_power_telemetry(
     ESP_ERROR_CHECK_WITHOUT_ABORT(
         set_socket_receive_timeout(
             transport->socket_fd,
-            DEMO_ACK_TIMEOUT_MS));
+            udp_transport_ack_timeout_ms()));
 
     const int64_t send_start_ms =
         esp_timer_get_time() / 1000;
@@ -1228,6 +1431,7 @@ esp_err_t udp_transport_send_power_telemetry(
 
     if (bytes_sent < 0) {
         ESP_LOGE(TAG, "sendto() failed: errno=%d", errno);
+        transport->tx_errors = sat_inc16(transport->tx_errors);
         udp_transport_close(transport);
         return ESP_FAIL;
     }
@@ -1249,6 +1453,8 @@ esp_err_t udp_transport_send_power_telemetry(
                     TAG,
                     "ACK timeout for sequence %" PRIu32,
                     (uint32_t)sequence);
+                transport->ack_timeouts = sat_inc16(transport->ack_timeouts);
+                transport->last_ack_rtt_ms = 0xFFFFu;
                 return ESP_ERR_TIMEOUT;
             }
 
@@ -1304,6 +1510,7 @@ esp_err_t udp_transport_send_power_telemetry(
     if (out_round_trip_ms != NULL) {
         *out_round_trip_ms = round_trip_ms;
     }
+    transport->last_ack_rtt_ms = round_trip_ms > 0xFFFEu ? 0xFFFEu : (uint16_t)round_trip_ms;
 
     ESP_LOGI(
         TAG,

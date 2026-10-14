@@ -8,6 +8,7 @@
 #include "driver/i2c_master.h"
 #include "esp_check.h"
 #include "esp_log.h"
+#include "esp_timer.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 #include "freertos/task.h"
@@ -46,6 +47,8 @@ static volatile uint32_t s_enabled_sensor_mask =
     I2C_SENSOR_GROUP_ALL;
 
 static bool s_initialized;
+static volatile uint32_t s_present_mask = I2C_SENSOR_GROUP_ALL;
+static volatile uint32_t s_last_read_duration_us;
 
 /**
  * @brief Return the device handle associated with an I2C address.
@@ -736,8 +739,14 @@ esp_err_t i2c_bus_monitor_read_all(
 
     const uint32_t enabled_sensor_mask =
         s_enabled_sensor_mask;
+    const uint32_t present_mask =
+        s_present_mask;
+    /*
+     * Validity for v3/v4 packets: word 15 reports the groups actually polled this cycle,
+     * so a group that failed its presence probe is shown as not polled instead of as zeros.
+     */
     telemetry->enabled_sensor_mask =
-        enabled_sensor_mask;
+        enabled_sensor_mask & present_mask;
     power_telemetry_t latest_snapshot = {0};
 
     if (s_telemetry_mutex != NULL &&
@@ -758,7 +767,12 @@ esp_err_t i2c_bus_monitor_read_all(
         return ESP_ERR_TIMEOUT;
     }
 
-    if ((enabled_sensor_mask & I2C_SENSOR_GROUP_PV) != 0u) {
+    const int64_t read_start_us = esp_timer_get_time();
+
+    if ((present_mask & I2C_SENSOR_GROUP_PV) == 0u) {
+        /* Device not detected: skip the bus and report it as absent, not as data. */
+        clear_ina226_fields(telemetry, ESP_ERR_NOT_FOUND);
+    } else if ((enabled_sensor_mask & I2C_SENSOR_GROUP_PV) != 0u) {
         telemetry->ina226_calibration_status =
             read_register_from_handle(
                 s_ina226_handle,
@@ -806,7 +820,10 @@ esp_err_t i2c_bus_monitor_read_all(
         }
     }
 
-    if ((enabled_sensor_mask & I2C_SENSOR_GROUP_BMS) != 0u) {
+    if ((present_mask & I2C_SENSOR_GROUP_BMS) == 0u) {
+        /* Device not detected: skip the bus and report it as absent, not as data. */
+        clear_bms_fields(telemetry, ESP_ERR_NOT_FOUND);
+    } else if ((enabled_sensor_mask & I2C_SENSOR_GROUP_BMS) != 0u) {
         for (size_t cell_index = 0;
              cell_index < BQ76942_CELL_COUNT;
              cell_index++) {
@@ -834,7 +851,10 @@ esp_err_t i2c_bus_monitor_read_all(
         }
     }
 
-    if ((enabled_sensor_mask & I2C_SENSOR_GROUP_MPPT) != 0u) {
+    if ((present_mask & I2C_SENSOR_GROUP_MPPT) == 0u) {
+        /* Device not detected: skip the bus and report it as absent, not as data. */
+        clear_mppt_fields(telemetry, ESP_ERR_NOT_FOUND);
+    } else if ((enabled_sensor_mask & I2C_SENSOR_GROUP_MPPT) != 0u) {
         telemetry->bq25798_reg13_status =
             read_register_from_handle(
                 s_bq25798_handle,
@@ -860,6 +880,11 @@ esp_err_t i2c_bus_monitor_read_all(
                 ESP_ERR_NOT_SUPPORTED);
         }
     }
+
+    const int64_t read_elapsed_us = esp_timer_get_time() - read_start_us;
+    s_last_read_duration_us = read_elapsed_us > (int64_t)UINT32_MAX
+        ? UINT32_MAX
+        : (uint32_t)read_elapsed_us;
 
     xSemaphoreGive(s_bus_mutex);
 
@@ -1190,4 +1215,76 @@ copy_current_state:
 release_bus:
     xSemaphoreGive(s_bus_mutex);
     return status;
+}
+
+esp_err_t i2c_bus_probe(uint8_t device_address, uint32_t timeout_ms)
+{
+    if (!s_initialized || s_bus_mutex == NULL) {
+        return ESP_ERR_INVALID_STATE;
+    }
+
+    if (device_address > 0x7Fu) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    if (xSemaphoreTake(
+            s_bus_mutex,
+            pdMS_TO_TICKS(I2C_TRANSACTION_TIMEOUT_MS * 5u)) != pdTRUE) {
+        return ESP_ERR_TIMEOUT;
+    }
+
+    const esp_err_t status = i2c_master_probe(
+        s_bus_handle,
+        device_address,
+        (int)timeout_ms);
+
+    xSemaphoreGive(s_bus_mutex);
+    return status;
+}
+
+esp_err_t i2c_bus_scan(
+    uint8_t first_address,
+    uint8_t last_address,
+    uint8_t *out_addresses,
+    size_t max_addresses,
+    size_t *out_count)
+{
+    if (out_count == NULL || first_address > last_address || last_address > 0x7Fu) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    *out_count = 0u;
+
+    for (uint32_t address = first_address; address <= last_address; address++) {
+        const esp_err_t status = i2c_bus_probe((uint8_t)address, 10u);
+
+        if (status == ESP_OK) {
+            if (out_addresses != NULL && *out_count < max_addresses) {
+                out_addresses[*out_count] = (uint8_t)address;
+            }
+            *out_count += 1u;
+        } else if (status != ESP_ERR_NOT_FOUND) {
+            ESP_LOGW(TAG, "Probe 0x%02X failed: %s", (unsigned)address, esp_err_to_name(status));
+            if (status == ESP_ERR_INVALID_STATE) {
+                return status;
+            }
+        }
+    }
+
+    return ESP_OK;
+}
+
+void i2c_bus_monitor_set_present_mask(uint32_t present_mask)
+{
+    s_present_mask = present_mask & I2C_SENSOR_GROUP_ALL;
+}
+
+uint32_t i2c_bus_monitor_get_present_mask(void)
+{
+    return s_present_mask;
+}
+
+uint32_t i2c_bus_monitor_last_read_duration_us(void)
+{
+    return s_last_read_duration_us;
 }
