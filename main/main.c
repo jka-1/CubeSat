@@ -4,6 +4,7 @@
 
 #include "app_config.h"
 #include "board_led.h"
+#include "debug_mode.h"
 #include "esp_log.h"
 #include "i2c_bus_monitor.h"
 #include "peripheral_sensors.h"
@@ -192,7 +193,10 @@ static void telemetry_task(void *argument)
             xTaskGetTickCount();
         const TickType_t cycle_deadline =
             cycle_start +
-            pdMS_TO_TICKS(DEMO_STREAM_PERIOD_MS);
+            pdMS_TO_TICKS(debug_mode_scan_period_ms());
+
+        /* Periodic ACK probe (every DEMO_PRESENCE_PROBE_PERIOD_MS): absent devices are skipped. */
+        debug_mode_probe_devices(false);
 
         power_telemetry_t telemetry = {0};
         telemetry.sample_number = ++sample_number;
@@ -223,8 +227,19 @@ static void telemetry_task(void *argument)
 
         esp_err_t status =
             i2c_bus_monitor_read_all(&telemetry);
+        debug_mode_account_read(&telemetry, status);
 
-        if (status != ESP_OK) {
+        /*
+         * Normal mode keeps the original behavior: if the whole read cycle fails
+         * (bus mutex timeout / bus not initialized) the packet is skipped, because a
+         * v4 packet cannot mark the values invalid. Debug mode still streams: v5
+         * carries per-device status so the zeros are not mistaken for data.
+         * Individual device failures never suppress the packet in either mode.
+         */
+        const bool send_despite_failure =
+            debug_mode_is_enabled() || DEMO_SEND_ON_I2C_FAILURE;
+
+        if (status != ESP_OK && !send_despite_failure) {
             consecutive_errors += 1u;
 
             ESP_LOGW(
@@ -233,7 +248,16 @@ static void telemetry_task(void *argument)
                 consecutive_errors,
                 DEMO_MAX_CONSECUTIVE_ERRORS,
                 esp_err_to_name(status));
-        } else {
+        }
+
+        if (status == ESP_OK || send_despite_failure) {
+            if (status != ESP_OK) {
+                ESP_LOGW(
+                    TAG,
+                    "I2C cycle failed (%s); streaming debug packet with device status",
+                    esp_err_to_name(status));
+            }
+
             uint32_t sequence = 0;
             uint32_t round_trip_ms = 0;
 
@@ -256,7 +280,9 @@ static void telemetry_task(void *argument)
                     " pv_cal=0x%02X%02X"
                     " mppt=%s"
                     " fault=0x%02X"
-                    " rtt=%" PRIu32 "ms",
+                    " rtt=%" PRIu32 "ms"
+                    " debug=%s present=0x%" PRIX32
+                    " i2c=%" PRIu32 "us",
                     sequence,
                     meta.has_mcu_temperature ? "yes" : "no",
                     meta.has_peripheral_temperature ? "yes" : "no",
@@ -266,7 +292,10 @@ static void telemetry_task(void *argument)
                     decode_mppt_state(
                         telemetry.bq25798_reg13),
                     telemetry.bq25798_fault_status_0,
-                    round_trip_ms);
+                    round_trip_ms,
+                    debug_mode_is_enabled() ? "on" : "off",
+                    debug_mode_present_mask(),
+                    i2c_bus_monitor_last_read_duration_us());
             } else {
                 consecutive_errors += 1u;
 
@@ -301,8 +330,12 @@ void app_main(void)
     ESP_ERROR_CHECK(sensor_provider_init());
     ESP_ERROR_CHECK(peripheral_sensors_init());
     ESP_ERROR_CHECK(i2c_bus_monitor_init());
+    ESP_ERROR_CHECK(debug_mode_init());
     apply_startup_hardware_configuration();
     ESP_ERROR_CHECK(wifi_station_init());
+    if (debug_mode_is_enabled()) {
+        debug_mode_apply_power_save();
+    }
 
     TaskHandle_t telemetry_task_handle = NULL;
 

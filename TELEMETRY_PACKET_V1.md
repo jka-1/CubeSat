@@ -43,6 +43,14 @@ Example with both peripheral sensors unavailable:
 
 `4353000403B40A280A0000280FA3000A00320EE50EDF0E5C0E5D00610000A5070000000000000000`
 
+## Debug packet: v5 (debug mode only)
+
+When debug mode is enabled (`debug_control`), firmware sends 36 words: the 20 v4 words with version
+`0x0005`, followed by 16 link/debug words: RSSI, uptime, tx errors, ACK timeouts, reconnects, flags,
+present/probed masks, scan/probe periods, per-device error counts, status nibbles, I2C cycle time and
+last ACK RTT. See `DEBUG_MODE.md` for the word table. The bridge reports it as `hex-v5-debug` and
+nulls the values of groups that are probed but absent.
+
 ## Legacy v3 validated raw packet
 
 Each field is one 16-bit word rendered as 4 hex characters.
@@ -158,6 +166,11 @@ Recommended direct I2C command payloads:
 
 - `{"type":"i2c_read","addr":"0x08","reg":"0x20","len":1}`
 - `{"type":"i2c_write","addr":"0x40","reg":"0x05","data":["0x0A","0x00"]}`
+- `{"type":"debug_control","enabled":true}`
+- `{"type":"set_scan_period","period_ms":500}` (200..5000)
+- `{"type":"i2c_scan"}` and `{"type":"i2c_probe","addr":"0x6B"}`
+
+Add `?wait=1` to `POST /command` to wait for the device result in the HTTP response.
 
 Do not use a full-register write to BQ25798 register `0x13` for ACDRV selection. That control needs a
 masked read/modify/write command so unrelated control bits are preserved. The typed

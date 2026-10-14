@@ -1,0 +1,622 @@
+{
+ "source": "cubesat-i2c-tool/cubesat_i2c/registers.py",
+ "devices": [
+  {
+   "name": "BMS (BQ76942)",
+   "addr": "0x08",
+   "registers": [
+    {
+     "addr": "0x14",
+     "name": "Cell 1 Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "mV/LSB. Sheet: 0E D2 -> 3.794 V",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x16",
+     "name": "Cell 2 Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "mV/LSB",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x18",
+     "name": "Cell 3 Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "mV/LSB",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x1A",
+     "name": "Cell 4 Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "mV/LSB",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x36",
+     "name": "PACK Pin Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": 0.01,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 2,
+     "notes": "userV=10 mV/LSB. Sheet: 05 DA (1498) -> 14.98 V",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x3A",
+     "name": "CC2 Current",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": true,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "A",
+     "precision": 3,
+     "notes": "userA = 1 mA/LSB (default units), signed. Sheet: 00 07 -> 0.007 A",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x68",
+     "name": "Internal Temperature",
+     "access": "R",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": 0.1,
+     "offset": -273.15,
+     "unit": "degC",
+     "precision": 2,
+     "notes": "0.1 K/LSB. Sheet: 0B A3 (2979) -> 24.75 degC",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x3E",
+     "name": "FET_ENABLE (subcommand 0x0022)",
+     "access": "W",
+     "width": 2,
+     "endian": "little",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "Write '0x22 0x00' to 0x3E (subcommand address, LSB first) to toggle FET_ENABLE. Sheet readback 0x0007.",
+     "source": "sheet"
+    }
+   ],
+   "notes": "Repo maps BMS=0x08 (user note said 0x6B). Editable."
+  },
+  {
+   "name": "MPPT Switch (BQ25798)",
+   "addr": "0x6B",
+   "registers": [
+    {
+     "addr": "0x0F",
+     "name": "REG0F Charger Control 0",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "EN_CHG = bit5. Sheet: 0xA2 enabled, 0x82 disabled",
+     "source": "sheet",
+     "bitfields": [
+      {
+       "name": "EN_AUTO_IBATDIS",
+       "bits": 7
+      },
+      {
+       "name": "FORCE_IBATDIS",
+       "bits": 6
+      },
+      {
+       "name": "EN_CHG",
+       "bits": 5
+      },
+      {
+       "name": "EN_ICO",
+       "bits": 4
+      },
+      {
+       "name": "FORCE_ICO",
+       "bits": 3
+      },
+      {
+       "name": "EN_HIZ",
+       "bits": 2
+      },
+      {
+       "name": "EN_TERM",
+       "bits": 1
+      }
+     ]
+    },
+    {
+     "addr": "0x10",
+     "name": "REG10 Charger Control 1 (Watchdog)",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "WATCHDOG = bits[2:0]; sheet: disable watchdog before bench tests",
+     "source": "sheet",
+     "bitfields": [
+      {
+       "name": "WATCHDOG",
+       "bits": [
+        2,
+        0
+       ]
+      }
+     ]
+    },
+    {
+     "addr": "0x12",
+     "name": "REG12 Charger Control 3",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "Sheet note '0x00 disable charge controller' is unverified; review bitfields",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x13",
+     "name": "REG13 Charger Control 4",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "Bench: 0x81 VIN1->VIN2, 0x41 VIN2->VIN1 (unvalidated per sheet)",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x1B",
+     "name": "REG1B Charger Status 0",
+     "access": "R",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x1C",
+     "name": "REG1C Charger Status 1",
+     "access": "R",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "",
+     "source": "sheet",
+     "bitfields": [
+      {
+       "name": "CHG_STAT",
+       "bits": [
+        7,
+        5
+       ]
+      },
+      {
+       "name": "VBUS_STAT",
+       "bits": [
+        4,
+        1
+       ]
+      },
+      {
+       "name": "BC12_DONE",
+       "bits": 0
+      }
+     ]
+    },
+    {
+     "addr": "0x1E",
+     "name": "REG1E Charger Status 3",
+     "access": "R",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x2E",
+     "name": "REG2E ADC Control",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "ADC_EN = bit7. Sheet bench 0x30 has ADC_EN=0; set bit7 (e.g. 0xB0) and verify",
+     "source": "sheet",
+     "bitfields": [
+      {
+       "name": "ADC_EN",
+       "bits": 7
+      },
+      {
+       "name": "ADC_RATE",
+       "bits": 6
+      },
+      {
+       "name": "ADC_SAMPLE",
+       "bits": [
+        5,
+        4
+       ]
+      }
+     ]
+    },
+    {
+     "addr": "0x30",
+     "name": "REG30 ADC Function Disable 1",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "0x00 enables VAC1/VAC2/D+/D- ADC channels",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x31",
+     "name": "REG31 IBUS ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": true,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "A",
+     "precision": 3,
+     "notes": "1 mA/LSB signed",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x33",
+     "name": "REG33 IBAT ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": true,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "A",
+     "precision": 3,
+     "notes": "1 mA/LSB signed (sheet: 0xFF88 -> -0.120 A)",
+     "source": "sheet notes/datasheet"
+    },
+    {
+     "addr": "0x35",
+     "name": "REG35 VBUS ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "1 mV/LSB. Sheet 0x13A0 -> 5.024 V",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x37",
+     "name": "REG37 VAC1 ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "1 mV/LSB. Sheet 0x13B0 -> 5.040 V",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x39",
+     "name": "REG39 VAC2 ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "1 mV/LSB",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x3B",
+     "name": "REG3B VBAT ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "1 mV/LSB. Sheet 0x38D9 -> 14.553 V",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x3D",
+     "name": "REG3D VSYS ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 3,
+     "notes": "1 mV/LSB. Sheet 0x3206 -> 12.806 V",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x41",
+     "name": "REG41 TDIE ADC",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": true,
+     "scale": 0.5,
+     "offset": 0.0,
+     "unit": "degC",
+     "precision": 1,
+     "notes": "0.5 degC/LSB signed. Sheet 0x0026 -> 19.0 degC",
+     "source": "sheet"
+    },
+    {
+     "addr": "0x48",
+     "name": "REG48 Part Information",
+     "access": "R",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "0x19: PN[5:3]=3 (BQ25798), DEV_REV[2:0]=1",
+     "source": "sheet",
+     "bitfields": [
+      {
+       "name": "PN",
+       "bits": [
+        5,
+        3
+       ]
+      },
+      {
+       "name": "DEV_REV",
+       "bits": [
+        2,
+        0
+       ]
+      }
+     ]
+    }
+   ],
+   "notes": "Repo maps MPPT=0x6B (user note said 0x08). Editable."
+  },
+  {
+   "name": "INA226",
+   "addr": "0x40",
+   "registers": [
+    {
+     "addr": "0x00",
+     "name": "Configuration",
+     "access": "RW",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "Default 0x4127",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x01",
+     "name": "Shunt Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": true,
+     "scale": 2.5e-06,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 6,
+     "notes": "2.5 uV/LSB signed",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x02",
+     "name": "Bus Voltage",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.00125,
+     "offset": 0.0,
+     "unit": "V",
+     "precision": 4,
+     "notes": "1.25 mV/LSB",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x03",
+     "name": "Power",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": 0.025,
+     "offset": 0.0,
+     "unit": "W",
+     "precision": 3,
+     "notes": "25 x current_LSB per LSB (assumes current_LSB = 1 mA)",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x04",
+     "name": "Current",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": true,
+     "scale": 0.001,
+     "offset": 0.0,
+     "unit": "A",
+     "precision": 3,
+     "notes": "current_LSB (assumes 1 mA; set by CALIBRATION)",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x05",
+     "name": "Calibration",
+     "access": "RW",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "CAL = 0.00512 / (current_LSB * R_shunt)",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x06",
+     "name": "Mask/Enable",
+     "access": "RW",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0x07",
+     "name": "Alert Limit",
+     "access": "RW",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0xFE",
+     "name": "Manufacturer ID",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "0x5449 'TI'",
+     "source": "datasheet"
+    },
+    {
+     "addr": "0xFF",
+     "name": "Die ID",
+     "access": "R",
+     "width": 2,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "0x2260",
+     "source": "datasheet"
+    }
+   ],
+   "notes": ""
+  }
+ ]
+}

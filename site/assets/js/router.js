@@ -1,22 +1,30 @@
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20260929e';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261013a';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261014a';
 
 const assetVersion = '20260929e';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
   communication: `./modules/communication.html?v=${assetVersion}`,
+  'link-health': `./modules/link-health.html?v=20261013a`,
+  'debug-mode': `./modules/debug-mode.html?v=20261014a`,
   partners: `./modules/partners.html?v=${assetVersion}`
 };
 
 const pageInitializers = {
   home: () => {},
   communication: initI2CPage,
+  'link-health': initLinkHealthPage,
+  'debug-mode': initDebugModePage,
   partners: () => {}
 };
 
 const pageDestroyers = {
   home: () => {},
   communication: destroyI2CPage,
+  'link-health': destroyLinkHealthPage,
+  'debug-mode': destroyDebugModePage,
   partners: () => {}
 };
 

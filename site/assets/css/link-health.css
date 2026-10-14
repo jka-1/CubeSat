@@ -1,0 +1,22 @@
+/* Link health page (loaded by modules/link-health.html; uses the shared variables in styles.css). */
+.link-health-page .card { margin-bottom: 18px; }
+.lh-controls { display: grid; grid-template-columns: 2fr 2fr 1fr 1fr auto; gap: 12px; align-items: end; }
+.lh-controls label { display: grid; gap: 6px; color: var(--white-soft); font-size: 0.78rem; }
+.lh-controls .input { min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: rgba(0,0,0,0.45); color: var(--white); }
+.lh-buttons { display: flex; gap: 8px; }
+.lh-tiles { display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px; margin-bottom: 18px; }
+.lh-tiles .metric-tile strong { font-size: 1.15rem; word-break: break-all; }
+.lh-chart-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 4px; }
+.lh-chart canvas { display: block; width: 100%; height: 170px; padding: 6px 10px 10px; }
+.lh-table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+.lh-table th { text-align: left; color: var(--white-soft); font-weight: 600; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+.lh-table td { color: var(--gold-soft); font-weight: 800; padding: 8px 10px 8px 4px; border-bottom: 1px solid var(--line); }
+@media (max-width: 1100px) {
+  .lh-tiles { grid-template-columns: repeat(3, 1fr); }
+  .lh-chart-grid { grid-template-columns: repeat(2, 1fr); }
+  .lh-controls { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 700px) {
+  .lh-tiles, .lh-chart-grid, .lh-controls { grid-template-columns: 1fr; }
+}

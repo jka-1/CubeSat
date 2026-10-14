@@ -7,12 +7,31 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
+#include "esp_timer.h"
 #include "esp_wifi.h"
 #include "nvs_flash.h"
 
 static const char *TAG = "wifi_station";
 static EventGroupHandle_t s_wifi_event_group;
 static int s_retry_count;
+static volatile uint32_t s_disconnect_count;
+static esp_timer_handle_t s_reconnect_timer;
+
+static void reconnect_timer_callback(void *arg)
+{
+    (void)arg;
+    ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_connect());
+}
+
+/* Exponential back-off: 1 s, 2 s, 4 s ... capped at DEMO_WIFI_BACKOFF_MAX_MS, retried forever. */
+static uint32_t reconnect_delay_ms(int attempt)
+{
+    uint32_t delay = DEMO_WIFI_BACKOFF_MIN_MS;
+    for (int i = 1; i < attempt && delay < DEMO_WIFI_BACKOFF_MAX_MS; i++) {
+        delay *= 2u;
+    }
+    return delay > DEMO_WIFI_BACKOFF_MAX_MS ? DEMO_WIFI_BACKOFF_MAX_MS : delay;
+}
 
 static void wifi_event_handler(
     void *arg,
@@ -30,13 +49,19 @@ static void wifi_event_handler(
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
         xEventGroupClearBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
+        ++s_disconnect_count;
+        ++s_retry_count;
 
-        if (s_retry_count < 10) {
-            ++s_retry_count;
-            ESP_LOGW(TAG, "Wi-Fi disconnected; reconnect attempt %d", s_retry_count);
-            ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_connect());
+        const uint32_t delay_ms = reconnect_delay_ms(s_retry_count);
+        ESP_LOGW(TAG, "Wi-Fi disconnected; reconnect attempt %d in %u ms",
+                 s_retry_count, (unsigned)delay_ms);
+
+        if (s_reconnect_timer != NULL) {
+            esp_timer_stop(s_reconnect_timer);
+            ESP_ERROR_CHECK_WITHOUT_ABORT(
+                esp_timer_start_once(s_reconnect_timer, (uint64_t)delay_ms * 1000u));
         } else {
-            ESP_LOGE(TAG, "Wi-Fi reconnect limit reached");
+            ESP_ERROR_CHECK_WITHOUT_ABORT(esp_wifi_connect());
         }
         return;
     }
@@ -71,6 +96,15 @@ esp_err_t wifi_station_init(void)
     }
 
     esp_netif_create_default_wifi_sta();
+
+    const esp_timer_create_args_t reconnect_timer_args = {
+        .callback = reconnect_timer_callback,
+        .name = "wifi_reconnect",
+    };
+    ESP_RETURN_ON_ERROR(
+        esp_timer_create(&reconnect_timer_args, &s_reconnect_timer),
+        TAG,
+        "reconnect timer creation failed");
 
     wifi_init_config_t wifi_init_config = WIFI_INIT_CONFIG_DEFAULT();
     ESP_RETURN_ON_ERROR(
@@ -136,4 +170,23 @@ esp_err_t wifi_station_init(void)
 EventGroupHandle_t wifi_station_event_group(void)
 {
     return s_wifi_event_group;
+}
+
+uint32_t wifi_station_reconnect_count(void)
+{
+    return s_disconnect_count;
+}
+
+esp_err_t wifi_station_get_rssi(int8_t *out_rssi)
+{
+    if (out_rssi == NULL) {
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    wifi_ap_record_t ap_info = {0};
+    const esp_err_t status = esp_wifi_sta_get_ap_info(&ap_info);
+    if (status == ESP_OK) {
+        *out_rssi = ap_info.rssi;
+    }
+    return status;
 }

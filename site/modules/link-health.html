@@ -1,0 +1,70 @@
+<link rel="stylesheet" href="./assets/css/link-health.css?v=20261013a" />
+<section id="link-health" class="page active link-health-page">
+  <div class="section-header">
+    <div>
+      <div class="eyebrow"><span class="pulse"></span> Wireless Link</div>
+      <h2>Telemetry link health</h2>
+      <p>
+        ESP32-S3 Wi-Fi → UDP 3333 → droplet bridge → SSE. Statistics come from packet sequence numbers and bridge
+        receive times. Signal strength appears only once the firmware sends v5 link-stats packets.
+      </p>
+    </div>
+    <div id="lhStatus" class="status-pill offline">Not connected</div>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <h3 class="card-title">Source</h3>
+      <span class="status-pill">UDP → SSE Bridge</span>
+    </div>
+    <div class="card-body lh-controls">
+      <label>Event stream <input id="lhStreamUrl" class="input" value="/telemetry/events" aria-label="SSE URL" /></label>
+      <label>Health <input id="lhHealthUrl" class="input" value="/telemetry/health" aria-label="Health URL" /></label>
+      <label>Nominal period (ms) <input id="lhPeriod" class="input" type="number" min="20" value="1000" /></label>
+      <label>Window
+        <select id="lhWindow" class="input">
+          <option value="60000">1 min</option>
+          <option value="300000" selected>5 min</option>
+          <option value="900000">15 min</option>
+          <option value="3600000">60 min</option>
+        </select>
+      </label>
+      <div class="lh-buttons">
+        <button id="lhConnect" class="button" type="button">Connect</button>
+        <button id="lhReset" class="button secondary" type="button">Clear stats</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="lh-tiles">
+    <div class="metric-tile"><span>Link state</span><strong id="lhState">--</strong><small id="lhStateDetail" class="metric-detail">waiting</small></div>
+    <div class="metric-tile"><span>Last packet age</span><strong id="lhAge">--</strong><small id="lhStale" class="metric-detail">stale after -- ms</small></div>
+    <div class="metric-tile"><span>ESP32 endpoint</span><strong id="lhEndpoint">--</strong><small id="lhEndpointChanges" class="metric-detail">port changes 0 · reboots 0</small></div>
+    <div class="metric-tile"><span>Signal (RSSI)</span><strong id="lhRssi">n/a</strong><small id="lhRssiDetail" class="metric-detail">needs v5 packets</small></div>
+    <div class="metric-tile"><span>Pending commands</span><strong id="lhPending">--</strong><small id="lhCmdSummary" class="metric-detail">--</small></div>
+    <div class="metric-tile"><span>Command control</span><strong id="lhCmdReady">--</strong><small id="lhCmdAuth" class="metric-detail">auth --</small></div>
+  </div>
+
+  <div class="lh-chart-grid">
+    <section class="card lh-chart"><div class="card-header"><h3 class="card-title">Packet inter-arrival (ms)</h3></div><canvas id="lhChartInterval" height="170"></canvas></section>
+    <section class="card lh-chart"><div class="card-header"><h3 class="card-title">Jitter, RFC3550 (ms)</h3></div><canvas id="lhChartJitter" height="170"></canvas></section>
+    <section class="card lh-chart"><div class="card-header"><h3 class="card-title">Loss % per bucket</h3></div><canvas id="lhChartLoss" height="170"></canvas></section>
+    <section class="card lh-chart"><div class="card-header"><h3 class="card-title">Gaps · dups · out-of-order</h3></div><canvas id="lhChartEvents" height="170"></canvas></section>
+    <section class="card lh-chart"><div class="card-header"><h3 class="card-title">Command RTT (ms)</h3></div><canvas id="lhChartRtt" height="170"></canvas></section>
+    <section class="card lh-chart"><div class="card-header"><h3 class="card-title">RSSI (dBm)</h3></div><canvas id="lhChartRssi" height="170"></canvas></section>
+  </div>
+
+  <section class="card">
+    <div class="card-header">
+      <h3 class="card-title">Window statistics</h3>
+      <span id="lhWindowLabel" class="status-pill">5 min</span>
+    </div>
+    <div class="card-body">
+      <table class="lh-table" id="lhTable"><tbody></tbody></table>
+    </div>
+  </section>
+  <p class="footer-note">
+    Loss = sequence gaps (16-bit, skips 0). A backward jump &gt; 64 or forward jump ≥ 1000 counts as a reboot, not loss.
+    Jitter is measured against the nominal period because v4 packets carry no transmit timestamp.
+  </p>
+</section>
