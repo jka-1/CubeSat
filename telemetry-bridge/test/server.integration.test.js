@@ -529,6 +529,7 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
     temperatureC: 25,
     temperatureSaturated: true,
     lightVoltageMv: 1550,
+    lightLevel: 'Bright',
     relativeLightLevel: 0.5,
     lightSaturated: true
   });
@@ -548,6 +549,7 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
     temperatureC: null,
     temperatureSaturated: null,
     lightVoltageMv: null,
+    lightLevel: null,
     relativeLightLevel: null,
     lightSaturated: null
   });

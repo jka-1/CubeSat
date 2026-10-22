@@ -37,7 +37,9 @@ async function startBridge(context) {
   const bridge = spawn(process.execPath, [path.join(bridgeDirectory, 'server.js')], {
     cwd: bridgeDirectory,
     env: { ...process.env, HTTP_PORT: String(http), UDP_PORT: String(udp), HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1',
-      COMMAND_TOKEN: token, COMMAND_TIMEOUT_MS: '300', TELEMETRY_STALE_MS: '3000' },
+      COMMAND_TOKEN: token, ALLOW_UNAUTHENTICATED_COMMANDS: 'false',
+      COMMAND_TARGET_HOST: '', COMMAND_TARGET_PORT: '', BMS_USER_VOLT_LSB_V: '0.01',
+      COMMAND_TIMEOUT_MS: '300', TELEMETRY_STALE_MS: '3000' },
     stdio: ['ignore', 'pipe', 'pipe']
   });
   let out = ''; bridge.stdout.on('data', (c) => { out += c; }); bridge.stderr.on('data', (c) => { out += c; });
@@ -55,6 +57,146 @@ async function startBridge(context) {
 }
 
 async function waitHealth(b, pred) { for (let i = 0; i < 80; i++) { const h = await b.health(); if (pred(h)) return h; await delay(25); } throw new Error('health condition not met'); }
+
+// Synthetic protocol fixture for the recovered v6 decoder, not a hardware capture.
+// 1508 userV -> 15.08 V; 2981 decikelvin -> 24.95 C; signed IBUS -125 mA;
+// VBUS/VAC1/VBAT/VSYS in mV; signed TDIE -5 half-degrees; ADC enabled;
+// TEMP_OUT 736 mV, GPIO1 temperature and GPIO2 light.
+function buildV6(seq, { flags = 0x3ff, present = 7, gpios = 0x0201 } = {}) {
+  const words = buildV5(seq, { present }).match(/.{4}/g).map((v) => parseInt(v, 16));
+  words[1] = 6;
+  words.push(flags, 1508, 2981, 0xff83, 5000, 6000, 14940, 14950, 0xfffb, 0x80, 736, gpios);
+  return words.map((v) => v.toString(16).padStart(4, '0')).join('');
+}
+
+async function latestSequence(b, seq) {
+  for (let i = 0; i < 80; i++) {
+    const body = await (await fetch(`${b.base}/latest`)).json();
+    if (body.latest?.packet?.seq === seq) return body.latest.packet;
+    await delay(25);
+  }
+  throw new Error(`No packet for sequence ${seq}`);
+}
+
+test('v6 ASCII and binary packets preserve raw fields and decode signed engineering values', async (t) => {
+  const b = await startBridge(t);
+  for (const [seq, binary] of [[100, false], [101, true]]) {
+    const hex = buildV6(seq);
+    await b.send(binary ? Buffer.from(hex, 'hex') : hex);
+    const p = await latestSequence(b, seq);
+    assert.equal(p.packet_format, 'hex-v6-streaming');
+    assert.deepEqual(p.telemetry.bms.cellVoltagesV, [3.813, 3.807, 3.676, 3.677]);
+    assert.equal(p.telemetry.bms.packVoltageV, 15.08);
+    assert.equal(p.telemetry.bms.internalTempC, 24.95);
+    for (const [key, value] of Object.entries({ ibusA: -0.125, vbusV: 5, vac1V: 6,
+      vbatV: 14.94, vsysV: 14.95, dieTempC: -2.5, adcEnabled: true })) {
+      assert.equal(p.telemetry.mppt[key], value, key);
+    }
+    assert.equal(p.telemetry.peripheral.temperatureVoltageMv, 736);
+    assert.equal(p.telemetry.adc.temp.gpio, 1);
+    assert.equal(p.telemetry.adc.light.gpio, 2);
+    assert.equal(p.raw.streaming.mppt_ibus_0x31, 0xff83);
+    assert.equal(p.raw.streaming.mppt_tdie_0x41, 0xfffb);
+    assert.equal(p.raw.streaming.bms_pack_0x36, 1508);
+    assert.equal((await b.health()).telemetry_packet_format, 'hex-v6-streaming');
+  }
+});
+
+test('v6 invalid flags and absent devices never expose extension measurements as real zeros', async (t) => {
+  const b = await startBridge(t);
+  for (const [seq, options] of [[110, { flags: 0, gpios: 0xffff }], [111, { present: 1 }]]) {
+    await b.send(buildV6(seq, options));
+    const p = await latestSequence(b, seq);
+    assert.equal(p.telemetry.bms.packVoltageV, null);
+    assert.equal(p.telemetry.bms.internalTempC, null);
+    for (const key of ['ibusA', 'vbusV', 'vac1V', 'vbatV', 'vsysV', 'dieTempC', 'adcEnabled']) {
+      assert.equal(p.telemetry.mppt[key], null, key);
+    }
+    if (seq === 110) {
+      assert.equal(p.telemetry.peripheral.temperatureVoltageMv, null);
+      assert.equal(p.telemetry.adc.temp.gpio, null);
+      assert.equal(p.telemetry.adc.light.gpio, null);
+    } else {
+      assert.deepEqual(p.telemetry.bms.cellVoltagesV, [null, null, null, null]);
+      assert.equal(p.telemetry.peripheral.temperatureVoltageMv, 736);
+    }
+  }
+});
+
+test('malformed v6 lengths cannot replace the last valid packet and v4 still follows v6', async (t) => {
+  const b = await startBridge(t);
+  await b.send(buildV6(120));
+  await latestSequence(b, 120);
+  // HTTP input exercises the same decoder and gives deterministic rejection feedback.
+  for (const hex of [buildV6(121).slice(0, -4), buildV6(121) + '0000']) {
+    const response = await fetch(`${b.base}/input`, { method: 'POST',
+      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hex }) });
+    assert.equal(response.status, 400);
+    assert.equal((await (await fetch(`${b.base}/latest`)).json()).latest.packet.seq, 120);
+  }
+  await b.send(V4);
+  const p = await latestSequence(b, 0x03b3);
+  assert.equal(p.packet_format, 'hex-v4-peripheral-sensors');
+  assert.equal(Object.hasOwn(p.telemetry.bms, 'packVoltageV'), false);
+  assert.equal(Object.hasOwn(p.telemetry.mppt, 'vbusV'), false);
+});
+
+test('live-mode requires authorization and a boolean, and does not manufacture a command target', async (t) => {
+  const b = await startBridge(t);
+  const postMode = (body, suppliedToken = token, route = '/live-mode') => fetch(`${b.base}${route}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json',
+      ...(suppliedToken ? { 'X-Command-Token': suppliedToken } : {}) }, body: JSON.stringify(body)
+  });
+  for (const supplied of ['', 'incorrect']) {
+    assert.equal((await postMode({ on: true }, supplied)).status, 401);
+    assert.equal((await b.health()).live_mode, false);
+  }
+  for (const body of [{}, { on: 'true' }, { on: 1 }, { on: null }]) {
+    assert.equal((await postMode(body)).status, 400);
+    assert.equal((await b.health()).live_mode, false);
+  }
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 5000);
+  t.after(() => { clearTimeout(timeout); controller.abort(); });
+  const events = await fetch(`${b.base}/events`, { signal: controller.signal });
+  const reader = events.body.getReader();
+  const decoder = new TextDecoder();
+  let pending = '';
+  async function nextStatus(on) {
+    while (true) {
+      let end;
+      while ((end = pending.indexOf('\n\n')) !== -1) {
+        const frame = pending.slice(0, end); pending = pending.slice(end + 2);
+        const line = frame.split('\n').find((v) => v.startsWith('data: '));
+        if (line) {
+          const event = JSON.parse(line.slice(6));
+          if (event.type === 'status' && event.live_mode === on) return event;
+        }
+      }
+      const { value, done } = await reader.read();
+      assert.equal(done, false, 'SSE ended before the requested status');
+      pending += decoder.decode(value, { stream: true });
+    }
+  }
+  await nextStatus(false);
+  const enabled = await postMode({ on: true, source: 'windows-test' });
+  assert.equal(enabled.status, 200);
+  const body = await enabled.json();
+  assert.equal(body.live_mode_source, 'windows-test');
+  assert.ok(Number.isFinite(Date.parse(body.live_mode_since)));
+  assert.equal((await nextStatus(true)).live_mode_source, 'windows-test');
+  const health = await b.health();
+  assert.equal(health.live_mode, true);
+  assert.equal(health.telemetry_connected, false);
+  assert.equal(health.command_ready, false);
+  assert.equal((await postMode({ on: false }, token, '/api/demo/live-mode')).status, 200);
+  const disabled = await nextStatus(false);
+  assert.equal(disabled.live_mode_source, null);
+  assert.equal(disabled.live_mode_since, null);
+  assert.equal((await b.health()).live_mode, false);
+  await reader.cancel();
+});
 
 test('v5 debug packet decodes presence for all, subset, single and none', async (t) => {
   const b = await startBridge(t);

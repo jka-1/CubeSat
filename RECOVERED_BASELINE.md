@@ -13,3 +13,20 @@ Server runtime: Node 20.19.4. The deployed bridge supports v6 streaming and auth
 The initial inherited test suite produced 35 passes and four stale-expectation failures: three peripheral payload assertions omit `lightLevel`, and one asserts an old asset version. Follow-up test changes should explicitly check the new contract, not remove coverage.
 
 Original recovery archives and file hashes are retained outside this worktree in `deployment-audit/2026-10-22/`. No live deployment or firmware change is part of this recovery.
+
+## Validated development baseline
+
+Branch: `codex/telemetry-baseline`. Recovery commit: `8a68a6b`.
+
+The follow-up test changes preserve strict peripheral assertions while adding the current `lightLevel` field and updating the asset-version expectations. New integration tests exercise:
+
+- ASCII and binary v6 packets, signed current/temperature conversion, BMS/MPPT engineering units, ADC GPIOs and raw values;
+- invalid extension flags and absent devices, retaining nulls;
+- malformed v6 lengths leaving the previous valid packet untouched, and v4 decoding after v6;
+- live-mode missing/wrong tokens, invalid boolean input, health and SSE updates, the API alias, and the distinction between a mode flag and a fresh device/command target.
+
+Validation: **43 tests passed, zero failed**, using `node --test` under local Node v25.9.0. `git diff --check` passed. All 29 recovered production files were verified against the original audit hashes; application behavior was not changed during test alignment.
+
+Runtime limitation: downloading a temporary Node v20.19.4 runtime from nodejs.org timed out, so matching-version execution remains unverified. No packages or global runtime changes were installed. V6 fixtures are synthetic tests of the recovered decoder contract, not independent confirmation of Jaden's firmware or hardware.
+
+Next prerequisites: obtain the latest firmware/Windows source, check firmware-to-decoder parity, and rerun on the intended server Node version before deployment. Database design can proceed against the recovered packet envelope while these are pending.
