@@ -1,6 +1,16 @@
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261014a';
+import { isStreamingMode, setStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261019b';
+
+let streamView = null;
+function applyStreamingToggle(on) {
+  $('dmStreamToggle').checked = on; $('dmStreamToggleText').textContent = on ? 'On' : 'Off';
+  $('dmStreamOffNote').hidden = on;
+  if (on && !streamView) streamView = mountStreamingView($('dmStreamRoot'), { url: $('dmStreamUrl').value.trim() || '/telemetry/events' });
+  if (!on && streamView) { streamView.destroy(); streamView = null; }
+}
 
 const REPLAY_AGE_MS = 2_000;
 const DEVICES = [['pv', 'PV / INA226'], ['bms', 'BMS / BQ76942'], ['mppt', 'MPPT / BQ25798']];
@@ -148,7 +158,7 @@ function renderTiles() {
   pill.textContent = d.enabled ? 'debug ON (v5)' : 'debug OFF';
   pill.className = `status-pill ${d.enabled ? 'online' : ''}`;
   $('dmDebugDetail').textContent = d.enabled
-    ? `scan ${d.scan_period_ms} ms · probe every ${d.probe_period_ms} ms · I2C cycle ${d.i2c_cycle_ms ?? '--'} ms · present mask 0x${d.present_mask.toString(16)}`
+    ? `scan ${d.scan_period_ms} ms · probe every ${d.probe_period_ms} ms · I²C cycle ${d.i2c_cycle_ms ?? '--'} ms · present mask 0x${d.present_mask.toString(16)}`
     : `firmware sending ${d.packet_format || 'non-debug'} packets`;
 }
 
@@ -271,7 +281,9 @@ export async function initDebugModePage() {
   for (const [q, id] of [['dmstream', 'dmStreamUrl'], ['dmhealth', 'dmHealthUrl'], ['dmcommand', 'dmCommandUrl']]) if (p.get(q)) $(id).value = p.get(q);
   connect();
   state.timer = setInterval(render, 1000); render();
+  $('dmStreamToggle').addEventListener('change', (e) => { setStreamingMode(e.target.checked); applyStreamingToggle(e.target.checked); log('INFO', `Streaming Telemetry ${e.target.checked ? 'on' : 'off'}`); });
+  applyStreamingToggle(isStreamingMode());
 }
 
-export function destroyDebugModePage() { disconnect(); clearInterval(state.timer); }
+export function destroyDebugModePage() { disconnect(); clearInterval(state.timer); if (streamView) { streamView.destroy(); streamView = null; } }
 export { state as debugModeState };

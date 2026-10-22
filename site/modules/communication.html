@@ -14,7 +14,7 @@
     Mock data is active by default. Connect the live stream from System Overview when hardware is ready.
   </p>
 
-  <section class="i2c-workspace" aria-label="Interactive I2C bus topology">
+  <section class="i2c-workspace" aria-label="Interactive I²C bus topology">
     <div class="telemetry-page-bank" aria-label="Telemetry and peripheral pages">
       <div class="page-bank-label">
         <span>Telemetry pages</span>
@@ -63,7 +63,7 @@
       </button>
     </div>
 
-    <div class="i2c-rails" aria-label="I2C bus lines">
+    <div class="i2c-rails" aria-label="I²C bus lines">
       <div class="rail rail-sda"><span>SDA · DATA</span></div>
       <div class="rail rail-scl"><span>SCL · CLOCK</span></div>
 
@@ -76,13 +76,13 @@
       </div>
     </div>
 
-    <div class="device-bank" aria-label="I2C follower devices">
+    <div class="device-bank" aria-label="I²C follower devices">
       <button class="topology-tile device-tile" type="button" data-detail-target="pv">
         <span class="device-port" aria-hidden="true"><i></i><i></i></span>
         <strong>INA226</strong>
         <span class="tile-meta">PV monitor · 0x40 follower</span>
         <span id="pvPreview" class="tile-value">-- W · -- A</span>
-        <span class="device-ack">ACK · simulated</span>
+        <span class="device-ack">ACK · --</span>
       </button>
 
       <button class="topology-tile device-tile" type="button" data-detail-target="mppt">
@@ -90,7 +90,7 @@
         <strong>BQ25798</strong>
         <span class="tile-meta">MPPT / BQ25 · 0x6B follower</span>
         <span id="mpptPreview" class="tile-value">Input --</span>
-        <span class="device-ack">ACK · simulated</span>
+        <span class="device-ack">ACK · --</span>
       </button>
 
       <button class="topology-tile device-tile" type="button" data-detail-target="bms">
@@ -98,7 +98,7 @@
         <strong>BQ76942</strong>
         <span class="tile-meta">Battery monitor · 0x08 follower</span>
         <span id="bmsPreview" class="tile-value">Pack -- V</span>
-        <span class="device-ack">ACK · simulated</span>
+        <span class="device-ack">ACK · --</span>
       </button>
 
       <button class="topology-tile device-tile" type="button" data-detail-target="load">
@@ -135,7 +135,7 @@
             <div class="pack-summary summary-grid">
               <div class="metric-tile"><span>MCU Temp</span><strong id="summaryMcuTemp">-- °C</strong></div>
               <div class="metric-tile"><span>Peripheral Temp</span><strong id="summaryPeripheralTemp">Unavailable</strong></div>
-              <div class="metric-tile"><span>Relative Light</span><strong id="summaryRelativeLight">Unavailable</strong></div>
+              <div class="metric-tile"><span>Light Level</span><strong id="summaryRelativeLight">Unavailable</strong></div>
               <div class="metric-tile"><span>Input Select</span><strong id="summaryMpptState">--</strong></div>
               <div class="metric-tile"><span>PV Power</span><strong id="summaryPvPower">-- W</strong></div>
               <div class="metric-tile"><span>Load Power</span><strong id="summaryLoadPower">-- W</strong></div>
@@ -173,13 +173,13 @@
                 <small id="peripheralTemperatureStatus" class="metric-detail">UNAVAILABLE</small>
               </div>
               <div class="metric-tile">
-                <span>Relative Light Level</span>
+                <span>Light Level (TEMT6000)</span>
                 <strong id="relativeLightValue">Unavailable</strong>
                 <small id="lightVoltageValue" class="metric-detail">Unavailable</small>
               </div>
             </div>
             <p class="detail-explainer">
-              Relative light is calibrated LIGHT_OUT voltage divided by 3100 mV and clamped to 0–100%. It is not a lux measurement.
+              Light level from calibrated LIGHT_OUT voltage: below 800 mV Lightly Lit, 800–1800 mV Bright, above 1800 mV Very Bright. It is not a lux measurement. Temperature: MCP9700, (mV − 500) / 10 °C.
             </p>
           </div>
 
@@ -227,13 +227,13 @@
               </div>
               <div class="telemetry-toolbar">
                 <select id="debugCommandType" class="input" aria-label="Debug command type">
-                  <option value="i2c_read">I2C Read</option>
-                  <option value="i2c_write">I2C Write</option>
+                  <option value="i2c_read">I²C Read</option>
+                  <option value="i2c_write">I²C Write</option>
                 </select>
-                <input id="debugAddrInput" class="input" value="0x6B" placeholder="Device address" aria-label="I2C device address" />
-                <input id="debugRegInput" class="input" value="0x13" placeholder="Register" aria-label="I2C register address" />
-                <input id="debugLenInput" class="input" value="1" placeholder="Read size" aria-label="I2C read size" />
-                <input id="debugDataInput" class="input" placeholder="Write bytes, e.g. 0x0A 0x00" aria-label="I2C write data" />
+                <input id="debugAddrInput" class="input" value="0x6B" placeholder="Device address" aria-label="I²C device address" />
+                <input id="debugRegInput" class="input" value="0x13" placeholder="Register" aria-label="I²C register address" />
+                <input id="debugLenInput" class="input" value="1" placeholder="Read size" aria-label="I²C read size" />
+                <input id="debugDataInput" class="input" placeholder="Write bytes, e.g. 0x0A 0x00" aria-label="I²C write data" />
                 <button class="button secondary" id="sendDebugCommandButton" type="button">Send debug</button>
               </div>
               <div class="telemetry-toolbar">

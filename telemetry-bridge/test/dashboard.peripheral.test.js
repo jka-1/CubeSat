@@ -35,6 +35,7 @@ test('switching from mock to live clears sensor values instead of retaining simu
     temperatureC: null,
     temperatureSaturated: null,
     lightVoltageMv: null,
+    lightLevel: null,
     relativeLightLevel: null,
     lightSaturated: null
   });
@@ -63,6 +64,7 @@ test('live packets with missing peripheral fields normalize to unavailable', () 
     temperatureC: 24.5,
     temperatureSaturated: false,
     lightVoltageMv: 1550,
+    lightLevel: 'Bright',
     relativeLightLevel: 0.5,
     lightSaturated: true
   });
@@ -102,10 +104,10 @@ test('production route loads the current communication dashboard assets', async 
     readFile(path.join(repositoryRoot, 'site/assets/js/router.js'), 'utf8')
   ]);
 
-  assert.match(index, /assets\/js\/app\.js\?v=20260929e/);
-  assert.match(index, /assets\/css\/styles\.css\?v=20260929e/);
-  assert.match(app, /router\.js\?v=20260929e/);
-  assert.match(router, /i2c\.js\?v=20260929e/);
+  assert.match(index, /assets\/js\/app\.js\?v=20261019b/);
+  assert.match(index, /assets\/css\/styles\.css\?v=20261019b/);
+  assert.match(app, /router\.js\?v=20261019b/);
+  assert.match(router, /i2c\.js\?v=20261019b/);
   assert.match(router, /communication:\s*`\.\/modules\/communication\.html/);
   assert.match(router, /communication:\s*initI2CPage/);
   assert.match(router, /route === 'dashboard'\) return 'communication'/);
