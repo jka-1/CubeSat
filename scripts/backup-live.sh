@@ -29,6 +29,16 @@ if [ -f "$bridge_package_file" ]; then
   cp "$bridge_package_file" "$backup_dir/package.json"
 fi
 
+bridge_dir="$(dirname "$bridge_file")"
+runtime_files=()
+for file in recording node_modules package-lock.json; do
+  if [ -e "$bridge_dir/$file" ]; then runtime_files+=("$file"); fi
+done
+if [ "${#runtime_files[@]}" -gt 0 ]; then
+  tar -czf "$backup_dir/bridge-runtime.tar.gz" -C "$bridge_dir" "${runtime_files[@]}"
+fi
+# Recording databases live outside the application directory and require a SQLite backup.
+
 if [ -n "$service_name" ] && command -v systemctl >/dev/null 2>&1; then
   systemctl status "$service_name" --no-pager > "$backup_dir/service-status.txt" 2>&1 || true
 fi

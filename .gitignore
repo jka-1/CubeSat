@@ -87,6 +87,10 @@ sdkconfig.*
 logs/
 *.csv
 node_modules/
+# Private telemetry recordings, including SQLite sidecars
+*.sqlite
+*.sqlite-*
+telemetry-bridge/data/
 .pytest_cache/
 backups/
 *_backup_*/

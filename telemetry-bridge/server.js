@@ -1,6 +1,8 @@
 import dgram from 'node:dgram';
 import http from 'node:http';
 import crypto from 'node:crypto';
+import { Recorder } from './recording/client.mjs';
+import { archivePayload } from './recording/raw.mjs';
 
 const httpPort = readPort('HTTP_PORT', 8080);
 const udpPort = readPort('UDP_PORT', 3333);
@@ -77,6 +79,10 @@ if (!['json', 'ina226-load-v1'].includes(configuredCommandPacketFormat)) {
   throw new Error('COMMAND_PACKET_FORMAT must be json or ina226-load-v1');
 }
 const commandToken = String(process.env.COMMAND_TOKEN || '');
+// Opt-in until the history/JWT UI milestone is ready. Never reuse the public site root.
+const recordingPath = process.env.RECORDING_DB_PATH || '';
+const recorder = recordingPath ? new Recorder(recordingPath) : null;
+if (recorder) await recorder.ready;
 const allowUnauthenticatedCommands = readBoolean(
   'ALLOW_UNAUTHENTICATED_COMMANDS',
   false
@@ -1586,7 +1592,8 @@ function createStatusMessage() {
     debug_mode: latestDebugState,
     live_mode: liveMode.on,
     live_mode_source: liveMode.source,
-    live_mode_since: liveMode.since
+    live_mode_since: liveMode.since,
+    recording: recorder?.status() || { enabled: false }
   };
 }
 
@@ -1634,6 +1641,7 @@ function publishCommandStatus(status, command, extra = {}) {
     commandWaiters.get(command.requestId)({ status, ...extra, result });
   }
   latestCommandEnvelope = createCommandEnvelope(status, command, extra);
+  recorder?.capture('command', { envelope: latestCommandEnvelope });
   broadcast(latestCommandEnvelope);
   broadcastStatus();
 }
@@ -2000,6 +2008,48 @@ const httpServer = http.createServer(async (request, response) => {
   );
 
   try {
+    if (requestUrl.pathname === '/runs' || requestUrl.pathname.startsWith('/runs/')) {
+      if (!recorder) throw createHttpError(503, 'Recording is not enabled');
+      // History access is private even when the legacy command bypass is enabled.
+      if (!commandToken || allowUnauthenticatedCommands) throw createHttpError(503, 'Recording requires command-token authentication');
+      assertCommandAuthorized(request);
+      response.setHeader('Cache-Control', 'no-store');
+      const parts = requestUrl.pathname.split('/').filter(Boolean);
+      const query = Object.fromEntries(requestUrl.searchParams);
+      if (request.method === 'GET' && parts.length === 1) {
+        sendJson(response, 200, { runs: await recorder.call('list', query), recording: recorder.status() });
+        return;
+      }
+      if (request.method === 'POST' && parts.length === 2 && parts[1] === 'start') {
+        const body = await readJsonBody(request);
+        if (!isTelemetryConnected() || latestEnvelope?.source !== 'udp') {
+          throw createHttpError(409, 'Fresh UDP telemetry is required to start recording');
+        }
+        const run = await recorder.call('start', { name: body.name, envelope: latestEnvelope,
+          metadata: { packet_format: latestEnvelope.packet.packet_format, pv_shunt_ohms: pvShuntOhms,
+            pv_current_lsb_a: pvCurrentLsbA, bms_user_volt_lsb_v: bmsUserVoltLsbV,
+            decoder_revision: process.env.DEPLOYED_REVISION || 'unversioned' } });
+        sendJson(response, 201, { run });
+        broadcastStatus();
+        return;
+      }
+      if (request.method === 'POST' && parts.length === 2 && parts[1] === 'stop') {
+        const run = await recorder.call('stop', {});
+        sendJson(response, 200, { run });
+        broadcastStatus();
+        return;
+      }
+      if (request.method === 'GET' && parts.length === 2) {
+        sendJson(response, 200, { run: await recorder.call('get', parts[1]) });
+        return;
+      }
+      if (request.method === 'GET' && parts.length === 3 && ['samples', 'events', 'series'].includes(parts[2])) {
+        sendJson(response, 200, await recorder.call(parts[2], { ...query, id: parts[1] }));
+        return;
+      }
+      sendJson(response, 404, { error: 'Recording route not found' });
+      return;
+    }
     if (request.method === 'GET' && requestUrl.pathname === '/events') {
       response.writeHead(200, {
         'Content-Type': 'text/event-stream; charset=utf-8',
@@ -2050,6 +2100,7 @@ const httpServer = http.createServer(async (request, response) => {
         live_mode: liveMode.on,
         live_mode_source: liveMode.source,
         live_mode_since: liveMode.since,
+        recording: recorder?.status() || { enabled: false },
         default_command_target: commandTargetHost && commandTargetPort
           ? {
               address: commandTargetHost,
@@ -2316,6 +2367,12 @@ udpSocket.on('message', (message, remoteInfo) => {
     bytes: remoteInfo.size
   });
 
+  // Persist only validated hardware UDP telemetry, never /input or browser simulation.
+  if (recorder) {
+    const archived = archivePayload(message);
+    recorder.capture('ingest', { envelope: { ...latestEnvelope, raw_auth_redacted: archived.redacted }, rawBase64: archived.rawBase64 });
+  }
+
   if (packet.packet_format !== 'ina226-load-v1') {
     const acknowledgement = Buffer.from(JSON.stringify({
       version: 1,
@@ -2377,7 +2434,10 @@ httpServer.listen(httpPort, httpBindAddress, () => {
   }
 });
 
-function shutdown(signal) {
+let shuttingDown = false;
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
   console.log(`[SYSTEM] received ${signal}; shutting down`);
   clearInterval(heartbeatTimer);
   clearInterval(statusTimer);
@@ -2390,11 +2450,13 @@ function shutdown(signal) {
   for (const response of sseClients) response.end();
   sseClients.clear();
 
+  setTimeout(() => process.exit(1), 5_000).unref();
+  if (recorder) await recorder.close().catch(() => {});
+
   udpSocket.close(() => {
     httpServer.close(() => process.exit(0));
   });
 
-  setTimeout(() => process.exit(1), 5_000).unref();
 }
 
 process.on('SIGTERM', () => shutdown('SIGTERM'));

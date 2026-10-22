@@ -30,6 +30,10 @@ if [ -f "$backup_dir/package.json" ]; then
   cp "$backup_dir/package.json" "$bridge_package_file"
 fi
 
+if [ -f "$backup_dir/bridge-runtime.tar.gz" ]; then
+  tar -xzf "$backup_dir/bridge-runtime.tar.gz" -C "$(dirname "$bridge_file")"
+fi
+
 if [ -n "$service_name" ] && command -v systemctl >/dev/null 2>&1; then
   systemctl restart "$service_name"
 fi

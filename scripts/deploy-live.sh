@@ -13,6 +13,8 @@ bridge_package_file="${BRIDGE_PACKAGE_FILE:-$(dirname "$bridge_file")/package.js
 service_name="${SERVICE_NAME:-}"
 expected_branch="${EXPECTED_BRANCH:-}"
 health_url="${HEALTH_URL:-http://127.0.0.1:8080/health}"
+bridge_source_dir="$(dirname "$bridge_source")"
+bridge_dir="$(dirname "$bridge_file")"
 
 if [ ! -d "$site_source" ]; then
   echo "Site source not found: $site_source" >&2
@@ -37,12 +39,27 @@ if [ -n "$expected_branch" ] && command -v git >/dev/null 2>&1; then
   fi
 fi
 
+if [ ! -d "$bridge_source_dir/recording" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
+  echo "Missing bridge recording modules or package lock." >&2
+  exit 1
+fi
+if ! command -v npm >/dev/null 2>&1; then
+  echo "npm is required to prepare the bridge dependencies; live files were not changed." >&2
+  exit 1
+fi
+# Prepare native dependencies for this server before replacing any live application files.
+npm ci --prefix "$bridge_source_dir" --omit=dev
+(cd "$bridge_source_dir" && node --input-type=module -e "import Database from 'better-sqlite3'; const db = new Database(':memory:'); db.close();")
+
 backup_dir="$("$script_dir/backup-live.sh")"
 echo "Backup created at: $backup_dir"
 
 cp -a "$site_source/." "$site_root/"
 cp "$bridge_source" "$bridge_file"
 cp "$bridge_package_source" "$bridge_package_file"
+cp "$bridge_source_dir/package-lock.json" "$bridge_dir/package-lock.json"
+cp -a "$bridge_source_dir/recording" "$bridge_dir/"
+cp -a "$bridge_source_dir/node_modules" "$bridge_dir/"
 
 if command -v git >/dev/null 2>&1; then
   git -C "$repo_root" rev-parse HEAD > "$backup_dir/deployed-revision.txt" 2>/dev/null || true
