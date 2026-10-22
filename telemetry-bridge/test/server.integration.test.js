@@ -525,6 +525,10 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
       : null;
   });
   assert.equal(decoded.telemetry.mcu.temperatureC, 26);
+  // INA226 raw CAL 0x0A00 + default effective shunt 2 mOhm -> Current_LSB 1 mA (matches the Registers tab).
+  assert.ok(Math.abs(decoded.telemetry.pv.currentA - 0.05) < 1e-9);
+  assert.ok(Math.abs(decoded.telemetry.pv.powerW - 0.25) < 1e-9);
+  assert.ok(Math.abs(decoded.telemetry.pv.busVoltageV - 5.00375) < 1e-9);
   assert.deepEqual(decoded.telemetry.peripheral, {
     temperatureC: 25,
     temperatureSaturated: true,
@@ -914,4 +918,30 @@ test('bridge health is degraded when command authorization is not configured', a
   assert.equal(health.status, 'degraded');
   assert.equal(health.command_auth_configured, false);
   assert.equal(health.command_ready, false);
+});
+
+test('bridge live-mode flag requires the token and shows in /health', async (context) => {
+  const httpPort = await reserveTcpPort();
+  const udpPort = await reserveUdpPort();
+  const baseUrl = `http://127.0.0.1:${httpPort}`;
+  const bridge = spawn(process.execPath, [bridgePath], {
+    cwd: bridgeDirectory,
+    env: { ...process.env, HTTP_PORT: String(httpPort), UDP_PORT: String(udpPort), HTTP_BIND_ADDRESS: '127.0.0.1',
+      UDP_BIND_ADDRESS: '127.0.0.1', COMMAND_TOKEN: commandToken },
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  context.after(async () => { if (bridge.exitCode === null) { bridge.kill('SIGTERM'); await once(bridge, 'exit'); } });
+  await waitFor(async () => (await fetch(`${baseUrl}/health`)).ok);
+  assert.equal((await fetch(`${baseUrl}/health`).then((r) => r.json())).live_mode, false);
+  const post = (body, token) => fetch(`${baseUrl}/live-mode`, { method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Command-Token': token } : {}) }, body: JSON.stringify(body) });
+  assert.equal((await post({ on: true }, 'wrong')).status, 401);
+  assert.equal((await post({ on: 'yes' }, commandToken)).status, 400);
+  const on = await post({ on: true, source: 'exe' }, commandToken);
+  assert.equal(on.status, 200);
+  const health = await fetch(`${baseUrl}/health`).then((r) => r.json());
+  assert.equal(health.live_mode, true);
+  assert.equal(health.live_mode_source, 'exe');
+  await post({ on: false }, commandToken);
+  assert.equal((await fetch(`${baseUrl}/health`).then((r) => r.json())).live_mode, false);
 });

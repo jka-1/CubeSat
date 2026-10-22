@@ -29,6 +29,10 @@ static const char *TAG = "udp_transport";
 #define TELEMETRY_PACKET_V5_WORD_COUNT \
     (TELEMETRY_PACKET_V4_WORD_COUNT + DEBUG_V5_EXTRA_WORDS)
 #define TELEMETRY_PACKET_V5_HEX_CHARS (TELEMETRY_PACKET_V5_WORD_COUNT * 4u)
+/* v6 = v5 + Streaming Telemetry words (BMS pack/temp, BQ25798 power path ADC, ADC devices). */
+#define TELEMETRY_PACKET_V6_WORD_COUNT \
+    (TELEMETRY_PACKET_V5_WORD_COUNT + DEBUG_V6_EXTRA_WORDS)
+#define TELEMETRY_PACKET_V6_HEX_CHARS (TELEMETRY_PACKET_V6_WORD_COUNT * 4u)
 
 static uint16_t sat_inc16(uint16_t value)
 {
@@ -341,7 +345,7 @@ static char *build_telemetry_hex_packet(
 
     const bool debug_packet = debug_mode_is_enabled();
     const size_t hex_size = (debug_packet
-        ? TELEMETRY_PACKET_V5_HEX_CHARS
+        ? TELEMETRY_PACKET_V6_HEX_CHARS
         : TELEMETRY_PACKET_V4_HEX_CHARS) + 1u;
 
     char *serialized = malloc(hex_size);
@@ -363,8 +367,8 @@ static char *build_telemetry_hex_packet(
     }
 
     if (debug_packet) {
-        /* v5 = v4 words with version 0x0005 followed by the debug/link words. */
-        memcpy(&serialized[4], "0005", 4);
+        /* v6 = v4 words with version 0x0006, the v5 debug/link words, then the v6 words. */
+        memcpy(&serialized[4], "0006", 4);
 
         int8_t rssi = 0;
         debug_link_stats_t link = {
@@ -388,7 +392,16 @@ static char *build_telemetry_hex_packet(
                 "%04X",
                 extra[index]);
         }
-        serialized[TELEMETRY_PACKET_V5_HEX_CHARS] = '\0';
+        uint16_t v6[DEBUG_V6_EXTRA_WORDS];
+        debug_mode_build_v6_words(telemetry, v6);
+        for (size_t index = 0; index < DEBUG_V6_EXTRA_WORDS; index++) {
+            offset += (size_t)snprintf(
+                serialized + offset,
+                hex_size - offset,
+                "%04X",
+                v6[index]);
+        }
+        serialized[TELEMETRY_PACKET_V6_HEX_CHARS] = '\0';
     }
 
     return serialized;
@@ -1094,7 +1107,7 @@ static esp_err_t handle_debug_control_command(
         cJSON_AddStringToObject(
             response_root,
             "note",
-            enabled ? "Debug mode on: v5 debug packets." : "Debug mode off: v4 packets.");
+            enabled ? "Debug mode on: v6 streaming/debug packets." : "Debug mode off: v4 packets.");
     }
 
     return ESP_OK;

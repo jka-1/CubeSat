@@ -60,7 +60,7 @@
 ## Scan-window analysis (is a 1 s scan feasible?)
 | item | number | source / derivation |
 |---|---|---|
-| I2C bit time | 2.5 us | 400 kHz (`I2C_MASTER_FREQ_HZ`, GPIO4/5) |
+| I2C bit time | 2.5 us | 400 kHz (`I2C_MASTER_FREQ_HZ`, SCL GPIO40 / SDA GPIO41) |
 | 2-byte register read | ~47 bits = ~118 us | S + addr/W(9) + reg(9) + Sr + addr/R(9) + 2x9 data + P |
 | 1-byte register read | ~38 bits = ~95 us | same without one data byte |
 | normal cycle bus time | ~2.0 ms | 15 two-byte + 2 one-byte reads (INA226 x5, BQ76942 cells/temp, BQ25798 REG13/fault) |
@@ -109,3 +109,31 @@
   unchanged.
 * Presence tiles and scan-period control are on the same tab.
 * Serial mode is unchanged.
+
+## Streaming Telemetry (web + app)
+
+A live, present-only device view built on the bridge SSE stream (`/telemetry/events`). No firmware change.
+
+- **Web, Debug Mode page:** the "Streaming Telemetry" card has an On/Off toggle. It shows per-device cards with
+  sparklines (window 1/5/15/60 min), a last-update age and a LIVE/STALE indicator. Only devices that are present
+  get a card. Hidden devices are listed as small chips: absent, bus error, not polled or paused.
+  - INA226 PV: bus V (raw bus register × 1.25 mV), current, power, shunt.
+  - BQ76942: cells 1/2/3/10 with gauges and min/max/Δ.
+  - BQ25798: ACDRV path, REG20 fault bits as badges, REG13.
+  - ESP32-S3 MCU temperature, and the ADC1 temperature/light peripheral when valid.
+- **Web, I2C telemetry page:** with the mode on (persisted in `localStorage['cubesat.streamingTelemetry']`):
+  - The page subscribes to the same shared stream and model (`site/assets/js/streaming-telemetry.mjs`).
+  - It shows the same cards above the bus view and hides the topology tiles of non-present devices.
+  - A "STREAMING" badge appears in the header and the nav.
+
+  With the mode off, the page behaves exactly as before (mock data until Connect Live).
+- **Presence rules:**
+  - v5 `debug.devices[key].state` is used first.
+  - Otherwise v3/v4 `sensor_polling.active_sensor_mask` (enabled ∧ present) is used.
+  - Otherwise a device is assumed present (v2).
+  - The bridge `available:false` flag always hides a group.
+- **Windows app:** the "Streaming Telemetry" tab reads the bridge SSE stream with `link_source.SseLinkSource` and
+  the Python port of the model (`cubesat_i2c/streaming_model.py`). It starts automatically when Debug (Wireless)
+  connects.
+- **Not in the v3/v4/v5 packets** (shown as "not in packet"): BMS pack voltage, BMS temperature, and MPPT
+  VBUS/VBAT. Adding them needs new packet words.

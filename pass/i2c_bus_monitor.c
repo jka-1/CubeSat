@@ -273,6 +273,11 @@ static void clear_bms_fields(
          cell_index++) {
         telemetry->bq76942_cell_status[cell_index] = status;
     }
+
+    memset(telemetry->bq76942_pack_voltage, 0, sizeof(telemetry->bq76942_pack_voltage));
+    memset(telemetry->bq76942_int_temp, 0, sizeof(telemetry->bq76942_int_temp));
+    telemetry->bq76942_pack_status = status;
+    telemetry->bq76942_temp_status = status;
 }
 
 static void clear_mppt_fields(
@@ -287,6 +292,11 @@ static void clear_mppt_fields(
     telemetry->bq25798_fault_status_0 = 0u;
     telemetry->bq25798_reg13_status = status;
     telemetry->bq25798_fault_status = status;
+    memset(telemetry->bq25798_adc_block, 0, sizeof(telemetry->bq25798_adc_block));
+    telemetry->bq25798_adc_control = 0u;
+    telemetry->bq25798_adc_disable_0 = 0u;
+    telemetry->bq25798_adc_status = status;
+    telemetry->bq25798_adc_control_status = status;
 }
 
 static void copy_group_from_snapshot(
@@ -341,6 +351,12 @@ static void copy_group_from_snapshot(
             destination->bq76942_cell_status,
             snapshot->bq76942_cell_status,
             sizeof(destination->bq76942_cell_status));
+        memcpy(destination->bq76942_pack_voltage, snapshot->bq76942_pack_voltage,
+               sizeof(destination->bq76942_pack_voltage));
+        memcpy(destination->bq76942_int_temp, snapshot->bq76942_int_temp,
+               sizeof(destination->bq76942_int_temp));
+        destination->bq76942_pack_status = snapshot->bq76942_pack_status;
+        destination->bq76942_temp_status = snapshot->bq76942_temp_status;
     }
 
     if ((sensor_mask & I2C_SENSOR_GROUP_MPPT) != 0u) {
@@ -352,6 +368,12 @@ static void copy_group_from_snapshot(
             snapshot->bq25798_reg13_status;
         destination->bq25798_fault_status =
             snapshot->bq25798_fault_status;
+        memcpy(destination->bq25798_adc_block, snapshot->bq25798_adc_block,
+               sizeof(destination->bq25798_adc_block));
+        destination->bq25798_adc_control = snapshot->bq25798_adc_control;
+        destination->bq25798_adc_disable_0 = snapshot->bq25798_adc_disable_0;
+        destination->bq25798_adc_status = snapshot->bq25798_adc_status;
+        destination->bq25798_adc_control_status = snapshot->bq25798_adc_control_status;
     }
 }
 
@@ -726,6 +748,60 @@ esp_err_t i2c_bus_monitor_init(void)
     return ESP_OK;
 }
 
+/**
+ * @brief Keep the BQ25798 ADC running in continuous mode (caller holds the bus mutex).
+ *
+ * Masked read-modify-write of REG2E ADC_Control only: ADC_EN=1, ADC_RATE=0 (continuous),
+ * ADC_SAMPLE=00 (15-bit); ADC_AVG/ADC_AVG_INIT and reserved bits are preserved. Clears only the
+ * REG2F/REG30 *_ADC_DIS bits for the streamed channels (IBUS, VBUS, VBAT, VSYS, TDIE, VAC1).
+ * No charge-control register is touched. Runs every cycle as one 1-byte read; writes only when
+ * the chip reset/was reconfigured (e.g. after a power cycle or hot-plug).
+ */
+static void ensure_bq25798_adc(power_telemetry_t *telemetry)
+{
+    uint8_t ctrl = 0u;
+    esp_err_t status = read_register_from_handle(
+        s_bq25798_handle, BQ25798_REG_ADC_CONTROL, &ctrl, 1);
+    telemetry->bq25798_adc_control_status = status;
+    if (status != ESP_OK) {
+        return;
+    }
+
+    const uint8_t wanted = (uint8_t)((ctrl & (uint8_t)~(BQ25798_ADC_RATE_BIT | BQ25798_ADC_SAMPLE_MASK)) |
+                                     BQ25798_ADC_EN_BIT);
+    if (wanted != ctrl) {
+        uint8_t dis0 = 0u;
+        uint8_t dis1 = 0u;
+        if (read_register_from_handle(s_bq25798_handle, BQ25798_REG_ADC_DISABLE_0, &dis0, 1) == ESP_OK &&
+            (dis0 & BQ25798_ADC_DIS0_NEEDED) != 0u) {
+            const uint8_t v = (uint8_t)(dis0 & (uint8_t)~BQ25798_ADC_DIS0_NEEDED);
+            (void)write_register_to_handle(s_bq25798_handle, BQ25798_REG_ADC_DISABLE_0, &v, 1);
+        }
+        if (read_register_from_handle(s_bq25798_handle, BQ25798_REG_ADC_DISABLE_1, &dis1, 1) == ESP_OK &&
+            (dis1 & BQ25798_ADC_DIS1_NEEDED) != 0u) {
+            const uint8_t v = (uint8_t)(dis1 & (uint8_t)~BQ25798_ADC_DIS1_NEEDED);
+            (void)write_register_to_handle(s_bq25798_handle, BQ25798_REG_ADC_DISABLE_1, &v, 1);
+        }
+        status = write_register_to_handle(s_bq25798_handle, BQ25798_REG_ADC_CONTROL, &wanted, 1);
+        ESP_LOGI(TAG, "BQ25798 ADC enable: REG2E 0x%02X -> 0x%02X (%s)",
+                 ctrl, wanted, esp_err_to_name(status));
+        if (status == ESP_OK) {
+            ctrl = wanted;
+        }
+    }
+    telemetry->bq25798_adc_control = ctrl;
+}
+
+uint16_t i2c_bq25798_adc_word(const power_telemetry_t *telemetry, bq25798_adc_word_t word)
+{
+    if (telemetry == NULL || word >= BQ25798_ADC_WORDS) {
+        return 0u;
+    }
+    const size_t i = (size_t)word * 2u;
+    return (uint16_t)(((uint16_t)telemetry->bq25798_adc_block[i] << 8) |
+                      telemetry->bq25798_adc_block[i + 1u]);
+}
+
 esp_err_t i2c_bus_monitor_read_all(
     power_telemetry_t *telemetry)
 {
@@ -838,6 +914,20 @@ esp_err_t i2c_bus_monitor_read_all(
                     telemetry->bq76942_cell_voltage[cell_index],
                     BQ76942_CELL_DATA_LENGTH);
         }
+
+        telemetry->bq76942_pack_status =
+            read_register_from_handle(
+                s_bq76942_handle,
+                BQ76942_PACK_VOLTAGE_REGISTER,
+                telemetry->bq76942_pack_voltage,
+                sizeof(telemetry->bq76942_pack_voltage));
+
+        telemetry->bq76942_temp_status =
+            read_register_from_handle(
+                s_bq76942_handle,
+                BQ76942_INT_TEMP_REGISTER,
+                telemetry->bq76942_int_temp,
+                sizeof(telemetry->bq76942_int_temp));
     } else {
         if (latest_snapshot.sample_number > 0u) {
             copy_group_from_snapshot(
@@ -868,6 +958,15 @@ esp_err_t i2c_bus_monitor_read_all(
                 0x20,
                 &telemetry->bq25798_fault_status_0,
                 sizeof(telemetry->bq25798_fault_status_0));
+
+        ensure_bq25798_adc(telemetry);
+
+        telemetry->bq25798_adc_status =
+            read_register_from_handle(
+                s_bq25798_handle,
+                BQ25798_ADC_BLOCK_START,
+                telemetry->bq25798_adc_block,
+                sizeof(telemetry->bq25798_adc_block));
     } else {
         if (latest_snapshot.sample_number > 0u) {
             copy_group_from_snapshot(

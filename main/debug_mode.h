@@ -18,6 +18,20 @@ extern "C" {
 
 #define DEBUG_DEVICE_COUNT            3u   /* index 0 = PV INA226, 1 = BMS BQ76942, 2 = MPPT BQ25798 */
 #define DEBUG_V5_EXTRA_WORDS          16u  /* words 20..35 of the v5 packet */
+#define DEBUG_V6_EXTRA_WORDS          12u  /* words 36..47 of the v6 packet (Streaming Telemetry) */
+
+/* v6 word 36 validity flags: a cleared bit means the value word is a sentinel, not data. */
+#define V6_VALID_BMS_PACK             (1u << 0)
+#define V6_VALID_BMS_TEMP             (1u << 1)
+#define V6_VALID_MPPT_IBUS            (1u << 2)
+#define V6_VALID_MPPT_VBUS            (1u << 3)
+#define V6_VALID_MPPT_VAC1            (1u << 4)
+#define V6_VALID_MPPT_VBAT            (1u << 5)
+#define V6_VALID_MPPT_VSYS            (1u << 6)
+#define V6_VALID_MPPT_TDIE            (1u << 7)
+#define V6_VALID_MPPT_ADC_CTRL        (1u << 8)
+#define V6_VALID_ADC_TEMP_MV          (1u << 9)
+#define V6_VALID_ADC_LIGHT_MV         (1u << 10)
 
 /* 4-bit per-device status codes carried in v5 word 33 */
 #define DEBUG_STATUS_OK               0x0u
@@ -65,6 +79,11 @@ uint16_t debug_mode_device_error_count(uint32_t device_index);
 void debug_mode_build_v5_words(
     const debug_link_stats_t *link,
     uint16_t out_words[DEBUG_V5_EXTRA_WORDS]);
+
+/* Fill the DEBUG_V6_EXTRA_WORDS words that follow the 36 v5 words. */
+void debug_mode_build_v6_words(
+    const power_telemetry_t *telemetry,
+    uint16_t out_words[DEBUG_V6_EXTRA_WORDS]);
 
 #ifdef __cplusplus
 }

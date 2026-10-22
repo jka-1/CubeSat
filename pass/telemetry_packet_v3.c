@@ -57,7 +57,7 @@ esp_err_t telemetry_packet_v3_build_words(
 
     /*
      * BQ76942 cell-voltage registers are little-endian. The dashboard uses
-     * cells 1, 2, 3, and 10 for the current validated hardware.
+     * cells 1-4 (0x14/0x16/0x18/0x1A) for the current validated hardware.
      */
     out_words[9] = combine_little_endian_bytes(
         telemetry->bq76942_cell_voltage[0]);
@@ -66,7 +66,7 @@ esp_err_t telemetry_packet_v3_build_words(
     out_words[11] = combine_little_endian_bytes(
         telemetry->bq76942_cell_voltage[2]);
     out_words[12] = combine_little_endian_bytes(
-        telemetry->bq76942_cell_voltage[9]);
+        telemetry->bq76942_cell_voltage[3]);   /* Cell 4, 0x1A */
 
     out_words[13] = (uint16_t)telemetry->bq25798_reg13;
     out_words[14] = (uint16_t)telemetry->bq25798_fault_status_0;

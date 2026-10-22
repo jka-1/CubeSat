@@ -29,4 +29,12 @@ Validation: **43 tests passed, zero failed**, using `node --test` under local No
 
 Runtime limitation: downloading a temporary Node v20.19.4 runtime from nodejs.org timed out, so matching-version execution remains unverified. No packages or global runtime changes were installed. V6 fixtures are synthetic tests of the recovered decoder contract, not independent confirmation of Jaden's firmware or hardware.
 
-Next prerequisites: obtain the latest firmware/Windows source, check firmware-to-decoder parity, and rerun on the intended server Node version before deployment. Database design can proceed against the recovered packet envelope while these are pending.
+## Jaden update integration
+
+Integrated `github/debug-mode-link-health` at `9563ef3b3dbd432fc32f17b7ba53473059cfc392` (four commits beyond PR #2's original head). This supplies v6 firmware, the Windows tool, streaming fixtures/tests and link diagnostics while preserving our independent v6/live-mode tests. The earlier firmware-source limitation above describes the original recovery, not this merged state. Which firmware binary is flashed is still not independently confirmed.
+
+The user supplied `app_config.h` and `app_config_defaults.h` privately. Both are local-only, ignored through the repository's local exclude file, absent from the Git index, and must not be staged or pushed. Their contents are not documented here. Upstream removed the older tracked `app_config.h`; that deletion is preserved. No private configuration is included in this merge.
+
+Combined bridge/frontend validation: **70 tests passed** under Node v25.9.0. Host C sensor conversion tests also passed. URL-to-path conversion now handles spaces in both the link test and the development server. The server smoke test successfully served the dashboard from this workspace path. Link-tool suite: **14 passed, 2 skipped, zero failed** (optional patched-bridge cases were not configured). Upstream Windows CRLF files and embedded patch context whitespace were preserved.
+
+Remaining validation limitations: full ESP-IDF build is unavailable (`idf.py` not installed); Windows GUI/Python tests were not run (PySide6, pyserial and pytest absent); exact Node 20 validation remains pending. No hardware command, flash, push or live deployment was performed. Next work can proceed with database design using the aligned source and packet fixtures.

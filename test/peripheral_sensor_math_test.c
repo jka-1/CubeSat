@@ -20,6 +20,12 @@ int main(void)
     assert_near(peripheral_relative_light_from_mv(3100), 1.0f);
     assert_near(peripheral_relative_light_from_mv(3600), 1.0f);
 
+    assert(peripheral_light_level_from_mv(0) == PERIPHERAL_LIGHT_LIGHTLY_LIT);
+    assert(peripheral_light_level_from_mv(799) == PERIPHERAL_LIGHT_LIGHTLY_LIT);
+    assert(peripheral_light_level_from_mv(800) == PERIPHERAL_LIGHT_BRIGHT);
+    assert(peripheral_light_level_from_mv(1800) == PERIPHERAL_LIGHT_BRIGHT);
+    assert(peripheral_light_level_from_mv(1801) == PERIPHERAL_LIGHT_VERY_BRIGHT);
+
     puts("peripheral sensor conversion tests passed");
     return 0;
 }

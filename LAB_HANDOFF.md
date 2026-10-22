@@ -58,7 +58,7 @@ The health response must show:
 
 ## Firmware gate
 
-The tracked Wi-Fi values in `main/app_config.h` are placeholders. On the flashing computer, enter the
+`main/app_config.h` is untracked (copy it from `main/app_config.h.example`; its Wi-Fi values are placeholders). On the flashing computer, enter the
 active lab SSID and password without committing them. Load the ESP-IDF environment used for the board,
 then run:
 

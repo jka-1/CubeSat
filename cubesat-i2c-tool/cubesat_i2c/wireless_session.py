@@ -1,0 +1,200 @@
+""""Debug (Wireless)" source: drives the debug firmware through the telemetry bridge HTTP command API.
+
+WirelessSession has the same interface as session.Session. send() accepts the i2c-tools console syntax used by
+the Registers / Sequences pages and returns i2c-tools-like text, so protocol.parse_get/parse_set and
+run_sequence work unchanged. Commands go to POST <base>/command?wait=1 with the X-Command-Token header.
+
+Supported lines: i2cget -c A -r R [-l N] | i2cset -c A -r R B... | i2cdetect | i2cconfig (ignored: the bus is
+fixed in firmware) | debug on|off | scan_period N (alias: period N) | probe A.
+"""
+import json, re, ssl, urllib.error, urllib.request
+from . import protocol as P
+from .session import Session
+
+GROUPS = (("pv", "PV / INA226", "0x40"), ("bms", "BMS / BQ76942", "0x08"), ("mppt", "MPPT / BQ25798", "0x6B"))
+
+
+def _opts(tokens):
+    o = {"rest": []}
+    i = 0
+    while i < len(tokens):
+        t = tokens[i]
+        if t in ("-c", "-r", "-l", "-s") and i + 1 < len(tokens):
+            o[t[1:]] = tokens[i + 1]; i += 2; continue
+        if not t.startswith("--"):
+            o["rest"].append(t)
+        i += 1
+    return o
+
+
+def format_detect(addresses):
+    """i2cdetect-style grid (parsed back by protocol.parse_detect)."""
+    found = {P.to_int(a) for a in addresses}
+    lines = ["     " + " ".join("%2x" % i for i in range(16))]
+    for base in range(0, 0x80, 16):
+        cells = []
+        for i in range(16):
+            a = base + i
+            cells.append("  " if a < 0x08 or a > 0x77 else ("%02x" % a if a in found else "--"))
+        lines.append("%02x: %s" % (base, " ".join(cells)))
+    return "\n".join(lines)
+
+
+class WirelessSession(Session):
+    def __init__(self, base_url, token="", log=None, timeout=6.0, verify_tls=True, opener=None):
+        super().__init__(None, log, timeout)
+        self.base = base_url.rstrip("/")
+        self.token = token or ""
+        self.ctx = None if verify_tls else ssl._create_unverified_context()
+        self._open = opener or (lambda req, t: urllib.request.urlopen(req, timeout=t, context=self.ctx))
+        self._connected = True
+        self.last_result = None
+
+    @staticmethod
+    def open(base_url, token="", log=None, timeout=6.0, verify_tls=True, opener=None):
+        s = WirelessSession(base_url, token, log, timeout, verify_tls, opener)
+        h = s.health()  # raises if the bridge is unreachable
+        s._log("SYS", "wireless bridge %s: telemetry %s, command_ready %s, format %s" % (
+            s.base, "fresh" if h.get("telemetry_connected") else "stale", h.get("command_ready"),
+            h.get("telemetry_packet_format")))
+        return s
+
+    @property
+    def connected(self):
+        return self._connected
+
+    def close(self):
+        self._connected = False
+
+    # --------------------------------------------------------------- HTTP
+    def health(self):
+        req = urllib.request.Request(self.base + "/health", headers={"Accept": "application/json"})
+        try:
+            with self._open(req, 5) as r:
+                return json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:  # 503 = degraded (no token configured) still has a JSON body
+            return json.loads(e.read().decode() or "{}")
+
+    def command(self, body, timeout=None):
+        """POST a bridge command synchronously; returns the bridge JSON (status completed/failed/timed_out/rejected)."""
+        data = json.dumps(body).encode()
+        headers = {"Content-Type": "application/json"}
+        if self.token:
+            headers["X-Command-Token"] = self.token
+        req = urllib.request.Request(self.base + "/command?wait=1", data=data, headers=headers, method="POST")
+        self._log("TX", "bridge " + json.dumps(body))
+        try:
+            with self._open(req, timeout or self.timeout) as r:
+                out = json.loads(r.read().decode())
+        except urllib.error.HTTPError as e:
+            try: detail = json.loads(e.read().decode()).get("error", "")
+            except Exception: detail = ""
+            out = {"status": "rejected", "http_status": e.code, "error": "HTTP %d %s" % (e.code, detail)}
+        except Exception as e:
+            out = {"status": "error", "error": "bridge unreachable: %s" % e}
+        self.last_result = out
+        self._log("RX", "bridge %s %s" % (out.get("status"), json.dumps(out.get("result") or out.get("error"))))
+        return out
+
+    def set_live_mode(self, on, source="exe"):
+        """Tell the bridge the app's live telemetry mode is on/off (POST /live-mode). Web pages read the flag
+        from /health and the status stream and never show simulated data while it is on. Returns True on success."""
+        headers = {"Content-Type": "application/json"}
+        if self.token:
+            headers["X-Command-Token"] = self.token
+        req = urllib.request.Request(self.base + "/live-mode", data=json.dumps({"on": bool(on), "source": source}).encode(),
+                                     headers=headers, method="POST")
+        try:
+            with self._open(req, 5) as r:
+                ok = bool(json.loads(r.read().decode()).get("live_mode")) == bool(on)
+        except Exception as e:
+            self._log("SYS", "bridge live-mode %s not set: %s" % ("on" if on else "off", e))
+            return False
+        self._log("SYS", "bridge live-mode %s" % ("on" if on else "off"))
+        return ok
+
+    # --------------------------------------------------------------- console emulation
+    def send(self, cmd, timeout=None):
+        if not self.connected:
+            raise IOError("not connected")
+        text = self._translate(cmd.strip())
+        return text + "\n" + P.PROMPT
+
+    @staticmethod
+    def _fail(out, what):
+        res = out.get("result") or {}
+        reason = res.get("error") or out.get("error") or out.get("status")
+        return "%s failed: %s" % (what, reason)
+
+    def _translate(self, line):
+        if not line:
+            return ""
+        tok = line.split()
+        op = tok[0].lower()
+        args = tok[1:]
+        if op == "i2cconfig":
+            return "Note: I²C pins/speed are fixed in the debug firmware (GPIO4/5, 400 kHz); i2cconfig ignored."
+        if op == "i2cget":
+            o = _opts(args)
+            if "c" not in o or "r" not in o:
+                return "error: i2cget needs -c and -r over the wireless bridge"
+            out = self.command({"type": "i2c_read", "addr": P.hx(o["c"]), "reg": P.hx(o["r"]),
+                                "len": int(o.get("l", 1))})
+            if out.get("status") != "completed":
+                return self._fail(out, "Read")
+            return " ".join(out["result"].get("data") or [])
+        if op == "i2cset":
+            o = _opts(args)
+            if "c" not in o or "r" not in o or not o["rest"]:
+                return "error: i2cset needs -c, -r and data over the wireless bridge"
+            out = self.command({"type": "i2c_write", "addr": P.hx(o["c"]), "reg": P.hx(o["r"]),
+                                "data": [P.hx(b) for b in o["rest"]]})
+            return "Write OK" if out.get("status") == "completed" else self._fail(out, "Write")
+        if op in ("i2cdetect", "scan"):
+            out = self.command({"type": "i2c_scan"})
+            if out.get("status") != "completed":
+                return self._fail(out, "Scan")
+            return format_detect(out["result"].get("addresses") or [])
+        if op == "i2cdump":
+            return "error: i2cdump is not supported over the wireless bridge (use i2cget per register)"
+        if op == "debug":
+            v = (args[0].lower() if args else "")
+            if v not in ("on", "off", "1", "0", "enable", "disable"):
+                return "error: debug needs on|off"
+            out = self.command({"type": "debug_control", "enabled": v in ("on", "1", "enable")})
+            if out.get("status") != "completed":
+                return self._fail(out, "Debug control")
+            return "Debug mode %s" % ("ON" if out["result"].get("enabled") else "OFF")
+        if op in ("scan_period", "period", "set_scan_period"):
+            try:
+                ms = int(args[0])
+            except (IndexError, ValueError):
+                return "error: scan_period needs milliseconds"
+            out = self.command({"type": "set_scan_period", "period_ms": ms})
+            if out.get("status") != "completed":
+                return self._fail(out, "Set scan period")
+            return "Scan period %s ms" % out["result"].get("period_ms")
+        if op == "probe":
+            if not args:
+                return "error: probe needs an address"
+            out = self.command({"type": "i2c_probe", "addr": P.hx(args[0])})
+            if out.get("status") != "completed":
+                return self._fail(out, "Probe")
+            r = out["result"]
+            return "%s %s (%s)" % (r.get("addr"), "present" if r.get("present") else "no ACK", r.get("probe_result"))
+        return "error: unrecognized command over the wireless bridge: %s" % tok[0]
+
+    # --------------------------------------------------------------- presence
+    def presence(self):
+        """Return (debug_mode dict or None, list of (key, label, addr, state, detail))."""
+        h = self.health()
+        dm = h.get("debug_mode") or None
+        tiles = []
+        for key, label, addr in GROUPS:
+            dev = ((dm or {}).get("devices") or {}).get(key)
+            if not dm or not dm.get("enabled") or not dev:
+                tiles.append((key, label, addr, "unknown", "enable debug for presence"))
+            else:
+                tiles.append((key, label, dev.get("addr", addr), dev.get("state", "unknown"),
+                              "status %s · errors %s" % (dev.get("last_status"), dev.get("error_count"))))
+        return h, tiles
