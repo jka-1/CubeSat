@@ -76,3 +76,17 @@ Desktop.ini
 *.workspace # General workspace files, can be from various tools
 *.suo       # Visual Studio Solution User Options
 *.sln.docstates # Visual Studio
+
+# Local firmware config (copy main/app_config.h.example -> main/app_config.h)
+main/app_config.h
+app_config.h
+sdkconfig.*
+!sdkconfig.defaults*
+*.bak*
+*.exe
+logs/
+*.csv
+node_modules/
+.pytest_cache/
+backups/
+*_backup_*/

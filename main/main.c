@@ -327,7 +327,11 @@ void app_main(void)
         "Starting CubeSat live telemetry demo firmware");
 
     ESP_ERROR_CHECK(board_led_init());
-    ESP_ERROR_CHECK(sensor_provider_init());
+    esp_err_t sensor_err = sensor_provider_init();
+    if (sensor_err != ESP_OK) {
+        /* MCU temperature is optional: packets carry 0x8000 when it is unavailable. */
+        ESP_LOGW(TAG, "MCU temperature sensor unavailable (%s); continuing without it", esp_err_to_name(sensor_err));
+    }
     ESP_ERROR_CHECK(peripheral_sensors_init());
     ESP_ERROR_CHECK(i2c_bus_monitor_init());
     ESP_ERROR_CHECK(debug_mode_init());
