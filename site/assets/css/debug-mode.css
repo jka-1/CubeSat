@@ -1,0 +1,39 @@
+/* Debug mode page (modules/debug-mode.html); shares variables with styles.css and lh-* classes from link-health.css. */
+.debug-mode-page .card { margin-bottom: 18px; }
+.dm-grid { display: grid; gap: 12px; align-items: end; }
+.dm-grid label { display: grid; gap: 6px; color: var(--white-soft); font-size: 0.78rem; }
+.debug-mode-page .input { min-height: 40px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--line);
+  background: rgba(0,0,0,0.45); color: var(--white); }
+.dm-source { grid-template-columns: 2fr 2fr 2fr 2fr auto; }
+.dm-ctl { grid-template-columns: 1fr; }
+.dm-reg { grid-template-columns: 1fr 1fr; }
+.dm-reg label, .dm-reg select { min-width: 0; }
+.dm-reg .dm-buttons { justify-content: flex-end; }
+.dm-buttons { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.dm-inline { display: flex; gap: 8px; }
+.dm-inline .input { width: 120px; }
+.dm-row { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 18px; }
+.dm-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 18px; }
+.dm-tile { border: 1px solid var(--line); border-radius: 16px; padding: 14px; background: rgba(0,0,0,0.35); display: grid; gap: 6px; }
+.dm-tile h4 { margin: 0; font-size: 0.9rem; color: var(--white); }
+.dm-tile strong { font-size: 1.25rem; }
+.dm-tile small { color: var(--white-soft); font-size: 0.75rem; }
+.dm-tile.present { border-color: var(--success, #54ef78); }
+.dm-tile.present strong { color: var(--success, #54ef78); }
+.dm-tile.absent { opacity: 0.75; }
+.dm-tile.absent strong { color: var(--white-soft); }
+.dm-tile.error strong { color: var(--danger, #ff7b7b); }
+.dm-tile.error { border-color: var(--danger, #ff7b7b); }
+.dm-tile.paused strong { color: var(--warning, #ffd66b); }
+.dm-note { color: var(--white-soft); font-size: 0.8rem; margin: 10px 0; min-height: 1.2em; }
+.dm-pre { margin: 0; padding: 10px; border-radius: 12px; background: rgba(0,0,0,0.45); color: var(--gold-soft, #f3dc8a);
+  font: 12px/1.45 Consolas, 'Courier New', monospace; white-space: pre-wrap; overflow: auto; }
+.dm-log { height: 236px; }
+.debug-mode-page textarea.dm-text { width: 100%; min-height: 200px; padding: 10px 12px; font: 12px/1.45 Consolas, monospace; resize: vertical; box-sizing: border-box; }
+.dm-seqbar { margin-top: 10px; justify-content: flex-end; }
+.dm-check { color: var(--white-soft); font-size: 0.8rem; display: flex; gap: 6px; align-items: center; margin-right: auto; }
+.dm-chart { display: block; width: 100%; height: 120px; }
+.dm-result td { word-break: break-all; }
+.debug-mode-page button:disabled { opacity: 0.45; cursor: not-allowed; }
+@media (max-width: 1100px) { .dm-row, .dm-source, .dm-reg { grid-template-columns: 1fr; } .dm-tiles { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 700px) { .dm-tiles { grid-template-columns: 1fr; } }

@@ -13,6 +13,10 @@ typedef struct {
     char server_host[128];
     uint16_t server_port;
     char device_id[48];
+    /* Link statistics (reset only at boot by udp_transport_init). */
+    uint16_t tx_errors;
+    uint16_t ack_timeouts;
+    uint16_t last_ack_rtt_ms;   /* 0xFFFF when the last ACK timed out */
 } udp_transport_t;
 
 esp_err_t udp_transport_init(
@@ -34,3 +38,7 @@ esp_err_t udp_transport_poll_command(
     bool *out_handled);
 
 void udp_transport_close(udp_transport_t *transport);
+
+/* Blocking ACK wait used by udp_transport_send_power_telemetry():
+ * min(DEMO_ACK_TIMEOUT_MS, scan period / 4). */
+uint32_t udp_transport_ack_timeout_ms(void);

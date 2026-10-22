@@ -7,7 +7,7 @@ This branch contains the hardened 1-4 telemetry handoff for Saturday, August 8, 
 - deploy / backup / rollback scripts
 - the ESP-side packet format used by the droplet
 
-The current firmware emits the `0x0004` combined packet. The bridge decodes its raw I2C values and
+The current firmware emits the `0x0004` combined packet. The bridge decodes its raw I²C values and
 new ADC peripheral readings into the dashboard view while retaining v1-v3 compatibility.
 
 Use [`LAB_HANDOFF.md`](LAB_HANDOFF.md) for the deployment and hardware acceptance checklist.
@@ -26,7 +26,7 @@ The dashboard is set up to display these telemetry groups:
 
 The bridge supports these test-ready command paths for this firmware build:
 
-- direct I2C register reads and writes
+- direct I²C register reads and writes
 - sensor polling pause / resume for PV, BMS, MPPT, or all sensors
 - verified BQ25798 ACDRV1 / ACDRV2 / disable control
 - ESP32-S3-DevKitC-1 addressable RGB LED on / off control
@@ -117,6 +117,8 @@ Expected decoded values from that example:
 
 ## Peripheral GPIO configuration
 
+`main/app_config.h` is not tracked in git. Create it with `cp main/app_config.h.example main/app_config.h`, then fill in your Wi-Fi credentials, server host and device id. Every other setting has a default in `main/app_config_defaults.h`.
+
 Enter the confirmed GPIOs in `main/app_config.h`:
 
 ```c
@@ -126,7 +128,7 @@ Enter the confirmed GPIOs in `main/app_config.h`:
 
 `-1` means unassigned. With both defaults unchanged, firmware builds and runs normally and v4 marks
 both peripheral readings unavailable. Assigned pins must be distinct ESP32-S3 ADC1-capable GPIOs
-and must not conflict with the existing GPIO4/GPIO5 I2C bus. Firmware validates these conditions at
+and must not conflict with the existing I²C bus (SCL GPIO40 / SDA GPIO41, `pass/i2c_bus_monitor.h`). Firmware validates these conditions at
 startup and disables invalid channels without substituting zero readings.
 
 ## Droplet deploy flow
@@ -203,7 +205,7 @@ The bridge accepts:
 - `POST /command`
 - `POST /api/demo/command`
 
-The bridge also accepts direct JSON I2C command payloads for firmware that exposes generic
+The bridge also accepts direct JSON I²C command payloads for firmware that exposes generic
 register access over UDP:
 
 ```json
@@ -334,7 +336,7 @@ confirmed shunt value is truly `100 Ω` and not `100 mΩ`.
 
 ## Current firmware status from `main/pass`
 
-The `pass/` code on `origin/main` validates the current hardware-side I2C reads for:
+The `pass/` code on `origin/main` validates the current hardware-side I²C reads for:
 
 - INA226 at `0x40`
 - BQ76942 at `0x08`

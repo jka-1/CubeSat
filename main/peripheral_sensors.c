@@ -13,11 +13,23 @@
 
 static const char *TAG = "peripheral_sensors";
 
+/* Fallbacks when app_config_defaults.h is not present (see it for the reasoning). */
+#ifndef DEMO_TEMP_OUT_ATTEN
+#define DEMO_TEMP_OUT_ATTEN 2   /* ADC_ATTEN_DB_6: MCP9700 100..1750 mV */
+#endif
+#ifndef DEMO_LIGHT_OUT_ATTEN
+#define DEMO_LIGHT_OUT_ATTEN 3  /* ADC_ATTEN_DB_12: TEMT6000 up to 3.3 V */
+#endif
+
 #define PERIPHERAL_ADC_SAMPLE_COUNT 16
 #define PERIPHERAL_ADC_MAX_RAW      4095
 
 static adc_oneshot_unit_handle_t s_adc_handle;
-static adc_cali_handle_t s_calibration_handle;
+/* One calibration handle per channel: curve fitting is per attenuation, and the two
+ * devices use different input ranges (see DEMO_TEMP_OUT_ATTEN / DEMO_LIGHT_OUT_ATTEN). */
+static adc_cali_handle_t s_temperature_cali;
+static adc_cali_handle_t s_light_cali;
+static peripheral_sensor_sample_t s_last_sample;
 static adc_channel_t s_temperature_channel;
 static adc_channel_t s_light_channel;
 static bool s_temperature_enabled;
@@ -65,6 +77,7 @@ static bool resolve_adc1_channel(
 }
 
 static esp_err_t read_calibrated_channel(
+    adc_cali_handle_t cali,
     adc_channel_t channel,
     int *out_voltage_mv,
     bool *out_saturated)
@@ -85,7 +98,7 @@ static esp_err_t read_calibrated_channel(
 
         int voltage_mv = 0;
         status = adc_cali_raw_to_voltage(
-            s_calibration_handle,
+            cali,
             raw,
             &voltage_mv);
 
@@ -102,6 +115,34 @@ static esp_err_t read_calibrated_channel(
         PERIPHERAL_ADC_SAMPLE_COUNT);
     *out_saturated = saturated;
     return ESP_OK;
+}
+
+static esp_err_t create_calibration(adc_channel_t channel, int atten, adc_cali_handle_t *out)
+{
+    const adc_cali_curve_fitting_config_t config = {
+        .unit_id = ADC_UNIT_1,
+        .chan = channel,
+        .atten = (adc_atten_t)atten,
+        .bitwidth = ADC_BITWIDTH_12,
+    };
+    return adc_cali_create_scheme_curve_fitting(&config, out);
+}
+
+void peripheral_sensors_get_last(peripheral_sensor_sample_t *out_sample)
+{
+    if (out_sample != NULL) {
+        *out_sample = s_last_sample;
+    }
+}
+
+int peripheral_sensors_temp_gpio(void)
+{
+    return s_temperature_enabled ? DEMO_TEMP_OUT_GPIO : -1;
+}
+
+int peripheral_sensors_light_gpio(void)
+{
+    return s_light_enabled ? DEMO_LIGHT_OUT_GPIO : -1;
 }
 
 esp_err_t peripheral_sensors_init(void)
@@ -145,8 +186,12 @@ esp_err_t peripheral_sensors_init(void)
         return ESP_OK;
     }
 
-    const adc_oneshot_chan_cfg_t channel_config = {
-        .atten = ADC_ATTEN_DB_12,
+    const adc_oneshot_chan_cfg_t temperature_config = {
+        .atten = (adc_atten_t)DEMO_TEMP_OUT_ATTEN,
+        .bitwidth = ADC_BITWIDTH_12,
+    };
+    const adc_oneshot_chan_cfg_t light_config = {
+        .atten = (adc_atten_t)DEMO_LIGHT_OUT_ATTEN,
         .bitwidth = ADC_BITWIDTH_12,
     };
 
@@ -154,7 +199,7 @@ esp_err_t peripheral_sensors_init(void)
         status = adc_oneshot_config_channel(
             s_adc_handle,
             s_temperature_channel,
-            &channel_config);
+            &temperature_config);
         if (status != ESP_OK) {
             ESP_LOGE(TAG, "TEMP_OUT channel configuration failed: %s", esp_err_to_name(status));
             s_temperature_enabled = false;
@@ -165,7 +210,7 @@ esp_err_t peripheral_sensors_init(void)
         status = adc_oneshot_config_channel(
             s_adc_handle,
             s_light_channel,
-            &channel_config);
+            &light_config);
         if (status != ESP_OK) {
             ESP_LOGE(TAG, "LIGHT_OUT channel configuration failed: %s", esp_err_to_name(status));
             s_light_enabled = false;
@@ -178,36 +223,27 @@ esp_err_t peripheral_sensors_init(void)
         return ESP_OK;
     }
 
-    const adc_cali_curve_fitting_config_t calibration_config = {
-        .unit_id = ADC_UNIT_1,
-        .chan = s_temperature_enabled
-            ? s_temperature_channel
-            : s_light_channel,
-        .atten = ADC_ATTEN_DB_12,
-        .bitwidth = ADC_BITWIDTH_12,
-    };
-
-    status = adc_cali_create_scheme_curve_fitting(
-        &calibration_config,
-        &s_calibration_handle);
-
-    if (status != ESP_OK) {
-        ESP_LOGE(
-            TAG,
-            "ADC calibration unavailable; peripheral sensors disabled: %s",
-            esp_err_to_name(status));
+    if (s_temperature_enabled &&
+        create_calibration(s_temperature_channel, DEMO_TEMP_OUT_ATTEN, &s_temperature_cali) != ESP_OK) {
+        ESP_LOGE(TAG, "TEMP_OUT calibration unavailable; TEMP_OUT disabled");
+        s_temperature_enabled = false;
+    }
+    if (s_light_enabled &&
+        create_calibration(s_light_channel, DEMO_LIGHT_OUT_ATTEN, &s_light_cali) != ESP_OK) {
+        ESP_LOGE(TAG, "LIGHT_OUT calibration unavailable; LIGHT_OUT disabled");
+        s_light_enabled = false;
+    }
+    if (!s_temperature_enabled && !s_light_enabled) {
         adc_oneshot_del_unit(s_adc_handle);
         s_adc_handle = NULL;
-        s_temperature_enabled = false;
-        s_light_enabled = false;
         return ESP_OK;
     }
 
     ESP_LOGI(
         TAG,
-        "Peripheral ADC ready: TEMP_OUT=%s, LIGHT_OUT=%s",
-        s_temperature_enabled ? "enabled" : "disabled",
-        s_light_enabled ? "enabled" : "disabled");
+        "Peripheral ADC1 ready: TEMP_OUT GPIO%d %s (atten %d), LIGHT_OUT GPIO%d %s (atten %d)",
+        DEMO_TEMP_OUT_GPIO, s_temperature_enabled ? "enabled" : "disabled", DEMO_TEMP_OUT_ATTEN,
+        DEMO_LIGHT_OUT_GPIO, s_light_enabled ? "enabled" : "disabled", DEMO_LIGHT_OUT_ATTEN);
     return ESP_OK;
 }
 
@@ -224,6 +260,7 @@ esp_err_t peripheral_sensors_read(
         int voltage_mv = 0;
         bool saturated = false;
         const esp_err_t status = read_calibrated_channel(
+            s_temperature_cali,
             s_temperature_channel,
             &voltage_mv,
             &saturated);
@@ -231,6 +268,7 @@ esp_err_t peripheral_sensors_read(
         if (status == ESP_OK) {
             out_sample->temperature_valid = true;
             out_sample->temperature_saturated = saturated;
+            out_sample->temperature_voltage_mv = voltage_mv;
             out_sample->temperature_c =
                 peripheral_temperature_c_from_mv(voltage_mv);
         } else {
@@ -242,6 +280,7 @@ esp_err_t peripheral_sensors_read(
         int voltage_mv = 0;
         bool saturated = false;
         const esp_err_t status = read_calibrated_channel(
+            s_light_cali,
             s_light_channel,
             &voltage_mv,
             &saturated);
@@ -252,10 +291,13 @@ esp_err_t peripheral_sensors_read(
             out_sample->light_voltage_mv = voltage_mv;
             out_sample->relative_light_level =
                 peripheral_relative_light_from_mv(voltage_mv);
+            ESP_LOGD(TAG, "LIGHT_OUT %d mV (%s)", voltage_mv,
+                     peripheral_light_level_name(peripheral_light_level_from_mv(voltage_mv)));
         } else {
             ESP_LOGW(TAG, "LIGHT_OUT read failed: %s", esp_err_to_name(status));
         }
     }
 
+    s_last_sample = *out_sample;
     return ESP_OK;
 }

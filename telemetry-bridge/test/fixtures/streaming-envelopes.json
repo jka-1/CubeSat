@@ -1,0 +1,1566 @@
+{
+ "v4_all": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:54.759Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 80
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v4-peripheral-sensors",
+   "device_id": "esp32-telemetry",
+   "seq": 11,
+   "device_uptime_ms": 0,
+   "sample_counter": 11,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0.1,
+     "powerW": 5e-06,
+     "currentA": 1e-06
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 2560,
+     "shunt": 40,
+     "bus": 4003,
+     "power": 10,
+     "current": 50
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42247,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 7
+   }
+  }
+ },
+ "v4_subset_pv_mppt": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:54.961Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 80
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v4-peripheral-sensors",
+   "device_id": "esp32-telemetry",
+   "seq": 12,
+   "device_uptime_ms": 0,
+   "sample_counter": 12,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0.1,
+     "powerW": 5e-06,
+     "currentA": 1e-06
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 2560,
+     "shunt": 40,
+     "bus": 4003,
+     "power": 10,
+     "current": 50
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42245,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 5
+   }
+  }
+ },
+ "v4_single_bms": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:55.114Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 80
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v4-peripheral-sensors",
+   "device_id": "esp32-telemetry",
+   "seq": 13,
+   "device_uptime_ms": 0,
+   "sample_counter": 13,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0,
+     "powerW": 0,
+     "currentA": 0
+    },
+    "mppt": {
+     "switchState": "off",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 0,
+     "fault20": 0
+    },
+    "reserved": 42242,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 2
+   }
+  }
+ },
+ "v4_none": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:55.267Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 80
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v4-peripheral-sensors",
+   "device_id": "esp32-telemetry",
+   "seq": 14,
+   "device_uptime_ms": 0,
+   "sample_counter": 14,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0,
+     "powerW": 0,
+     "currentA": 0
+    },
+    "mppt": {
+     "switchState": "off",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      0,
+      0,
+      0,
+      0
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 0,
+     "fault20": 0
+    },
+    "reserved": 42240,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 0
+   }
+  }
+ },
+ "v5_all": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:55.421Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 144
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v5-debug",
+   "device_id": "esp32-telemetry",
+   "seq": 21,
+   "device_uptime_ms": 5000,
+   "sample_counter": 21,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0.1,
+     "powerW": 5e-06,
+     "currentA": 1e-06
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 2560,
+     "shunt": 40,
+     "bus": 4003,
+     "power": 10,
+     "current": 50
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42247,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 7
+   },
+   "link": {
+    "rssi_dbm": -50,
+    "uptime_ms": 5000,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 7,
+    "probed_mask": 7,
+    "scan_period_ms": 1000,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v5_subset_pv_mppt": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:55.574Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 144
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v5-debug",
+   "device_id": "esp32-telemetry",
+   "seq": 22,
+   "device_uptime_ms": 0,
+   "sample_counter": 22,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0.1,
+     "powerW": 5e-06,
+     "currentA": 1e-06
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "available": false
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 2560,
+     "shunt": 40,
+     "bus": 4003,
+     "power": 10,
+     "current": 50
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42245,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 5
+   },
+   "link": {
+    "rssi_dbm": -50,
+    "uptime_ms": 0,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 5,
+    "probed_mask": 7,
+    "scan_period_ms": 1000,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v5_single_bms": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:55.726Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 144
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v5-debug",
+   "device_id": "esp32-telemetry",
+   "seq": 23,
+   "device_uptime_ms": 0,
+   "sample_counter": 23,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": null,
+     "powerW": null,
+     "currentA": null,
+     "available": false
+    },
+    "mppt": {
+     "switchState": null,
+     "faults": [],
+     "available": false
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 0,
+     "fault20": 0
+    },
+    "reserved": 42242,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 2
+   },
+   "link": {
+    "rssi_dbm": -50,
+    "uptime_ms": 0,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 2,
+    "probed_mask": 7,
+    "scan_period_ms": 1000,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v5_none": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:55.879Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 144
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v5-debug",
+   "device_id": "esp32-telemetry",
+   "seq": 24,
+   "device_uptime_ms": 0,
+   "sample_counter": 24,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": null,
+     "powerW": null,
+     "currentA": null,
+     "available": false
+    },
+    "mppt": {
+     "switchState": null,
+     "faults": [],
+     "available": false
+    },
+    "bms": {
+     "cellVoltagesV": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "available": false
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 0,
+     "fault20": 0
+    },
+    "reserved": 42240,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 0
+   },
+   "link": {
+    "rssi_dbm": -50,
+    "uptime_ms": 0,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 0,
+    "probed_mask": 7,
+    "scan_period_ms": 1000,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v5_pv_timeout": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T18:40:56.031Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 56330,
+   "bytes": 144
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v5-debug",
+   "device_id": "esp32-telemetry",
+   "seq": 25,
+   "device_uptime_ms": 0,
+   "sample_counter": 25,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": null,
+     "powerW": null,
+     "currentA": null,
+     "available": false
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": []
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ]
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42246,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 6
+   },
+   "link": {
+    "rssi_dbm": null,
+    "uptime_ms": 0,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 6,
+    "probed_mask": 7,
+    "scan_period_ms": 1000,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": false,
+      "probed": true,
+      "state": "error",
+      "last_status": "timeout",
+      "last_status_code": 3,
+      "error_count": 4
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v6_all": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T23:16:11.809Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 43288,
+   "bytes": 192
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v6-streaming",
+   "device_id": "esp32-telemetry",
+   "seq": 1,
+   "device_uptime_ms": 14,
+   "sample_counter": 1,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0.1,
+     "busVoltageV": 5.00375,
+     "powerW": 5e-06,
+     "currentA": 1e-06
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": [],
+     "ibusA": 0.25,
+     "vbusV": 5.024,
+     "vac1V": 5.04,
+     "vbatV": 14.553,
+     "vsysV": 12.806,
+     "dieTempC": 19,
+     "adcEnabled": true
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ],
+     "packVoltageV": 14.98,
+     "internalTempC": 24.75
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false,
+     "temperatureVoltageMv": 750
+    },
+    "adc": {
+     "temp": {
+      "device": "MCP9700",
+      "signal": "TEMP_OUT",
+      "gpio": 1
+     },
+     "light": {
+      "device": "TEMT6000",
+      "signal": "LIGHT_OUT",
+      "gpio": 2
+     }
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 2560,
+     "shunt": 40,
+     "bus": 4003,
+     "power": 10,
+     "current": 50
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42247,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    },
+    "streaming": {
+     "flags": 2047,
+     "bms_pack_0x36": 1498,
+     "bms_int_temp_0x68": 2979,
+     "mppt_ibus_0x31": 250,
+     "mppt_vbus_0x35": 5024,
+     "mppt_vac1_0x37": 5040,
+     "mppt_vbat_0x3b": 14553,
+     "mppt_vsys_0x3d": 12806,
+     "mppt_tdie_0x41": 38,
+     "mppt_adc_control_0x2e": 176,
+     "adc_temp_mv": 750,
+     "adc_gpios": 513
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 7
+   },
+   "link": {
+    "rssi_dbm": -55,
+    "uptime_ms": 14,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 7,
+    "probed_mask": 7,
+    "scan_period_ms": 200,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v6_subset_pv_mppt": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T23:16:12.671Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 39628,
+   "bytes": 192
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v6-streaming",
+   "device_id": "esp32-telemetry",
+   "seq": 1,
+   "device_uptime_ms": 14,
+   "sample_counter": 1,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": 0.1,
+     "busVoltageV": 5.00375,
+     "powerW": 5e-06,
+     "currentA": 1e-06
+    },
+    "mppt": {
+     "switchState": "acdrv1",
+     "faults": [],
+     "ibusA": 0.25,
+     "vbusV": 5.024,
+     "vac1V": 5.04,
+     "vbatV": 14.553,
+     "vsysV": 12.806,
+     "dieTempC": 19,
+     "adcEnabled": true
+    },
+    "bms": {
+     "cellVoltagesV": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "available": false,
+     "packVoltageV": null,
+     "internalTempC": null
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false,
+     "temperatureVoltageMv": 750
+    },
+    "adc": {
+     "temp": {
+      "device": "MCP9700",
+      "signal": "TEMP_OUT",
+      "gpio": 1
+     },
+     "light": {
+      "device": "TEMT6000",
+      "signal": "LIGHT_OUT",
+      "gpio": 2
+     }
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 2560,
+     "shunt": 40,
+     "bus": 4003,
+     "power": 10,
+     "current": 50
+    },
+    "mppt": {
+     "reg13": 97,
+     "fault20": 0
+    },
+    "reserved": 42245,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    },
+    "streaming": {
+     "flags": 2044,
+     "bms_pack_0x36": 65535,
+     "bms_int_temp_0x68": 65535,
+     "mppt_ibus_0x31": 250,
+     "mppt_vbus_0x35": 5024,
+     "mppt_vac1_0x37": 5040,
+     "mppt_vbat_0x3b": 14553,
+     "mppt_vsys_0x3d": 12806,
+     "mppt_tdie_0x41": 38,
+     "mppt_adc_control_0x2e": 176,
+     "adc_temp_mv": 750,
+     "adc_gpios": 513
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 5
+   },
+   "link": {
+    "rssi_dbm": -55,
+    "uptime_ms": 14,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 5,
+    "probed_mask": 7,
+    "scan_period_ms": 200,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v6_single_bms": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T23:16:13.474Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 55320,
+   "bytes": 192
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v6-streaming",
+   "device_id": "esp32-telemetry",
+   "seq": 1,
+   "device_uptime_ms": 9,
+   "sample_counter": 1,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": null,
+     "busVoltageV": null,
+     "powerW": null,
+     "currentA": null,
+     "available": false
+    },
+    "mppt": {
+     "switchState": null,
+     "faults": [],
+     "available": false,
+     "ibusA": null,
+     "vbusV": null,
+     "vac1V": null,
+     "vbatV": null,
+     "vsysV": null,
+     "dieTempC": null,
+     "adcEnabled": null
+    },
+    "bms": {
+     "cellVoltagesV": [
+      3.813,
+      3.807,
+      3.676,
+      3.677
+     ],
+     "packVoltageV": 14.98,
+     "internalTempC": 24.75
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false,
+     "temperatureVoltageMv": 750
+    },
+    "adc": {
+     "temp": {
+      "device": "MCP9700",
+      "signal": "TEMP_OUT",
+      "gpio": 1
+     },
+     "light": {
+      "device": "TEMT6000",
+      "signal": "LIGHT_OUT",
+      "gpio": 2
+     }
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 0,
+     "fault20": 0
+    },
+    "reserved": 42242,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    },
+    "streaming": {
+     "flags": 1539,
+     "bms_pack_0x36": 1498,
+     "bms_int_temp_0x68": 2979,
+     "mppt_ibus_0x31": 32768,
+     "mppt_vbus_0x35": 65535,
+     "mppt_vac1_0x37": 65535,
+     "mppt_vbat_0x3b": 65535,
+     "mppt_vsys_0x3d": 65535,
+     "mppt_tdie_0x41": 32768,
+     "mppt_adc_control_0x2e": 0,
+     "adc_temp_mv": 750,
+     "adc_gpios": 513
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 2
+   },
+   "link": {
+    "rssi_dbm": -55,
+    "uptime_ms": 9,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 2,
+    "probed_mask": 7,
+    "scan_period_ms": 200,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": true,
+      "probed": true,
+      "state": "present",
+      "last_status": "ok",
+      "last_status_code": 0,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ },
+ "v6_none": {
+  "type": "telemetry",
+  "source": "udp",
+  "received_at": "2026-10-18T23:16:14.295Z",
+  "transmission_age_ms": null,
+  "network": {
+   "remote_address": "127.0.0.1",
+   "remote_port": 53646,
+   "bytes": 192
+  },
+  "packet": {
+   "version": 1,
+   "type": "telemetry",
+   "packet_format": "hex-v6-streaming",
+   "device_id": "esp32-telemetry",
+   "seq": 1,
+   "device_uptime_ms": 13,
+   "sample_counter": 1,
+   "transmitted_at": null,
+   "telemetry": {
+    "mcu": {
+     "temperatureC": 26
+    },
+    "pv": {
+     "shuntVoltageMv": null,
+     "busVoltageV": null,
+     "powerW": null,
+     "currentA": null,
+     "available": false
+    },
+    "mppt": {
+     "switchState": null,
+     "faults": [],
+     "available": false,
+     "ibusA": null,
+     "vbusV": null,
+     "vac1V": null,
+     "vbatV": null,
+     "vsysV": null,
+     "dieTempC": null,
+     "adcEnabled": null
+    },
+    "bms": {
+     "cellVoltagesV": [
+      null,
+      null,
+      null,
+      null
+     ],
+     "available": false,
+     "packVoltageV": null,
+     "internalTempC": null
+    },
+    "load": null,
+    "peripheral": {
+     "temperatureC": 25,
+     "temperatureSaturated": false,
+     "lightVoltageMv": 1550,
+     "relativeLightLevel": 0.5,
+     "lightSaturated": false,
+     "temperatureVoltageMv": 750
+    },
+    "adc": {
+     "temp": {
+      "device": "MCP9700",
+      "signal": "TEMP_OUT",
+      "gpio": 1
+     },
+     "light": {
+      "device": "TEMT6000",
+      "signal": "LIGHT_OUT",
+      "gpio": 2
+     }
+    }
+   },
+   "raw": {
+    "pv": {
+     "calibration": 0,
+     "shunt": 0,
+     "bus": 0,
+     "power": 0,
+     "current": 0
+    },
+    "mppt": {
+     "reg13": 0,
+     "fault20": 0
+    },
+    "reserved": 42240,
+    "peripheral": {
+     "flags": 3,
+     "temperature_centi_c": 2500,
+     "light_voltage_mv": 1550,
+     "relative_light_basis_points": 5000
+    },
+    "streaming": {
+     "flags": 1536,
+     "bms_pack_0x36": 65535,
+     "bms_int_temp_0x68": 65535,
+     "mppt_ibus_0x31": 32768,
+     "mppt_vbus_0x35": 65535,
+     "mppt_vac1_0x37": 65535,
+     "mppt_vbat_0x3b": 65535,
+     "mppt_vsys_0x3d": 65535,
+     "mppt_tdie_0x41": 32768,
+     "mppt_adc_control_0x2e": 0,
+     "adc_temp_mv": 750,
+     "adc_gpios": 513
+    }
+   },
+   "sensor_polling": {
+    "active_sensor_mask": 0
+   },
+   "link": {
+    "rssi_dbm": -55,
+    "uptime_ms": 13,
+    "tx_errors": 0,
+    "ack_timeouts": 0,
+    "wifi_reconnects": 0,
+    "last_ack_rtt_ms": null
+   },
+   "debug": {
+    "enabled": true,
+    "presence_detection": true,
+    "present_mask": 0,
+    "probed_mask": 7,
+    "scan_period_ms": 200,
+    "probe_period_ms": 5000,
+    "i2c_cycle_ms": 3.7,
+    "devices": {
+     "pv": {
+      "label": "PV / INA226",
+      "addr": "0x40",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "bms": {
+      "label": "BMS / BQ76942",
+      "addr": "0x08",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     },
+     "mppt": {
+      "label": "MPPT / BQ25798",
+      "addr": "0x6B",
+      "present": false,
+      "probed": true,
+      "state": "absent",
+      "last_status": "absent",
+      "last_status_code": 1,
+      "error_count": 0
+     }
+    }
+   }
+  }
+ }
+}

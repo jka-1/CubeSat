@@ -17,6 +17,34 @@ const hexPacketVersionValidatedRaw = 0x0003;
 const hexPacketVersionPeripheralSensors = 0x0004;
 const hexPacketLegacyWordCount = 16;
 const hexPacketPeripheralWordCount = 20;
+// v5 = v4 + 16 debug words: link stats (RSSI, uptime, tx errors, ACK timeouts, reconnects)
+// and per-device presence/status. Sent by the firmware only while debug mode is on.
+const hexPacketVersionDebug = 0x0005;
+const hexPacketDebugWordCount = 36;
+// v6 = v5 + 12 Streaming Telemetry words: BQ76942 PACK pin voltage (0x36) and Int Temperature (0x68),
+// BQ25798 power-path ADC (IBUS/VBUS/VAC1/VBAT/VSYS/TDIE, REG2E readback) and the ADC device GPIOs.
+const hexPacketVersionStreaming = 0x0006;
+// TEMT6000 LIGHT_OUT level bands (same constants as site/assets/js/telemetry-model.mjs).
+const lightBrightMinMv = 800;
+const lightVeryBrightMinMv = 1800;
+function lightLevelFromMv(mv) {
+  if (!Number.isFinite(mv)) return null;
+  if (mv < lightBrightMinMv) return 'Lightly Lit';
+  if (mv <= lightVeryBrightMinMv) return 'Bright';
+  return 'Very Bright';
+}
+const hexPacketStreamingWordCount = 48;
+const bmsUserVoltLsbV = readFiniteNumber('BMS_USER_VOLT_LSB_V', 0.01); // BQ76942 userV (DA Configuration), default 10 mV
+const debugDeviceGroups = Object.freeze([
+  { key: 'pv', label: 'PV / INA226', addr: '0x40', mask: 0x01 },
+  { key: 'bms', label: 'BMS / BQ76942', addr: '0x08', mask: 0x02 },
+  { key: 'mppt', label: 'MPPT / BQ25798', addr: '0x6B', mask: 0x04 }
+]);
+const debugStatusNames = Object.freeze({
+  0x0: 'ok', 0x1: 'absent', 0x2: 'nack', 0x3: 'timeout', 0x4: 'paused', 0x5: 'error', 0xf: 'unknown'
+});
+const scanPeriodMinMs = 200;
+const scanPeriodMaxMs = 5000;
 const ina226LoadCommandMagic = 0x4943;
 const ina226LoadResultMagic = 0x4952;
 const ina226LoadProtocolVersion = 0x01;
@@ -29,10 +57,15 @@ const ina226LoadAddress = 0x40;
 const ina226CalibrationRegister = 0x05;
 const hexPacketByteCounts = new Set([
   hexPacketLegacyWordCount * 2,
-  hexPacketPeripheralWordCount * 2
+  hexPacketPeripheralWordCount * 2,
+  hexPacketDebugWordCount * 2,
+  hexPacketStreamingWordCount * 2
 ]);
 const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
-const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 100);
+// Effective INA226 shunt as seen by the chip. Bench data (CAL 0x0A00=2560, shunt reg 65 = 162.5 uV
+// at 81 mA) gives 2 mOhm, i.e. Current_LSB = 0.00512/(2560*0.002) = 1 mA, matching the Registers tab.
+// The 100 Ohm figure is not across IN+/IN- (0.08 A x 100 Ohm = 8 V, far beyond the 81.92 mV shunt range).
+const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 0.002);
 const loadCurrentLsbA = readFiniteNumber('LOAD_INA226_CURRENT_LSB_A', 0.001);
 const loadShuntOhms = readFiniteNumber('LOAD_INA226_SHUNT_OHMS', 100);
 const commandTargetHost = String(process.env.COMMAND_TARGET_HOST || '').trim();
@@ -89,6 +122,7 @@ let latestEnvelope = null;
 let latestDebugEnvelope = null;
 let latestCommandEnvelope = null;
 let lastTelemetryEndpoint = null;
+let latestDebugState = null;
 let sensorPollingState = null;
 let generatedSequence = 1_000_000;
 let lastBroadcastTelemetryConnected = null;
@@ -292,6 +326,17 @@ function isTelemetryConnected(now = Date.now()) {
   return ageMs !== null && ageMs <= telemetryStaleMs;
 }
 
+// Live-telemetry mode flag, set by the Windows app (POST /live-mode with the command token) when its
+// Debug (Wireless) / Streaming source goes live. Web pages read it (status SSE + /health) and never show
+// simulated data while it is on or while real telemetry is arriving.
+const liveMode = { on: false, source: null, since: null };
+
+function setLiveMode(on, source) {
+  liveMode.on = !!on;
+  liveMode.source = on ? String(source || 'app').slice(0, 40) : null;
+  liveMode.since = on ? new Date().toISOString() : null;
+}
+
 function isCommandAuthorizationConfigured() {
   return allowUnauthenticatedCommands || commandToken.length > 0;
 }
@@ -411,6 +456,22 @@ function debugResultMatchesPending(packet, pending) {
   if (expected.type === 'mppt_acdrv_control') {
     return packet.state === expected.state &&
       packet.verified === true;
+  }
+
+  if (expected.type === 'debug_control') {
+    return packet.enabled === expected.enabled;
+  }
+
+  if (expected.type === 'set_scan_period') {
+    return Number.isInteger(packet.period_ms);
+  }
+
+  if (expected.type === 'i2c_scan') {
+    return Array.isArray(packet.addresses);
+  }
+
+  if (expected.type === 'i2c_probe') {
+    return byteValuesMatch(packet.addr, expected.addr) && typeof packet.present === 'boolean';
   }
 
   if (!byteValuesMatch(packet.addr, expected.addr) ||
@@ -714,7 +775,7 @@ function extractHexWordsFromText(text) {
 
 function extractHexWordsFromRawBuffer(buffer) {
   if (!Buffer.isBuffer(buffer) || !hexPacketByteCounts.has(buffer.length)) {
-    throw new Error('raw hex packet must contain 32 or 40 bytes');
+    throw new Error('raw hex packet must contain 32, 40, 72, or 96 bytes');
   }
 
   const words = [];
@@ -736,9 +797,13 @@ function normalizeHexPacketWords(words) {
   }
 
   const versionWord = words[1];
-  const expectedWordCount = versionWord === hexPacketVersionPeripheralSensors
-    ? hexPacketPeripheralWordCount
-    : hexPacketLegacyWordCount;
+  const expectedWordCount = versionWord === hexPacketVersionStreaming
+    ? hexPacketStreamingWordCount
+    : versionWord === hexPacketVersionDebug
+    ? hexPacketDebugWordCount
+    : versionWord === hexPacketVersionPeripheralSensors
+      ? hexPacketPeripheralWordCount
+      : hexPacketLegacyWordCount;
 
   if (words.length !== expectedWordCount) {
     throw new Error(
@@ -851,6 +916,7 @@ function normalizeHexPacketWords(words) {
         },
         pv: {
           shuntVoltageMv: decodeIna226ShuntMv(words[5]),
+          busVoltageV: +(words[6] * 0.00125).toFixed(5),
           powerW: decodeIna226PowerW(words[7], pvResolvedCurrentLsbA),
           currentA: decodeIna226CurrentA(words[8], pvResolvedCurrentLsbA)
         },
@@ -911,6 +977,7 @@ function normalizeHexPacketWords(words) {
         ? (flags & 0x0004) !== 0
         : null,
       lightVoltageMv: lightValid ? words[18] : null,
+      lightLevel: lightValid ? lightLevelFromMv(words[18]) : null,
       relativeLightLevel: lightValid ? words[19] / 10_000 : null,
       lightSaturated: lightValid
         ? (flags & 0x0008) !== 0
@@ -925,7 +992,132 @@ function normalizeHexPacketWords(words) {
     return packet;
   }
 
+  if (versionWord === hexPacketVersionDebug) {
+    const v4Words = words.slice(0, hexPacketPeripheralWordCount);
+    v4Words[1] = hexPacketVersionPeripheralSensors;
+    const packet = normalizeHexPacketWords(v4Words);
+    const debug = decodeDebugWords(words.slice(hexPacketPeripheralWordCount));
+    packet.packet_format = 'hex-v5-debug';
+    packet.link = debug.link;
+    packet.device_uptime_ms = debug.link.uptime_ms;
+    packet.debug = debug.debug;
+    applyDevicePresence(packet, debug.debug);
+    return packet;
+  }
+
+  if (versionWord === hexPacketVersionStreaming) {
+    const v5Words = words.slice(0, hexPacketDebugWordCount);
+    v5Words[1] = hexPacketVersionDebug;
+    const packet = normalizeHexPacketWords(v5Words);
+    packet.packet_format = 'hex-v6-streaming';
+    applyStreamingWords(packet, words.slice(hexPacketDebugWordCount));
+    return packet;
+  }
+
   throw new Error(`unsupported hex packet version 0x${versionWord.toString(16).padStart(4, '0')}`);
+}
+
+function decodeDebugWords(w) {
+  const flags = w[6];
+  const presentMask = w[7] & 0x00ff;
+  const probedMask = (w[7] >> 8) & 0x00ff;
+  const devices = {};
+  debugDeviceGroups.forEach((group, index) => {
+    const code = (w[13] >> (index * 4)) & 0x0f;
+    const probed = (probedMask & group.mask) !== 0;
+    const present = (presentMask & group.mask) !== 0;
+    let state = 'unknown';
+    if (probed && !present) state = (code === 0x3 || code === 0x5) ? 'error' : 'absent';
+    else if (code === 0x0) state = 'present';
+    else if (code === 0x4) state = 'paused';
+    else if (code === 0xf) state = probed ? 'present' : 'unknown';
+    else if (code !== 0x1) state = 'error';
+    else state = 'absent';
+    devices[group.key] = {
+      label: group.label,
+      addr: group.addr,
+      present,
+      probed,
+      state,
+      last_status: debugStatusNames[code] || `code_${code}`,
+      last_status_code: code,
+      error_count: w[10 + index]
+    };
+  });
+  return {
+    link: {
+      rssi_dbm: w[0] === 0x8000 ? null : decodeSignedWord(w[0]),
+      uptime_ms: (w[1] * 0x10000) + w[2],
+      tx_errors: w[3],
+      ack_timeouts: w[4],
+      wifi_reconnects: w[5],
+      last_ack_rtt_ms: w[15] === 0xffff ? null : w[15]
+    },
+    debug: {
+      enabled: (flags & 0x0001) !== 0,
+      presence_detection: (flags & 0x0002) !== 0,
+      present_mask: presentMask,
+      probed_mask: probedMask,
+      scan_period_ms: w[8],
+      probe_period_ms: w[9],
+      i2c_cycle_ms: w[14] === 0xffff ? null : w[14] / 10,
+      devices
+    }
+  };
+}
+
+// Absent devices carry zero words in v5; expose them as unavailable instead of as measurements.
+function applyDevicePresence(packet, debug) {
+  const t = packet.telemetry;
+  if (!debug.devices.pv.present && debug.devices.pv.probed) {
+    t.pv = { shuntVoltageMv: null, busVoltageV: null, powerW: null, currentA: null, available: false };
+  }
+  if (!debug.devices.bms.present && debug.devices.bms.probed) {
+    t.bms = { cellVoltagesV: [null, null, null, null], available: false };
+  }
+  if (!debug.devices.mppt.present && debug.devices.mppt.probed) {
+    t.mppt = { switchState: null, faults: [], available: false };
+  }
+}
+
+// v6 words 36..47 (see main/debug_mode.c debug_mode_build_v6_words). Invalid -> null, never zero.
+function applyStreamingWords(packet, w) {
+  const flags = w[0];
+  const ok = (bit) => (flags & (1 << bit)) !== 0;
+  const t = packet.telemetry;
+  const r3 = (v) => +v.toFixed(3);
+  const gpio = (b) => (b === 0xff ? null : b);
+  if (t.bms && t.bms.available !== false) {
+    t.bms.packVoltageV = ok(0) ? r3(w[1] * bmsUserVoltLsbV) : null;
+    t.bms.internalTempC = ok(1) ? +((w[2] * 0.1) - 273.15).toFixed(2) : null;
+  } else if (t.bms) {
+    t.bms.packVoltageV = null; t.bms.internalTempC = null;
+  }
+  const mpptLive = t.mppt && t.mppt.available !== false;
+  const m = (bit, value) => (mpptLive && ok(bit) ? value : null);
+  if (t.mppt) {
+    t.mppt.ibusA = m(2, r3(decodeSignedWord(w[3]) / 1000));
+    t.mppt.vbusV = m(3, r3(w[4] / 1000));
+    t.mppt.vac1V = m(4, r3(w[5] / 1000));
+    t.mppt.vbatV = m(5, r3(w[6] / 1000));
+    t.mppt.vsysV = m(6, r3(w[7] / 1000));
+    t.mppt.dieTempC = m(7, decodeSignedWord(w[8]) * 0.5);
+    t.mppt.adcEnabled = mpptLive && ok(8) ? (w[9] & 0x80) !== 0 : null;
+  }
+  t.peripheral = t.peripheral || {};
+  t.peripheral.temperatureVoltageMv = ok(9) ? w[10] : null;
+  t.adc = {
+    temp: { device: 'MCP9700', signal: 'TEMP_OUT', gpio: gpio(w[11] & 0xff) },
+    light: { device: 'TEMT6000', signal: 'LIGHT_OUT', gpio: gpio((w[11] >> 8) & 0xff) }
+  };
+  packet.raw.streaming = {
+    flags,
+    bms_pack_0x36: w[1], bms_int_temp_0x68: w[2],
+    mppt_ibus_0x31: w[3], mppt_vbus_0x35: w[4], mppt_vac1_0x37: w[5],
+    mppt_vbat_0x3b: w[6], mppt_vsys_0x3d: w[7], mppt_tdie_0x41: w[8],
+    mppt_adc_control_0x2e: w[9] & 0xff,
+    adc_temp_mv: w[10], adc_gpios: w[11]
+  };
 }
 
 function normalizeHexPacketText(text) {
@@ -1269,6 +1461,19 @@ function normalizeDebugPacket(value) {
       pickFirst(value.write_data, value.writeData),
       'write_data'
     ),
+    addresses: Array.isArray(value.addresses) ? value.addresses.map(String) : undefined,
+    count: Number.isInteger(value.count) ? value.count : undefined,
+    scan_us: Number.isFinite(value.scan_us) ? value.scan_us : undefined,
+    present: typeof value.present === 'boolean' ? value.present : undefined,
+    probe_result: typeof value.probe_result === 'string' ? value.probe_result : undefined,
+    debug_enabled: typeof value.debug_enabled === 'boolean' ? value.debug_enabled : undefined,
+    period_ms: Number.isInteger(value.period_ms) ? value.period_ms : undefined,
+    requested_period_ms: Number.isInteger(value.requested_period_ms) ? value.requested_period_ms : undefined,
+    scan_period_ms: Number.isInteger(value.scan_period_ms) ? value.scan_period_ms : undefined,
+    probe_period_ms: Number.isInteger(value.probe_period_ms) ? value.probe_period_ms : undefined,
+    present_mask: Number.isInteger(value.present_mask) ? value.present_mask : undefined,
+    ack_timeout_ms: Number.isInteger(value.ack_timeout_ms) ? value.ack_timeout_ms : undefined,
+    device_time_ms: Number.isFinite(value.device_time_ms) ? value.device_time_ms : undefined,
     note: pickFirst(value.note, value.message, null)
       ? String(pickFirst(value.note, value.message))
       : null,
@@ -1377,7 +1582,11 @@ function createStatusMessage() {
     command_transport_ready: commandTransportReady,
     command_ready: commandTransportReady && isCommandAuthorizationConfigured(),
     command_target: activeCommandTarget,
-    pending_commands: pendingCommands.size
+    pending_commands: pendingCommands.size,
+    debug_mode: latestDebugState,
+    live_mode: liveMode.on,
+    live_mode_source: liveMode.source,
+    live_mode_since: liveMode.since
   };
 }
 
@@ -1401,7 +1610,29 @@ function createCommandEnvelope(status, command, extra = {}) {
   };
 }
 
+const commandWaiters = new Map();
+
+function waitForCommandResult(requestId, timeoutMs) {
+  return new Promise((resolve) => {
+    const timer = setTimeout(() => {
+      commandWaiters.delete(requestId);
+      resolve({ status: 'timed_out', error: 'No final command status before the wait limit.' });
+    }, timeoutMs);
+    timer.unref();
+    commandWaiters.set(requestId, (value) => {
+      clearTimeout(timer);
+      commandWaiters.delete(requestId);
+      resolve(value);
+    });
+  });
+}
+
 function publishCommandStatus(status, command, extra = {}) {
+  if (['completed', 'failed', 'timed_out'].includes(status) && commandWaiters.has(command.requestId)) {
+    const candidate = latestDebugEnvelope?.packet;
+    const result = candidate && candidate.request_id === command.requestId ? candidate : null;
+    commandWaiters.get(command.requestId)({ status, ...extra, result });
+  }
   latestCommandEnvelope = createCommandEnvelope(status, command, extra);
   broadcast(latestCommandEnvelope);
   broadcastStatus();
@@ -1516,10 +1747,15 @@ function buildJsonCommandMessage(body) {
     'i2c_write',
     'sensor_control',
     'mppt_acdrv_control',
-    'led_control'
+    'led_control',
+    'debug_control',
+    'set_scan_period',
+    'i2c_scan',
+    'i2c_probe'
   ].includes(directCommandType)) {
     throw new Error(
-      'type must be i2c_read, i2c_write, sensor_control, mppt_acdrv_control, or led_control'
+      'type must be i2c_read, i2c_write, sensor_control, mppt_acdrv_control, led_control, ' +
+      'debug_control, set_scan_period, i2c_scan, or i2c_probe'
     );
   }
 
@@ -1539,7 +1775,33 @@ function buildJsonCommandMessage(body) {
 
   let summary;
 
-  if (directCommandType === 'sensor_control') {
+  if (directCommandType === 'debug_control') {
+    const enabled = normalizeOptionalBoolean(
+      pickFirst(body?.enabled, body?.state),
+      'enabled'
+    );
+    if (enabled === null) {
+      throw new Error('debug_control must include enabled');
+    }
+    payloadObject.enabled = enabled;
+    summary = `DEBUG_MODE ${enabled ? 'ON' : 'OFF'}`;
+  } else if (directCommandType === 'set_scan_period') {
+    const periodMs = Number(pickFirst(body?.period_ms, body?.periodMs));
+    if (!Number.isInteger(periodMs) || periodMs < scanPeriodMinMs || periodMs > scanPeriodMaxMs) {
+      throw new Error(`set_scan_period period_ms must be an integer from ${scanPeriodMinMs} through ${scanPeriodMaxMs}`);
+    }
+    payloadObject.period_ms = periodMs;
+    summary = `SET_SCAN_PERIOD ${periodMs} ms`;
+  } else if (directCommandType === 'i2c_scan') {
+    summary = 'I2C_SCAN 0x08-0x77';
+  } else if (directCommandType === 'i2c_probe') {
+    const address = asByte(pickFirst(body?.addr, body?.address), 'addr');
+    if (address < 0x08 || address > 0x77) {
+      throw new Error('i2c_probe addr must be 0x08 through 0x77');
+    }
+    payloadObject.addr = formatHexByte(address);
+    summary = `I2C_PROBE ${payloadObject.addr}`;
+  } else if (directCommandType === 'sensor_control') {
     const sensorName = normalizeSensorName(
       pickFirst(body?.sensor, body?.sensor_name, body?.sensorName)
     );
@@ -1784,6 +2046,10 @@ const httpServer = http.createServer(async (request, response) => {
         command_transport_ready: status.command_transport_ready,
         command_ready: status.command_ready,
         pending_commands: pendingCommands.size,
+        debug_mode: latestDebugState,
+        live_mode: liveMode.on,
+        live_mode_source: liveMode.source,
+        live_mode_since: liveMode.since,
         default_command_target: commandTargetHost && commandTargetPort
           ? {
               address: commandTargetHost,
@@ -1831,6 +2097,22 @@ const httpServer = http.createServer(async (request, response) => {
 
     if (
       request.method === 'POST' &&
+      (requestUrl.pathname === '/live-mode' ||
+       requestUrl.pathname === '/api/demo/live-mode')
+    ) {
+      assertCommandAuthorized(request);
+      const body = await readJsonBody(request);
+      if (typeof body?.on !== 'boolean') {
+        throw createHttpError(400, 'live-mode body must be {"on": true|false}');
+      }
+      setLiveMode(body.on, body.source);
+      broadcastStatus();
+      sendJson(response, 200, { live_mode: liveMode.on, live_mode_source: liveMode.source, live_mode_since: liveMode.since });
+      return;
+    }
+
+    if (
+      request.method === 'POST' &&
       (requestUrl.pathname === '/command' ||
        requestUrl.pathname === '/api/demo/command')
     ) {
@@ -1843,7 +2125,15 @@ const httpServer = http.createServer(async (request, response) => {
         target
       };
 
+      const waitForResult =
+        requestUrl.searchParams.get('wait') === '1' || body?.wait === true;
       registerPendingCommand(pendingCommand);
+      const resultPromise = waitForResult
+        ? waitForCommandResult(
+            commandMessage.requestId,
+            commandTimeoutMs * ((pendingCommand.maxRetries || 0) + 1) + 1_000
+          )
+        : null;
 
       try {
         await sendUdpMessage(commandMessage.payloadBuffer, target);
@@ -1857,6 +2147,21 @@ const httpServer = http.createServer(async (request, response) => {
 
       if (pendingCommands.has(commandMessage.requestId)) {
         publishCommandStatus('pending', pendingCommand);
+      }
+
+      if (resultPromise) {
+        // Synchronous mode for scripted clients (Windows app, debug page sequences).
+        const outcome = await resultPromise;
+        sendJson(response, 200, {
+          accepted: true,
+          request_id: commandMessage.requestId,
+          summary: commandMessage.summary,
+          target,
+          issued_at: commandMessage.issuedAt,
+          timeout_ms: commandTimeoutMs,
+          ...outcome
+        });
+        return;
       }
 
       sendJson(response, 202, {
@@ -1986,6 +2291,10 @@ udpSocket.on('message', (message, remoteInfo) => {
     last_seen: new Date(serverReceiveTime).toISOString(),
     packet_format: packet.packet_format || 'json'
   };
+
+  latestDebugState = packet.debug
+    ? { ...packet.debug, link: packet.link || null, updated_at: lastTelemetryEndpoint.last_seen }
+    : { enabled: false, packet_format: packet.packet_format || 'json', updated_at: lastTelemetryEndpoint.last_seen };
 
   if (Number.isInteger(packet.sensor_polling?.active_sensor_mask)) {
     sensorPollingState = createSensorPollingState(
