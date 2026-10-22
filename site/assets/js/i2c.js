@@ -1,7 +1,10 @@
 import {
   normalizePeripheralTelemetry,
-  peripheralTelemetryForMode
-} from './telemetry-model.mjs?v=20260923b';
+  peripheralTelemetryForMode,
+  lightLevelFromMv
+} from './telemetry-model.mjs?v=20261019b';
+import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261019b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261019b';
 
 const initialTelemetry = {
   mcu: {
@@ -68,6 +71,8 @@ let dataMode = 'mock';
 let communicationRoot = null;
 let activeDetailTrigger = null;
 const pendingCommandIds = new Set();
+// Streaming Telemetry mode (shared model with the Debug Mode page). Inactive => page behaves exactly as before.
+let streaming = null;
 const finishedCommandIds = new Set();
 
 const commandButtonIds = [
@@ -118,6 +123,66 @@ function teardownTelemetryStreamHeightSync() {
   window.removeEventListener('resize', queueTelemetryStreamHeightSync);
   streamPanelResizeObserver?.disconnect();
   streamPanelResizeObserver = null;
+}
+
+// ---------------------------------------------------------------- no simulated data while live
+// The bridge reports live_mode (set by the Windows app) and telemetry_connected in /health. While either is
+// true this page never shows mock values: it connects the live stream instead (or shows blanks).
+let liveProbeTimer = null;
+const blankTelemetry = () => ({
+  mcu: { temperatureC: null },
+  pv: { shuntVoltageMv: null, powerW: null, currentA: null },
+  mppt: { switchState: 'unknown', faults: [] },
+  bms: { cellVoltagesV: [null, null, null, null] },
+  load: null,
+  peripheral: peripheralTelemetryForMode('live')
+});
+
+export function deriveHealthUrl(streamUrl) {
+  const t = typeof streamUrl === 'string' ? streamUrl.trim() : '';
+  return t.endsWith('/events') ? `${t.slice(0, -'/events'.length)}/health` : '/telemetry/health';
+}
+
+export function bridgeReportsLive(health) {
+  return !!health && (health.live_mode === true || health.telemetry_connected === true);
+}
+
+async function probeBridgeLive() {
+  try {
+    const url = deriveHealthUrl(document.getElementById('streamUrl')?.value);
+    const response = await fetch(url, { cache: 'no-store' });
+    return bridgeReportsLive(await response.json());
+  } catch {
+    return false;
+  }
+}
+
+function stopLiveProbe() {
+  if (liveProbeTimer) { clearInterval(liveProbeTimer); liveProbeTimer = null; }
+}
+
+function startLiveProbe() {
+  stopLiveProbe();
+  const tick = async () => {
+    if (dataMode !== 'mock' || streaming || !communicationRoot) return;
+    if (await probeBridgeLive() && dataMode === 'mock' && !streaming && communicationRoot) {
+      writeLog('Bridge reports live telemetry: simulated data disabled.');
+      connectTelemetryStream();
+    }
+  };
+  liveProbeTimer = setInterval(tick, 5000);
+}
+
+async function startDefaultMode() {
+  dataMode = 'probe';
+  state = blankTelemetry();
+  renderTelemetry(state, streamMetadata);
+  setStreamStatus('Checking bridge…', false);
+  const live = await probeBridgeLive();
+  if (!communicationRoot || streaming || dataMode !== 'probe') return;
+  if (live) connectTelemetryStream();
+  else startMockData();
+  startLiveProbe();
 }
 
 function deriveCommandUrl(streamUrl) {
@@ -190,7 +255,7 @@ function setStreamStatus(text, online = false, packetFormat = null) {
 
   document.querySelectorAll('.device-tile:not([data-detail-target="load"]) .device-ack')
     .forEach((indicator) => {
-      indicator.textContent = online && !loadOnly ? 'ACK · live' : 'ACK · simulated';
+      indicator.textContent = online && !loadOnly ? 'ACK · live' : dataMode === 'mock' ? 'ACK · simulated' : 'ACK · no data';
     });
 
   const loadIndicator = document.querySelector(
@@ -287,9 +352,12 @@ function renderTopologyPreviews(telemetry) {
   const cells = Array.isArray(telemetry.bms?.cellVoltagesV)
     ? telemetry.bms.cellVoltagesV.map(numericValue).filter((value) => value !== null)
     : [];
-  const packVoltage = cells.length
-    ? cells.reduce((sum, value) => sum + value, 0)
-    : null;
+  const measuredPack = numericValue(telemetry.bms?.packVoltageV);
+  const packVoltage = measuredPack !== null
+    ? measuredPack
+    : cells.length
+      ? cells.reduce((sum, value) => sum + value, 0)
+      : null;
 
   setPreviewText(
     'overviewPreview',
@@ -301,7 +369,7 @@ function renderTopologyPreviews(telemetry) {
     peripheralTemperature === null && relativeLight === null
       ? 'Awaiting sensors'
       : `${peripheralTemperature === null ? '-- °C' : formatValue(peripheralTemperature, '°C', 1)} · ` +
-        `${relativeLight === null ? '--%' : `${formatNumber(relativeLight * 100, 0)}% light`}`
+        `${lightLevelText(telemetry.peripheral)}`
   );
   setPreviewText('pvPreview', `${formatNumber(pvPower, 1)} W · ${formatNumber(pvCurrent, 2)} A`);
   setPreviewText('mpptPreview', `Input ${String(telemetry.mppt?.switchState || '--').toUpperCase()}`);
@@ -611,9 +679,9 @@ function renderSystemSummary(telemetry) {
       ? 'Unavailable'
       : formatValue(telemetry.peripheral.temperatureC, '°C', 1);
   const relativeLight = numericValue(telemetry.peripheral?.relativeLightLevel);
-  document.getElementById('summaryRelativeLight').textContent = relativeLight === null
+  document.getElementById('summaryRelativeLight').textContent = numericValue(telemetry.peripheral?.lightVoltageMv) === null
     ? 'Unavailable'
-    : `${telemetry.peripheral.lightSaturated ? '≥' : ''}${formatNumber(relativeLight * 100, 1)}%`;
+    : lightLevelText(telemetry.peripheral);
   document.getElementById('summaryMpptState').textContent = String(telemetry.mppt.switchState || '--').toUpperCase();
   document.getElementById('summaryPvPower').textContent = formatValue(telemetry.pv.powerW, 'W', 2);
   document.getElementById('summaryLoadPower').textContent = loadAvailable
@@ -638,9 +706,9 @@ function renderPeripheralCard(telemetry) {
     : peripheral.temperatureSaturated
       ? 'ADC SATURATED'
       : 'VALID';
-  document.getElementById('relativeLightValue').textContent = relativeLight === null
+  document.getElementById('relativeLightValue').textContent = lightVoltageMv === null
     ? 'Unavailable'
-    : `${peripheral.lightSaturated ? '≥' : ''}${formatNumber(relativeLight * 100, 1)}%`;
+    : (peripheral.lightLevel ?? lightLevelFromMv(lightVoltageMv));
   document.getElementById('lightVoltageValue').textContent = lightVoltageMv === null
     ? 'Unavailable'
     : `${formatNumber(lightVoltageMv, 0)} mV${peripheral.lightSaturated ? ' (lower bound)' : ''}`;
@@ -756,7 +824,39 @@ function renderMpptCard(telemetry) {
       ).join('')
     : meterRow('Fault Status', 'CLEAR', 0, 'nominal', 'No MPPT faults active.');
 
-  mpptFaults.innerHTML = `${switchRow}${faultRows}`;
+  mpptFaults.innerHTML = `${switchRow}${faultRows}${mpptPowerPathRows(telemetry.mppt)}`;
+}
+
+// v6 Streaming Telemetry rows; rendered only when the packet carries the value.
+function bmsExtraRows(bms) {
+  const rows = [];
+  const pack = numericValue(bms?.packVoltageV);
+  const temp = numericValue(bms?.internalTempC);
+  if (pack !== null) rows.push(meterRow('Pack Voltage', formatValue(pack, 'V', 2), normalizePercent(pack, { min: 0, max: 20 }), 'nominal', 'Measured PACK pin voltage (BQ76942 0x36).'));
+  if (temp !== null) rows.push(meterRow('BMS Internal Temp', formatValue(temp, '°C', 1), normalizePercent(temp, { min: -20, max: 85 }), temp > 70 ? 'watch' : 'nominal', 'BQ76942 Int Temperature (0x68).'));
+  return rows.join('');
+}
+
+function mpptPowerPathRows(mppt) {
+  const defs = [
+    ['VBUS', mppt?.vbusV, 'V', 3, { min: 0, max: 30 }, 'REG35 VBUS_ADC'],
+    ['VAC1', mppt?.vac1V, 'V', 3, { min: 0, max: 30 }, 'REG37 VAC1_ADC'],
+    ['VBAT', mppt?.vbatV, 'V', 3, { min: 0, max: 20 }, 'REG3B VBAT_ADC'],
+    ['VSYS', mppt?.vsysV, 'V', 3, { min: 0, max: 20 }, 'REG3D VSYS_ADC'],
+    ['IBUS', numericValue(mppt?.ibusA) === null ? null : numericValue(mppt.ibusA) * 1000, 'mA', 0, { min: 0, max: 3000 }, 'REG31 IBUS_ADC'],
+    ['Die Temp', mppt?.dieTempC, '°C', 1, { min: -20, max: 120 }, 'REG41 TDIE_ADC']
+  ];
+  return defs
+    .filter(([, v]) => numericValue(v) !== null)
+    .map(([label, v, unit, digits, range, note]) => meterRow(label, formatValue(numericValue(v), unit, digits), normalizePercent(numericValue(v), range), 'nominal', note))
+    .join('');
+}
+
+// TEMT6000: 3-level label from LIGHT_OUT mV (bands in telemetry-model.mjs) plus the mV reading.
+function lightLevelText(peripheral) {
+  const mv = numericValue(peripheral?.lightVoltageMv);
+  if (mv === null) return '--';
+  return `${peripheral.lightLevel ?? lightLevelFromMv(mv)} · ${formatNumber(mv, 0)} mV${peripheral.lightSaturated ? ' (sat)' : ''}`;
 }
 
 function renderBmsCard(telemetry) {
@@ -766,10 +866,13 @@ function renderBmsCard(telemetry) {
   const cells = telemetry.bms.cellVoltagesV.slice(0, 4);
   const validCells = cells.map((value) => numericValue(value)).filter((value) => value !== null);
 
-  const packVoltage = validCells.length
+  const cellSum = validCells.length
     ? validCells.reduce((sum, value) => sum + value, 0)
     : null;
-  const averageVoltage = validCells.length ? packVoltage / validCells.length : null;
+  // Measured PACK pin voltage (BQ76942 0x36, v6 packets) when available, else the sum of cells 1-4.
+  const measuredPack = numericValue(telemetry.bms.packVoltageV);
+  const packVoltage = measuredPack !== null ? measuredPack : cellSum;
+  const averageVoltage = validCells.length ? cellSum / validCells.length : null;
   const lowestVoltage = validCells.length ? Math.min(...validCells) : null;
   const highestVoltage = validCells.length ? Math.max(...validCells) : null;
   const deltaMv =
@@ -789,7 +892,7 @@ function renderBmsCard(telemetry) {
       status,
       status === 'idle' ? 'Waiting for live packet data.' : `Cell ${index + 1} of 4`
     );
-  }).join('');
+  }).join('') + bmsExtraRows(telemetry.bms);
 }
 
 function renderTelemetry(telemetry, metadata = streamMetadata) {
@@ -963,13 +1066,15 @@ function normalizeFromCandidate(candidate) {
 
   const normalizedCells = normalizeCellArray(bmsCells);
 
+  // Accept a telemetry object when its device groups are there, even if values are null: the bridge sends
+  // null for a sensor that is absent/invalid (e.g. MCU temperature 0x8000 on v4, absent chips on v6), and those
+  // fields simply render as "--". Rejecting them froze the live page on every v4 packet with mcu.temperatureC null.
+  const hasGroups = ['mcu', 'pv', 'mppt', 'bms'].every((key) => candidate[key] && typeof candidate[key] === 'object');
+  const hasFlatValues = [mcuTemperature, pvShuntVoltageMv, pvPowerW, pvCurrentA, mpptSwitchState].every((v) => v !== undefined) &&
+    normalizedCells.filter((value) => value !== null).length >= 4;
+  while (normalizedCells.length < 4) normalizedCells.push(null);
   if (
-    mcuTemperature === undefined ||
-    pvShuntVoltageMv === undefined ||
-    pvPowerW === undefined ||
-    pvCurrentA === undefined ||
-    mpptSwitchState === undefined ||
-    normalizedCells.filter((value) => value !== null).length < 4 ||
+    (!hasGroups && !hasFlatValues) ||
     (hasLoadTelemetry && (
       loadShuntVoltageMv === undefined ||
       loadPowerW === undefined ||
@@ -986,14 +1091,24 @@ function normalizeFromCandidate(candidate) {
     pv: {
       shuntVoltageMv: numericValue(pvShuntVoltageMv),
       powerW: numericValue(pvPowerW),
-      currentA: numericValue(pvCurrentA)
+      currentA: numericValue(pvCurrentA),
+      busVoltageV: numericValue(candidate?.pv?.busVoltageV)
     },
     mppt: {
       switchState: normalizeSwitchState(mpptSwitchState),
-      faults: normalizeFaults(mpptFaults)
+      faults: normalizeFaults(mpptFaults),
+      // v6 Streaming Telemetry power path (null / absent on older packets)
+      ibusA: numericValue(candidate?.mppt?.ibusA),
+      vbusV: numericValue(candidate?.mppt?.vbusV),
+      vac1V: numericValue(candidate?.mppt?.vac1V),
+      vbatV: numericValue(candidate?.mppt?.vbatV),
+      vsysV: numericValue(candidate?.mppt?.vsysV),
+      dieTempC: numericValue(candidate?.mppt?.dieTempC)
     },
     bms: {
-      cellVoltagesV: normalizedCells
+      cellVoltagesV: normalizedCells,
+      packVoltageV: numericValue(candidate?.bms?.packVoltageV),
+      internalTempC: numericValue(candidate?.bms?.internalTempC)
     },
     load: hasLoadTelemetry
       ? {
@@ -1006,7 +1121,7 @@ function normalizeFromCandidate(candidate) {
   };
 }
 
-function normalizePacket(envelope) {
+export function normalizePacket(envelope) {
   const candidates = [
     envelope?.packet?.telemetry,
     envelope?.telemetry,
@@ -1172,7 +1287,7 @@ function applyTelemetryPacket(packetEnvelope) {
 
   if (!normalizedPacket) {
     writeLog(
-      'Rejected packet: expected I2C telemetry groups { mcu, pv, mppt, bms } with optional load.'
+      'Rejected packet: expected I²C telemetry groups { mcu, pv, mppt, bms } with optional load.'
     );
     return;
   }
@@ -1243,7 +1358,7 @@ function startMockData() {
   setStreamStatus('Mock data active', false);
   sensorPollingState = null;
   setDetailNote(
-    'Mock data is active by default. Use Connect Live when the firmware begins sending the new I2C telemetry packet.'
+    'Mock data is active by default. Use Connect Live when the firmware begins sending the new I²C telemetry packet.'
   );
   setCommandTargetNote(
     'Commands are idle in mock mode. Connect to the live bridge before using MPPT, pause/resume, or debug controls.'
@@ -1340,11 +1455,111 @@ function connectTelemetryStream() {
 }
 
 function onConnectClick() {
+  if (streaming) {
+    writeLog('Streaming Telemetry mode is active: this page already follows the shared live stream.');
+    return;
+  }
   connectTelemetryStream();
 }
 
-function onMockClick() {
+async function onMockClick() {
+  if (await probeBridgeLive()) {
+    writeLog('Simulated data is unavailable while the bridge reports live telemetry.');
+    if (dataMode === 'mock') connectTelemetryStream();
+    return;
+  }
+  if (streaming) stopStreamingMode(true);
   startMockData();
+}
+
+function applyStreamingVisibility(model) {
+  const snap = model.snapshot();
+  const present = new Set(snap.devices.map((d) => d.key));
+  const known = snap.hasData;
+  for (const key of ['pv', 'bms', 'mppt']) {
+    const tile = communicationRoot?.querySelector(`[data-detail-target="${key}"]`);
+    if (tile) tile.hidden = known && !present.has(key);
+  }
+  const loadTile = communicationRoot?.querySelector('[data-detail-target="load"]');
+  if (loadTile) loadTile.hidden = known && !model.latest?.packet?.telemetry?.load;
+}
+
+// Streaming mode renders from the shared model (decoded + presence), so packets with absent groups still render;
+// absent groups stay empty instead of being rejected by the strict all-groups check in normalizePacket().
+function applyStreamingTelemetry(model) {
+  const envelope = model.latest;
+  const decoded = model.decoded;
+  const vis = model.visibility || {};
+  const pkt = envelope.packet || {};
+  const on = (key) => vis[key]?.visible === true;
+  state = {
+    mcu: { temperatureC: decoded.mcu.tempC },
+    pv: on('pv')
+      ? { shuntVoltageMv: decoded.pv.shuntMv, powerW: decoded.pv.powerW, currentA: decoded.pv.currentA }
+      : { shuntVoltageMv: null, powerW: null, currentA: null },
+    mppt: on('mppt')
+      ? { switchState: normalizeSwitchState(decoded.mppt.acdrv), faults: decoded.mppt.faults.filter((f) => f.active).map((f) => f.name) }
+      : { switchState: 'unknown', faults: [] },
+    bms: { cellVoltagesV: on('bms') ? decoded.bms.cells.map((c) => c.v) : [null, null, null, null] },
+    load: pkt.telemetry?.load || null,
+    peripheral: decoded.peripheral
+  };
+  streamMetadata = extractMetadata(envelope);
+  renderTelemetry(state, streamMetadata);
+  if (envelope.network?.remote_address && envelope.network?.remote_port) {
+    setNodeAddressNote(`ESP32 node: ${envelope.network.remote_address}:${envelope.network.remote_port}`);
+  }
+}
+
+function startStreamingMode() {
+  stopMockData();
+  closeLiveStream();
+  dataMode = 'live';
+  state = {
+    mcu: { temperatureC: null },
+    pv: { shuntVoltageMv: null, powerW: null, currentA: null },
+    mppt: { switchState: 'unknown', faults: [] },
+    bms: { cellVoltagesV: [null, null, null, null] },
+    load: null,
+    peripheral: peripheralTelemetryForMode('live')
+  };
+  renderTelemetry(state, { deviceId: 'Waiting for streaming telemetry', sequence: '--', transmittedAt: 'Not supplied', receivedAt: 'Not supplied' });
+  setStreamStatus('Streaming Telemetry: waiting', false);
+  const header = communicationRoot?.querySelector('.i2c-page-header');
+  const section = document.createElement('section');
+  section.className = 'card st-i2c-section';
+  section.innerHTML = `<div class="card-header"><h3 class="card-title">Streaming Telemetry</h3>
+    <label class="st-section-toggle"><input type="checkbox" id="i2cStreamToggle" checked /><span class="st-switch"></span><span>On</span></label></div>
+    <div class="card-body"><div id="i2cStreamRoot"></div></div>`;
+  header?.insertAdjacentElement('afterend', section);
+  const badge = document.createElement('span');
+  badge.className = 'st-indicator live st-header-badge';
+  badge.innerHTML = '<i></i>Streaming Telemetry';
+  header?.querySelector('div')?.appendChild(badge);
+  const view = mountStreamingView(section.querySelector('#i2cStreamRoot'), { url: streamingUrl() });
+  let seenPackets = -1; let seenStatus = null;
+  const unsubscribe = subscribeStreaming((model) => {
+    if (model.status && model.status !== seenStatus) { seenStatus = model.status; applyTelemetryPacket(model.status); }
+    if (model.latest && model.packets !== seenPackets) { seenPackets = model.packets; applyStreamingTelemetry(model); }
+    applyStreamingVisibility(model);
+  });
+  section.querySelector('#i2cStreamToggle').addEventListener('change', (event) => {
+    if (!event.target.checked) { stopStreamingMode(true); startDefaultMode(); }
+  });
+  streaming = { section, badge, view, unsubscribe };
+  setDetailNote('Streaming Telemetry mode: live data from the shared stream; only devices present on the bus are shown.');
+  writeLog('Streaming Telemetry mode active (shared stream, present devices only).');
+}
+
+function stopStreamingMode(persistOff = false) {
+  if (!streaming) return;
+  streaming.unsubscribe();
+  streaming.view.destroy();
+  streaming.section.remove();
+  streaming.badge.remove();
+  communicationRoot?.querySelectorAll('.device-tile').forEach((tile) => { tile.hidden = false; });
+  streaming = null;
+  if (persistOff) setStreamingMode(false);
 }
 
 async function sendCommandRequest(payload) {
@@ -1535,7 +1750,7 @@ function onLedOffClick() {
 }
 
 export function initI2CPage() {
-  state = structuredClone(initialTelemetry);
+  state = blankTelemetry();
   streamMetadata = { ...mockMetadata };
   sensorPollingState = null;
   bridgeCommandReady = false;
@@ -1574,7 +1789,11 @@ export function initI2CPage() {
   communicationRoot?.addEventListener('click', onCommunicationClick);
   window.addEventListener('keydown', onDetailKeydown);
 
-  startMockData();
+  if (isStreamingMode()) {
+    startStreamingMode();
+  } else {
+    startDefaultMode();
+  }
 }
 
 export function destroyI2CPage() {
@@ -1593,6 +1812,8 @@ export function destroyI2CPage() {
   document.getElementById('ledOffButton')?.removeEventListener('click', onLedOffClick);
   communicationRoot?.removeEventListener('click', onCommunicationClick);
   window.removeEventListener('keydown', onDetailKeydown);
+  stopStreamingMode(false);
+  stopLiveProbe();
   communicationRoot = null;
   activeDetailTrigger = null;
 

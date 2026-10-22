@@ -1,8 +1,26 @@
+// TEMT6000 LIGHT_OUT level bands (calibrated mV). Boundaries: < LIGHT_BRIGHT_MIN_MV -> Lightly Lit,
+// LIGHT_BRIGHT_MIN_MV..LIGHT_VERY_BRIGHT_MIN_MV -> Bright, > LIGHT_VERY_BRIGHT_MIN_MV -> Very Bright.
+export const LIGHT_BRIGHT_MIN_MV = 800;
+export const LIGHT_VERY_BRIGHT_MIN_MV = 1800;
+export function lightLevelFromMv(mv) {
+  if (mv === null || mv === undefined || mv === '' || !Number.isFinite(Number(mv))) return null;
+  const v = Number(mv);
+  if (v < LIGHT_BRIGHT_MIN_MV) return 'Lightly Lit';
+  if (v <= LIGHT_VERY_BRIGHT_MIN_MV) return 'Bright';
+  return 'Very Bright';
+}
+// MCP9700 TEMP_OUT: 500 mV at 0 degC, 10 mV/degC.
+export function mcp9700TempCFromMv(mv) {
+  if (mv === null || mv === undefined || !Number.isFinite(Number(mv))) return null;
+  return (Number(mv) - 500) / 10;
+}
+
 export function unavailablePeripheralTelemetry() {
   return {
     temperatureC: null,
     temperatureSaturated: null,
     lightVoltageMv: null,
+    lightLevel: null,
     relativeLightLevel: null,
     lightSaturated: null
   };
@@ -30,6 +48,7 @@ export function normalizePeripheralTelemetry(candidate) {
       ? null
       : peripheral.temperatureSaturated === true,
     lightVoltageMv,
+    lightLevel: lightLevelFromMv(lightVoltageMv),
     relativeLightLevel: relativeLightLevel === null
       ? null
       : Math.min(1, Math.max(0, relativeLightLevel)),
@@ -47,6 +66,7 @@ export function createMockPeripheralTelemetry(random = Math.random) {
     temperatureC,
     temperatureSaturated: false,
     lightVoltageMv: Math.round(relativeLightLevel * 3100),
+    lightLevel: lightLevelFromMv(Math.round(relativeLightLevel * 3100)),
     relativeLightLevel,
     lightSaturated: false
   };

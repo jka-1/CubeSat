@@ -21,6 +21,20 @@ const hexPacketPeripheralWordCount = 20;
 // and per-device presence/status. Sent by the firmware only while debug mode is on.
 const hexPacketVersionDebug = 0x0005;
 const hexPacketDebugWordCount = 36;
+// v6 = v5 + 12 Streaming Telemetry words: BQ76942 PACK pin voltage (0x36) and Int Temperature (0x68),
+// BQ25798 power-path ADC (IBUS/VBUS/VAC1/VBAT/VSYS/TDIE, REG2E readback) and the ADC device GPIOs.
+const hexPacketVersionStreaming = 0x0006;
+// TEMT6000 LIGHT_OUT level bands (same constants as site/assets/js/telemetry-model.mjs).
+const lightBrightMinMv = 800;
+const lightVeryBrightMinMv = 1800;
+function lightLevelFromMv(mv) {
+  if (!Number.isFinite(mv)) return null;
+  if (mv < lightBrightMinMv) return 'Lightly Lit';
+  if (mv <= lightVeryBrightMinMv) return 'Bright';
+  return 'Very Bright';
+}
+const hexPacketStreamingWordCount = 48;
+const bmsUserVoltLsbV = readFiniteNumber('BMS_USER_VOLT_LSB_V', 0.01); // BQ76942 userV (DA Configuration), default 10 mV
 const debugDeviceGroups = Object.freeze([
   { key: 'pv', label: 'PV / INA226', addr: '0x40', mask: 0x01 },
   { key: 'bms', label: 'BMS / BQ76942', addr: '0x08', mask: 0x02 },
@@ -44,10 +58,14 @@ const ina226CalibrationRegister = 0x05;
 const hexPacketByteCounts = new Set([
   hexPacketLegacyWordCount * 2,
   hexPacketPeripheralWordCount * 2,
-  hexPacketDebugWordCount * 2
+  hexPacketDebugWordCount * 2,
+  hexPacketStreamingWordCount * 2
 ]);
 const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
-const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 100);
+// Effective INA226 shunt as seen by the chip. Bench data (CAL 0x0A00=2560, shunt reg 65 = 162.5 uV
+// at 81 mA) gives 2 mOhm, i.e. Current_LSB = 0.00512/(2560*0.002) = 1 mA, matching the Registers tab.
+// The 100 Ohm figure is not across IN+/IN- (0.08 A x 100 Ohm = 8 V, far beyond the 81.92 mV shunt range).
+const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 0.002);
 const loadCurrentLsbA = readFiniteNumber('LOAD_INA226_CURRENT_LSB_A', 0.001);
 const loadShuntOhms = readFiniteNumber('LOAD_INA226_SHUNT_OHMS', 100);
 const commandTargetHost = String(process.env.COMMAND_TARGET_HOST || '').trim();
@@ -306,6 +324,17 @@ function telemetryAgeMs(now = Date.now()) {
 function isTelemetryConnected(now = Date.now()) {
   const ageMs = telemetryAgeMs(now);
   return ageMs !== null && ageMs <= telemetryStaleMs;
+}
+
+// Live-telemetry mode flag, set by the Windows app (POST /live-mode with the command token) when its
+// Debug (Wireless) / Streaming source goes live. Web pages read it (status SSE + /health) and never show
+// simulated data while it is on or while real telemetry is arriving.
+const liveMode = { on: false, source: null, since: null };
+
+function setLiveMode(on, source) {
+  liveMode.on = !!on;
+  liveMode.source = on ? String(source || 'app').slice(0, 40) : null;
+  liveMode.since = on ? new Date().toISOString() : null;
 }
 
 function isCommandAuthorizationConfigured() {
@@ -746,7 +775,7 @@ function extractHexWordsFromText(text) {
 
 function extractHexWordsFromRawBuffer(buffer) {
   if (!Buffer.isBuffer(buffer) || !hexPacketByteCounts.has(buffer.length)) {
-    throw new Error('raw hex packet must contain 32, 40, or 72 bytes');
+    throw new Error('raw hex packet must contain 32, 40, 72, or 96 bytes');
   }
 
   const words = [];
@@ -768,7 +797,9 @@ function normalizeHexPacketWords(words) {
   }
 
   const versionWord = words[1];
-  const expectedWordCount = versionWord === hexPacketVersionDebug
+  const expectedWordCount = versionWord === hexPacketVersionStreaming
+    ? hexPacketStreamingWordCount
+    : versionWord === hexPacketVersionDebug
     ? hexPacketDebugWordCount
     : versionWord === hexPacketVersionPeripheralSensors
       ? hexPacketPeripheralWordCount
@@ -885,6 +916,7 @@ function normalizeHexPacketWords(words) {
         },
         pv: {
           shuntVoltageMv: decodeIna226ShuntMv(words[5]),
+          busVoltageV: +(words[6] * 0.00125).toFixed(5),
           powerW: decodeIna226PowerW(words[7], pvResolvedCurrentLsbA),
           currentA: decodeIna226CurrentA(words[8], pvResolvedCurrentLsbA)
         },
@@ -945,6 +977,7 @@ function normalizeHexPacketWords(words) {
         ? (flags & 0x0004) !== 0
         : null,
       lightVoltageMv: lightValid ? words[18] : null,
+      lightLevel: lightValid ? lightLevelFromMv(words[18]) : null,
       relativeLightLevel: lightValid ? words[19] / 10_000 : null,
       lightSaturated: lightValid
         ? (flags & 0x0008) !== 0
@@ -969,6 +1002,15 @@ function normalizeHexPacketWords(words) {
     packet.device_uptime_ms = debug.link.uptime_ms;
     packet.debug = debug.debug;
     applyDevicePresence(packet, debug.debug);
+    return packet;
+  }
+
+  if (versionWord === hexPacketVersionStreaming) {
+    const v5Words = words.slice(0, hexPacketDebugWordCount);
+    v5Words[1] = hexPacketVersionDebug;
+    const packet = normalizeHexPacketWords(v5Words);
+    packet.packet_format = 'hex-v6-streaming';
+    applyStreamingWords(packet, words.slice(hexPacketDebugWordCount));
     return packet;
   }
 
@@ -1028,7 +1070,7 @@ function decodeDebugWords(w) {
 function applyDevicePresence(packet, debug) {
   const t = packet.telemetry;
   if (!debug.devices.pv.present && debug.devices.pv.probed) {
-    t.pv = { shuntVoltageMv: null, powerW: null, currentA: null, available: false };
+    t.pv = { shuntVoltageMv: null, busVoltageV: null, powerW: null, currentA: null, available: false };
   }
   if (!debug.devices.bms.present && debug.devices.bms.probed) {
     t.bms = { cellVoltagesV: [null, null, null, null], available: false };
@@ -1036,6 +1078,46 @@ function applyDevicePresence(packet, debug) {
   if (!debug.devices.mppt.present && debug.devices.mppt.probed) {
     t.mppt = { switchState: null, faults: [], available: false };
   }
+}
+
+// v6 words 36..47 (see main/debug_mode.c debug_mode_build_v6_words). Invalid -> null, never zero.
+function applyStreamingWords(packet, w) {
+  const flags = w[0];
+  const ok = (bit) => (flags & (1 << bit)) !== 0;
+  const t = packet.telemetry;
+  const r3 = (v) => +v.toFixed(3);
+  const gpio = (b) => (b === 0xff ? null : b);
+  if (t.bms && t.bms.available !== false) {
+    t.bms.packVoltageV = ok(0) ? r3(w[1] * bmsUserVoltLsbV) : null;
+    t.bms.internalTempC = ok(1) ? +((w[2] * 0.1) - 273.15).toFixed(2) : null;
+  } else if (t.bms) {
+    t.bms.packVoltageV = null; t.bms.internalTempC = null;
+  }
+  const mpptLive = t.mppt && t.mppt.available !== false;
+  const m = (bit, value) => (mpptLive && ok(bit) ? value : null);
+  if (t.mppt) {
+    t.mppt.ibusA = m(2, r3(decodeSignedWord(w[3]) / 1000));
+    t.mppt.vbusV = m(3, r3(w[4] / 1000));
+    t.mppt.vac1V = m(4, r3(w[5] / 1000));
+    t.mppt.vbatV = m(5, r3(w[6] / 1000));
+    t.mppt.vsysV = m(6, r3(w[7] / 1000));
+    t.mppt.dieTempC = m(7, decodeSignedWord(w[8]) * 0.5);
+    t.mppt.adcEnabled = mpptLive && ok(8) ? (w[9] & 0x80) !== 0 : null;
+  }
+  t.peripheral = t.peripheral || {};
+  t.peripheral.temperatureVoltageMv = ok(9) ? w[10] : null;
+  t.adc = {
+    temp: { device: 'MCP9700', signal: 'TEMP_OUT', gpio: gpio(w[11] & 0xff) },
+    light: { device: 'TEMT6000', signal: 'LIGHT_OUT', gpio: gpio((w[11] >> 8) & 0xff) }
+  };
+  packet.raw.streaming = {
+    flags,
+    bms_pack_0x36: w[1], bms_int_temp_0x68: w[2],
+    mppt_ibus_0x31: w[3], mppt_vbus_0x35: w[4], mppt_vac1_0x37: w[5],
+    mppt_vbat_0x3b: w[6], mppt_vsys_0x3d: w[7], mppt_tdie_0x41: w[8],
+    mppt_adc_control_0x2e: w[9] & 0xff,
+    adc_temp_mv: w[10], adc_gpios: w[11]
+  };
 }
 
 function normalizeHexPacketText(text) {
@@ -1501,7 +1583,10 @@ function createStatusMessage() {
     command_ready: commandTransportReady && isCommandAuthorizationConfigured(),
     command_target: activeCommandTarget,
     pending_commands: pendingCommands.size,
-    debug_mode: latestDebugState
+    debug_mode: latestDebugState,
+    live_mode: liveMode.on,
+    live_mode_source: liveMode.source,
+    live_mode_since: liveMode.since
   };
 }
 
@@ -1962,6 +2047,9 @@ const httpServer = http.createServer(async (request, response) => {
         command_ready: status.command_ready,
         pending_commands: pendingCommands.size,
         debug_mode: latestDebugState,
+        live_mode: liveMode.on,
+        live_mode_source: liveMode.source,
+        live_mode_since: liveMode.since,
         default_command_target: commandTargetHost && commandTargetPort
           ? {
               address: commandTargetHost,
@@ -2004,6 +2092,22 @@ const httpServer = http.createServer(async (request, response) => {
       latestEnvelope = createEnvelope(packet, 'http-input', null);
       broadcast(latestEnvelope);
       sendJson(response, 200, { accepted: true, envelope: latestEnvelope });
+      return;
+    }
+
+    if (
+      request.method === 'POST' &&
+      (requestUrl.pathname === '/live-mode' ||
+       requestUrl.pathname === '/api/demo/live-mode')
+    ) {
+      assertCommandAuthorized(request);
+      const body = await readJsonBody(request);
+      if (typeof body?.on !== 'boolean') {
+        throw createHttpError(400, 'live-mode body must be {"on": true|false}');
+      }
+      setLiveMode(body.on, body.source);
+      broadcastStatus();
+      sendJson(response, 200, { live_mode: liveMode.on, live_mode_source: liveMode.source, live_mode_since: liveMode.since });
       return;
     }
 

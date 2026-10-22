@@ -833,7 +833,7 @@ h1 {
   align-items: center;
 }
 
-/* I2C visual diagram */
+/* I²C visual diagram */
 .i2c-board {
   position: relative;
   min-height: 780px;
@@ -850,7 +850,7 @@ h1 {
 }
 
 .i2c-board::after {
-  content: "I2C BUS SANDBOX";
+  content: "I\0000B2C BUS SANDBOX";
   position: absolute;
   left: 20px;
   bottom: 15px;
@@ -1172,7 +1172,7 @@ h1 {
   font-size: 1.2rem;
 }
 
-/* I2C topology dashboard */
+/* I²C topology dashboard */
 .i2c-page {
   --sda: #ef444f;
   --scl: #54d98c;

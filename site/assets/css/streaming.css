@@ -1,0 +1,110 @@
+/* Streaming Telemetry cards (streaming-view.mjs); uses the shared variables from styles.css. */
+.st-root { display: grid; gap: 14px; }
+.st-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.st-indicator { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 999px; font-size: 0.78rem;
+  font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid var(--line); color: var(--white-soft); background: rgba(0,0,0,0.45); }
+.st-indicator i { width: 9px; height: 9px; border-radius: 50%; background: var(--white-soft); opacity: 0.5; }
+.st-indicator.live { color: var(--success); border-color: rgba(84,239,120,0.55); }
+.st-indicator.live i { background: var(--success); opacity: 1; box-shadow: 0 0 10px var(--success); animation: st-pulse 1.6s infinite; }
+.st-indicator.stale { color: var(--warning); border-color: rgba(255,214,107,0.5); }
+.st-indicator.stale i { background: var(--warning); opacity: 1; }
+@keyframes st-pulse { 50% { opacity: 0.35; } }
+.st-meta { color: var(--white-soft); font-size: 0.8rem; font-variant-numeric: tabular-nums; flex: 1; min-width: 200px; }
+.st-window { color: var(--white-soft); font-size: 0.78rem; display: flex; gap: 6px; align-items: center; }
+.st-window select { min-height: 32px; border-radius: 10px; border: 1px solid var(--line); background: rgba(0,0,0,0.45); color: var(--white); padding: 0 8px; }
+.st-hidden { display: flex; flex-wrap: wrap; gap: 8px; min-height: 0; }
+.st-hidden:empty { display: none; }
+.st-chip { font-size: 0.72rem; padding: 4px 10px; border-radius: 999px; border: 1px dashed rgba(237,232,217,0.3); color: rgba(237,232,217,0.55); }
+.st-chip.error { border-color: rgba(255,123,123,0.6); color: var(--danger); }
+.st-empty { color: var(--white-soft); font-size: 0.85rem; opacity: 0.75; }
+.st-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 14px; align-items: start; }
+.st-card { border: 1px solid var(--line); border-radius: 18px; padding: 14px 16px; background: linear-gradient(160deg, rgba(212,175,55,0.07), rgba(0,0,0,0.5));
+  display: grid; gap: 10px; transition: opacity 0.4s, filter 0.4s; }
+.st-card[hidden] { display: none; }
+.st-card header { display: flex; align-items: baseline; gap: 10px; }
+.st-card h4 { margin: 0; font-size: 0.95rem; color: var(--gold-soft); letter-spacing: 0.02em; }
+.st-card header small { color: var(--white-soft); opacity: 0.7; font-size: 0.72rem; }
+.st-age { margin-left: auto; font-size: 0.7rem; color: var(--white-soft); opacity: 0.7; font-variant-numeric: tabular-nums; }
+.st-metric { display: grid; grid-template-columns: 1fr 110px 120px; align-items: center; gap: 10px; }
+.st-label { color: var(--white-soft); font-size: 0.78rem; }
+.st-value { font-size: 1.05rem; color: var(--white); text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.st-spark { width: 120px; height: 30px; display: block; }
+.st-cells { display: grid; gap: 8px; }
+.st-cell { display: grid; grid-template-columns: 58px 1fr 84px 120px; align-items: center; gap: 10px; }
+.st-gauge { height: 10px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; }
+.st-gauge i { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--gold); transition: width 0.6s ease, background 0.3s; }
+.st-gauge i.ok { background: linear-gradient(90deg, var(--success-deep), var(--success)); }
+.st-gauge i.warn { background: var(--warning); }
+.st-gauge i.bad { background: var(--danger); }
+.st-stats { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.78rem; color: var(--white-soft); }
+.st-stats b { color: var(--white); font-variant-numeric: tabular-nums; }
+.st-acdrv { display: flex; align-items: center; gap: 12px; }
+.st-pill { padding: 5px 12px; border-radius: 999px; font-size: 0.85rem; border: 1px solid var(--line); }
+.st-pill.on { color: #04140a; background: var(--success); border-color: var(--success); }
+.st-pill.off { color: var(--white-soft); background: rgba(255,255,255,0.06); }
+.st-pill.warn { color: #1b1300; background: var(--warning); }
+.st-acdrv small { color: var(--white-soft); opacity: 0.7; font-variant-numeric: tabular-nums; }
+.st-faults { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.st-fault { font-size: 0.66rem; text-align: center; padding: 5px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(237,232,217,0.45); background: rgba(0,0,0,0.35); transition: all 0.3s; }
+.st-fault.lit { color: #fff; background: rgba(210,35,42,0.85); border-color: var(--danger); box-shadow: 0 0 12px rgba(255,123,123,0.6); }
+.st-small .st-metric { grid-template-columns: 1fr 100px 120px; }
+.st-is-stale .st-card { opacity: 0.45; filter: grayscale(0.8); }
+.st-section-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; color: var(--white-soft); font-size: 0.85rem; }
+.st-switch { position: relative; width: 44px; height: 24px; border-radius: 999px; background: rgba(255,255,255,0.15); border: 1px solid var(--line); transition: background 0.25s; }
+.st-switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: var(--white-soft); transition: transform 0.25s; }
+.st-section-toggle input { position: absolute; opacity: 0; pointer-events: none; }
+.st-section-toggle input:checked + .st-switch { background: var(--success-deep); }
+.st-section-toggle input:checked + .st-switch::after { transform: translateX(20px); background: #fff; }
+.st-off-note { color: var(--white-soft); font-size: 0.85rem; opacity: 0.8; }
+@media (max-width: 700px) { .st-metric, .st-small .st-metric { grid-template-columns: 1fr 90px; } .st-spark { display: none; } .st-cell { grid-template-columns: 54px 1fr 76px; } .st-faults { grid-template-columns: repeat(2, 1fr); } }
+.i2c-page [data-detail-target][hidden] { display: none !important; }
+.st-i2c-section { margin: 0 0 18px; }
+.st-header-badge { margin-top: 10px; }
+.st-nav-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  color: var(--success); border: 1px solid rgba(84,239,120,0.5); border-radius: 999px; padding: 4px 10px; text-decoration: none; }
+.st-nav-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+.st-nav-badge[hidden] { display: none; }
+/* v6 Streaming Telemetry additions */
+.st-sub { margin: .6rem 0 .2rem; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; opacity: .8; }
+.st-sub small { margin-left: .4rem; text-transform: none; opacity: .7; }
+.st-note { font-size: .75rem; opacity: .6; margin: .4rem 0 0; }
+.st-flow { display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; font-size: .78rem; margin: .2rem 0 .4rem; }
+.st-flow span { padding: .15rem .45rem; border: 1px solid rgba(212,175,55,.35); border-radius: 6px; }
+.st-flow b { font-variant-numeric: tabular-nums; }
+.st-flow i { opacity: .5; font-style: normal; }
+/* Compact one-screen layout (no scrolling): smaller type, short sparklines, fixed 3-column placement. */
+.st-root { gap: 6px; }
+.st-bar { gap: 8px; }
+.st-indicator { padding: 3px 9px; font-size: .7rem; }
+.st-window select { min-height: 26px; }
+.st-grid { gap: 8px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.st-card { padding: 7px 10px; gap: 4px; border-radius: 12px; }
+.st-card h4 { font-size: .82rem; }
+.st-metric, .st-small .st-metric { grid-template-columns: 1fr 92px 80px; gap: 6px; }
+.st-label { font-size: .7rem; }
+.st-value { font-size: .85rem; }
+.st-spark { width: 80px; height: 18px; }
+.st-cells { gap: 3px; }
+.st-cell { grid-template-columns: 44px 1fr 70px 80px; gap: 6px; }
+.st-gauge { height: 7px; }
+.st-stats, .st-flow { font-size: .7rem; gap: 6px; }
+.st-faults { grid-template-columns: repeat(6, 1fr); gap: 3px; }
+.st-fault { font-size: .58rem; padding: 2px 2px; }
+.st-pill { padding: 2px 8px; font-size: .75rem; }
+.st-sub { margin: .2rem 0 0; font-size: .68rem; }
+.st-note { font-size: .66rem; margin: .1rem 0 0; }
+@media (min-width: 1000px) {
+  .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-flow: row dense; }
+  .st-card[data-card="pv"], .st-card[data-card="mcu"], .st-card[data-card="peripheral"] { grid-column: 1; }
+  .st-card[data-card="bms"] { grid-column: 2; grid-row: 1 / span 3; }
+  .st-card[data-card="mppt"] { grid-column: 3; grid-row: 1 / span 3; }
+}
+.st-toggles { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: .7rem; color: var(--white-soft); }
+.st-toggle { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+.st-toggle input { accent-color: var(--gold); margin: 0; }
+.st-root [data-per][hidden] { display: none; }
+/* TEMT6000 value ("Lightly Lit · 732 mV") needs a wider value column than the numeric rows. */
+.st-metric[data-metric="per.light"], .st-small .st-metric[data-metric="per.light"] { grid-template-columns: auto minmax(130px, 1fr) 80px; }
+.st-metric[data-metric="per.light"] .st-value { white-space: normal; overflow-wrap: anywhere; }
+.st-cell { grid-template-columns: 82px 1fr 70px 80px; } .st-cell .st-label { white-space: nowrap; }

@@ -6,9 +6,9 @@
       <div class="eyebrow"><span class="pulse"></span> Wireless Debug</div>
       <h2>Debug mode</h2>
       <p>
-        Register-level I2C access over the Wi-Fi bridge. Device presence comes from the firmware's v5 debug packet
+        Register-level I²C access over the Wi-Fi bridge. Device presence comes from the firmware's v5/v6 debug packet
         (probe at startup, every 5 s, and on demand). Register definitions and conversions are shared with the
-        Windows I2C tool.
+        Windows I²C tool.
       </p>
     </div>
     <div id="dmStatus" class="status-pill offline">Not connected</div>
@@ -40,11 +40,21 @@
         <div class="dm-buttons">
           <button id="dmScan" class="button secondary" type="button" data-cmd>Bus scan + probe</button>
         </div>
-        <small id="dmDebugDetail" class="metric-detail">waiting for v5 packets</small>
+        <small id="dmDebugDetail" class="metric-detail">waiting for v5/v6 packets</small>
       </div>
     </section>
     <div class="dm-tiles" id="dmTiles"></div>
   </div>
+
+  <section class="card dm-stream-card" id="dmStreamCard">
+    <div class="card-header"><h3 class="card-title">Streaming Telemetry</h3>
+      <label class="st-section-toggle"><input type="checkbox" id="dmStreamToggle" /><span class="st-switch"></span><span id="dmStreamToggleText">Off</span></label></div>
+    <div class="card-body">
+      <p id="dmStreamOffNote" class="st-off-note">Turn on to follow the live event stream and show decoded telemetry for present devices only.
+        The mode is remembered and also switches the I²C Telemetry page to this shared stream.</p>
+      <div id="dmStreamRoot"></div>
+    </div>
+  </section>
 
   <div class="dm-row">
     <section class="card">
