@@ -1,0 +1,113 @@
+diff --git a/telemetry-bridge/server.js b/telemetry-bridge/server.js
+index a83d0eb..cb0a01b 100644
+--- a/telemetry-bridge/server.js
++++ b/telemetry-bridge/server.js
+@@ -1,6 +1,7 @@
+ import dgram from 'node:dgram';
+ import http from 'node:http';
+ import crypto from 'node:crypto';
++import fs from 'node:fs';
+ 
+ const httpPort = readPort('HTTP_PORT', 8080);
+ const udpPort = readPort('UDP_PORT', 3333);
+@@ -17,6 +18,9 @@ const hexPacketVersionValidatedRaw = 0x0003;
+ const hexPacketVersionPeripheralSensors = 0x0004;
+ const hexPacketLegacyWordCount = 16;
+ const hexPacketPeripheralWordCount = 20;
++// Proposed v5: v4 + 6 link-health words (RSSI, uptime hi/lo, tx errors, ACK timeouts, Wi-Fi reconnects).
++const hexPacketVersionLinkStats = 0x0005;
++const hexPacketLinkStatsWordCount = 26;
+ const ina226LoadCommandMagic = 0x4943;
+ const ina226LoadResultMagic = 0x4952;
+ const ina226LoadProtocolVersion = 0x01;
+@@ -29,7 +33,8 @@ const ina226LoadAddress = 0x40;
+ const ina226CalibrationRegister = 0x05;
+ const hexPacketByteCounts = new Set([
+   hexPacketLegacyWordCount * 2,
+-  hexPacketPeripheralWordCount * 2
++  hexPacketPeripheralWordCount * 2,
++  hexPacketLinkStatsWordCount * 2
+ ]);
+ const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
+ const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 100);
+@@ -95,6 +100,18 @@ let lastBroadcastTelemetryConnected = null;
+ let ina226LoadSampleCounter = 0;
+ let nextIna226LoadRequestId = 1;
+ const sseClients = new Set();
++// Optional passive UDP tap for link characterization: one CSV line per received datagram,
++// written before decoding so rejected packets are counted too. Disabled unless UDP_TAP_LOG is set.
++const udpTapLogPath = String(process.env.UDP_TAP_LOG || '').trim();
++const udpTapStream = udpTapLogPath
++  ? fs.createWriteStream(udpTapLogPath, { flags: 'a' })
++  : null;
++if (udpTapStream) {
++  udpTapStream.on('error', (error) => console.error('[UDP] tap log error:', error.message));
++  if (!fs.existsSync(udpTapLogPath) || fs.statSync(udpTapLogPath).size === 0) {
++    udpTapStream.write('server_rx_ms,remote_address,remote_port,bytes,payload_b64\n');
++  }
++}
+ const pendingCommands = new Map();
+ 
+ function readPort(name, fallback) {
+@@ -714,7 +731,7 @@ function extractHexWordsFromText(text) {
+ 
+ function extractHexWordsFromRawBuffer(buffer) {
+   if (!Buffer.isBuffer(buffer) || !hexPacketByteCounts.has(buffer.length)) {
+-    throw new Error('raw hex packet must contain 32 or 40 bytes');
++    throw new Error('raw hex packet must contain 32, 40, or 52 bytes');
+   }
+ 
+   const words = [];
+@@ -736,9 +753,11 @@ function normalizeHexPacketWords(words) {
+   }
+ 
+   const versionWord = words[1];
+-  const expectedWordCount = versionWord === hexPacketVersionPeripheralSensors
+-    ? hexPacketPeripheralWordCount
+-    : hexPacketLegacyWordCount;
++  const expectedWordCount = versionWord === hexPacketVersionLinkStats
++    ? hexPacketLinkStatsWordCount
++    : versionWord === hexPacketVersionPeripheralSensors
++      ? hexPacketPeripheralWordCount
++      : hexPacketLegacyWordCount;
+ 
+   if (words.length !== expectedWordCount) {
+     throw new Error(
+@@ -925,6 +944,23 @@ function normalizeHexPacketWords(words) {
+     return packet;
+   }
+ 
++  if (versionWord === hexPacketVersionLinkStats) {
++    const v4Words = words.slice(0, hexPacketPeripheralWordCount);
++    v4Words[1] = hexPacketVersionPeripheralSensors;
++    const packet = normalizeHexPacketWords(v4Words);
++    const rssiWord = words[20];
++    packet.packet_format = 'hex-v5-link-stats';
++    packet.link = {
++      rssi_dbm: rssiWord === 0x8000 ? null : decodeSignedWord(rssiWord),
++      uptime_ms: (words[21] * 0x10000) + words[22],
++      tx_errors: words[23],
++      ack_timeouts: words[24],
++      wifi_reconnects: words[25]
++    };
++    packet.device_uptime_ms = packet.link.uptime_ms;
++    return packet;
++  }
++
+   throw new Error(`unsupported hex packet version 0x${versionWord.toString(16).padStart(4, '0')}`);
+ }
+ 
+@@ -1891,6 +1927,13 @@ udpSocket.on('error', (error) => {
+ });
+ 
+ udpSocket.on('message', (message, remoteInfo) => {
++  if (udpTapStream) {
++    udpTapStream.write(
++      `${Date.now()},${remoteInfo.address},${remoteInfo.port},${message.length},` +
++      `${message.subarray(0, 512).toString('base64')}\n`
++    );
++  }
++
+   if (message.length > maxUdpBytes) {
+     console.warn(
+       `[UDP] rejected oversized packet from ${remoteInfo.address}:${remoteInfo.port}`
