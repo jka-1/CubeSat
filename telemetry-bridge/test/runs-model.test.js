@@ -2,8 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  MAX_SERIES_WINDOW_MS, formatDuration, metricValue, nearestBucket, runMatches,
-  seriesExtent, windowForPreset
+  MAX_SERIES_WINDOW_MS, formatDuration, formatRelativeTime, metricValue, nearestBucket,
+  responseSummary, responseWindow, runMatches, seriesExtent, windowForPreset
 } from '../../site/assets/js/runs-model.mjs';
 
 const run = {
@@ -47,4 +47,22 @@ test('chart helpers handle constant series and nearest bucket', () => {
   assert.ok(extent.min < 4 && extent.max > 4);
   assert.equal(nearestBucket(points, 26), points[2]);
   assert.equal(formatDuration(3_661_000), '1h 1m 1s');
+});
+
+test('trigger-aligned response windows and summaries preserve time-domain behavior', () => {
+  assert.deepEqual(responseWindow(10_000, 500, 2_000), { start: 9_500, end: 12_000 });
+  assert.throws(() => responseWindow(10_000, -1, 2_000), /valid response window/);
+  assert.equal(formatRelativeTime(-250), 'T−250 ms');
+  assert.equal(formatRelativeTime(1_250), 'T+1.25 s');
+  const summary = responseSummary([
+    { start_ms: 9_000, end_ms: 9_500, mean: 4, min: 3.9, max: 4.1, valid_count: 2 },
+    { start_ms: 9_500, end_ms: 10_000, mean: 6, min: 5.9, max: 6.1, valid_count: 1 },
+    { start_ms: 10_000, end_ms: 10_500, mean: 9, min: 8, max: 10, valid_count: 2 },
+    { start_ms: 10_500, end_ms: 11_000, mean: 7, min: 6.5, max: 7.5, valid_count: 2 }
+  ], 10_000);
+  assert.equal(summary.baseline, (4 * 2 + 6) / 3);
+  assert.equal(summary.initial, 9);
+  assert.equal(summary.peak, 10);
+  assert.equal(summary.delta, 10 - summary.baseline);
+  assert.equal(summary.peak_at_ms, 250);
 });

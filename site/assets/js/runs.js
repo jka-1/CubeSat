@@ -1,8 +1,9 @@
 import { apiFetch, canOperate } from './auth.js?v=20261022a';
 import {
-  RUN_METRICS, MAX_SERIES_WINDOW_MS, formatDuration, metricValue, nearestBucket,
-  runEnd, runMatches, seriesExtent, windowForPreset
-} from './runs-model.mjs?v=20261023a';
+  RUN_METRICS, MAX_SERIES_WINDOW_MS, formatDuration, formatRelativeTime, metricValue,
+  nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent,
+  windowForPreset
+} from './runs-model.mjs?v=20261023b';
 
 const API = '/telemetry/runs';
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -61,10 +62,58 @@ function dateLabel(ms, withDate = true) {
 }
 
 function sourceLabel(source) { return SOURCE_LABELS[source] || (source ? String(source) : 'Unconfirmed'); }
+function responseMode() { return $('analysisMode')?.value === 'response'; }
+function selectedTrigger() {
+  const id = Number($('responseTrigger')?.value);
+  return events.find((event) => event.id === id) || null;
+}
+function analysisTimeLabel(ms) {
+  const trigger = responseMode() ? selectedTrigger() : null;
+  return trigger ? formatRelativeTime(ms - trigger.at_ms) : dateLabel(ms, false);
+}
 function reasonLabel(reason) {
   return ({ operator_stop: 'Stopped by operator', source_switch: 'Power source switched', debug_exit: 'Debug ended',
     bridge_restart: 'Bridge restarted', graceful_shutdown: 'Bridge stopped', queue_overflow: 'Recorder overflow' })[reason] ||
     (reason ? String(reason).replaceAll('_', ' ') : 'In progress');
+}
+
+function eventDescription(event) {
+  const details = event.details || {};
+  if (event.type === 'sequence_step') {
+    return `${details.sequence_name || 'Sequence'} · line ${details.step_number ?? '?'} ${details.phase || ''}`.trim();
+  }
+  if (event.type === 'command_status') return details.label || details.summary || 'Command status';
+  if (event.type === 'source_switch') return `${sourceLabel(details.from_source)} → ${sourceLabel(details.to_source)}`;
+  if (event.type === 'mode_changed') return `${TYPE_LABELS[details.from_mode] || details.from_mode || 'unknown'} → ${TYPE_LABELS[details.to_mode] || details.to_mode || 'unknown'}`;
+  return EVENT_LABELS[event.type] || event.type;
+}
+
+function populateResponseTriggers() {
+  const select = $('responseTrigger'); if (!select) return;
+  const previous = Number(select.value);
+  const preferredTypes = new Set(['run_started', 'source_switch', 'mode_changed', 'command_status', 'sequence_step']);
+  let candidates = events.filter((event) => preferredTypes.has(event.type));
+  if (!candidates.length) candidates = events;
+  select.replaceChildren();
+  for (const event of candidates) {
+    const option = document.createElement('option'); option.value = String(event.id);
+    option.textContent = `${dateLabel(event.at_ms, false)} · ${eventDescription(event)}`;
+    select.append(option);
+  }
+  const fallback = candidates.find((event) => event.type === 'sequence_step' && event.details?.phase === 'started') ||
+    candidates.find((event) => event.type === 'command_status') ||
+    candidates.find((event) => event.type === 'run_started') || candidates[0];
+  const chosen = candidates.find((event) => event.id === previous) || fallback;
+  if (chosen) select.value = String(chosen.id);
+}
+
+function updateAnalysisControls() {
+  const response = responseMode();
+  show('timelineWindowControl', !response); show('responseControls', response); show('responseHelp', response);
+  show('customWindow', !response && $('seriesWindow').value === 'custom');
+  if (response) populateResponseTriggers();
+  text('analysisTitle', response ? 'Frequency response' : 'Measurement timeline');
+  text('chartTitle', response ? 'Trigger-aligned telemetry response' : 'Telemetry measurement timeline');
 }
 
 async function api(path = '', options = {}) {
@@ -175,10 +224,10 @@ async function selectRun(id) {
     text('seriesState', 'Loading run…');
     const body = await api(`/${encodeURIComponent(id)}`);
     if (destroyed) return;
-    selectedRun = body.run; selectedBucket = null; selectedBucketIndex = -1;
+    selectedRun = body.run; selectedBucket = null; selectedBucketIndex = -1; events = [];
     show('runDetailEmpty', false); show('runDetailContent', true);
     renderRunHeader();
-    $('seriesWindow').value = 'full';
+    $('analysisMode').value = 'timeline'; $('seriesWindow').value = 'full'; updateAnalysisControls();
     const window = windowForPreset(selectedRun, 'full');
     setCustomInputs(window);
     await loadAnalysis(window);
@@ -212,16 +261,39 @@ async function loadAnalysis(window) {
       api(`/${encodeURIComponent(selectedRun.id)}/series?${query}`), loadAllEvents(selectedRun.id)
     ]);
     if (destroyed) return;
-    series = seriesBody.points; events = allEvents; eventAfter = null;
+    series = seriesBody.points; events = allEvents; eventAfter = null; populateResponseTriggers();
     show('seriesLoading', false); show('seriesEmpty', seriesExtent(series) === null); show('chartFrame', seriesExtent(series) !== null);
     text('seriesState', series.length ? `${series.length} time buckets` : 'No samples');
-    text('windowSummary', `${dateLabel(window.start)} to ${dateLabel(window.end)} · ${formatDuration(window.end - window.start)}` +
-      (window.end - window.start >= MAX_SERIES_WINDOW_MS ? ' · limited to 24 hours' : ''));
+    const trigger = responseMode() ? selectedTrigger() : null;
+    text('windowSummary', trigger
+      ? `${formatRelativeTime(window.start - trigger.at_ms)} to ${formatRelativeTime(window.end - trigger.at_ms)} · trigger ${dateLabel(trigger.at_ms)}`
+      : `${dateLabel(window.start)} to ${dateLabel(window.end)} · ${formatDuration(window.end - window.start)}` +
+        (window.end - window.start >= MAX_SERIES_WINDOW_MS ? ' · limited to 24 hours' : ''));
+    renderResponseSummary();
     renderChart(); renderEventMarkers(); renderEvents(true); await loadSamples(true);
   } catch (error) {
     show('seriesLoading', false); show('seriesEmpty', true); show('chartFrame', false);
+    show('responseSummary', false);
     text('seriesState', error.message);
   }
+}
+
+function renderResponseSummary() {
+  const holder = $('responseSummary'), trigger = responseMode() ? selectedTrigger() : null;
+  holder.replaceChildren(); show('responseSummary', !!trigger && seriesExtent(series) !== null);
+  if (!trigger) return;
+  const result = responseSummary(series, trigger.at_ms);
+  const delta = Number.isFinite(result.delta)
+    ? `${result.delta >= 0 ? '+' : ''}${result.delta.toFixed(selectedMetric().digits)} ${selectedMetric().unit}`
+    : 'Unavailable';
+  holder.append(
+    fact('Pre-trigger baseline', formatValue(result.baseline)),
+    fact('First bucket after T+0', formatValue(result.initial)),
+    fact('Peak change', delta),
+    fact('Peak time', formatRelativeTime(result.peak_at_ms)),
+    fact('Post-trigger range', Number.isFinite(result.min) && Number.isFinite(result.max)
+      ? `${result.min.toFixed(selectedMetric().digits)}–${result.max.toFixed(selectedMetric().digits)} ${selectedMetric().unit}` : 'Unavailable')
+  );
 }
 
 function chartCoordinates(point, extent) {
@@ -242,7 +314,7 @@ function renderChart() {
   for (let i = 0; i <= 4; i += 1) {
     const x = 70 + i * 216.5, at = currentWindow.start + i * (currentWindow.end - currentWindow.start) / 4;
     const label = svgElement('text', { x, y: 340, class: 'chart-axis-label', 'text-anchor': i === 0 ? 'start' : i === 4 ? 'end' : 'middle' });
-    label.textContent = dateLabel(at, false); axes.append(label);
+    label.textContent = analysisTimeLabel(at); axes.append(label);
   }
   // Separate subpaths preserve missing buckets instead of drawing invented values across gaps.
   const segments = [];
@@ -262,14 +334,19 @@ function renderChart() {
   $('chartLine').setAttribute('d', line); $('chartBand').setAttribute('d', band);
   renderChartMarkers(); updateChartSelection();
   text('metricColumn', `${selectedMetric().label} (${selectedMetric().unit})`);
-  $('seriesChart').setAttribute('aria-label', `${selectedMetric().label} from ${dateLabel(currentWindow.start)} to ${dateLabel(currentWindow.end)}`);
+  const trigger = responseMode() ? selectedTrigger() : null;
+  $('seriesChart').setAttribute('aria-label', trigger
+    ? `${selectedMetric().label} from ${formatRelativeTime(currentWindow.start - trigger.at_ms)} to ${formatRelativeTime(currentWindow.end - trigger.at_ms)}`
+    : `${selectedMetric().label} from ${dateLabel(currentWindow.start)} to ${dateLabel(currentWindow.end)}`);
 }
 
 function renderChartMarkers() {
   const group = $('chartMarkers'); group.replaceChildren();
+  const trigger = responseMode() ? selectedTrigger() : null;
   for (const event of events.filter((item) => item.at_ms >= currentWindow.start && item.at_ms <= currentWindow.end)) {
     const x = 70 + (event.at_ms - currentWindow.start) / (currentWindow.end - currentWindow.start) * 866;
-    group.append(svgElement('line', { x1: x, x2: x, y1: 24, y2: 314, class: `chart-event chart-event-${event.type}` }));
+    const active = event.id === trigger?.id ? ' chart-event-trigger' : '';
+    group.append(svgElement('line', { x1: x, x2: x, y1: 24, y2: 314, class: `chart-event chart-event-${event.type}${active}` }));
   }
 }
 
@@ -282,7 +359,10 @@ function updateChartSelection() {
 
 async function chooseBucket(bucket) {
   selectedBucket = bucket; selectedBucketIndex = series.indexOf(bucket); updateChartSelection();
-  text('selectedBucket', `${dateLabel(bucket.start_ms)} to ${dateLabel(bucket.end_ms)} · ${bucket.valid_count} numeric of ${bucket.sample_count} packets · mean ${formatValue(bucket.mean)}`);
+  const range = responseMode()
+    ? `${analysisTimeLabel(bucket.start_ms)} to ${analysisTimeLabel(bucket.end_ms)}`
+    : `${dateLabel(bucket.start_ms)} to ${dateLabel(bucket.end_ms)}`;
+  text('selectedBucket', `${range} · ${bucket.valid_count} numeric of ${bucket.sample_count} packets · mean ${formatValue(bucket.mean)}`);
   text('tableScope', 'Packets represented by the selected graph bucket.');
   await loadSamples(true);
   $('packetsTab').click();
@@ -297,7 +377,7 @@ function renderEventMarkers() {
   const holder = $('eventMarkers'); holder.replaceChildren();
   const visible = events.filter((event) => event.at_ms >= currentWindow.start && event.at_ms <= currentWindow.end);
   for (const event of visible) {
-    const button = element('button', `event-marker event-${event.type}`, `${EVENT_LABELS[event.type] || event.type} · ${dateLabel(event.at_ms, false)}`);
+    const button = element('button', `event-marker event-${event.type}`, `${EVENT_LABELS[event.type] || event.type} · ${analysisTimeLabel(event.at_ms)}`);
     button.type = 'button'; button.addEventListener('click', () => {
       $('eventsTab').click(); document.querySelector(`[data-event-id="${event.id}"]`)?.focus();
     }); holder.append(button);
@@ -325,7 +405,8 @@ async function loadSamples(reset) {
 
 function renderSample(sample) {
   const row = document.createElement('tr');
-  for (const value of [dateLabel(sample.received_ms, false), sample.seq ?? '—', TYPE_LABELS[sample.mode] || sample.mode || '—',
+  const sampleTime = responseMode() ? `${analysisTimeLabel(sample.received_ms)} · ${dateLabel(sample.received_ms, false)}` : dateLabel(sample.received_ms, false);
+  for (const value of [sampleTime, sample.seq ?? '—', TYPE_LABELS[sample.mode] || sample.mode || '—',
     sourceLabel(sample.power_source), sample.packet_order, formatValue(metricValue(sample, selectedMetric().id))]) {
     row.append(element('td', '', String(value)));
   }
@@ -375,6 +456,11 @@ async function stopRun() {
 }
 
 function requestedWindow() {
+  if (responseMode()) {
+    const trigger = selectedTrigger();
+    if (!trigger) throw new Error('This run has no event available as an initialization trigger.');
+    return responseWindow(trigger.at_ms, Number($('responseBefore').value), Number($('responseAfter').value));
+  }
   if ($('seriesWindow').value !== 'custom') return windowForPreset(selectedRun, $('seriesWindow').value);
   const start = new Date($('seriesStart').value).getTime(), end = new Date($('seriesEnd').value).getTime();
   if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) throw new Error('Choose a valid start and end time.');
@@ -398,7 +484,17 @@ function bindEvents() {
     const button = event.target.closest('[data-run-filter]'); if (!button) return;
     filter = button.dataset.runFilter; $('runFilters').querySelectorAll('button').forEach((node) => node.classList.toggle('active', node === button)); renderRunList();
   });
-  $('seriesWindow').addEventListener('change', () => show('customWindow', $('seriesWindow').value === 'custom'));
+  $('analysisMode').addEventListener('change', async () => {
+    updateAnalysisControls();
+    if (!selectedRun) return;
+    try { const window = requestedWindow(); if (!responseMode()) setCustomInputs(window); await loadAnalysis(window); }
+    catch (error) { text('seriesState', error.message); }
+  });
+  $('seriesWindow').addEventListener('change', updateAnalysisControls);
+  $('responseTrigger').addEventListener('change', async () => {
+    if (!selectedRun || !responseMode()) return;
+    try { await loadAnalysis(requestedWindow()); } catch (error) { text('seriesState', error.message); }
+  });
   $('seriesForm').addEventListener('submit', async (event) => { event.preventDefault(); try { const window = requestedWindow(); setCustomInputs(window); await loadAnalysis(window); } catch (error) { text('seriesState', error.message); } });
   $('seriesMetric').addEventListener('change', () => loadAnalysis(currentWindow || windowForPreset(selectedRun, 'full')));
   $('seriesChart').addEventListener('click', (event) => {

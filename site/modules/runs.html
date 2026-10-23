@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="./assets/css/runs.css?v=20261023a" />
+<link rel="stylesheet" href="./assets/css/runs.css?v=20261023b" />
 <section id="runs" class="page active runs-page" aria-labelledby="runsTitle">
   <header class="runs-heading">
     <div>
@@ -82,18 +82,33 @@
             <div id="seriesState" class="series-state" role="status" aria-live="polite"></div>
           </div>
           <form id="seriesForm" class="series-controls">
+            <label for="analysisMode">Analysis<select id="analysisMode">
+              <option value="timeline">Timeline</option>
+              <option value="response">Frequency response</option>
+            </select></label>
             <label for="seriesMetric">Measurement<select id="seriesMetric"></select></label>
-            <label for="seriesWindow">Window<select id="seriesWindow">
+            <label id="timelineWindowControl" for="seriesWindow">Window<select id="seriesWindow">
               <option value="full">Full run</option><option value="30s">Last 30 seconds</option>
               <option value="1m">Last minute</option><option value="5m">Last 5 minutes</option>
               <option value="15m">Last 15 minutes</option><option value="custom">Custom range</option>
             </select></label>
+            <div id="responseControls" class="response-controls" hidden>
+              <label for="responseTrigger">Initialization trigger<select id="responseTrigger"></select></label>
+              <label for="responseBefore">Before trigger (ms)<input id="responseBefore" type="number" min="0" max="86400000" step="1" value="2000" /></label>
+              <label for="responseAfter">After trigger (ms)<input id="responseAfter" type="number" min="1" max="86400000" step="1" value="10000" /></label>
+            </div>
             <div id="customWindow" class="custom-window" hidden>
               <label for="seriesStart">From<input id="seriesStart" type="datetime-local" step="0.001" /></label>
               <label for="seriesEnd">To<input id="seriesEnd" type="datetime-local" step="0.001" /></label>
             </div>
             <button class="run-button" type="submit">Apply window</button>
           </form>
+
+          <div id="responseHelp" class="response-help" hidden>
+            <strong>Trigger-aligned time response</strong>
+            <span>The graph uses T+0 at the selected event so startup measurements can be compared around initialization.</span>
+          </div>
+          <dl id="responseSummary" class="response-summary" aria-label="Frequency response summary" aria-live="polite" hidden></dl>
 
           <div id="seriesLoading" class="chart-skeleton" aria-label="Loading graph" hidden><i></i><i></i><i></i><i></i><i></i></div>
           <div id="seriesEmpty" class="runs-empty chart-empty" hidden><strong>No numeric samples</strong><p>Try another metric or time window.</p></div>

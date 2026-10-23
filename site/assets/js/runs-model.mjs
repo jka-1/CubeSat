@@ -83,6 +83,52 @@ export function nearestBucket(points, atMs) {
   }, { point: points[0], distance: Infinity }).point;
 }
 
+export function responseWindow(triggerAt, beforeMs, afterMs) {
+  const before = Number(beforeMs), after = Number(afterMs);
+  if (!Number.isFinite(triggerAt) || !Number.isInteger(before) || !Number.isInteger(after) ||
+      before < 0 || after < 1 || before + after > MAX_SERIES_WINDOW_MS) {
+    throw new Error('Choose a valid response window no longer than 24 hours.');
+  }
+  return { start: triggerAt - before, end: triggerAt + after };
+}
+
+export function formatRelativeTime(milliseconds) {
+  if (!Number.isFinite(milliseconds)) return '—';
+  if (milliseconds === 0) return 'T+0 ms';
+  const sign = milliseconds < 0 ? '−' : '+';
+  const value = Math.abs(milliseconds);
+  if (value < 1000) return `T${sign}${Math.round(value)} ms`;
+  const seconds = value / 1000;
+  return `T${sign}${seconds.toFixed(seconds < 10 ? 2 : 1)} s`;
+}
+
+export function responseSummary(points, triggerAt) {
+  const valid = points.filter((point) => Number.isFinite(point.mean) && Number.isFinite(point.valid_count) && point.valid_count > 0);
+  const weightedMean = (items) => {
+    const count = items.reduce((sum, point) => sum + point.valid_count, 0);
+    return count ? items.reduce((sum, point) => sum + point.mean * point.valid_count, 0) / count : null;
+  };
+  const before = valid.filter((point) => (point.start_ms + point.end_ms) / 2 < triggerAt);
+  const after = valid.filter((point) => (point.start_ms + point.end_ms) / 2 >= triggerAt);
+  const baseline = weightedMean(before);
+  if (!after.length) return { baseline, initial: null, min: null, max: null, peak: null, delta: null, peak_at_ms: null };
+  const initial = after[0].mean;
+  const minima = after.map((point) => point.min).filter(Number.isFinite);
+  const maxima = after.map((point) => point.max).filter(Number.isFinite);
+  const min = minima.length ? Math.min(...minima) : null;
+  const max = maxima.length ? Math.max(...maxima) : null;
+  if (!Number.isFinite(min) || !Number.isFinite(max)) {
+    return { baseline, initial, min, max, peak: null, delta: null, peak_at_ms: null };
+  }
+  const peak = Number.isFinite(baseline) && Math.abs(min - baseline) > Math.abs(max - baseline) ? min : max;
+  const peakPoint = after.find((point) => point.min === peak || point.max === peak);
+  return {
+    baseline, initial, min, max, peak,
+    delta: Number.isFinite(baseline) ? peak - baseline : null,
+    peak_at_ms: peakPoint ? (peakPoint.start_ms + peakPoint.end_ms) / 2 - triggerAt : null
+  };
+}
+
 export function formatDuration(milliseconds) {
   if (!Number.isFinite(milliseconds) || milliseconds < 0) return '—';
   const totalSeconds = Math.floor(milliseconds / 1000);

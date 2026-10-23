@@ -2,7 +2,7 @@ import { allowRoute } from './auth.js?v=20261022a';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261022a';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261022a';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261022a';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261023a';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261023b';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
