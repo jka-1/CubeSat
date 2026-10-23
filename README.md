@@ -156,7 +156,7 @@ The deploy script automatically:
 
 - creates a backup under `/root/cubesat-live-backups/<timestamp>`
 - copies `site/` into `/var/www/html`
-- copies `telemetry-bridge/server.js` into `/opt/cubesat-telemetry/server.js`
+- copies the bridge server, locked dependencies, recording modules, authentication modules and account-management tool into `/opt/cubesat-telemetry/`
 - restarts `cubesat-telemetry.service`
 - requires the bridge health check to pass before reporting success
 
@@ -170,13 +170,17 @@ Environment="COMMAND_TOKEN=replace-with-a-random-lab-token"
 Use `systemctl edit cubesat-telemetry.service` to add the override, then run
 `systemctl daemon-reload`. Communicate the token to the lab operator separately; do not commit it.
 
+JWT website login is implemented locally but remains opt-in. Account roles, HTTPS requirements and private configuration steps are documented in [`telemetry-bridge/AUTHENTICATION.md`](telemetry-bridge/AUTHENTICATION.md). Enabling JWT does not replace `COMMAND_TOKEN`; operator hardware requests must satisfy both controls.
+
 ## Verification
 
-Bridge health:
+Bridge readiness (safe for the local service check):
 
 ```bash
-curl http://127.0.0.1:8080/health
+curl http://127.0.0.1:8080/healthz
 ```
+
+The detailed `/health` response requires a JWT session when website login is enabled.
 
 Live stream:
 

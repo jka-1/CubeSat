@@ -1,6 +1,7 @@
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261019b';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261013a';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261019b';
+import { allowRoute } from './auth.js?v=20261022a';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261022a';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261022a';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261022a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -36,6 +37,7 @@ const pageDestroyers = {
 };
 
 let currentRoute = null;
+let navigationId = 0;
 
 function resolveRoute(route) {
   if (route === 'dashboard') return 'communication';
@@ -49,21 +51,27 @@ function updateNav(route) {
 }
 
 async function loadRoute(route) {
+  const id = ++navigationId;
   const safeRoute = resolveRoute(route);
+  history.replaceState(null, '', `#${safeRoute}`);
 
   if (currentRoute && pageDestroyers[currentRoute]) {
     pageDestroyers[currentRoute]();
   }
 
   const root = document.getElementById('page-root');
+  root.hidden = !allowRoute(safeRoute);
+  if (root.hidden) { root.replaceChildren(); currentRoute = null; return; }
   const response = await fetch(routes[safeRoute]);
+  const html = await response.text();
+  if (id !== navigationId) return;
 
   if (!response.ok) {
     root.innerHTML = '<section class="page"><p>Failed to load page module.</p></section>';
     return;
   }
 
-  root.innerHTML = await response.text();
+  root.innerHTML = html;
   updateNav(safeRoute);
   updateStreamingBadge();
   currentRoute = safeRoute;
@@ -78,6 +86,7 @@ async function loadRoute(route) {
 }
 
 export function initRouter() {
+  window.addEventListener('cubesat-auth-change', () => loadRoute(location.hash.slice(1) || 'home'));
   document.querySelectorAll('[data-route]').forEach((link) => {
     link.addEventListener('click', (event) => {
       const route = link.dataset.route;

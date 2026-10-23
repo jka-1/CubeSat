@@ -2,7 +2,10 @@ import dgram from 'node:dgram';
 import http from 'node:http';
 import crypto from 'node:crypto';
 import { Recorder } from './recording/client.mjs';
+import { Sessions } from './auth/session.mjs';
 import { archivePayload } from './recording/raw.mjs';
+
+const sessions = new Sessions();
 
 const httpPort = readPort('HTTP_PORT', 8080);
 const udpPort = readPort('UDP_PORT', 3333);
@@ -344,11 +347,11 @@ function setLiveMode(on, source) {
 }
 
 function isCommandAuthorizationConfigured() {
-  return allowUnauthenticatedCommands || commandToken.length > 0;
+  return (!sessions.enabled && allowUnauthenticatedCommands) || commandToken.length > 0;
 }
 
 function assertCommandAuthorized(request) {
-  if (allowUnauthenticatedCommands) return;
+  if (allowUnauthenticatedCommands && !sessions.enabled) return;
 
   if (!commandToken) {
     throw createHttpError(
@@ -1583,7 +1586,7 @@ function createStatusMessage() {
     telemetry_endpoint: lastTelemetryEndpoint,
     telemetry_packet_format: latestEnvelope?.packet?.packet_format || null,
     sensor_polling: sensorPollingState,
-    command_auth_required: !allowUnauthenticatedCommands,
+    command_auth_required: sessions.enabled || !allowUnauthenticatedCommands,
     command_auth_configured: isCommandAuthorizationConfigured(),
     command_transport_ready: commandTransportReady,
     command_ready: commandTransportReady && isCommandAuthorizationConfigured(),
@@ -2008,11 +2011,50 @@ const httpServer = http.createServer(async (request, response) => {
   );
 
   try {
+    response.setHeader('Cache-Control', 'no-store');
+    response.setHeader('X-Content-Type-Options', 'nosniff');
+    if (request.method === 'GET' && requestUrl.pathname === '/auth/status') {
+      sendJson(response, 200, { enabled: sessions.enabled });
+      return;
+    }
+    if (request.method === 'GET' && requestUrl.pathname === '/healthz') {
+      const ready = isCommandAuthorizationConfigured() && (!recorder || recorder.status().ready);
+      sendJson(response, ready ? 200 : 503, {
+        status: ready ? 'ok' : 'degraded',
+        server_time: new Date().toISOString()
+      });
+      return;
+    }
+    if (requestUrl.pathname.startsWith('/auth/')) {
+      if (!sessions.enabled) { sendJson(response, 200, { enabled: false }); return; }
+      if (request.method === 'POST' && requestUrl.pathname === '/auth/login') {
+        const { jwt, session } = await sessions.login(request, await readJsonBody(request));
+        response.setHeader('Set-Cookie', sessions.cookie(jwt));
+        sendJson(response, 200, sessions.publicSession(session));
+        return;
+      }
+      const session = await sessions.authenticate(request);
+      if (request.method === 'GET' && requestUrl.pathname === '/auth/me') {
+        sendJson(response, 200, sessions.publicSession(session));
+        return;
+      }
+      if (request.method === 'POST' && requestUrl.pathname === '/auth/logout') {
+        sessions.csrfCheck(request, session);
+        sessions.revoke(session.id);
+        response.setHeader('Set-Cookie', sessions.cookie('', 0));
+        sendJson(response, 200, { signed_out: true });
+        return;
+      }
+      throw createHttpError(404, 'Authentication route not found');
+    }
+    const session = sessions.enabled ? await sessions.authorize(request) : null;
     if (requestUrl.pathname === '/runs' || requestUrl.pathname.startsWith('/runs/')) {
       if (!recorder) throw createHttpError(503, 'Recording is not enabled');
       // History access is private even when the legacy command bypass is enabled.
-      if (!commandToken || allowUnauthenticatedCommands) throw createHttpError(503, 'Recording requires command-token authentication');
-      assertCommandAuthorized(request);
+      if (!sessions.enabled) {
+        if (!commandToken || allowUnauthenticatedCommands) throw createHttpError(503, 'Recording requires command-token authentication');
+        assertCommandAuthorized(request);
+      }
       response.setHeader('Cache-Control', 'no-store');
       const parts = requestUrl.pathname.split('/').filter(Boolean);
       const query = Object.fromEntries(requestUrl.searchParams);
@@ -2060,6 +2102,7 @@ const httpServer = http.createServer(async (request, response) => {
 
       response.write(': CubeSat telemetry event stream\n\n');
       sseClients.add(response);
+      if (session) sessions.attachStream(session, response);
       sendSse(response, createStatusMessage());
       if (latestEnvelope !== null) sendSse(response, latestEnvelope);
       if (latestDebugEnvelope !== null) sendSse(response, latestDebugEnvelope);
@@ -2139,6 +2182,7 @@ const httpServer = http.createServer(async (request, response) => {
        requestUrl.pathname === '/api/demo/input')
     ) {
       const body = await readJsonBody(request);
+      if (sessions.enabled) assertCommandAuthorized(request);
       const packet = normalizeIncomingPacket(body);
       latestEnvelope = createEnvelope(packet, 'http-input', null);
       broadcast(latestEnvelope);
@@ -2429,7 +2473,7 @@ httpServer.listen(httpPort, httpBindAddress, () => {
   console.log(`[HTTP] health: /health`);
   if (!isCommandAuthorizationConfigured()) {
     console.warn('[HTTP] command control disabled: configure COMMAND_TOKEN');
-  } else if (allowUnauthenticatedCommands) {
+  } else if (allowUnauthenticatedCommands && !sessions.enabled) {
     console.warn('[HTTP] command control is running without authentication');
   }
 });

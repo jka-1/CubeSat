@@ -11,6 +11,24 @@
         ],
         "createdAt": "2026-09-29T21:31:55.423Z",
         "reason": "User confirmed the existing gradient heading should be ignored so hardware implementation can proceed"
+      },
+      {
+        "rule": "gradient-text",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-10-23T14:31:20.822Z",
+        "reason": "Existing CubeSat dashboard heading treatment predates the JWT login change; preserving the incumbent visual system"
+      },
+      {
+        "rule": "dark-glow",
+        "value": "*",
+        "files": [
+          "site/index.html"
+        ],
+        "createdAt": "2026-10-23T14:35:21.692Z",
+        "reason": "Existing telemetry status LEDs and CubeSat dashboard accents predate JWT login; preserving the incumbent hardware-monitoring language"
       }
     ]
   }

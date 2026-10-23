@@ -1,3 +1,4 @@
+import { apiFetch, canOperate } from './auth.js?v=20261022a';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,
@@ -150,7 +151,7 @@ export function bridgeReportsLive(health) {
 async function probeBridgeLive() {
   try {
     const url = deriveHealthUrl(document.getElementById('streamUrl')?.value);
-    const response = await fetch(url, { cache: 'no-store' });
+    const response = await apiFetch(url, { cache: 'no-store' });
     return bridgeReportsLive(await response.json());
   } catch {
     return false;
@@ -307,6 +308,7 @@ function updateCommandControls() {
     if (button) button.disabled = !enabled;
   });
 
+  if (!canOperate()) { writeLog('An operator account is required to send commands.'); return; }
   if (!bridgeCommandReady) {
     setCommandAvailabilityNote(
       'Debug controls are locked until the bridge has a fresh ESP32 command target.'
@@ -1567,6 +1569,7 @@ async function sendCommandRequest(payload) {
   const commandUrl = commandUrlElement?.value?.trim() || '/telemetry/command';
   const commandToken = commandTokenValue();
 
+  if (!canOperate()) { writeLog('An operator account is required to send commands.'); return; }
   if (!bridgeCommandReady) {
     writeLog('Command blocked: wait for a fresh ESP32 command target.');
     updateCommandControls();
@@ -1585,7 +1588,7 @@ async function sendCommandRequest(payload) {
     };
     if (commandToken) headers['X-Command-Token'] = commandToken;
 
-    const response = await fetch(commandUrl, {
+    const response = await apiFetch(commandUrl, {
       method: 'POST',
       headers,
       body: JSON.stringify(payload)

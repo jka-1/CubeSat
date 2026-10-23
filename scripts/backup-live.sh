@@ -31,7 +31,7 @@ fi
 
 bridge_dir="$(dirname "$bridge_file")"
 runtime_files=()
-for file in recording node_modules package-lock.json; do
+for file in auth recording tools node_modules package-lock.json; do
   if [ -e "$bridge_dir/$file" ]; then runtime_files+=("$file"); fi
 done
 if [ "${#runtime_files[@]}" -gt 0 ]; then

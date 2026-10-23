@@ -12,7 +12,7 @@ bridge_file="${BRIDGE_FILE:-/opt/cubesat-telemetry/server.js}"
 bridge_package_file="${BRIDGE_PACKAGE_FILE:-$(dirname "$bridge_file")/package.json}"
 service_name="${SERVICE_NAME:-}"
 expected_branch="${EXPECTED_BRANCH:-}"
-health_url="${HEALTH_URL:-http://127.0.0.1:8080/health}"
+health_url="${HEALTH_URL:-http://127.0.0.1:8080/healthz}"
 bridge_source_dir="$(dirname "$bridge_source")"
 bridge_dir="$(dirname "$bridge_file")"
 
@@ -39,8 +39,8 @@ if [ -n "$expected_branch" ] && command -v git >/dev/null 2>&1; then
   fi
 fi
 
-if [ ! -d "$bridge_source_dir/recording" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
-  echo "Missing bridge recording modules or package lock." >&2
+if [ ! -d "$bridge_source_dir/auth" ] || [ ! -d "$bridge_source_dir/recording" ] || [ ! -f "$bridge_source_dir/tools/auth-user.mjs" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
+  echo "Missing bridge auth/recording modules or package lock." >&2
   exit 1
 fi
 if ! command -v npm >/dev/null 2>&1; then
@@ -49,7 +49,7 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 # Prepare native dependencies for this server before replacing any live application files.
 npm ci --prefix "$bridge_source_dir" --omit=dev
-(cd "$bridge_source_dir" && node --input-type=module -e "import Database from 'better-sqlite3'; const db = new Database(':memory:'); db.close();")
+(cd "$bridge_source_dir" && node --input-type=module -e "import { jwtVerify } from 'jose'; import Database from 'better-sqlite3'; const db = new Database(':memory:'); db.close();")
 
 backup_dir="$("$script_dir/backup-live.sh")"
 echo "Backup created at: $backup_dir"
@@ -59,6 +59,8 @@ cp "$bridge_source" "$bridge_file"
 cp "$bridge_package_source" "$bridge_package_file"
 cp "$bridge_source_dir/package-lock.json" "$bridge_dir/package-lock.json"
 cp -a "$bridge_source_dir/recording" "$bridge_dir/"
+cp -a "$bridge_source_dir/auth" "$bridge_dir/"
+cp -a "$bridge_source_dir/tools" "$bridge_dir/"
 cp -a "$bridge_source_dir/node_modules" "$bridge_dir/"
 
 if command -v git >/dev/null 2>&1; then

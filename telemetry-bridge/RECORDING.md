@@ -1,6 +1,6 @@
 # Recording backend — first milestone
 
-This is a local, opt-in backend implementation. It has not been deployed. Graph/table UI, CSV export, JWT login and Windows sequence-run integration are subsequent milestones. The current API requires the existing command token for **all** history reads and recording actions. JWT will add user identity/roles without removing the hardware command token.
+This is a local, opt-in backend implementation. It has not been deployed. Graph/table UI, CSV export and Windows sequence-run integration are subsequent milestones. JWT login is now implemented locally: viewers can read history, operators can start/stop runs, and hardware actions still require the existing command token. See `AUTHENTICATION.md`.
 
 ## Database decision
 
@@ -28,15 +28,15 @@ An end marker contains `reason`, `from_source`, `to_source`, source register evi
 
 ## Local setup
 
-From `telemetry-bridge`, install using `npm ci`. Set `RECORDING_DB_PATH` to a private path outside `site/` or `/var/www/`, for example an absolute path under `telemetry-bridge/data/`, which is ignored by Git. Configure the existing `COMMAND_TOKEN` through your private environment as usual, then run `node server.js`. Never put real tokens in shared examples or commits.
+From `telemetry-bridge`, install using `npm ci`. Set `RECORDING_DB_PATH` to a private path outside `site/` or `/var/www/`, for example an absolute path under `telemetry-bridge/data/`, which is ignored by Git. Configure JWT login as described in `AUTHENTICATION.md` and keep the existing `COMMAND_TOKEN` in the private service environment, then run `node server.js`. Never put real tokens, account files or passwords in shared examples or commits.
 
-Without `RECORDING_DB_PATH`, recording is disabled and no database worker opens. The public health/SSE status adds a `recording` object with enabled/ready status, active run ID, queue count and error/drop counters. The original command-token behavior remains intact. History APIs fail closed if no token is configured or the legacy unauthenticated-command bypass is enabled. Do not enable this remotely before HTTPS is established.
+Without `RECORDING_DB_PATH`, recording is disabled and no database worker opens. Health/SSE status adds a `recording` object with enabled/ready status, active run ID, queue count and error/drop counters. With JWT disabled, history retains its command-token compatibility behavior and fails closed if no token is configured or the legacy unauthenticated-command bypass is enabled. With JWT enabled, history reads require a viewer or operator session and recording actions require an operator session. Do not enable JWT remotely before HTTPS is established.
 
 Both user-supplied firmware headers remain local and excluded from Git. This backend does not read them.
 
 ## API contract
 
-All routes are under the existing Apache prefix in deployment (`/telemetry/runs/...`) and require `X-Command-Token`. Examples below use bridge-relative paths:
+All routes are under the existing Apache prefix in deployment (`/telemetry/runs/...`). In JWT mode, reads require a viewer or operator session and writes require an operator session plus CSRF verification. The command token remains reserved for hardware-control routes. Examples below use bridge-relative paths:
 
 | Method / path | Operation |
 |---|---|
@@ -66,8 +66,8 @@ Use `node tools/backup-recordings.mjs <source.sqlite> <new-backup.sqlite>` from 
 
 Deployment helpers now prepare locked dependencies and verify the SQLite native module **before** copying live application files. They include recording modules, dependencies and the lockfile in application backup/restore. The droplet currently lacks npm; deployment preflight will refuse until it is available. Application backups do not substitute for the database backup above. Only schema v1 exists; automatic downgrade is not supported, and a newer schema version is rejected.
 
-Next milestones: JWT identity and role checks; run explorer with graph/table views and end markers; Windows recorder controls and sequence-step correlation; calibrated transient acquisition and retention/load testing before sustained capture.
+Next milestones: run explorer with graph/table views and end markers; Windows recorder controls and sequence-step correlation; calibrated transient acquisition and retention/load testing before sustained capture.
 
 ## Validation
 
-The local Node v25.9.0 suite passes 86 tests, including real loopback UDP/HTTP recording, mode/source boundaries, credential redaction, restart recovery, duplicate/reordered packets, bounded queries, transaction rollback, queue overflow, concurrent-writer rejection, consistent backup/restore, and deploy/rollback packaging in temporary directories. The existing command lifecycle and streaming tests still pass. Exact Node 20 execution, sustained production-rate testing, hardware confirmation and all live deployment checks remain pending.
+The local suite covers real loopback UDP/HTTP recording, mode/source boundaries, credential redaction, restart recovery, duplicate/reordered packets, bounded queries, transaction rollback, queue overflow, concurrent-writer rejection, consistent backup/restore, JWT signature/claim/expiry validation, role and CSRF enforcement, logout revocation, and deploy/rollback packaging in temporary directories. Exact Node 20 execution, sustained production-rate testing, hardware confirmation and all live deployment checks remain pending.

@@ -1,3 +1,4 @@
+import { apiFetch, canOperate } from './auth.js?v=20261022a';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261014a';
@@ -38,7 +39,7 @@ function token() { return $('dmToken')?.value.trim() || ''; }
 function updateControls() {
   const st = state.status;
   const needsToken = st ? st.command_auth_required !== false : true;
-  const ready = !!st?.command_ready && (!needsToken || token().length > 0) && !state.busy;
+  const ready = canOperate() && !!st?.command_ready && (!needsToken || token().length > 0) && !state.busy;
   document.querySelectorAll('.debug-mode-page [data-cmd]').forEach((b) => { b.disabled = !ready; });
   const reg = currentRegister();
   if ($('dmWrite') && reg && !String(reg.access).includes('W')) $('dmWrite').disabled = true;
@@ -54,7 +55,7 @@ async function sendCommand(body) {
   log('TX', JSON.stringify(body));
   let res; let j;
   try {
-    res = await fetch(`${url}${url.includes('?') ? '&' : '?'}wait=1`, { method: 'POST', headers, body: JSON.stringify(body) });
+    res = await apiFetch(`${url}${url.includes('?') ? '&' : '?'}wait=1`, { method: 'POST', headers, body: JSON.stringify(body) });
     j = await res.json().catch(() => ({}));
   } catch (e) { log('ERR', `bridge unreachable: ${e.message}`); return { status: 'error', error: e.message }; }
   const ms = Math.round(performance.now() - started);
@@ -232,7 +233,7 @@ function onEvent(ev) {
 
 async function pollHealth() {
   try {
-    const j = await (await fetch($('dmHealthUrl').value.trim(), { cache: 'no-store' })).json();
+    const j = await (await apiFetch($('dmHealthUrl').value.trim(), { cache: 'no-store' })).json();
     state.status = { ...(state.status || {}), ...j };
     if (j.debug_mode !== undefined && (!state.debug || j.debug_mode)) state.debug = j.debug_mode;
     if (j.server_time) state.skew = Date.now() - Date.parse(j.server_time);
@@ -255,7 +256,7 @@ function disconnect(updateButton = true) {
 }
 
 export async function initDebugModePage() {
-  try { state.map = await (await fetch('./assets/data/register-map.json?v=20261014a')).json(); }
+  try { state.map = await (await apiFetch('./assets/data/register-map.json?v=20261014a')).json(); }
   catch { state.map = { devices: [] }; log('ERR', 'register map failed to load'); }
   $('dmDevice').innerHTML = state.map.devices.map((d) => `<option value="${d.addr}">${d.addr}  ${d.name}</option>`).join('');
   fillRegisters();

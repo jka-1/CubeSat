@@ -104,12 +104,32 @@ test('production route loads the current communication dashboard assets', async 
     readFile(path.join(repositoryRoot, 'site/assets/js/router.js'), 'utf8')
   ]);
 
-  assert.match(index, /assets\/js\/app\.js\?v=20261019b/);
-  assert.match(index, /assets\/css\/styles\.css\?v=20261019b/);
-  assert.match(app, /router\.js\?v=20261019b/);
-  assert.match(router, /i2c\.js\?v=20261019b/);
+  assert.match(index, /assets\/js\/app\.js\?v=20261022a/);
+  assert.match(index, /assets\/css\/styles\.css\?v=20261022a/);
+  assert.match(app, /router\.js\?v=20261022a/);
+  assert.match(router, /i2c\.js\?v=20261022a/);
   assert.match(router, /communication:\s*`\.\/modules\/communication\.html/);
   assert.match(router, /communication:\s*initI2CPage/);
   assert.match(router, /route === 'dashboard'\) return 'communication'/);
   assert.doesNotMatch(router, /dashboard\.js/);
+});
+
+test('browser bridge requests use JWT session and CSRF wrapper while preserving the command token', async () => {
+  const [auth, i2c, debug, link] = await Promise.all([
+    readFile(path.join(repositoryRoot, 'site/assets/js/auth.js'), 'utf8'),
+    readFile(path.join(repositoryRoot, 'site/assets/js/i2c.js'), 'utf8'),
+    readFile(path.join(repositoryRoot, 'site/assets/js/debug-mode.js'), 'utf8'),
+    readFile(path.join(repositoryRoot, 'site/assets/js/link-health.js'), 'utf8')
+  ]);
+
+  assert.match(auth, /credentials:\s*'same-origin'/);
+  assert.match(auth, /headers\.set\('X-CSRF-Token', state\.csrf\)/);
+  assert.match(i2c, /apiFetch\(commandUrl/);
+  assert.match(i2c, /headers\['X-Command-Token'\] = commandToken/);
+  assert.match(i2c, /if \(!canOperate\(\)\)/);
+  assert.match(debug, /apiFetch\(`\$\{url\}/);
+  assert.match(debug, /headers\['X-Command-Token'\] = token\(\)/);
+  assert.match(debug, /canOperate\(\) &&/);
+  assert.match(link, /apiFetch\(url/);
+  for (const script of [i2c, debug, link]) assert.doesNotMatch(script, /await fetch\(/);
 });

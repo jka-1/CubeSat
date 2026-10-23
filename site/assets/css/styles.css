@@ -2046,3 +2046,27 @@ h1 {
     min-height: 390px;
   }
 }
+
+/* Account controls extend the existing black/gold lab interface. */
+.account-panel {
+  width: min(480px, calc(100% - 32px));
+  margin: 32px auto;
+  padding: 24px;
+  background: var(--black);
+  border: 1px solid var(--gold-deep);
+  border-radius: 12px;
+}
+.account-panel[hidden], #accountForm[hidden], #accountLogout[hidden], #accountRetry[hidden], #accountButton[hidden] { display: none; }
+.account-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.account-heading h1 { margin: 0; font-size: 1.5rem; }
+.account-panel p { color: var(--white-soft); line-height: 1.6; overflow-wrap: anywhere; }
+.account-panel form { display: grid; gap: 10px; }
+.account-panel label:not(:first-child) { margin-block-start: 12px; }
+.account-panel input { min-width: 0; width: 100%; padding: 12px; font-size: 16px; background: var(--black); color: var(--white); border: 1px solid var(--gold-deep); border-radius: 6px; caret-color: var(--gold); }
+.account-panel button, #accountButton { min-height: 44px; padding: 10px 16px; background: var(--black); color: var(--gold-soft); border: 1px solid var(--gold-deep); border-radius: 6px; cursor: pointer; font-size: 16px; }
+.account-panel button:hover, #accountButton:hover { border-color: var(--gold); }
+.account-panel button:disabled { opacity: .65; cursor: wait; }
+.account-panel :focus-visible, #accountButton:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 3px; }
+#accountSubmit { margin-block-start: 14px; background: var(--gold); color: var(--black); font-weight: 700; }
+#accountMessage:empty { display: none; }
+#accountMessage { color: var(--warning); }

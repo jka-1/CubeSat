@@ -1,3 +1,4 @@
+import { apiFetch } from './auth.js?v=20261022a';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 
 const MAX_AGE_MS = 3_600_000;
@@ -132,7 +133,7 @@ function onEvent(ev) {
 async function pollHealth() {
   const url = $('lhHealthUrl')?.value?.trim(); if (!url) return;
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await apiFetch(url, { cache: 'no-store' });
     const j = await res.json();
     state.status = { ...(state.status || {}), ...j };
     if (j.server_time) state.clockSkew = Date.now() - Date.parse(j.server_time);

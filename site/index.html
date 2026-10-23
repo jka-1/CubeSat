@@ -8,7 +8,7 @@
     name="description"
     content="Modular CubeSat Battery Management and Power Delivery System site with portfolio, live I²C telemetry, and partners pages."
   />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20261019b" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20261022a" />
   <link rel="stylesheet" href="./assets/css/streaming.css?v=20261019b" />
 </head>
 <body>
@@ -29,14 +29,30 @@
         <a class="nav-link" href="#debug-mode" data-route="debug-mode">Debug Mode</a>
         <a id="streamingNavBadge" class="st-nav-badge" href="#debug-mode" title="Streaming Telemetry mode is on" hidden><i></i>Streaming</a>
         <a class="nav-link" href="#partners" data-route="partners">Partners</a>
+        <button id="accountButton" class="nav-link" type="button">Sign in</button>
       </div>
     </nav>
   </header>
+
+  <section id="accountPanel" class="account-panel" aria-labelledby="accountTitle" hidden>
+    <div class="account-heading"><h1 id="accountTitle">Sign in</h1><button id="accountClose" type="button">Close</button></div>
+    <p id="accountHelp">Use your CubeSat account to view telemetry and saved runs.</p>
+    <form id="accountForm">
+      <label for="accountUsername">Username</label>
+      <input id="accountUsername" name="username" autocomplete="username" maxlength="64" required>
+      <label for="accountPassword">Password</label>
+      <input id="accountPassword" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+      <button id="accountSubmit" type="submit">Sign in</button>
+    </form>
+    <p id="accountMessage" role="status" aria-live="polite"></p>
+    <button id="accountLogout" type="button" hidden>Sign out</button>
+    <button id="accountRetry" type="button" hidden>Retry connection</button>
+  </section>
 
   <main id="page-root" class="page-shell" aria-live="polite">
     <noscript>Please enable JavaScript to load the modular pages.</noscript>
   </main>
 
-  <script type="module" src="./assets/js/app.js?v=20261019b"></script>
+  <script type="module" src="./assets/js/app.js?v=20261022a"></script>
 </body>
 </html>

@@ -21,12 +21,16 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('source/bridge/package.json', '{}');
   write('source/bridge/package-lock.json', '{}');
   write('source/bridge/recording/client.mjs', 'new module');
+  write('source/bridge/auth/session.mjs', 'new auth');
+  write('source/bridge/tools/auth-user.mjs', 'new account tool');
   write('source/bridge/node_modules/example/index.js', 'new dependency');
   write('live/site/index.html', 'old site');
   write('live/bridge/server.js', 'old server');
   write('live/bridge/package.json', '{}');
   write('live/bridge/package-lock.json', '{}');
   write('live/bridge/recording/client.mjs', 'old module');
+  write('live/bridge/auth/session.mjs', 'old auth');
+  write('live/bridge/tools/auth-user.mjs', 'old account tool');
   write('live/bridge/node_modules/example/index.js', 'old dependency');
   write('private/runs.sqlite', 'untouched recording data');
   // These shims exercise deployment orchestration only; the actual native driver is tested separately.
@@ -45,11 +49,15 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   writeFileSync(npm, '#!/bin/sh\nexit 0\n');
   execFileSync('bash', [deploy], { env });
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'new module');
+  assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'new auth');
+  assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'new account tool');
   const backup = join(root, 'backups', readdirSync(join(root, 'backups'))[0]);
   execFileSync('bash', [rollback, backup], { env });
   assert.equal(readFileSync(join(live, 'site/index.html'), 'utf8'), 'old site');
   assert.equal(readFileSync(join(live, 'bridge/server.js'), 'utf8'), 'old server');
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'old module');
+  assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'old auth');
+  assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'old account tool');
   assert.equal(readFileSync(join(live, 'bridge/node_modules/example/index.js'), 'utf8'), 'old dependency');
   assert.equal(readFileSync(join(root, 'private/runs.sqlite'), 'utf8'), 'untouched recording data');
 });
