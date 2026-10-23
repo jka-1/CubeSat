@@ -129,6 +129,12 @@ export function responseSummary(points, triggerAt) {
   };
 }
 
+export function csvCell(value) {
+  if (value === null || value === undefined) return '';
+  const text = typeof value === 'string' && /^[=+\-@\t\r]/.test(value) ? `'${value}` : String(value);
+  return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+}
+
 export function formatDuration(milliseconds) {
   if (!Number.isFinite(milliseconds) || milliseconds < 0) return '—';
   const totalSeconds = Math.floor(milliseconds / 1000);

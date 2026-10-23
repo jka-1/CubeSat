@@ -172,6 +172,8 @@ Use `systemctl edit cubesat-telemetry.service` to add the override, then run
 
 JWT website login is implemented locally but remains opt-in. Account roles, HTTPS requirements and private configuration steps are documented in [`telemetry-bridge/AUTHENTICATION.md`](telemetry-bridge/AUTHENTICATION.md). Enabling JWT does not replace `COMMAND_TOKEN`; operator hardware requests must satisfy both controls.
 
+Opt-in HMAC-SHA256 firmware telemetry provenance is documented in [`telemetry-bridge/TELEMETRY_PROVENANCE.md`](telemetry-bridge/TELEMETRY_PROVENANCE.md). It uses a separate private key, a per-boot nonce and replay checks; the existing command token remains unchanged.
+
 ## Verification
 
 Bridge readiness (safe for the local service check):

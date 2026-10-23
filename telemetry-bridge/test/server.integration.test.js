@@ -7,6 +7,7 @@ import net from 'node:net';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { signTelemetry } from '../telemetry-auth.mjs';
 
 const testDirectory = path.dirname(fileURLToPath(import.meta.url));
 const bridgeDirectory = path.resolve(testDirectory, '..');
@@ -174,6 +175,57 @@ async function postCommand(baseUrl, payload, token = commandToken) {
     body: JSON.stringify(payload)
   });
 }
+
+test('strict UDP provenance accepts signed firmware telemetry and rejects unsigned or replayed packets', async (context) => {
+  const httpPort = await reserveTcpPort();
+  const udpPort = await reserveUdpPort();
+  const baseUrl = `http://127.0.0.1:${httpPort}`;
+  const hmacKey = 'integration-only-telemetry-hmac-key-at-least-32-bytes';
+  const bridge = spawn(process.execPath, [bridgePath], {
+    cwd: bridgeDirectory,
+    env: { ...process.env, HTTP_PORT: String(httpPort), UDP_PORT: String(udpPort),
+      HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1', COMMAND_TOKEN: commandToken,
+      REQUIRE_SIGNED_TELEMETRY: 'true', TELEMETRY_HMAC_KEY: hmacKey },
+    stdio: ['ignore', 'pipe', 'pipe']
+  });
+  let output = '';
+  bridge.stdout.on('data', (chunk) => { output += chunk; });
+  bridge.stderr.on('data', (chunk) => { output += chunk; });
+  context.after(async () => {
+    if (bridge.exitCode === null) bridge.kill('SIGTERM');
+    if (bridge.exitCode === null) await once(bridge, 'exit');
+  });
+  await waitFor(async () => (await fetch(`${baseUrl}/health`)).ok).catch((error) => {
+    throw new Error(`${error.message}\nBridge output:\n${output}`);
+  });
+
+  const device = dgram.createSocket('udp4');
+  device.bind(0, '127.0.0.1');
+  await once(device, 'listening');
+  context.after(() => device.close());
+  const receive = createJsonReceiver(device);
+  const hex = '4353000303B380000A0000280FA3000A00320EE50EDF0E5C0E5D00610000A507';
+
+  await sendUdp(device, hex, udpPort);
+  await assert.rejects(receive(100), /Timed out/);
+
+  const unsigned = { version: 1, type: 'signed_telemetry', device_id: 'esp32-telemetry',
+    boot_id: '0123456789abcdef', seq: 0x03b3, uptime_ms: 15_000, hex };
+  const signed = { ...unsigned, signature: signTelemetry(unsigned, hmacKey) };
+  await sendUdp(device, JSON.stringify(signed), udpPort);
+  assert.equal((await receive()).seq, 0x03b3);
+  const health = await waitFor(async () => {
+    const body = await (await fetch(`${baseUrl}/health`)).json();
+    return body.telemetry_connected ? body : null;
+  });
+  assert.equal(health.telemetry_auth_required, true);
+  assert.equal(health.telemetry_auth_configured, true);
+  assert.deepEqual(health.telemetry_provenance, { authenticated: true, scheme: 'hmac-sha256-v1',
+    device_id: 'esp32-telemetry', boot_id: '0123456789abcdef', seq: 0x03b3 });
+
+  await sendUdp(device, JSON.stringify(signed), udpPort);
+  await assert.rejects(receive(100), /Timed out/);
+});
 
 test('bridge completes the hardened telemetry and debug command lifecycle', async (context) => {
   const httpPort = await reserveTcpPort();

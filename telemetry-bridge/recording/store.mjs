@@ -1,6 +1,6 @@
 import Database from 'better-sqlite3';
 import { randomUUID } from 'node:crypto';
-import { confirmedMode, confirmedSource, packetOrder, transition, SOURCE_LABELS } from './state.mjs';
+import { confirmedMode, confirmedSource, deviceReboot, packetOrder, transition, SOURCE_LABELS } from './state.mjs';
 
 export const METRICS = Object.freeze({
   'pv.busVoltageV': '$.packet.telemetry.pv.busVoltageV',
@@ -29,6 +29,7 @@ function integer(value, fallback, min, max) {
 export class RunStore {
   constructor(filename, now = Date.now()) {
     this.ownerId = randomUUID();
+    this.lastDeviceUptimeMs = null;
     this.db = new Database(filename);
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
@@ -94,13 +95,16 @@ export class RunStore {
     if (envelope?.source !== 'udp' || envelope.type !== 'telemetry') fail('A real UDP telemetry source is required', 409);
     const mode = confirmedMode(envelope.packet);
     if (!mode) fail('The packet does not report a supported recording mode', 409);
-    return this.db.transaction(() => {
+    const run = this.db.transaction(() => {
       if (this.active()) fail('Stop the current recording first', 409);
       const id = this.insertRun({ name: name.trim(), device_id: envelope.packet.device_id,
         remote_address: envelope.network.remote_address, mode, source: confirmedSource(envelope.packet), at: now, metadata });
       this.event(id, now, 'run_started', { mode, source: confirmedSource(envelope.packet) });
       return this.get(id);
     })();
+    const uptime = envelope.packet.device_uptime_ms;
+    this.lastDeviceUptimeMs = Number.isSafeInteger(uptime) && uptime > 0 ? uptime : null;
+    return run;
   }
   finish(run, at, reason, status = 'completed', next = null, details = {}) {
     this.db.prepare('UPDATE runs SET status=?,ended_ms=?,end_reason=?,next_run_id=? WHERE id=?')
@@ -108,18 +112,32 @@ export class RunStore {
     this.event(run.id, at, 'run_ended', { reason, next_run_id: next, ...details });
   }
   stop({ now = Date.now(), reason = 'operator_stop', status = 'completed' } = {}) {
-    return this.db.transaction(() => {
+    const stopped = this.db.transaction(() => {
       const active = this.active();
       if (!active) fail('No recording is active', 409);
       this.finish(active, now, reason, status);
       return this.get(active.id);
     })();
+    this.lastDeviceUptimeMs = null;
+    return stopped;
+  }
+  rotate(run, { mode, source, at, reason, details }) {
+    this.finish(run, at, reason, 'completed', null, details);
+    const next = this.insertRun({ name: run.name, device_id: run.device_id,
+      remote_address: run.remote_address, mode: mode ?? run.current_mode, source: source ?? run.current_source,
+      at, metadata: JSON.parse(run.metadata_json), previous: run.id, session: run.session_id });
+    this.db.prepare('UPDATE runs SET next_run_id=? WHERE id=?').run(next, run.id);
+    this.db.prepare("UPDATE events SET details_json=json_set(details_json,'$.next_run_id',?) WHERE id=(SELECT MAX(id) FROM events WHERE run_id=? AND type='run_ended')")
+      .run(next, run.id);
+    this.event(next, at, 'run_started', { reason, previous_run_id: run.id, ...details });
+    return this.active();
   }
   ingest({ envelope, rawBase64 }) {
     if (envelope?.source !== 'udp' || envelope.type !== 'telemetry') return null;
     const at = Date.parse(envelope.received_at);
     if (!Number.isFinite(at)) fail('Invalid receive timestamp');
-    return this.db.transaction(() => {
+    let acceptedUptime = null;
+    const result = this.db.transaction(() => {
       let run = this.active();
       if (!run) return null;
       const p = envelope.packet;
@@ -127,39 +145,39 @@ export class RunStore {
       // Do not accidentally record cached/pre-start envelopes.
       if (at < run.started_ms) return null;
       const mode = confirmedMode(p), source = confirmedSource(p);
-      const order = packetOrder(run.last_seq, p.seq);
+      const uptime = Number.isSafeInteger(p.device_uptime_ms) && p.device_uptime_ms >= 0 ? p.device_uptime_ms : null;
+      const reboot = deviceReboot(run.last_seq, p.seq, this.lastDeviceUptimeMs, uptime);
+      const order = reboot ? 'forward' : packetOrder(run.last_seq, p.seq);
       const forward = order !== 'duplicate' && order !== 'out_of_order';
       if (forward) {
-        const change = transition(run, mode, source);
         const details = { from_source: run.current_source, to_source: source,
           from_mode: run.current_mode, to_mode: mode,
           source_evidence: 'mppt_reg13', reg13: p.raw?.mppt?.reg13 ?? null };
-        if (change.sourceChanged) {
-          details.label = `Power source switched from ${SOURCE_LABELS[run.current_source]} to ${SOURCE_LABELS[source]}`;
-          this.event(run.id, at, 'source_switch', details);
-        }
-        if (change.modeChanged) this.event(run.id, at, 'mode_changed', details);
-        if (change.rotate) {
-          // End old and create successor atomically, with the boundary packet in the successor.
-          this.finish(run, at, change.reason, 'completed', null, details);
-          const next = this.insertRun({ name: run.name, device_id: run.device_id,
-            remote_address: run.remote_address, mode, source: source ?? run.current_source,
-            at, metadata: JSON.parse(run.metadata_json), previous: run.id, session: run.session_id });
-          this.db.prepare('UPDATE runs SET next_run_id=? WHERE id=?').run(next, run.id);
-          // Attach the link to the existing end marker, not a second contradictory marker.
-          this.db.prepare("UPDATE events SET details_json=json_set(details_json,'$.next_run_id',?) WHERE id=(SELECT MAX(id) FROM events WHERE run_id=? AND type='run_ended')")
-            .run(next, run.id);
-          this.event(next, at, 'run_started', { reason: change.reason, previous_run_id: run.id, ...details });
-          run = this.active();
+        if (reboot) {
+          Object.assign(details, { label: 'Device reboot detected', previous_seq: run.last_seq,
+            next_seq: p.seq, previous_uptime_ms: this.lastDeviceUptimeMs, next_uptime_ms: uptime });
+          this.event(run.id, at, 'device_reboot', details);
+          run = this.rotate(run, { mode, source, at, reason: 'device_reboot', details });
+        } else {
+          const change = transition(run, mode, source);
+          if (change.sourceChanged) {
+            details.label = `Power source switched from ${SOURCE_LABELS[run.current_source]} to ${SOURCE_LABELS[source]}`;
+            this.event(run.id, at, 'source_switch', details);
+          }
+          if (change.modeChanged) this.event(run.id, at, 'mode_changed', details);
+          if (change.rotate) run = this.rotate(run, { mode, source, at, reason: change.reason, details });
         }
         this.db.prepare(`UPDATE runs SET current_mode=?,current_source=?,contains_debug=MAX(contains_debug,?),last_seq=? WHERE id=?`)
           .run(mode ?? run.current_mode, source ?? run.current_source, mode === 'debug' ? 1 : 0, p.seq ?? null, run.id);
+        if (uptime !== null) acceptedUptime = uptime;
       }
       const inserted = this.db.prepare(`INSERT INTO samples(run_id,received_ms,seq,mode,power_source,packet_order,envelope_json,raw_base64)
         VALUES(?,?,?,?,?,?,?,?)`).run(run.id, at, p.seq ?? null, mode, source, order, JSON.stringify(envelope), rawBase64);
       this.db.prepare('UPDATE runs SET sample_count=sample_count+1,last_received_ms=? WHERE id=?').run(at, run.id);
       return { run_id: run.id, sample_id: Number(inserted.lastInsertRowid), mode, power_source: source };
     })();
+    if (acceptedUptime !== null) this.lastDeviceUptimeMs = acceptedUptime;
+    return result;
   }
   command({ envelope }) {
     const run = this.active();

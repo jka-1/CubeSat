@@ -18,7 +18,9 @@
 #include "debug_mode.h"
 #include "esp_check.h"
 #include "esp_log.h"
+#include "esp_random.h"
 #include "esp_timer.h"
+#include "mbedtls/md.h"
 #include "wifi_station.h"
 
 static const char *TAG = "udp_transport";
@@ -33,6 +35,11 @@ static const char *TAG = "udp_transport";
 #define TELEMETRY_PACKET_V6_WORD_COUNT \
     (TELEMETRY_PACKET_V5_WORD_COUNT + DEBUG_V6_EXTRA_WORDS)
 #define TELEMETRY_PACKET_V6_HEX_CHARS (TELEMETRY_PACKET_V6_WORD_COUNT * 4u)
+
+/* Define only in the ignored, private app_config.h. Empty keeps legacy raw hex. */
+#ifndef DEMO_TELEMETRY_HMAC_KEY
+#define DEMO_TELEMETRY_HMAC_KEY ""
+#endif
 
 static uint16_t sat_inc16(uint16_t value)
 {
@@ -404,6 +411,82 @@ static char *build_telemetry_hex_packet(
         serialized[TELEMETRY_PACKET_V6_HEX_CHARS] = '\0';
     }
 
+    return serialized;
+}
+
+static char *build_telemetry_payload(
+    const udp_transport_t *transport,
+    char *hex_payload,
+    uint16_t sequence)
+{
+    const char *key = DEMO_TELEMETRY_HMAC_KEY;
+    if (key[0] == '\0') {
+        return hex_payload;
+    }
+
+    const uint64_t uptime_ms = (uint64_t)(esp_timer_get_time() / 1000);
+    const int canonical_length = snprintf(
+        NULL,
+        0,
+        "cubesat-telemetry-v1\n%s\n%s\n%u\n%" PRIu64 "\n%s",
+        transport->device_id,
+        transport->boot_id,
+        (unsigned int)sequence,
+        uptime_ms,
+        hex_payload);
+    if (canonical_length < 0) {
+        return NULL;
+    }
+
+    char *canonical = malloc((size_t)canonical_length + 1u);
+    if (canonical == NULL) {
+        return NULL;
+    }
+    snprintf(
+        canonical,
+        (size_t)canonical_length + 1u,
+        "cubesat-telemetry-v1\n%s\n%s\n%u\n%" PRIu64 "\n%s",
+        transport->device_id,
+        transport->boot_id,
+        (unsigned int)sequence,
+        uptime_ms,
+        hex_payload);
+
+    unsigned char digest[32] = {0};
+    const mbedtls_md_info_t *sha256 =
+        mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
+    const int hmac_status = sha256 == NULL ? -1 : mbedtls_md_hmac(
+        sha256,
+        (const unsigned char *)key,
+        strlen(key),
+        (const unsigned char *)canonical,
+        (size_t)canonical_length,
+        digest);
+    free(canonical);
+    if (hmac_status != 0) {
+        ESP_LOGE(TAG, "Could not sign telemetry payload");
+        return NULL;
+    }
+
+    char signature[65] = {0};
+    for (size_t index = 0; index < sizeof(digest); index++) {
+        snprintf(&signature[index * 2u], 3u, "%02x", digest[index]);
+    }
+
+    cJSON *root = cJSON_CreateObject();
+    if (root == NULL) {
+        return NULL;
+    }
+    cJSON_AddNumberToObject(root, "version", 1);
+    cJSON_AddStringToObject(root, "type", "signed_telemetry");
+    cJSON_AddStringToObject(root, "device_id", transport->device_id);
+    cJSON_AddStringToObject(root, "boot_id", transport->boot_id);
+    cJSON_AddNumberToObject(root, "seq", sequence);
+    cJSON_AddNumberToObject(root, "uptime_ms", (double)uptime_ms);
+    cJSON_AddStringToObject(root, "hex", hex_payload);
+    cJSON_AddStringToObject(root, "signature", signature);
+    char *serialized = cJSON_PrintUnformatted(root);
+    cJSON_Delete(root);
     return serialized;
 }
 
@@ -1345,6 +1428,21 @@ esp_err_t udp_transport_init(
     transport->next_sequence = 1u;
     transport->last_ack_rtt_ms = 0xFFFFu;
 
+    if (DEMO_TELEMETRY_HMAC_KEY[0] != '\0' &&
+        strlen(DEMO_TELEMETRY_HMAC_KEY) < 32u) {
+        ESP_LOGE(TAG, "DEMO_TELEMETRY_HMAC_KEY must contain at least 32 bytes");
+        return ESP_ERR_INVALID_ARG;
+    }
+
+    const uint32_t boot_high = esp_random();
+    const uint32_t boot_low = esp_random();
+    snprintf(
+        transport->boot_id,
+        sizeof(transport->boot_id),
+        "%08" PRIx32 "%08" PRIx32,
+        boot_high,
+        boot_low);
+
     strlcpy(
         transport->server_host,
         server_host,
@@ -1412,13 +1510,24 @@ esp_err_t udp_transport_send_power_telemetry(
     const uint16_t sequence =
         next_sequence_word(transport);
 
-    char *payload = build_telemetry_hex_packet(
+    char *hex_payload = build_telemetry_hex_packet(
         transport,
         telemetry,
         meta,
         sequence);
 
+    if (hex_payload == NULL) {
+        freeaddrinfo(destination);
+        return ESP_ERR_NO_MEM;
+    }
+
+    char *payload = build_telemetry_payload(
+        transport,
+        hex_payload,
+        sequence);
+
     if (payload == NULL) {
+        free(hex_payload);
         freeaddrinfo(destination);
         return ESP_ERR_NO_MEM;
     }
@@ -1439,7 +1548,10 @@ esp_err_t udp_transport_send_power_telemetry(
         destination->ai_addr,
         destination->ai_addrlen);
 
-    free(payload);
+    if (payload != hex_payload) {
+        cJSON_free(payload);
+    }
+    free(hex_payload);
     freeaddrinfo(destination);
 
     if (bytes_sent < 0) {

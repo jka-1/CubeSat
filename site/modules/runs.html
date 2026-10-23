@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="./assets/css/runs.css?v=20261023b" />
+<link rel="stylesheet" href="./assets/css/runs.css?v=20261023e" />
 <section id="runs" class="page active runs-page" aria-labelledby="runsTitle">
   <header class="runs-heading">
     <div>
@@ -128,9 +128,12 @@
         <section class="run-data" aria-labelledby="dataTitle">
           <div class="run-data-heading">
             <div><h3 id="dataTitle">Recorded data</h3><p id="tableScope">Packets in the selected time window.</p></div>
-            <div class="run-tabs" role="tablist" aria-label="Recorded data tables">
-              <button id="packetsTab" class="active" type="button" role="tab" aria-selected="true" aria-controls="packetsPanel">Packets</button>
-              <button id="eventsTab" type="button" role="tab" aria-selected="false" aria-controls="eventsPanel">Events</button>
+            <div class="run-data-actions">
+              <button id="exportCsv" class="run-button secondary" type="button">Export current CSV</button>
+              <div class="run-tabs" role="tablist" aria-label="Recorded data tables">
+                <button id="packetsTab" class="active" type="button" role="tab" aria-selected="true" aria-controls="packetsPanel">Packets</button>
+                <button id="eventsTab" type="button" role="tab" aria-selected="false" aria-controls="eventsPanel">Events</button>
+              </div>
             </div>
           </div>
           <div id="packetsPanel" role="tabpanel" aria-labelledby="packetsTab">

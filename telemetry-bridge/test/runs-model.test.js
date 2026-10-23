@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
-  MAX_SERIES_WINDOW_MS, formatDuration, formatRelativeTime, metricValue, nearestBucket,
+  MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue, nearestBucket,
   responseSummary, responseWindow, runMatches, seriesExtent, windowForPreset
 } from '../../site/assets/js/runs-model.mjs';
 
@@ -65,4 +65,13 @@ test('trigger-aligned response windows and summaries preserve time-domain behavi
   assert.equal(summary.peak, 10);
   assert.equal(summary.delta, 10 - summary.baseline);
   assert.equal(summary.peak_at_ms, 250);
+});
+
+test('CSV cells preserve commas, quotes and newlines without formula interpretation', () => {
+  assert.equal(csvCell('plain'), 'plain');
+  assert.equal(csvCell('a,b'), '"a,b"');
+  assert.equal(csvCell('say "hi"\nnext'), '"say ""hi""\nnext"');
+  assert.equal(csvCell('=HYPERLINK("bad")'), '"\'=HYPERLINK(""bad"")"');
+  assert.equal(csvCell(-2.5), '-2.5');
+  assert.equal(csvCell(null), '');
 });

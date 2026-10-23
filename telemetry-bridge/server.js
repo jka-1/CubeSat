@@ -4,6 +4,7 @@ import crypto from 'node:crypto';
 import { Recorder } from './recording/client.mjs';
 import { Sessions } from './auth/session.mjs';
 import { archivePayload } from './recording/raw.mjs';
+import { SignedTelemetryVerifier } from './telemetry-auth.mjs';
 
 const sessions = new Sessions();
 
@@ -12,6 +13,11 @@ const udpPort = readPort('UDP_PORT', 3333);
 const httpBindAddress = process.env.HTTP_BIND_ADDRESS || '127.0.0.1';
 const udpBindAddress = process.env.UDP_BIND_ADDRESS || '0.0.0.0';
 const telemetryToken = process.env.TELEMETRY_TOKEN || '';
+const requireSignedTelemetry = readBoolean('REQUIRE_SIGNED_TELEMETRY', false);
+const signedTelemetry = new SignedTelemetryVerifier({
+  key: process.env.TELEMETRY_HMAC_KEY || '',
+  required: requireSignedTelemetry
+});
 const maxUdpBytes = Number(process.env.MAX_UDP_BYTES || 4096);
 const hexDeviceId = process.env.HEX_DEVICE_ID || 'esp32-telemetry';
 const ina226LoadDeviceId = process.env.INA226_LOAD_DEVICE_ID || 'ina226-load';
@@ -1494,6 +1500,7 @@ function normalizeDebugPacket(value) {
 
 function decodeUdpPacket(message) {
   if (message.length === ina226LoadTelemetryBytes) {
+    if (requireSignedTelemetry) throw new Error('signed telemetry is required');
     return normalizeIna226LoadTelemetry(message);
   }
 
@@ -1508,14 +1515,29 @@ function decodeUdpPacket(message) {
     if (parsed?.type === 'debug_result') {
       return normalizeDebugPacket(parsed);
     }
+    const verified = signedTelemetry.verify(parsed);
+    if (verified) {
+      const packet = normalizeHexPacketText(verified.hex);
+      if (packet.device_id !== verified.provenance.device_id) {
+        throw new Error('signed telemetry device_id does not match HEX_DEVICE_ID');
+      }
+      if (packet.seq !== verified.provenance.seq) {
+        throw new Error('signed telemetry sequence does not match hex payload');
+      }
+      packet.device_uptime_ms = verified.uptime_ms;
+      packet.transport_provenance = verified.provenance;
+      return packet;
+    }
     return normalizeIncomingPacket(parsed);
   }
 
   if (looksLikeHexPacketText(text)) {
+    if (requireSignedTelemetry) throw new Error('signed telemetry is required');
     return normalizeHexPacketText(text);
   }
 
   if (hexPacketByteCounts.has(message.length)) {
+    if (requireSignedTelemetry) throw new Error('signed telemetry is required');
     return normalizeHexPacketWords(
       extractHexWordsFromRawBuffer(message)
     );
@@ -1541,6 +1563,10 @@ function createEnvelope(packet, source, network = null) {
     received_at: receivedAt.toISOString(),
     transmission_age_ms: transmissionAgeMs,
     network,
+    provenance: packet.transport_provenance || {
+      authenticated: false,
+      scheme: null
+    },
     packet
   };
 }
@@ -1585,6 +1611,9 @@ function createStatusMessage() {
     telemetry_stale_after_ms: telemetryStaleMs,
     telemetry_endpoint: lastTelemetryEndpoint,
     telemetry_packet_format: latestEnvelope?.packet?.packet_format || null,
+    telemetry_provenance: latestEnvelope?.provenance || null,
+    telemetry_auth_required: requireSignedTelemetry,
+    telemetry_auth_configured: Boolean(signedTelemetry.key),
     sensor_polling: sensorPollingState,
     command_auth_required: sessions.enabled || !allowUnauthenticatedCommands,
     command_auth_configured: isCommandAuthorizationConfigured(),
@@ -2070,7 +2099,8 @@ const httpServer = http.createServer(async (request, response) => {
         const run = await recorder.call('start', { name: body.name, envelope: latestEnvelope,
           metadata: { packet_format: latestEnvelope.packet.packet_format, pv_shunt_ohms: pvShuntOhms,
             pv_current_lsb_a: pvCurrentLsbA, bms_user_volt_lsb_v: bmsUserVoltLsbV,
-            decoder_revision: process.env.DEPLOYED_REVISION || 'unversioned' } });
+            decoder_revision: process.env.DEPLOYED_REVISION || 'unversioned',
+            telemetry_provenance: latestEnvelope.provenance } });
         sendJson(response, 201, { run });
         broadcastStatus();
         return;
@@ -2141,6 +2171,9 @@ const httpServer = http.createServer(async (request, response) => {
         telemetry_stale_after_ms: telemetryStaleMs,
         telemetry_endpoint: lastTelemetryEndpoint,
         telemetry_packet_format: status.telemetry_packet_format,
+        telemetry_provenance: status.telemetry_provenance,
+        telemetry_auth_required: status.telemetry_auth_required,
+        telemetry_auth_configured: status.telemetry_auth_configured,
         sensor_polling: sensorPollingState,
         command_auth_required: status.command_auth_required,
         command_auth_configured: status.command_auth_configured,

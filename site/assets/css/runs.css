@@ -138,7 +138,7 @@
 #chartBand { fill: rgba(212, 175, 55, 0.14); stroke: none; }
 #chartLine { fill: none; stroke: var(--gold-soft); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
 .chart-event { stroke: rgba(255, 214, 107, 0.5); stroke-width: 1; stroke-dasharray: 5 4; }
-.chart-event-source_switch, .chart-event-run_ended { stroke: rgba(255, 123, 123, 0.76); }
+.chart-event-source_switch, .chart-event-run_ended, .chart-event-device_reboot { stroke: rgba(255, 123, 123, 0.76); }
 .chart-event-sequence_step { stroke: rgba(139, 190, 255, 0.88); }
 .chart-event-trigger { stroke: #fff; stroke-width: 2.5; stroke-dasharray: none; }
 #chartSelection { stroke: #fff; stroke-width: 1.5; vector-effect: non-scaling-stroke; }
@@ -151,12 +151,14 @@
 .chart-skeleton i:nth-child(5) { height: 56%; animation-delay: 400ms; }
 .event-markers { display: flex; gap: 7px; margin-top: 10px; overflow-x: auto; padding-bottom: 3px; }
 .event-marker { min-height: 34px; padding: 0 10px; flex: none; font-size: 0.7rem; }
-.event-marker.event-source_switch, .event-marker.event-run_ended { color: #ffb1b1; border-color: rgba(255, 123, 123, 0.42); }
+.event-marker.event-source_switch, .event-marker.event-run_ended, .event-marker.event-device_reboot { color: #ffb1b1; border-color: rgba(255, 123, 123, 0.42); }
 .event-marker.event-sequence_step { color: #d7e9ff; border-color: rgba(139, 190, 255, 0.42); }
 .event-marker-empty { color: var(--runs-muted); font-size: 0.76rem; }
 .selected-bucket { margin: 10px 0 0; color: var(--runs-muted); font-size: 0.78rem; line-height: 1.5; }
 
-.run-tabs { display: flex; gap: 6px; }
+.run-data-actions, .run-tabs { display: flex; align-items: center; gap: 6px; }
+.run-data-actions { flex-wrap: wrap; justify-content: flex-end; }
+.run-data-actions .run-button { min-height: 38px; font-size: 0.76rem; }
 .run-tabs button { min-height: 38px; }
 .run-table-wrap { max-height: 480px; overflow: auto; border: 1px solid var(--runs-line); border-radius: 10px; scrollbar-color: var(--gold-deep) #111; }
 .run-table { width: 100%; border-collapse: collapse; min-width: 760px; font-size: 0.78rem; }
@@ -199,6 +201,7 @@
   .custom-window, .response-controls { grid-column: auto; grid-template-columns: 1fr; }
   .response-help { align-items: flex-start; flex-direction: column; }
   .response-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .run-data-actions { width: 100%; justify-content: space-between; }
   .series-controls .run-button { width: 100%; }
   #seriesChart { min-height: 230px; }
   .runs-error { grid-template-columns: 1fr; }

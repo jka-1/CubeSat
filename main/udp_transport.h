@@ -13,6 +13,7 @@ typedef struct {
     char server_host[128];
     uint16_t server_port;
     char device_id[48];
+    char boot_id[17];
     /* Link statistics (reset only at boot by udp_transport_init). */
     uint16_t tx_errors;
     uint16_t ack_timeouts;

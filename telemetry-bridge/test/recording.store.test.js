@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { RunStore } from '../recording/store.mjs';
-import { confirmedSource, transition } from '../recording/state.mjs';
+import { confirmedSource, deviceReboot, transition } from '../recording/state.mjs';
 import { archivePayload } from '../recording/raw.mjs';
 
 const fixtures = JSON.parse(readFileSync(new URL('./fixtures/streaming-envelopes.json', import.meta.url)));
@@ -18,12 +18,13 @@ test('archive preserves binary bytes and removes JSON transport credentials expl
   assert.equal(archived.redacted, true);
   assert.deepEqual(JSON.parse(Buffer.from(archived.rawBase64, 'base64').toString()), { seq: 1 });
 });
-function envelope(seq, { debug = false, reg = 0x40, at = START + seq * 1000 } = {}) {
+function envelope(seq, { debug = false, reg = 0x40, uptime = 14, at = START + seq * 1000 } = {}) {
   const e = structuredClone(fixtures.v6_all);
   e.received_at = new Date(at).toISOString();
   e.packet.seq = seq;
   e.packet.debug.enabled = debug;
   e.packet.raw.mppt.reg13 = reg;
+  e.packet.device_uptime_ms = uptime;
   return e;
 }
 function setup(t, options) {
@@ -130,6 +131,26 @@ test('sequence wrap advances; injected/browser and unrelated device data cannot 
   }
   assert.equal(store.get(run.id).sample_count, 2);
   assert.equal(store.samples({ id: run.id }).items[1].packet_order, 'forward');
+});
+
+test('device uptime and conservative sequence resets create a linked reboot boundary', (t) => {
+  const { store, run, send } = setup(t, { uptime: 90_000 });
+  send(1200, { uptime: 100_000, at: START + 1000 });
+  const rebooted = send(1, { uptime: 1_000, at: START + 2000 });
+  const previous = store.get(run.id), next = store.get(rebooted.run_id);
+  assert.equal(previous.end_reason, 'device_reboot');
+  assert.equal(previous.next_run_id, next.id);
+  assert.equal(next.previous_run_id, previous.id);
+  assert.equal(next.session_id, previous.session_id);
+  assert.deepEqual(store.samples({ id: previous.id }).items.map((sample) => sample.seq), [1200]);
+  assert.deepEqual(store.samples({ id: next.id }).items.map((sample) => [sample.seq, sample.packet_order]), [[1, 'forward']]);
+  const marker = store.events({ id: previous.id }).items.find((event) => event.type === 'device_reboot');
+  assert.equal(marker.details.previous_uptime_ms, 100_000);
+  assert.equal(marker.details.next_uptime_ms, 1_000);
+  assert.equal(deviceReboot(2000, 1, null, null), true);
+  assert.equal(deviceReboot(2000, 1, 10_000, 11_000), false);
+  assert.equal(deviceReboot(100, 1, null, null), false);
+  assert.equal(deviceReboot(65535, 1, 100_000, 101_000), false);
 });
 
 test('durable restart marks open runs interrupted and requires an explicit new recording', (t) => {

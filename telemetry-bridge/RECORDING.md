@@ -1,6 +1,6 @@
 # Recording and run analysis
 
-This is a local, opt-in implementation. It has not been deployed. The browser Run Explorer and Windows sequence-run integration are implemented locally; CSV export remains a future milestone. JWT login is also implemented locally: viewers can read history, operators can start/stop runs, and hardware actions still require the existing command token. See `AUTHENTICATION.md`.
+This is a local, opt-in implementation. It has not been deployed. The browser Run Explorer, bounded CSV export and Windows sequence-run integration are implemented locally. JWT login is also implemented locally: viewers can read history, operators can start/stop runs, and hardware actions still require the existing command token. See `AUTHENTICATION.md`.
 
 ## Database decision
 
@@ -18,6 +18,7 @@ The protocol remains unchanged. Storage records the decoded envelope plus raw pa
 - Entering Debug: retain the run, mark the mode change, tag subsequent samples as Debug.
 - Within Debug: source changes create events without ending the run, preserving the before/after transient.
 - Leaving Debug: end the run and start Live Telemetry. A simultaneous source change still produces only one successor.
+- A confirmed device restart ends the current run with `device_reboot` and creates a linked successor. The boundary packet belongs only to the successor.
 - The first packet reporting a boundary belongs only to the successor. Old-run end and new-run start share its receive timestamp. Both run records and the end marker contain the linkage.
 
 Mode currently means the **ESP32-reported debug flag**. It is not the Windows app's `live_mode` flag or a successful button click. Legacy v4 packets indicate normal mode. A separate app-selected experiment mode has not been introduced.
@@ -49,15 +50,15 @@ All routes are under the existing Apache prefix in deployment (`/telemetry/runs/
 | `GET /runs/:id/events?after=...&limit=100` | Start/end, source/mode and command events; at most 500 per page |
 | `GET /runs/:id/series?metric=pv.currentA&start=...&end=...&points=500` | Bounded graph buckets with min/max/mean, sample/valid counts and packet IDs |
 
-`start` and `end` are UTC epoch milliseconds; intervals are `[start,end)`. Samples and events use stable ingestion-ID cursors (`next_after`). Series ranges are limited to 24 hours and 2,000 buckets. Use the returned bucket range to drill into its raw rows. Empty buckets are omitted; the future UI must render gaps rather than invent measurements. Stored nulls contribute no numeric value to aggregates. All SQL values are bound parameters, and metrics are allowlisted in `recording/store.mjs`.
+`start` and `end` are UTC epoch milliseconds; intervals are `[start,end)`. Samples and events use stable ingestion-ID cursors (`next_after`). Series ranges are limited to 24 hours and 2,000 buckets. Use the returned bucket range to drill into its raw rows. Empty buckets are omitted; the UI renders gaps rather than inventing measurements. Stored nulls contribute no numeric value to aggregates. All SQL values are bound parameters, and metrics are allowlisted in `recording/store.mjs`.
 
 `bms.cellSlot4V` deliberately refers to the fourth transmitted slot: v6 uses physical cell 4, older formats used cell 10. Keep packet format visible when comparing historical data. Calibration/decoder metadata is saved at start; set `DEPLOYED_REVISION` during deployment to avoid an `unversioned` decoder label.
 
 ## Failure and provenance behavior
 
-Raw UDP capture is **not authenticated hardware provenance**: the existing sender identity/IP controls and network trust still apply. HTTP `/input`, browser mock data, unrelated device IDs and other source IPs cannot enter a recording. The acquisition is pinned to the starting device ID and address, while a UDP source-port change does not itself split runs.
+UDP capture can use the opt-in HMAC-SHA256 firmware envelope documented in `TELEMETRY_PROVENANCE.md`. In strict mode, every telemetry packet must carry a valid signature, matching device ID and sequence; immediate replays are rejected and non-secret provenance is archived with the envelope. Compatibility mode still accepts unsigned raw packets and therefore relies on sender identity/IP controls and network trust. HTTP `/input`, browser mock data, unrelated device IDs and other source IPs cannot enter a recording. The acquisition is pinned to the starting device ID and address, while a UDP source-port change does not itself split runs.
 
-Duplicate and out-of-order sequence values remain in the raw archive but do not change mode/source state or cause boundaries. A 16-bit sequence wrap is supported. Reboot identification/sequence-epoch recovery is not yet implemented: after a device reboot, stop/start the recording explicitly to establish a fresh sequence baseline. Do not claim zero loss over UDP.
+Duplicate and out-of-order sequence values remain in the raw archive but do not change mode/source state or cause boundaries. A 16-bit sequence wrap is supported. V5/V6 reboot detection requires a sequence restart plus an uptime drop of at least five seconds into the first two minutes of uptime. Legacy packets without uptime use a conservative large sequence-reset fallback. Ordinary small backwards jumps and natural sequence wrap do not split a run. Detection is based on the first qualifying packet and cannot identify a reboot whose sequence and uptime evidence are absent. Do not claim zero loss over UDP.
 
 Start/stop and each ingestion boundary use SQLite transactions. A failed write cannot leave a half-created successor. On restart, open runs become interrupted and do not automatically resume. Graceful shutdown also ends the active run as interrupted. Storage failures and queue overflow are visible in health; capture stops, keeping UDP/SSE responsive. Queue overflow persists an incomplete-run marker when the database can still write. A full/broken disk can prevent the failure marker itself; health remains the immediate source of truth. Recovery requires fixing storage and restarting recording.
 
@@ -67,14 +68,14 @@ Use `node tools/backup-recordings.mjs <source.sqlite> <new-backup.sqlite>` from 
 
 Deployment helpers now prepare locked dependencies and verify the SQLite native module **before** copying live application files. They include recording modules, dependencies and the lockfile in application backup/restore. The droplet currently lacks npm; deployment preflight will refuse until it is available. Application backups do not substitute for the database backup above. Only schema v1 exists; automatic downgrade is not supported, and a newer schema version is rejected.
 
-The browser Run Explorer lists and searches saved runs, shows linked recording segments and end reasons, graphs any allowlisted metric over preset or custom time windows, and binds graph selection to the exact packet-table interval. It also exposes event markers and an event table, inline decoded packet inspection, and operator-only start/stop controls. Graph gaps remain gaps; unavailable measurements are never interpolated.
+The browser Run Explorer lists and searches saved runs, shows linked recording segments and end reasons, graphs any allowlisted metric over preset or custom time windows, and binds graph selection to the exact packet-table interval. It also exposes event markers and an event table, inline decoded packet inspection, operator-only start/stop controls, and CSV export for the current graph or selected-bucket interval. CSV export paginates the existing bounded samples API, includes raw and decoded data, neutralizes spreadsheet formula prefixes in string cells, and refuses intervals above 100,000 packets. Graph gaps remain gaps; unavailable measurements are never interpolated.
 
 Its **Frequency response** analysis aligns the x-axis to a chosen run, command, mode, source or sequence-step event, exposes operator-selected time before and after T+0, and derives a pre-trigger baseline, first post-trigger bucket, peak change, peak time and post-trigger range from the displayed aggregates. This is a time-domain startup/transient view at the recorded telemetry rate. It does not claim a swept-frequency/Bode response or recover behavior between packets; the sequence trigger is the server's marker-receipt time immediately before the Windows tool sends the associated command.
 
 The Windows I²C tool uses `POST /runs/start`, `POST /runs/stop` and `POST /runs/events` for operator recording control and sequence correlation. Sequence events contain a bounded profile name, original line number and command text, phase, outcome and truncated result. The bridge supplies the event timestamp and always attaches the marker to the active run; clients cannot select another run or backdate a marker. With JWT enabled, these writes require an operator session and CSRF validation. Hardware commands additionally continue to require `X-Command-Token`.
 
-Next milestones: calibrated transient acquisition, CSV export and retention/load testing before sustained capture.
+Next milestones: calibrated transient acquisition and retention/load testing before sustained capture.
 
 ## Validation
 
-The local suite covers real loopback UDP/HTTP recording, mode/source boundaries, credential redaction, restart recovery, duplicate/reordered packets, bounded queries, transaction rollback, queue overflow, concurrent-writer rejection, consistent backup/restore, JWT signature/claim/expiry validation, role and CSRF enforcement, logout revocation, and deploy/rollback packaging in temporary directories. Exact Node 20 execution, sustained production-rate testing, hardware confirmation and all live deployment checks remain pending.
+The local suite covers real loopback UDP/HTTP recording, mode/source/reboot boundaries, signed-telemetry verification and replay rejection, credential redaction, restart recovery, duplicate/reordered packets, bounded queries, transaction rollback, queue overflow, concurrent-writer rejection, consistent backup/restore, JWT signature/claim/expiry validation, role and CSRF enforcement, logout revocation, CSV safety helpers, and deploy/rollback packaging in temporary directories. Exact Node 20 execution, sustained production-rate testing, ESP-IDF compilation, hardware confirmation and all live deployment checks remain pending.

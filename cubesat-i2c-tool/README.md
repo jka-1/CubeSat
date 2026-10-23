@@ -74,7 +74,8 @@ On the Connection tab, choose **Source → Debug (Wireless)**. Enter the bridge 
 If the bridge has JWT login enabled, also enter an operator username and password. The password,
 JWT and CSRF value remain in memory and are not written to settings. The command token is still
 sent for every hardware command. Streaming Telemetry and Link Health reuse the same in-memory
-authenticated connection.
+authenticated connection. An expired JWT triggers one serialized sign-in retry; disconnecting or
+logging out clears the in-memory password, session and cookies.
 
 * Presence tiles (PV/INA226 0x40, BMS/BQ76942 0x08, MPPT/BQ25798 0x6B) refresh every 2 s from
   `/health`. They need the firmware's debug mode (v5 packets).

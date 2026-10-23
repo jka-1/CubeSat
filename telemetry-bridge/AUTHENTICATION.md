@@ -13,7 +13,7 @@ When JWT login is enabled, `/health`, `/latest`, `/events`, `/runs`, `/input`, `
 
 The JWT is stored only in an `HttpOnly`, `SameSite=Strict` cookie. Production cookies require HTTPS and include `Secure`. State-changing requests require both an operator session and an in-memory CSRF value tied to that session. JWT verification pins HS256 and validates the signature, issuer, audience, subject, role, ID, issued time and expiry. Logout revokes the server-side session and closes its telemetry streams; a bridge restart invalidates every existing session. Sessions default to 15 minutes and cannot exceed one hour.
 
-The Windows I²C tool follows the same flow when JWT is enabled. Its cookie jar, password and CSRF value remain in process memory; only the non-secret username and bridge URL are saved. Its SSE readers share that in-memory cookie jar. The existing command token remains separate and is still required for hardware commands.
+The Windows I²C tool follows the same flow when JWT is enabled. Its cookie jar, password and CSRF value remain in process memory; only the non-secret username and bridge URL are saved. Its SSE readers share that in-memory cookie jar. If an authenticated request receives `401`, the tool serializes one login renewal and retries that request once; concurrent readers reuse the renewed session. Logout, disconnect and failed connection cleanup erase the in-memory credentials and cookie jar. The existing command token remains separate and is still required for hardware commands after renewal.
 
 ## Create a private account file
 
@@ -47,4 +47,4 @@ Omit `AUTH_CONFIG_PATH` to retain the pre-login behavior during local compatibil
 
 ## Deliberate limits
 
-Sessions and revocations are held in memory for one bridge process. This is suitable for the current single-process, single-droplet design and deliberately invalidates sessions on restart. A multi-process deployment would need a shared session store. Login limits use the TCP peer address; behind the current local Apache proxy, users share the conservative ten-attempts-per-minute limit. Password reset, self-registration, refresh tokens and federated identity are outside this milestone.
+Sessions and revocations are held in memory for one bridge process. This is suitable for the current single-process, single-droplet design and deliberately invalidates sessions on restart. The Windows client renews by submitting the still in-memory account password; the server does not issue a refresh token. A multi-process deployment would need a shared session store. Login limits use the TCP peer address; behind the current local Apache proxy, users share the conservative ten-attempts-per-minute limit. Password reset, self-registration, refresh tokens and federated identity are outside this milestone.

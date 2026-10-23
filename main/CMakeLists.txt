@@ -29,5 +29,6 @@ idf_component_register(
         esp_driver_i2c
         esp_timer
         esp_adc
+        mbedtls
         led_strip
 )

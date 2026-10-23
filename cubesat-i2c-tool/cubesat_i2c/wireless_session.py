@@ -7,7 +7,7 @@ run_sequence work unchanged. Commands go to POST <base>/command?wait=1 with the 
 Supported lines: i2cget -c A -r R [-l N] | i2cset -c A -r R B... | i2cdetect | i2cconfig (ignored: the bus is
 fixed in firmware) | debug on|off | scan_period N (alias: period N) | probe A.
 """
-import http.cookiejar, json, re, ssl, urllib.error, urllib.parse, urllib.request
+import http.cookiejar, json, re, ssl, threading, urllib.error, urllib.parse, urllib.request
 from . import protocol as P
 from .session import Session
 
@@ -61,6 +61,9 @@ class WirelessSession(Session):
         self.user = None
         self.auth_enabled = False
         self.active_run_id = None
+        self._auth_lock = threading.RLock()
+        self._username = ""
+        self._password = ""
         parsed = urllib.parse.urlsplit(self.base)
         self.origin = "%s://%s" % (parsed.scheme, parsed.netloc)
 
@@ -90,11 +93,16 @@ class WirelessSession(Session):
         if self.auth_enabled and self.user:
             try: self.logout()
             except Exception: pass
+        self._clear_auth()
         self._connected = False
 
     def open_url(self, request, timeout):
         """Open an authenticated bridge request for the SSE/health reader threads."""
-        return self._open(request, timeout)
+        csrf = self.csrf
+        try: return self._open(request, timeout)
+        except urllib.error.HTTPError as e:
+            if e.code != 401 or not self._renew_session(csrf): raise
+            return self._open(request, timeout)
 
     # --------------------------------------------------------------- HTTP
     def _headers(self, write=False, command_token=False):
@@ -112,8 +120,9 @@ class WirelessSession(Session):
         try: return json.loads(e.read().decode() or "{}").get("error", "")
         except Exception: return ""
 
-    def _json(self, path, body=None, command_token=False, timeout=6.0):
+    def _json(self, path, body=None, command_token=False, timeout=6.0, allow_reauth=True):
         write = body is not None
+        csrf = self.csrf
         req = urllib.request.Request(self.base + path,
             data=json.dumps(body).encode() if write else None,
             headers=self._headers(write, command_token), method="POST" if write else "GET")
@@ -121,6 +130,8 @@ class WirelessSession(Session):
             with self._open(req, timeout) as r:
                 return json.loads(r.read().decode() or "{}")
         except urllib.error.HTTPError as e:
+            if e.code == 401 and allow_reauth and self._renew_session(csrf):
+                return self._json(path, body, command_token, timeout, False)
             raise IOError("HTTP %d %s" % (e.code, self._error(e))) from e
 
     def auth_status(self):
@@ -129,24 +140,43 @@ class WirelessSession(Session):
             if "HTTP 404" in str(e): return False
             raise
 
-    def login(self, username, password):
-        data = self._json("/auth/login", {"username": username, "password": password})
+    def login(self, username, password, renewal=False):
+        data = self._json("/auth/login", {"username": username, "password": password}, allow_reauth=False)
         self.csrf, self.user = data.get("csrf", ""), data.get("user")
         if not self.csrf or not self.user:
             raise IOError("Bridge login did not establish a session")
-        self._log("SYS", "signed in as %s (%s)" % (self.user.get("username"), self.user.get("role")))
+        self._username, self._password = username, password
+        self._log("SYS", "%s as %s (%s)" % ("session renewed" if renewal else "signed in",
+                                                self.user.get("username"), self.user.get("role")))
         return self.user
 
     def logout(self):
-        self._json("/auth/logout", {}, timeout=5)
-        self.csrf, self.user = "", None
+        try: self._json("/auth/logout", {}, timeout=5, allow_reauth=False)
+        finally: self._clear_auth()
 
-    def health(self):
+    def _clear_auth(self):
+        self.csrf, self.user, self._username, self._password = "", None, "", ""
+        try: self.cookies.clear()
+        except Exception: pass
+
+    def _renew_session(self, previous_csrf):
+        if not self.auth_enabled or not self._username or not self._password:
+            return False
+        with self._auth_lock:
+            if previous_csrf and self.csrf and self.csrf != previous_csrf:
+                return True  # another reader already renewed this in-memory session
+            self.login(self._username, self._password, renewal=True)
+            return True
+
+    def health(self, _allow_reauth=True):
+        csrf = self.csrf
         req = urllib.request.Request(self.base + "/health", headers=self._headers())
         try:
             with self._open(req, 5) as r:
                 return json.loads(r.read().decode())
         except urllib.error.HTTPError as e:  # 503 = degraded (no token configured) still has a JSON body
+            if e.code == 401 and _allow_reauth and self._renew_session(csrf):
+                return self.health(False)
             body = json.loads(e.read().decode() or "{}")
             if e.code == 401: raise IOError("HTTP 401 %s" % body.get("error", "sign in required")) from e
             return body
@@ -177,16 +207,19 @@ class WirelessSession(Session):
             self.active_run_id = marker.get("run_id") or self.active_run_id
         return marker
 
-    def command(self, body, timeout=None):
+    def command(self, body, timeout=None, _allow_reauth=True):
         """POST a bridge command synchronously; returns the bridge JSON (status completed/failed/timed_out/rejected)."""
         data = json.dumps(body).encode()
         headers = self._headers(True, True)
+        csrf = self.csrf
         req = urllib.request.Request(self.base + "/command?wait=1", data=data, headers=headers, method="POST")
         self._log("TX", "bridge " + json.dumps(body))
         try:
             with self._open(req, timeout or self.timeout) as r:
                 out = json.loads(r.read().decode())
         except urllib.error.HTTPError as e:
+            if e.code == 401 and _allow_reauth and self._renew_session(csrf):
+                return self.command(body, timeout, False)
             try: detail = json.loads(e.read().decode()).get("error", "")
             except Exception: detail = ""
             out = {"status": "rejected", "http_status": e.code, "error": "HTTP %d %s" % (e.code, detail)}
@@ -196,15 +229,21 @@ class WirelessSession(Session):
         self._log("RX", "bridge %s %s" % (out.get("status"), json.dumps(out.get("result") or out.get("error"))))
         return out
 
-    def set_live_mode(self, on, source="exe"):
+    def set_live_mode(self, on, source="exe", _allow_reauth=True):
         """Tell the bridge the app's live telemetry mode is on/off (POST /live-mode). Web pages read the flag
         from /health and the status stream and never show simulated data while it is on. Returns True on success."""
         headers = self._headers(True, True)
+        csrf = self.csrf
         req = urllib.request.Request(self.base + "/live-mode", data=json.dumps({"on": bool(on), "source": source}).encode(),
                                      headers=headers, method="POST")
         try:
             with self._open(req, 5) as r:
                 ok = bool(json.loads(r.read().decode()).get("live_mode")) == bool(on)
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and _allow_reauth and self._renew_session(csrf):
+                return self.set_live_mode(on, source, False)
+            self._log("SYS", "bridge live-mode %s not set: %s" % ("on" if on else "off", e))
+            return False
         except Exception as e:
             self._log("SYS", "bridge live-mode %s not set: %s" % ("on" if on else "off", e))
             return False

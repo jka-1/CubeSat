@@ -41,3 +41,17 @@ export function packetOrder(previousSequence, sequence) {
   const delta = (sequence - previousSequence + 65535) % 65535;
   return delta === 0 ? 'duplicate' : delta > 32767 ? 'out_of_order' : 'forward';
 }
+
+export function deviceReboot(previousSequence, sequence, previousUptimeMs, uptimeMs) {
+  if (!Number.isInteger(previousSequence) || !Number.isInteger(sequence) ||
+      previousSequence < 1 || previousSequence > 65535 || sequence < 1 || sequence > 65535) return false;
+  const haveUptime = Number.isSafeInteger(previousUptimeMs) && Number.isSafeInteger(uptimeMs) &&
+    previousUptimeMs > 0 && uptimeMs >= 0;
+  const uptimeReset = haveUptime && uptimeMs < 120_000 &&
+    previousUptimeMs - uptimeMs >= 5_000 && sequence <= 32 && previousSequence > sequence;
+  if (haveUptime) return uptimeReset;
+  // Live v4 packets do not carry uptime. Only classify a large, non-wrap sequence reset;
+  // smaller backwards jumps remain ordinary out-of-order UDP delivery.
+  return packetOrder(previousSequence, sequence) === 'out_of_order' &&
+    previousSequence > 1024 && previousSequence < 65_000 && sequence <= 32;
+}

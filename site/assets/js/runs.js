@@ -1,9 +1,9 @@
 import { apiFetch, canOperate } from './auth.js?v=20261022a';
 import {
-  RUN_METRICS, MAX_SERIES_WINDOW_MS, formatDuration, formatRelativeTime, metricValue,
+  RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent,
   windowForPreset
-} from './runs-model.mjs?v=20261023b';
+} from './runs-model.mjs?v=20261023e';
 
 const API = '/telemetry/runs';
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -11,8 +11,10 @@ const SOURCE_LABELS = { pv: 'PV', bat_secondary: 'BAT/secondary' };
 const TYPE_LABELS = { debug: 'Debug', live_telemetry: 'Live telemetry' };
 const EVENT_LABELS = {
   run_started: 'Run started', run_ended: 'Run ended', source_switch: 'Source switched',
-  mode_changed: 'Mode changed', command_status: 'Command status', sequence_step: 'Sequence step'
+  mode_changed: 'Mode changed', command_status: 'Command status', sequence_step: 'Sequence step',
+  device_reboot: 'Device reboot'
 };
+const MAX_CSV_ROWS = 100_000;
 
 let destroyed = false;
 let refreshTimer;
@@ -73,7 +75,8 @@ function analysisTimeLabel(ms) {
 }
 function reasonLabel(reason) {
   return ({ operator_stop: 'Stopped by operator', source_switch: 'Power source switched', debug_exit: 'Debug ended',
-    bridge_restart: 'Bridge restarted', graceful_shutdown: 'Bridge stopped', queue_overflow: 'Recorder overflow' })[reason] ||
+    device_reboot: 'Device reboot detected', bridge_restart: 'Bridge restarted',
+    graceful_shutdown: 'Bridge stopped', queue_overflow: 'Recorder overflow' })[reason] ||
     (reason ? String(reason).replaceAll('_', ' ') : 'In progress');
 }
 
@@ -91,7 +94,7 @@ function eventDescription(event) {
 function populateResponseTriggers() {
   const select = $('responseTrigger'); if (!select) return;
   const previous = Number(select.value);
-  const preferredTypes = new Set(['run_started', 'source_switch', 'mode_changed', 'command_status', 'sequence_step']);
+  const preferredTypes = new Set(['run_started', 'source_switch', 'mode_changed', 'command_status', 'sequence_step', 'device_reboot']);
   let candidates = events.filter((event) => preferredTypes.has(event.type));
   if (!candidates.length) candidates = events;
   select.replaceChildren();
@@ -403,6 +406,37 @@ async function loadSamples(reset) {
   } catch (error) { text('tableScope', `Packets could not be loaded: ${error.message}`); }
 }
 
+async function exportCurrentCsv() {
+  if (!selectedRun || !currentWindow) return;
+  const button = $('exportCsv'), window = sampleWindow(), trigger = responseMode() ? selectedTrigger() : null;
+  setBusy(button, true, 'Preparing CSV…');
+  text('tableScope', 'Preparing CSV export…');
+  try {
+    const rows = [['received_at', 'relative_ms', 'seq', 'mode', 'power_source', 'packet_order',
+      'metric_id', 'metric_value', 'raw_base64', 'envelope_json'].map(csvCell).join(',')];
+    let after = 0, count = 0;
+    do {
+      const query = new URLSearchParams({ start: String(window.start), end: String(window.end), limit: '500', after: String(after) });
+      const body = await api(`/${encodeURIComponent(selectedRun.id)}/samples?${query}`);
+      for (const sample of body.items) {
+        const metric = metricValue(sample, selectedMetric().id);
+        rows.push([new Date(sample.received_ms).toISOString(), trigger ? sample.received_ms - trigger.at_ms : null,
+          sample.seq, sample.mode, sample.power_source, sample.packet_order, selectedMetric().id, metric,
+          sample.raw_base64, JSON.stringify(sample.envelope)].map(csvCell).join(','));
+      }
+      count += body.items.length; after = body.next_after;
+      if (after && count >= MAX_CSV_ROWS) throw new Error('This export exceeds 100,000 packets. Choose a narrower graph window.');
+    } while (after && !destroyed);
+    const blob = new Blob([rows.join('\r\n') + '\r\n'], { type: 'text/csv;charset=utf-8' });
+    const link = document.createElement('a'), url = URL.createObjectURL(blob);
+    const name = selectedRun.name.replace(/[^A-Za-z0-9._-]+/g, '-').replace(/^-|-$/g, '') || 'telemetry-run';
+    link.href = url; link.download = `${name}-${selectedRun.id.slice(0, 8)}.csv`; link.hidden = true;
+    document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 0);
+    text('tableScope', `Exported ${count.toLocaleString()} packets from the current graph interval.`);
+  } catch (error) { text('tableScope', `CSV export failed: ${error.message}`); }
+  finally { setBusy(button, false, 'Preparing CSV…'); }
+}
+
 function renderSample(sample) {
   const row = document.createElement('tr');
   const sampleTime = responseMode() ? `${analysisTimeLabel(sample.received_ms)} · ${dateLabel(sample.received_ms, false)}` : dateLabel(sample.received_ms, false);
@@ -513,6 +547,7 @@ function bindEvents() {
   });
   $('selectedBucket').addEventListener('dblclick', () => { selectedBucket = null; selectedBucketIndex = -1; updateChartSelection(); text('selectedBucket', 'Graph selection cleared.'); text('tableScope', 'Packets in the selected time window.'); loadSamples(true); });
   $('samplesLoadMore').addEventListener('click', () => loadSamples(false));
+  $('exportCsv').addEventListener('click', exportCurrentCsv);
   $('packetsTab').addEventListener('click', () => setTab('packets')); $('eventsTab').addEventListener('click', () => setTab('events'));
 }
 
