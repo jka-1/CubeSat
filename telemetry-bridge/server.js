@@ -2081,6 +2081,14 @@ const httpServer = http.createServer(async (request, response) => {
         broadcastStatus();
         return;
       }
+      if (request.method === 'POST' && parts.length === 2 && parts[1] === 'events') {
+        const body = await readJsonBody(request);
+        const marker = await recorder.call('marker', { sequence_name: body.sequence_name,
+          step_index: body.step_index, step_text: body.step_text, phase: body.phase,
+          ok: body.ok ?? null, result: body.result ?? null, now: Date.now() });
+        sendJson(response, 201, { marker });
+        return;
+      }
       if (request.method === 'GET' && parts.length === 2) {
         sendJson(response, 200, { run: await recorder.call('get', parts[1]) });
         return;

@@ -34,6 +34,21 @@ function setup(t, options) {
   return { store, run, send };
 }
 
+test('sequence markers are bounded, tied to the active run and preserve step outcomes', (t) => {
+  const { store, run } = setup(t);
+  const marker = store.marker({ sequence_name: 'Startup', step_index: 2,
+    step_text: 'i2cset -c 0x6b -r 0x10 0x00', phase: 'completed', ok: true,
+    result: 'Write OK', now: START + 250 });
+  assert.equal(marker.run_id, run.id);
+  const saved = store.events({ id: run.id }).items.find((event) => event.type === 'sequence_step');
+  assert.deepEqual(saved.details, { sequence_name: 'Startup', step_index: 2, step_number: 3,
+    step_text: 'i2cset -c 0x6b -r 0x10 0x00', phase: 'completed', ok: true, result: 'Write OK' });
+  assert.throws(() => store.marker({ sequence_name: 'Startup', step_index: -1, step_text: 'x', phase: 'started' }), /index/);
+  assert.throws(() => store.marker({ sequence_name: 'Startup', step_index: 0, step_text: 'x', phase: 'started', result: {} }), /output/);
+  store.stop();
+  assert.throws(() => store.marker({ sequence_name: 'Startup', step_index: 0, step_text: 'x', phase: 'started' }), /No recording/);
+});
+
 test('source mapping requires available, unpaused register evidence; ambiguous and missing remain unknown', () => {
   assert.equal(confirmedSource(envelope(1).packet), 'pv');
   for (const reg of [0, 0x80]) assert.equal(confirmedSource(envelope(1, { reg }).packet), 'bat_secondary');

@@ -1,6 +1,6 @@
-# Recording backend — first milestone
+# Recording and run analysis
 
-This is a local, opt-in backend implementation. It has not been deployed. Graph/table UI, CSV export and Windows sequence-run integration are subsequent milestones. JWT login is now implemented locally: viewers can read history, operators can start/stop runs, and hardware actions still require the existing command token. See `AUTHENTICATION.md`.
+This is a local, opt-in implementation. It has not been deployed. The browser Run Explorer and Windows sequence-run integration are implemented locally; CSV export remains a future milestone. JWT login is also implemented locally: viewers can read history, operators can start/stop runs, and hardware actions still require the existing command token. See `AUTHENTICATION.md`.
 
 ## Database decision
 
@@ -24,7 +24,7 @@ Mode currently means the **ESP32-reported debug flag**. It is not the Windows ap
 
 Source and mode changes are detected from telemetry, not from an issued command. The observation timestamp is therefore limited by the telemetry sampling period. These records support startup/transient analysis, not a claim of frequency-response measurement or high-speed logic capture.
 
-An end marker contains `reason`, `from_source`, `to_source`, source register evidence, timestamp and `next_run_id`. `source_switch` and `mode_changed` events provide additional context. Existing command status updates are recorded with request IDs and timestamps; sequence names/step IDs and server-side sequence execution are not yet available.
+An end marker contains `reason`, `from_source`, `to_source`, source register evidence, timestamp and `next_run_id`. `source_switch` and `mode_changed` events provide additional context. Existing command status updates are recorded with request IDs and timestamps. The Windows tool records each executable sequence line with its profile name, original line index, command text, phase and result; sequence execution remains client-side.
 
 ## Local setup
 
@@ -42,6 +42,7 @@ All routes are under the existing Apache prefix in deployment (`/telemetry/runs/
 |---|---|
 | `POST /runs/start` with `{"name":"Startup test"}` | Start recording the currently fresh UDP device/address; returns 201 and a run |
 | `POST /runs/stop` | Finish the active recording |
+| `POST /runs/events` | Add a server-timestamped sequence-step marker to the active run |
 | `GET /runs?limit=50&offset=0` | List runs, newest first; at most 100 per page |
 | `GET /runs/:id` | Run metadata, counts, status, end reason and previous/next IDs |
 | `GET /runs/:id/samples?start=...&end=...&after=...&limit=100` | Packet table with raw payload and decoded envelope; at most 500 per page |
@@ -68,7 +69,9 @@ Deployment helpers now prepare locked dependencies and verify the SQLite native 
 
 The browser Run Explorer lists and searches saved runs, shows linked recording segments and end reasons, graphs any allowlisted metric over preset or custom time windows, and binds graph selection to the exact packet-table interval. It also exposes event markers and an event table, inline decoded packet inspection, and operator-only start/stop controls. Graph gaps remain gaps; unavailable measurements are never interpolated.
 
-Next milestones: Windows recorder controls and sequence-step correlation; calibrated transient acquisition and retention/load testing before sustained capture.
+The Windows I²C tool uses `POST /runs/start`, `POST /runs/stop` and `POST /runs/events` for operator recording control and sequence correlation. Sequence events contain a bounded profile name, original line number and command text, phase, outcome and truncated result. The bridge supplies the event timestamp and always attaches the marker to the active run; clients cannot select another run or backdate a marker. With JWT enabled, these writes require an operator session and CSRF validation. Hardware commands additionally continue to require `X-Command-Token`.
+
+Next milestones: calibrated transient acquisition, CSV export and retention/load testing before sustained capture.
 
 ## Validation
 

@@ -100,7 +100,7 @@ def parse_step(line):
     return ("cmd", s)
 
 
-def run_sequence(session, steps, on_step=None, stop_event=None, stop_on_error=True, sleep=time.sleep):
+def run_sequence(session, steps, on_step=None, on_step_start=None, stop_event=None, stop_on_error=True, sleep=time.sleep):
     """Run steps; returns list of (step, ok, result)."""
     results = []
     session._log("SEQ", "start (%d lines)" % len(steps))
@@ -111,6 +111,8 @@ def run_sequence(session, steps, on_step=None, stop_event=None, stop_on_error=Tr
         st = parse_step(line)
         if st is None:
             continue
+        if on_step_start:
+            on_step_start(i, line)
         if st[0] == "delay":
             session._log("SEQ", "delay %d ms" % st[1])
             sleep(st[1] / 1000.0)

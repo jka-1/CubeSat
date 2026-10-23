@@ -23,5 +23,7 @@ test('run explorer route exposes graph, packet table, events, and recording cont
   assert.match(script, /\/series\?/);
   assert.match(script, /\/samples\?/);
   assert.match(script, /\/events\?/);
+  assert.match(script, /sequence_step: 'Sequence step'/);
+  assert.match(script, /details\.sequence_name/);
   assert.doesNotMatch(script, /\.innerHTML\s*=/);
 });

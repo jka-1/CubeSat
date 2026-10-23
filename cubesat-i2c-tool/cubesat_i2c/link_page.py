@@ -91,6 +91,7 @@ class LinkHealthPage(QWidget):
     def __init__(self, store=None, mock_default=False, parent=None):
         super().__init__(parent)
         self.store = store
+        self.auth_opener = None
         s = store.settings if store else {}
         self.model, self.source = LinkModel(), None
         root = QVBoxLayout(self)
@@ -136,7 +137,7 @@ class LinkHealthPage(QWidget):
         if self.kind.currentIndex() == 1:
             self.source = MockLinkSource(self.model, period_ms=self.period.value())
         else:
-            self.source = SseLinkSource(self.model, self.sse.text().strip(), self.health.text().strip())
+            self.source = SseLinkSource(self.model, self.sse.text().strip(), self.health.text().strip(), opener=self.auth_opener)
             if self.store:
                 self.store.settings.update(link_sse_url=self.sse.text().strip(), link_health_url=self.health.text().strip(),
                                            link_period_ms=self.period.value())
@@ -146,6 +147,13 @@ class LinkHealthPage(QWidget):
     def disconnect_source(self):
         if self.source: self.source.stop()
         self.source = None; self.btn.setText("Connect")
+
+    def use_bridge_session(self, session):
+        """Share the in-memory JWT cookie with bridge SSE reads; credentials are never copied or persisted."""
+        self.disconnect_source()
+        self.auth_opener = session.open_url if session else None
+        if session:
+            self.sse.setText(session.base + "/events"); self.health.setText(session.base + "/health")
 
     def compute(self, now=None):
         ev, cmds, st = self.model.snapshot()

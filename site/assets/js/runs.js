@@ -10,7 +10,7 @@ const SOURCE_LABELS = { pv: 'PV', bat_secondary: 'BAT/secondary' };
 const TYPE_LABELS = { debug: 'Debug', live_telemetry: 'Live telemetry' };
 const EVENT_LABELS = {
   run_started: 'Run started', run_ended: 'Run ended', source_switch: 'Source switched',
-  mode_changed: 'Mode changed', command_status: 'Command status'
+  mode_changed: 'Mode changed', command_status: 'Command status', sequence_step: 'Sequence step'
 };
 
 let destroyed = false;
@@ -337,6 +337,7 @@ function renderSample(sample) {
 
 function detailsLabel(details) {
   if (details.label) return details.label;
+  if (details.sequence_name) return `${details.sequence_name} · step ${details.step_number} ${details.phase}: ${details.step_text}`;
   if (details.reason) return reasonLabel(details.reason);
   if (details.from_mode || details.to_mode) return `${TYPE_LABELS[details.from_mode] || details.from_mode || 'unknown'} → ${TYPE_LABELS[details.to_mode] || details.to_mode || 'unknown'}`;
   if (details.summary) return details.summary;

@@ -87,9 +87,10 @@ class LinkModel:
 
 
 class SseLinkSource:
-    def __init__(self, model, sse_url, health_url="", verify_tls=True):
+    def __init__(self, model, sse_url, health_url="", verify_tls=True, opener=None):
         self.model, self.sse_url, self.health_url = model, sse_url, health_url
         self.ctx = None if verify_tls else ssl._create_unverified_context()
+        self._open = opener or (lambda req, timeout: urllib.request.urlopen(req, timeout=timeout, context=self.ctx))
         self.stop_event = threading.Event()
         self.threads = []
 
@@ -105,7 +106,7 @@ class SseLinkSource:
         while not self.stop_event.is_set():
             try:
                 req = urllib.request.Request(self.sse_url, headers={"Accept": "text/event-stream", "Cache-Control": "no-cache"})
-                with urllib.request.urlopen(req, timeout=30, context=self.ctx) as resp:
+                with self._open(req, 30) as resp:
                     self.model.sse_open, self.model.error = True, ""
                     self.model.expect_replay = True
                     data = []
@@ -129,7 +130,7 @@ class SseLinkSource:
     def _health_loop(self):
         while self.health_url and not self.stop_event.is_set():
             try:
-                with urllib.request.urlopen(self.health_url, timeout=5, context=self.ctx) as resp:
+                with self._open(urllib.request.Request(self.health_url, headers={"Accept": "application/json"}), 5) as resp:
                     j = json.loads(resp.read().decode("utf-8"))
                 j["type"] = "status"
                 self.model.on_event(j)

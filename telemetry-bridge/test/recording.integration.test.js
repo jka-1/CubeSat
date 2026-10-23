@@ -70,6 +70,10 @@ test('opt-in bridge recording authenticates history, persists UDP runs and expos
   const started = await request('/runs/start', { name: 'Initialization and power switching' });
   assert.equal(started.status, 201);
   const first = (await started.json()).run;
+  const step = await request('/runs/events', { sequence_name: 'Startup', step_index: 0,
+    step_text: 'debug on', phase: 'started', ok: null });
+  assert.equal(step.status, 201);
+  assert.equal((await step.json()).marker.run_id, first.id);
   assert.equal((await request('/runs/start', { name: 'Concurrent' })).status, 409);
   const raw = await send(2);
   await send(3, true);
@@ -88,6 +92,8 @@ test('opt-in bridge recording authenticates history, persists UDP runs and expos
   assert.equal(end.details.next_run_id, last.id);
   assert.equal(end.details.from_source, 'bat_secondary');
   assert.equal(end.details.to_source, 'pv');
+  const firstMarkers = (await json(`/runs/${first.id}/events`)).items;
+  assert.equal(firstMarkers.find((event) => event.type === 'sequence_step').details.step_text, 'debug on');
   const samples = (await json(`/runs/${first.id}/samples`)).items;
   assert.equal(samples.length, 3);
   assert.equal(samples[0].raw_base64, Buffer.from(raw).toString('base64'));

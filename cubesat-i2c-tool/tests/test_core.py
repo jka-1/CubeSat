@@ -99,8 +99,10 @@ def test_sequence(tmp_path):
     slept = []
     steps = ["# c", DEFAULT_CONFIG, "delay 250", "wait 1 s", "i2cset -c 0x6b -r 0x0f 0x82 # x",
              "i2cget -c 0x22 -r 0x00", "i2cget -c 0x6b -r 0x0f"]
-    res = run_sequence(s, steps, sleep=slept.append)
+    started = []
+    res = run_sequence(s, steps, sleep=slept.append, on_step_start=lambda i, line: started.append((i, line)))
     assert slept == [0.25, 1.0]
+    assert [i for i, _ in started] == [1, 2, 3, 4, 5]
     assert [r[1] for r in res] == [True, True, True, True, False]  # stopped at failure
     res = run_sequence(s, steps, sleep=lambda x: None, stop_on_error=False)
     assert res[-1][1] and "0x82" in res[-1][2]

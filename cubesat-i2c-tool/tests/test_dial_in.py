@@ -50,6 +50,36 @@ def test_set_live_mode_posts_flag_with_token():
     assert s.set_live_mode(False) is True and sent["data"]["on"] is False
 
 
+def test_recording_and_sequence_marker_requests_carry_both_auth_layers():
+    from cubesat_i2c.wireless_session import WirelessSession
+    calls = []
+
+    class R:
+        def __init__(self, body): self.body = body
+        def __enter__(self): return self
+        def __exit__(self, *a): return False
+        def read(self): return json.dumps(self.body).encode()
+
+    def opener(req, timeout):
+        calls.append((req.full_url, dict(req.header_items()), json.loads(req.data.decode()) if req.data else None))
+        if req.full_url.endswith('/runs/start'):
+            return R({"run": {"id": "run-1", "name": "Startup"}})
+        if req.full_url.endswith('/runs/events'):
+            return R({"marker": {"run_id": "run-1", "event_id": 7}})
+        return R({"run": {"id": "run-1", "name": "Startup"}})
+
+    s = WirelessSession("https://bridge.example/telemetry", token="command-secret", opener=opener)
+    s.csrf = "csrf-value"; s.auth_enabled = True; s.user = {"username": "op", "role": "operator"}
+    assert s.start_recording("Startup")["id"] == "run-1"
+    assert s.sequence_marker("Startup", 0, "debug on", "started")["event_id"] == 7
+    assert s.stop_recording()["id"] == "run-1"
+    for url, headers, _ in calls:
+        assert url.startswith("https://bridge.example/telemetry/runs")
+        assert headers["Origin"] == "https://bridge.example"
+        assert headers["X-csrf-token"] == "csrf-value"
+        assert headers["X-command-token"] == "command-secret"
+
+
 def test_window_title_uses_superscript_two(tmp_path, monkeypatch):
     monkeypatch.setenv("CUBESAT_I2C_HOME", str(tmp_path))
     from PySide6.QtWidgets import QApplication

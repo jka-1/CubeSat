@@ -7,7 +7,7 @@ run_sequence work unchanged. Commands go to POST <base>/command?wait=1 with the 
 Supported lines: i2cget -c A -r R [-l N] | i2cset -c A -r R B... | i2cdetect | i2cconfig (ignored: the bus is
 fixed in firmware) | debug on|off | scan_period N (alias: period N) | probe A.
 """
-import json, re, ssl, urllib.error, urllib.request
+import http.cookiejar, json, re, ssl, urllib.error, urllib.parse, urllib.request
 from . import protocol as P
 from .session import Session
 
@@ -46,14 +46,37 @@ class WirelessSession(Session):
         self.base = base_url.rstrip("/")
         self.token = token or ""
         self.ctx = None if verify_tls else ssl._create_unverified_context()
-        self._open = opener or (lambda req, t: urllib.request.urlopen(req, timeout=t, context=self.ctx))
+        self.cookies = http.cookiejar.CookieJar()
+        if opener:
+            self._open = opener
+        else:
+            handlers = [urllib.request.HTTPCookieProcessor(self.cookies)]
+            if self.ctx is not None:
+                handlers.append(urllib.request.HTTPSHandler(context=self.ctx))
+            built = urllib.request.build_opener(*handlers)
+            self._open = lambda req, t: built.open(req, timeout=t)
         self._connected = True
         self.last_result = None
+        self.csrf = ""
+        self.user = None
+        self.auth_enabled = False
+        self.active_run_id = None
+        parsed = urllib.parse.urlsplit(self.base)
+        self.origin = "%s://%s" % (parsed.scheme, parsed.netloc)
 
     @staticmethod
-    def open(base_url, token="", log=None, timeout=6.0, verify_tls=True, opener=None):
+    def open(base_url, token="", log=None, timeout=6.0, verify_tls=True, opener=None, username="", password=""):
         s = WirelessSession(base_url, token, log, timeout, verify_tls, opener)
-        h = s.health()  # raises if the bridge is unreachable
+        s.auth_enabled = s.auth_status()
+        if s.auth_enabled:
+            if not username or not password:
+                raise IOError("This bridge requires a CubeSat username and password")
+            s.login(username, password)
+        try:
+            h = s.health()  # raises if the bridge is unreachable
+        except Exception:
+            s.close()
+            raise
         s._log("SYS", "wireless bridge %s: telemetry %s, command_ready %s, format %s" % (
             s.base, "fresh" if h.get("telemetry_connected") else "stale", h.get("command_ready"),
             h.get("telemetry_packet_format")))
@@ -64,23 +87,100 @@ class WirelessSession(Session):
         return self._connected
 
     def close(self):
+        if self.auth_enabled and self.user:
+            try: self.logout()
+            except Exception: pass
         self._connected = False
 
+    def open_url(self, request, timeout):
+        """Open an authenticated bridge request for the SSE/health reader threads."""
+        return self._open(request, timeout)
+
     # --------------------------------------------------------------- HTTP
+    def _headers(self, write=False, command_token=False):
+        headers = {"Accept": "application/json"}
+        if write:
+            headers.update({"Content-Type": "application/json", "Origin": self.origin})
+            if self.csrf:
+                headers["X-CSRF-Token"] = self.csrf
+        if command_token and self.token:
+            headers["X-Command-Token"] = self.token
+        return headers
+
+    @staticmethod
+    def _error(e):
+        try: return json.loads(e.read().decode() or "{}").get("error", "")
+        except Exception: return ""
+
+    def _json(self, path, body=None, command_token=False, timeout=6.0):
+        write = body is not None
+        req = urllib.request.Request(self.base + path,
+            data=json.dumps(body).encode() if write else None,
+            headers=self._headers(write, command_token), method="POST" if write else "GET")
+        try:
+            with self._open(req, timeout) as r:
+                return json.loads(r.read().decode() or "{}")
+        except urllib.error.HTTPError as e:
+            raise IOError("HTTP %d %s" % (e.code, self._error(e))) from e
+
+    def auth_status(self):
+        try: return bool(self._json("/auth/status").get("enabled"))
+        except IOError as e:
+            if "HTTP 404" in str(e): return False
+            raise
+
+    def login(self, username, password):
+        data = self._json("/auth/login", {"username": username, "password": password})
+        self.csrf, self.user = data.get("csrf", ""), data.get("user")
+        if not self.csrf or not self.user:
+            raise IOError("Bridge login did not establish a session")
+        self._log("SYS", "signed in as %s (%s)" % (self.user.get("username"), self.user.get("role")))
+        return self.user
+
+    def logout(self):
+        self._json("/auth/logout", {}, timeout=5)
+        self.csrf, self.user = "", None
+
     def health(self):
-        req = urllib.request.Request(self.base + "/health", headers={"Accept": "application/json"})
+        req = urllib.request.Request(self.base + "/health", headers=self._headers())
         try:
             with self._open(req, 5) as r:
                 return json.loads(r.read().decode())
         except urllib.error.HTTPError as e:  # 503 = degraded (no token configured) still has a JSON body
-            return json.loads(e.read().decode() or "{}")
+            body = json.loads(e.read().decode() or "{}")
+            if e.code == 401: raise IOError("HTTP 401 %s" % body.get("error", "sign in required")) from e
+            return body
+
+    def recording_status(self):
+        data = self._json("/runs", command_token=True)
+        self.active_run_id = (data.get("recording") or {}).get("active_run_id")
+        return data
+
+    def start_recording(self, name):
+        data = self._json("/runs/start", {"name": name}, command_token=True)
+        self.active_run_id = (data.get("run") or {}).get("id")
+        self._log("SEQ", "recording started: %s" % name)
+        return data.get("run") or {}
+
+    def stop_recording(self):
+        data = self._json("/runs/stop", {}, command_token=True)
+        self.active_run_id = None
+        self._log("SEQ", "recording stopped")
+        return data.get("run") or {}
+
+    def sequence_marker(self, sequence_name, step_index, step_text, phase, ok=None, result=None):
+        if not self.active_run_id:
+            return None
+        marker = self._json("/runs/events", {"sequence_name": sequence_name, "step_index": step_index,
+            "step_text": step_text, "phase": phase, "ok": ok, "result": result}, command_token=True).get("marker")
+        if marker:
+            self.active_run_id = marker.get("run_id") or self.active_run_id
+        return marker
 
     def command(self, body, timeout=None):
         """POST a bridge command synchronously; returns the bridge JSON (status completed/failed/timed_out/rejected)."""
         data = json.dumps(body).encode()
-        headers = {"Content-Type": "application/json"}
-        if self.token:
-            headers["X-Command-Token"] = self.token
+        headers = self._headers(True, True)
         req = urllib.request.Request(self.base + "/command?wait=1", data=data, headers=headers, method="POST")
         self._log("TX", "bridge " + json.dumps(body))
         try:
@@ -99,9 +199,7 @@ class WirelessSession(Session):
     def set_live_mode(self, on, source="exe"):
         """Tell the bridge the app's live telemetry mode is on/off (POST /live-mode). Web pages read the flag
         from /health and the status stream and never show simulated data while it is on. Returns True on success."""
-        headers = {"Content-Type": "application/json"}
-        if self.token:
-            headers["X-Command-Token"] = self.token
+        headers = self._headers(True, True)
         req = urllib.request.Request(self.base + "/live-mode", data=json.dumps({"on": bool(on), "source": source}).encode(),
                                      headers=headers, method="POST")
         try:

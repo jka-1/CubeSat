@@ -13,6 +13,8 @@ When JWT login is enabled, `/health`, `/latest`, `/events`, `/runs`, `/input`, `
 
 The JWT is stored only in an `HttpOnly`, `SameSite=Strict` cookie. Production cookies require HTTPS and include `Secure`. State-changing requests require both an operator session and an in-memory CSRF value tied to that session. JWT verification pins HS256 and validates the signature, issuer, audience, subject, role, ID, issued time and expiry. Logout revokes the server-side session and closes its telemetry streams; a bridge restart invalidates every existing session. Sessions default to 15 minutes and cannot exceed one hour.
 
+The Windows I²C tool follows the same flow when JWT is enabled. Its cookie jar, password and CSRF value remain in process memory; only the non-secret username and bridge URL are saved. Its SSE readers share that in-memory cookie jar. The existing command token remains separate and is still required for hardware commands.
+
 ## Create a private account file
 
 Keep the account file outside this repository and outside the public website. The account tool reads the password from standard input so it does not appear in process arguments or the shell history:

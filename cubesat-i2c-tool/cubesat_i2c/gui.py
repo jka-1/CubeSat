@@ -30,14 +30,22 @@ class Worker(QObject):
     step = Signal(int, str, bool, str)
     done = Signal(str)
 
-    def __init__(self, session, steps, stop_on_error, stop_event):
+    def __init__(self, session, steps, stop_on_error, stop_event, sequence_name):
         super().__init__()
         self.session, self.steps, self.soe, self.stop = session, steps, stop_on_error, stop_event
+        self.sequence_name = sequence_name
+
+    def marker(self, index, line, phase, ok=None, result=None):
+        if isinstance(self.session, WirelessSession) and self.session.active_run_id:
+            try: self.session.sequence_marker(self.sequence_name, index, line, phase, ok, result)
+            except Exception as e: self.session._log("SEQ", "marker failed: %s" % e)
 
     def run(self):
         try:
             res = run_sequence(self.session, self.steps,
-                               on_step=lambda i, l, ok, r: self.step.emit(i, l, ok, r),
+                               on_step_start=lambda i, l: self.marker(i, l, "started"),
+                               on_step=lambda i, l, ok, r: (self.marker(i, l, "completed" if ok else "failed", ok, r),
+                                                            self.step.emit(i, l, ok, r)),
                                stop_event=self.stop, stop_on_error=self.soe)
             ok = sum(1 for r in res if r[1])
             self.done.emit("Finished: %d/%d steps OK" % (ok, len(res)))
@@ -144,16 +152,24 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------------------------------------- debug (wireless)
     def _wireless_box(self):
-        self.wireless_box = g = QGroupBox("Debug (Wireless) - telemetry bridge HTTP API"); f = QHBoxLayout(g)
+        self.wireless_box = g = QGroupBox("Debug (Wireless) - telemetry bridge HTTP API"); f = QGridLayout(g)
         self.bridge_url = QLineEdit(self.store.settings.get("bridge_url", "http://127.0.0.1:8080"))
         self.bridge_url.setMinimumWidth(280)
         self.bridge_url.setToolTip("Bridge base URL, e.g. http://<droplet>:8080 or https://<site>/telemetry")
+        self.bridge_user = QLineEdit(self.store.settings.get("bridge_username", ""))
+        self.bridge_user.setPlaceholderText("username when JWT login is enabled")
+        self.bridge_password = QLineEdit(); self.bridge_password.setEchoMode(QLineEdit.Password)
+        self.bridge_password.setPlaceholderText("password (not saved)")
         self.bridge_token = QLineEdit(os.environ.get("COMMAND_TOKEN", ""))
         self.bridge_token.setEchoMode(QLineEdit.Password); self.bridge_token.setPlaceholderText("command token (not saved)")
         self.bridge_tls = QCheckBox("Verify TLS"); self.bridge_tls.setChecked(True)
         self.wbtn = QPushButton("Connect"); self.wbtn.clicked.connect(self.toggle_wireless)
-        for x in (QLabel("Bridge"), self.bridge_url, QLabel("Token"), self.bridge_token, self.bridge_tls, self.wbtn):
-            f.addWidget(x)
+        f.addWidget(QLabel("Bridge"), 0, 0); f.addWidget(self.bridge_url, 0, 1, 1, 3)
+        f.addWidget(self.bridge_tls, 0, 4); f.addWidget(self.wbtn, 0, 5)
+        f.addWidget(QLabel("Login"), 1, 0); f.addWidget(self.bridge_user, 1, 1)
+        f.addWidget(self.bridge_password, 1, 2); f.addWidget(QLabel("Command token"), 1, 3)
+        f.addWidget(self.bridge_token, 1, 4, 1, 2)
+        f.setColumnStretch(1, 1); f.setColumnStretch(2, 1); f.setColumnStretch(4, 1)
         return g
 
     def _debug_box(self):
@@ -184,29 +200,40 @@ class MainWindow(QMainWindow):
     def toggle_wireless(self):
         if isinstance(self.session, WirelessSession):
             self.session.set_live_mode(False)
+            self.stream_page.stop(); self.link_page.use_bridge_session(None)
             self.session.close(); self.session = None; self.ptimer.stop()
             self.wbtn.setText("Connect"); self.statusBar().showMessage("Disconnected")
-            self.log.write("SYS", "wireless disconnected"); self._show_presence(None); self.stream_page.stop(); return
+            self.log.write("SYS", "wireless disconnected"); self._show_presence(None)
+            self.sync_recording_state(); return
         if self.session:
             self.session.close(); self.session = None; self.cbtn.setText("Connect")
         url = self.bridge_url.text().strip()
         try:
             self.session = WirelessSession.open(url, self.bridge_token.text().strip(), self.log,
-                                                verify_tls=self.bridge_tls.isChecked())
+                                                verify_tls=self.bridge_tls.isChecked(),
+                                                username=self.bridge_user.text().strip(),
+                                                password=self.bridge_password.text())
         except Exception as e:
             QMessageBox.critical(self, "Bridge unreachable", "%s\n%s" % (url, e)); self.session = None; return
-        self.store.settings["bridge_url"] = url; self.store.save_settings()
+        self.bridge_password.clear()
+        self.store.settings["bridge_url"] = url
+        self.store.settings["bridge_username"] = self.bridge_user.text().strip()
+        self.store.save_settings()
         self.wbtn.setText("Disconnect"); self.statusBar().showMessage("Debug (Wireless) via %s" % url)
         self.console("Connected to bridge %s. Registers, Sequences and Test Log now run over the bridge." % url)
         self.ptimer.start(); self.poll_presence()
-        self.stream_page.start(url, self.bridge_tls.isChecked())   # Streaming Telemetry tab follows the wireless bridge
+        self.stream_page.start(url, self.bridge_tls.isChecked(), self.session.open_url)   # shares the in-memory JWT cookie
+        self.link_page.use_bridge_session(self.session)
         # Live mode on the bridge: the droplet web pages stop showing simulated data while the exe is live.
         if not self.session.set_live_mode(True):
             self.console("Note: bridge live-mode flag not set (needs the command token); web pages still go live once telemetry arrives.")
+        self.sync_recording_state()
 
     def closeEvent(self, e):
         if isinstance(self.session, WirelessSession):
-            try: self.session.set_live_mode(False)
+            try:
+                self.stream_page.stop(); self.link_page.use_bridge_session(None)
+                self.session.set_live_mode(False); self.session.close()
             except Exception: pass
         super().closeEvent(e)
 
@@ -544,6 +571,16 @@ class MainWindow(QMainWindow):
         ins = QPushButton("Insert read of selected register"); ins.clicked.connect(lambda: self._ins(False))
         insw = QPushButton("Insert write (Registers tab value)"); insw.clicked.connect(lambda: self._ins(True))
         ib.addWidget(ins); ib.addWidget(insw); right.addLayout(ib)
+        recording = QGroupBox("Telemetry recording"); rg = QGridLayout(recording)
+        self.run_name = QLineEdit(); self.run_name.setPlaceholderText("Run name (defaults to the selected profile)")
+        self.record_start = QPushButton("Start recording"); self.record_start.clicked.connect(self.start_recording)
+        self.record_stop = QPushButton("Stop recording"); self.record_stop.clicked.connect(self.stop_recording)
+        self.record_status = QLabel("Connect to Debug (Wireless) to record and mark sequence steps.")
+        rg.addWidget(QLabel("Name"), 0, 0); rg.addWidget(self.run_name, 0, 1)
+        rg.addWidget(self.record_start, 0, 2); rg.addWidget(self.record_stop, 0, 3)
+        rg.addWidget(self.record_status, 1, 0, 1, 4); rg.setColumnStretch(1, 1)
+        self.record_start.setEnabled(False); self.record_stop.setEnabled(False)
+        right.addWidget(recording)
         rb = QHBoxLayout(); self.soe = QCheckBox("Stop on error"); self.soe.setChecked(True)
         self.runb = QPushButton("Run sequence"); self.runb.clicked.connect(self.run_seq)
         self.stopb = QPushButton("Stop"); self.stopb.setEnabled(False); self.stopb.clicked.connect(lambda: self._stop.set())
@@ -608,8 +645,10 @@ class MainWindow(QMainWindow):
 
     def run_seq(self):
         if not self.need(): return
+        if isinstance(self.session, WirelessSession): self.sync_recording_state()
         self.seqout.clear(); self._stop = threading.Event()
-        self.thread = QThread(); self.worker = Worker(self.session, self._lines(), self.soe.isChecked(), self._stop)
+        profile = self.plist.currentItem().text() if self.plist.currentItem() else "Unsaved sequence"
+        self.thread = QThread(); self.worker = Worker(self.session, self._lines(), self.soe.isChecked(), self._stop, profile)
         self.worker.moveToThread(self.thread); self.thread.started.connect(self.worker.run)
         self.worker.step.connect(lambda i, l, ok, r: self.seqout.appendPlainText("%s L%d %s\n    %s" % ("OK " if ok else "ERR", i + 1, l, r.replace("\n", "\n    "))))
         self.worker.done.connect(self._seq_done); self.worker.done.connect(self.thread.quit)
@@ -617,6 +656,43 @@ class MainWindow(QMainWindow):
 
     def _seq_done(self, msg):
         self.seqout.appendPlainText(msg); self.runb.setEnabled(True); self.stopb.setEnabled(False)
+
+    def sync_recording_state(self):
+        if not isinstance(self.session, WirelessSession):
+            self.record_start.setEnabled(False); self.record_stop.setEnabled(False)
+            self.record_status.setText("Connect to Debug (Wireless) to record and mark sequence steps.")
+            return
+        try:
+            data = self.session.recording_status()
+            active = bool((data.get("recording") or {}).get("active_run_id"))
+            active_run = next((r for r in data.get("runs", []) if r.get("status") == "recording"), None)
+            operator = not self.session.auth_enabled or (self.session.user or {}).get("role") == "operator"
+            self.record_status.setText(("Recording: %s" % active_run.get("name") if active_run else "Recorder ready")
+                                       if operator else "Viewer account: recording controls are read-only")
+            self.record_start.setEnabled(operator and not active); self.record_stop.setEnabled(operator and active)
+        except Exception as e:
+            self.record_start.setEnabled(False); self.record_stop.setEnabled(False)
+            self.record_status.setText("Recorder unavailable: %s" % e)
+
+    def start_recording(self):
+        if not isinstance(self.session, WirelessSession): return self.sync_recording_state()
+        profile = self.plist.currentItem().text() if self.plist.currentItem() else "Sequence"
+        name = self.run_name.text().strip() or profile
+        try:
+            run = self.session.start_recording(name)
+            self.record_status.setText("Recording: %s" % run.get("name", name))
+            self.record_start.setEnabled(False); self.record_stop.setEnabled(True)
+        except Exception as e:
+            QMessageBox.warning(self, "Recording not started", str(e)); self.sync_recording_state()
+
+    def stop_recording(self):
+        if not isinstance(self.session, WirelessSession): return self.sync_recording_state()
+        try:
+            run = self.session.stop_recording()
+            self.record_status.setText("Stopped: %s" % run.get("name", "run"))
+            self.record_start.setEnabled(True); self.record_stop.setEnabled(False)
+        except Exception as e:
+            QMessageBox.warning(self, "Recording not stopped", str(e)); self.sync_recording_state()
 
     # ---------------------------------------------------------------- log
     def _log_tab(self):

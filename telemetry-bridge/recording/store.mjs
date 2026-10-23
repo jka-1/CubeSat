@@ -78,8 +78,8 @@ export class RunStore {
   }
   active() { return this.db.prepare("SELECT * FROM runs WHERE status='recording'").get() || null; }
   event(id, at, type, details) {
-    this.db.prepare('INSERT INTO events(run_id,at_ms,type,details_json) VALUES(?,?,?,?)')
-      .run(id, at, type, JSON.stringify(details));
+    return Number(this.db.prepare('INSERT INTO events(run_id,at_ms,type,details_json) VALUES(?,?,?,?)')
+      .run(id, at, type, JSON.stringify(details)).lastInsertRowid);
   }
   insertRun({ name, device_id, remote_address, mode, source, at, metadata, previous = null, session = randomUUID() }) {
     const id = randomUUID();
@@ -166,6 +166,22 @@ export class RunStore {
     if (!run || envelope.target?.address !== run.remote_address) return null;
     this.event(run.id, Date.parse(envelope.updated_at), 'command_status', envelope);
     return { run_id: run.id };
+  }
+  marker({ sequence_name, step_index, step_text, phase, ok = null, result = null, now = Date.now() }) {
+    const run = this.active();
+    if (!run) fail('No recording is active', 409);
+    if (typeof sequence_name !== 'string' || !sequence_name.trim() || sequence_name.length > 120) {
+      fail('Sequence name must be 1–120 characters');
+    }
+    if (!Number.isSafeInteger(step_index) || step_index < 0 || step_index > 100000) fail('Invalid sequence step index');
+    if (typeof step_text !== 'string' || !step_text.trim() || step_text.length > 500) fail('Sequence step must be 1–500 characters');
+    if (!['started', 'completed', 'failed'].includes(phase)) fail('Invalid sequence step phase');
+    if (ok !== null && typeof ok !== 'boolean') fail('Sequence step result must be true, false or null');
+    if (result !== null && typeof result !== 'string') fail('Sequence step output must be a string or null');
+    const details = { sequence_name: sequence_name.trim(), step_index, step_number: step_index + 1,
+      step_text: step_text.trim(), phase, ok, result: result === null ? null : result.slice(0, 1000) };
+    const event_id = this.event(run.id, integer(now, Date.now(), 0, Number.MAX_SAFE_INTEGER), 'sequence_step', details);
+    return { run_id: run.id, event_id, ...details };
   }
   get(id) {
     const row = this.db.prepare('SELECT * FROM runs WHERE id=?').get(id);

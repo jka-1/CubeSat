@@ -94,12 +94,14 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
   const health = await (await request('/health', viewer)).json();
   assert.equal(health.command_auth_required, true, 'JWT mode keeps command-token authentication required');
   for (const path of ['/runs/start', '/runs/stop', '/live-mode', '/command', '/api/demo/command', '/input', '/api/demo/input']) assert.equal((await request(path, viewer, {}, { 'X-Command-Token': 'test-command' })).status, 403);
+  assert.equal((await request('/runs/events', viewer, { sequence_name: 'x', step_index: 0, step_text: 'x', phase: 'started' })).status, 403);
   const operator = await login('operator');
   assert.equal((await request('/live-mode', operator, { on: true })).status, 401);
   assert.equal((await request('/live-mode', operator, { on: true }, { 'X-Command-Token': 'test-command', 'X-CSRF-Token': '' })).status, 403);
   assert.equal((await request('/live-mode', operator, { on: true }, { 'X-Command-Token': 'test-command', Origin: 'https://evil.example' })).status, 403);
   assert.equal((await request('/live-mode', operator, { on: true }, { 'X-Command-Token': 'test-command' })).status, 200);
   assert.equal((await request('/runs/start', operator, { name: 'local' })).status, 409);
+  assert.equal((await request('/runs/events', operator, { sequence_name: 'x', step_index: 0, step_text: 'x', phase: 'started' })).status, 409);
   const stream = await request('/events', viewer), reader = stream.body.getReader();
   await reader.read();
   assert.equal((await request('/auth/logout', viewer, {})).status, 200);

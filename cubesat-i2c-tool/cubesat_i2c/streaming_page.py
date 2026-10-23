@@ -219,13 +219,14 @@ class StreamingPage(QWidget):
     def running(self):
         return self.source is not None
 
-    def start(self, base=None, verify_tls=None):
+    def start(self, base=None, verify_tls=None, opener=None):
         if base: self.url.setText(base)
         if verify_tls is not None: self.tls.setChecked(verify_tls)
         self.stop()
         b = self.url.text().strip().rstrip("/")
         self.model = StreamingModel()   # fresh model: a lingering old reader thread cannot write into it
-        self.source = SseLinkSource(self.model, b + "/events", b + "/health", verify_tls=self.tls.isChecked())
+        self.source = SseLinkSource(self.model, b + "/events", b + "/health",
+                                    verify_tls=self.tls.isChecked(), opener=opener)
         self.source.start(); self.btn.setText("Stop streaming"); self.refresh()
 
     def stop(self):

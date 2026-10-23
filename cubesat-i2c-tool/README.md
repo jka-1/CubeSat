@@ -71,10 +71,18 @@ On the Connection tab, choose **Source → Debug (Wireless)**. Enter the bridge 
 **Connect**. After that, the Registers, Sequences and Test Log pages run over the bridge's
 `POST /command?wait=1` API.
 
+If the bridge has JWT login enabled, also enter an operator username and password. The password,
+JWT and CSRF value remain in memory and are not written to settings. The command token is still
+sent for every hardware command. Streaming Telemetry and Link Health reuse the same in-memory
+authenticated connection.
+
 * Presence tiles (PV/INA226 0x40, BMS/BQ76942 0x08, MPPT/BQ25798 0x6B) refresh every 2 s from
   `/health`. They need the firmware's debug mode (v5 packets).
 * Buttons: Enable/Disable debug, scan period (200-5000 ms), and bus scan + probe.
 * Extra sequence lines: `debug on|off`, `scan_period N`, `probe 0x6B`.
+* The Sequences page can start and stop a named telemetry recording. While a recording is active,
+  every executable sequence line writes server-timestamped `started` and `completed`/`failed`
+  markers to the run. These markers appear in the browser Run Explorer graph and event table.
 * `i2cconfig` is ignored (the bus is fixed in firmware). `i2cdump` is not available over the bridge.
 * Serial mode is unchanged.
 * `run.py --wireless http://host:8080` opens the app with this source selected.
