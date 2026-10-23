@@ -2,6 +2,7 @@ import { allowRoute } from './auth.js?v=20261022a';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261022a';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261022a';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261022a';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261023a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -17,6 +18,7 @@ const routes = {
   communication: `./modules/communication.html?v=20261019b`,
   'link-health': `./modules/link-health.html?v=20261013a`,
   'debug-mode': `./modules/debug-mode.html?v=20261019b`,
+  runs: `./modules/runs.html?v=20261023a`,
   partners: `./modules/partners.html?v=${assetVersion}`
 };
 
@@ -25,6 +27,7 @@ const pageInitializers = {
   communication: initI2CPage,
   'link-health': initLinkHealthPage,
   'debug-mode': initDebugModePage,
+  runs: initRunsPage,
   partners: () => {}
 };
 
@@ -33,6 +36,7 @@ const pageDestroyers = {
   communication: destroyI2CPage,
   'link-health': destroyLinkHealthPage,
   'debug-mode': destroyDebugModePage,
+  runs: destroyRunsPage,
   partners: () => {}
 };
 

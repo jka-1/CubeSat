@@ -1,0 +1,135 @@
+<link rel="stylesheet" href="./assets/css/runs.css?v=20261023a" />
+<section id="runs" class="page active runs-page" aria-labelledby="runsTitle">
+  <header class="runs-heading">
+    <div>
+      <h2 id="runsTitle">Telemetry runs</h2>
+      <p>Record real UDP telemetry, inspect startup behavior, and trace debug or power-source boundaries back to packets.</p>
+    </div>
+    <div id="runsBridgeState" class="status-pill offline">Checking recorder</div>
+  </header>
+
+  <section class="runs-capture" aria-labelledby="captureTitle">
+    <div>
+      <h3 id="captureTitle">Capture control</h3>
+      <p id="captureHelp">A recording begins with the latest fresh hardware packet.</p>
+    </div>
+    <form id="runStartForm" class="runs-capture-form">
+      <label for="runName">Run name</label>
+      <input id="runName" name="name" maxlength="120" placeholder="Initialization test 01" required />
+      <button id="runStart" class="run-button primary" type="submit">Start recording</button>
+      <button id="runStop" class="run-button danger" type="button">Stop recording</button>
+    </form>
+    <p id="captureMessage" class="runs-message" role="status" aria-live="polite"></p>
+  </section>
+
+  <div id="runsError" class="runs-error" role="alert" hidden>
+    <strong>Run history is unavailable.</strong>
+    <span id="runsErrorText">Check the telemetry bridge and try again.</span>
+    <button id="runsRetry" class="run-button" type="button">Retry</button>
+  </div>
+
+  <div class="runs-layout">
+    <aside class="run-library" aria-labelledby="libraryTitle">
+      <div class="run-library-heading">
+        <div><h3 id="libraryTitle">Saved runs</h3><span id="runCount">Loading…</span></div>
+        <button id="runsRefresh" class="icon-button" type="button" aria-label="Refresh saved runs" title="Refresh saved runs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6v5h-5M4 18v-5h5M6.1 9A7 7 0 0 1 18.5 6.5L20 11M4 13l1.5 4.5A7 7 0 0 0 17.9 15"/></svg>
+        </button>
+      </div>
+      <label class="run-search" for="runSearch">Search runs
+        <input id="runSearch" type="search" placeholder="Name, source, device, reason" />
+      </label>
+      <div id="runFilters" class="run-filters" aria-label="Filter saved runs">
+        <button class="active" type="button" data-run-filter="all">All</button>
+        <button type="button" data-run-filter="recording">Active</button>
+        <button type="button" data-run-filter="debug">Debug</button>
+        <button type="button" data-run-filter="live_telemetry">Live</button>
+      </div>
+      <div id="runListSkeleton" class="run-list-skeleton" aria-label="Loading saved runs">
+        <i></i><i></i><i></i>
+      </div>
+      <ol id="runList" class="run-list"></ol>
+      <div id="runListEmpty" class="runs-empty" hidden>
+        <strong>No matching runs</strong>
+        <p>Start a recording or change the search and filters.</p>
+      </div>
+      <button id="runsLoadMore" class="run-button secondary run-load-more" type="button" hidden>Load more runs</button>
+    </aside>
+
+    <main id="runDetail" class="run-detail" aria-live="polite">
+      <div id="runDetailEmpty" class="runs-empty detail-empty">
+        <strong>Select a saved run</strong>
+        <p>The graph, event markers, and packet table will appear here.</p>
+      </div>
+
+      <div id="runDetailContent" hidden>
+        <header class="run-detail-heading">
+          <div>
+            <div class="run-title-line"><h3 id="runDetailName">Run</h3><span id="runDetailStatus" class="status-pill"></span></div>
+            <p id="runDetailDescription"></p>
+          </div>
+          <nav class="run-chain" aria-label="Linked runs">
+            <button id="runPrevious" type="button" hidden>Previous segment</button>
+            <button id="runNext" type="button" hidden>Next segment</button>
+          </nav>
+        </header>
+
+        <dl id="runFacts" class="run-facts"></dl>
+
+        <section class="run-analysis" aria-labelledby="analysisTitle">
+          <div class="run-analysis-heading">
+            <div><h3 id="analysisTitle">Measurement timeline</h3><p id="windowSummary">Choose a metric and time window.</p></div>
+            <div id="seriesState" class="series-state" role="status" aria-live="polite"></div>
+          </div>
+          <form id="seriesForm" class="series-controls">
+            <label for="seriesMetric">Measurement<select id="seriesMetric"></select></label>
+            <label for="seriesWindow">Window<select id="seriesWindow">
+              <option value="full">Full run</option><option value="30s">Last 30 seconds</option>
+              <option value="1m">Last minute</option><option value="5m">Last 5 minutes</option>
+              <option value="15m">Last 15 minutes</option><option value="custom">Custom range</option>
+            </select></label>
+            <div id="customWindow" class="custom-window" hidden>
+              <label for="seriesStart">From<input id="seriesStart" type="datetime-local" step="0.001" /></label>
+              <label for="seriesEnd">To<input id="seriesEnd" type="datetime-local" step="0.001" /></label>
+            </div>
+            <button class="run-button" type="submit">Apply window</button>
+          </form>
+
+          <div id="seriesLoading" class="chart-skeleton" aria-label="Loading graph" hidden><i></i><i></i><i></i><i></i><i></i></div>
+          <div id="seriesEmpty" class="runs-empty chart-empty" hidden><strong>No numeric samples</strong><p>Try another metric or time window.</p></div>
+          <div id="chartFrame" class="chart-frame" hidden>
+            <svg id="seriesChart" viewBox="0 0 960 360" role="img" tabindex="0" aria-labelledby="chartTitle chartDescription">
+              <title id="chartTitle">Telemetry measurement timeline</title>
+              <desc id="chartDescription">Use left and right arrow keys to select a time bucket and show its packets.</desc>
+              <g id="chartGrid"></g><g id="chartMarkers"></g><path id="chartBand"></path><path id="chartLine"></path>
+              <line id="chartSelection" x1="0" x2="0" y1="24" y2="314" hidden></line>
+              <g id="chartAxes"></g>
+            </svg>
+          </div>
+          <div id="eventMarkers" class="event-markers" aria-label="Run events"></div>
+          <p id="selectedBucket" class="selected-bucket" aria-live="polite">Click the graph or use its arrow keys to inspect a bucket.</p>
+        </section>
+
+        <section class="run-data" aria-labelledby="dataTitle">
+          <div class="run-data-heading">
+            <div><h3 id="dataTitle">Recorded data</h3><p id="tableScope">Packets in the selected time window.</p></div>
+            <div class="run-tabs" role="tablist" aria-label="Recorded data tables">
+              <button id="packetsTab" class="active" type="button" role="tab" aria-selected="true" aria-controls="packetsPanel">Packets</button>
+              <button id="eventsTab" type="button" role="tab" aria-selected="false" aria-controls="eventsPanel">Events</button>
+            </div>
+          </div>
+          <div id="packetsPanel" role="tabpanel" aria-labelledby="packetsTab">
+            <div class="run-table-wrap"><table class="run-table"><thead><tr><th>Time</th><th>Seq</th><th>Mode</th><th>Source</th><th>Order</th><th id="metricColumn">Value</th><th><span class="sr-only">Details</span></th></tr></thead><tbody id="sampleRows"></tbody></table></div>
+            <div id="samplesEmpty" class="runs-empty table-empty" hidden><strong>No packets in this interval</strong><p>Clear the graph selection or choose a wider window.</p></div>
+            <button id="samplesLoadMore" class="run-button secondary run-load-more" type="button" hidden>Load more packets</button>
+          </div>
+          <div id="eventsPanel" role="tabpanel" aria-labelledby="eventsTab" hidden>
+            <div class="run-table-wrap"><table class="run-table"><thead><tr><th>Time</th><th>Event</th><th>Details</th></tr></thead><tbody id="eventRows"></tbody></table></div>
+            <div id="eventsEmpty" class="runs-empty table-empty" hidden><strong>No events recorded</strong><p>This run has no event markers yet.</p></div>
+            <button id="eventsLoadMore" class="run-button secondary run-load-more" type="button" hidden>Load more events</button>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+</section>

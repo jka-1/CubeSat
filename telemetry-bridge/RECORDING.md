@@ -66,7 +66,9 @@ Use `node tools/backup-recordings.mjs <source.sqlite> <new-backup.sqlite>` from 
 
 Deployment helpers now prepare locked dependencies and verify the SQLite native module **before** copying live application files. They include recording modules, dependencies and the lockfile in application backup/restore. The droplet currently lacks npm; deployment preflight will refuse until it is available. Application backups do not substitute for the database backup above. Only schema v1 exists; automatic downgrade is not supported, and a newer schema version is rejected.
 
-Next milestones: run explorer with graph/table views and end markers; Windows recorder controls and sequence-step correlation; calibrated transient acquisition and retention/load testing before sustained capture.
+The browser Run Explorer lists and searches saved runs, shows linked recording segments and end reasons, graphs any allowlisted metric over preset or custom time windows, and binds graph selection to the exact packet-table interval. It also exposes event markers and an event table, inline decoded packet inspection, and operator-only start/stop controls. Graph gaps remain gaps; unavailable measurements are never interpolated.
+
+Next milestones: Windows recorder controls and sequence-step correlation; calibrated transient acquisition and retention/load testing before sustained capture.
 
 ## Validation
 
