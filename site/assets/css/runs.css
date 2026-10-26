@@ -137,6 +137,7 @@
 .chart-axis-label { fill: #bcb5a4; font-size: 12px; }
 #chartBand { fill: rgba(212, 175, 55, 0.14); stroke: none; }
 #chartLine { fill: none; stroke: var(--gold-soft); stroke-width: 2.5; vector-effect: non-scaling-stroke; }
+#chartPoints circle { fill: var(--gold-soft); }
 .chart-event { stroke: rgba(255, 214, 107, 0.5); stroke-width: 1; stroke-dasharray: 5 4; }
 .chart-event-source_switch, .chart-event-run_ended, .chart-event-device_reboot { stroke: rgba(255, 123, 123, 0.76); }
 .chart-event-sequence_step { stroke: rgba(139, 190, 255, 0.88); }

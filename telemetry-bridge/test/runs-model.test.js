@@ -3,7 +3,7 @@ import test from 'node:test';
 
 import {
   MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue, nearestBucket,
-  responseSummary, responseWindow, runMatches, seriesExtent, windowForPreset
+  responseSummary, responseWindow, runMatches, seriesExtent, seriesSegments, windowForPreset
 } from '../../site/assets/js/runs-model.mjs';
 
 const run = {
@@ -47,6 +47,16 @@ test('chart helpers handle constant series and nearest bucket', () => {
   assert.ok(extent.min < 4 && extent.max > 4);
   assert.equal(nearestBucket(points, 26), points[2]);
   assert.equal(formatDuration(3_661_000), '1h 1m 1s');
+});
+
+test('chart segments join normal sparse buckets and preserve sustained gaps', () => {
+  const point = (start) => ({ start_ms: start, end_ms: start + 40, min: 1, max: 2, mean: 1.5 });
+  const points = [point(0), point(250), point(500), point(750), point(3_000), point(3_250)];
+  assert.deepEqual(seriesSegments(points).map((segment) => segment.map((item) => item.start_ms)), [
+    [0, 250, 500, 750], [3_000, 3_250]
+  ]);
+  assert.deepEqual(seriesSegments([{ ...point(0), mean: null }]), []);
+  assert.equal(seriesSegments([point(0)])[0].length, 1);
 });
 
 test('trigger-aligned response windows and summaries preserve time-domain behavior', () => {

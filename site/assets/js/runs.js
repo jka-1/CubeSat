@@ -1,9 +1,9 @@
 import { apiFetch, canOperate } from './auth.js?v=20261022a';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
-  nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent,
+  nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,
   windowForPreset
-} from './runs-model.mjs?v=20261023e';
+} from './runs-model.mjs?v=20261026a';
 
 const API = '/telemetry/runs';
 const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -319,15 +319,11 @@ function renderChart() {
     const label = svgElement('text', { x, y: 340, class: 'chart-axis-label', 'text-anchor': i === 0 ? 'start' : i === 4 ? 'end' : 'middle' });
     label.textContent = analysisTimeLabel(at); axes.append(label);
   }
-  // Separate subpaths preserve missing buckets instead of drawing invented values across gaps.
-  const segments = [];
-  for (const point of series) {
-    if (!Number.isFinite(point.mean)) continue;
-    const previous = segments.at(-1);
-    const coordinates = { point, ...chartCoordinates(point, extent) };
-    if (!previous || previous.at(-1).point.end_ms < point.start_ms) segments.push([coordinates]);
-    else previous.push(coordinates);
-  }
+  // Bucket widths can be narrower than the packet cadence. Join normal sample intervals while
+  // retaining separate subpaths for sustained telemetry gaps.
+  const segments = seriesSegments(series).map((segment) => segment.map((point) => ({
+    point, ...chartCoordinates(point, extent)
+  })));
   const line = segments.map((segment) => segment.map((p, index) => `${index ? 'L' : 'M'}${p.x.toFixed(2)},${p.meanY.toFixed(2)}`).join(' ')).join(' ');
   const band = segments.map((segment) => {
     const upper = segment.map((p, index) => `${index ? 'L' : 'M'}${p.x.toFixed(2)},${p.maxY.toFixed(2)}`).join(' ');
@@ -335,6 +331,10 @@ function renderChart() {
     return `${upper}${lower}Z`;
   }).join(' ');
   $('chartLine').setAttribute('d', line); $('chartBand').setAttribute('d', band);
+  const dots = $('chartPoints'); dots.replaceChildren();
+  for (const segment of segments.filter((item) => item.length === 1)) {
+    dots.append(svgElement('circle', { cx: segment[0].x, cy: segment[0].meanY, r: 3 }));
+  }
   renderChartMarkers(); updateChartSelection();
   text('metricColumn', `${selectedMetric().label} (${selectedMetric().unit})`);
   const trigger = responseMode() ? selectedTrigger() : null;

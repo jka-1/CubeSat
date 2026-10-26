@@ -74,6 +74,23 @@ export function seriesExtent(points) {
   return { min, max };
 }
 
+export function seriesSegments(points, gapFactor = 3) {
+  const valid = points.filter((point) => Number.isFinite(point.mean));
+  if (valid.length < 2) return valid.length ? [valid] : [];
+  const middle = (point) => (point.start_ms + point.end_ms) / 2;
+  const gaps = valid.slice(1).map((point, index) => middle(point) - middle(valid[index]))
+    .filter((gap) => Number.isFinite(gap) && gap > 0).sort((a, b) => a - b);
+  const cadence = gaps[Math.floor(gaps.length / 2)] || 1;
+  const threshold = cadence * gapFactor;
+  const segments = [[valid[0]]];
+  for (const point of valid.slice(1)) {
+    const segment = segments.at(-1);
+    if (middle(point) - middle(segment.at(-1)) > threshold) segments.push([point]);
+    else segment.push(point);
+  }
+  return segments;
+}
+
 export function nearestBucket(points, atMs) {
   if (!points.length) return null;
   return points.reduce((best, point) => {

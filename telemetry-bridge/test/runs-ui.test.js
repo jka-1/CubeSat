@@ -16,7 +16,7 @@ test('run explorer route exposes graph, packet table, events, and recording cont
   assert.match(index, /data-route="runs"/);
   assert.match(router, /runs:\s*initRunsPage/);
   for (const id of ['runStartForm', 'runStop', 'analysisMode', 'responseTrigger', 'responseBefore',
-    'responseAfter', 'responseSummary', 'seriesChart', 'exportCsv', 'sampleRows', 'eventRows']) {
+    'responseAfter', 'responseSummary', 'seriesChart', 'chartPoints', 'exportCsv', 'sampleRows', 'eventRows']) {
     assert.match(html, new RegExp(`id="${id}"`));
   }
   assert.match(script, /apiFetch\(API/);
