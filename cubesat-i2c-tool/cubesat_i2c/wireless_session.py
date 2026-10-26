@@ -198,6 +198,32 @@ class WirelessSession(Session):
         self._log("SEQ", "recording stopped")
         return data.get("run") or {}
 
+    # ------------------------------------------------- recorded runs (read side)
+    def list_runs(self, limit=50, offset=0):
+        """GET /runs: {runs:[...newest first], recording:{enabled, ready, active_run_id, ...}}."""
+        data = self._json("/runs?limit=%d&offset=%d" % (int(limit), int(offset)), command_token=True)
+        self.active_run_id = (data.get("recording") or {}).get("active_run_id")
+        return data
+
+    @staticmethod
+    def _q(params):
+        return urllib.parse.urlencode({k: v for k, v in params.items() if v is not None})
+
+    def get_run(self, run_id):
+        return self._json("/runs/" + urllib.parse.quote(run_id, safe=""), command_token=True).get("run") or {}
+
+    def run_events(self, run_id, after=0, limit=200):
+        return self._json("/runs/%s/events?%s" % (urllib.parse.quote(run_id, safe=""),
+                          self._q({"after": after, "limit": limit})), command_token=True)
+
+    def run_samples(self, run_id, start=None, end=None, after=0, limit=500):
+        return self._json("/runs/%s/samples?%s" % (urllib.parse.quote(run_id, safe=""),
+                          self._q({"start": start, "end": end, "after": after, "limit": limit})), command_token=True, timeout=15)
+
+    def run_series(self, run_id, metric, start=None, end=None, points=400):
+        return self._json("/runs/%s/series?%s" % (urllib.parse.quote(run_id, safe=""),
+                          self._q({"metric": metric, "start": start, "end": end, "points": points})), command_token=True, timeout=15)
+
     def sequence_marker(self, sequence_name, step_index, step_text, phase, ok=None, result=None):
         if not self.active_run_id:
             return None

@@ -13,6 +13,7 @@ from .storage import Store, TestLog, DEFAULT_CONFIG
 from .conversions import convert
 from .link_page import LinkHealthPage
 from .streaming_page import StreamingPage
+from .runs_page import RecordingsPage
 from .wireless_session import WirelessSession
 
 MONO = QFont("Consolas", 10)
@@ -76,6 +77,8 @@ class MainWindow(QMainWindow):
         tabs.addTab(self.link_page, "Link Health")
         self.stream_page = StreamingPage(self.store)
         tabs.addTab(self.stream_page, "Streaming Telemetry")
+        self.runs_page = RecordingsPage(self.store, on_recording_changed=lambda: self.sync_recording_state())
+        tabs.addTab(self.runs_page, "Recordings")
         self.tabs = tabs
         tabs.currentChanged.connect(lambda i: i == 4 and self.refresh_log())
         self.setCentralWidget(tabs)
@@ -200,7 +203,7 @@ class MainWindow(QMainWindow):
     def toggle_wireless(self):
         if isinstance(self.session, WirelessSession):
             self.session.set_live_mode(False)
-            self.stream_page.stop(); self.link_page.use_bridge_session(None)
+            self.stream_page.stop(); self.link_page.use_bridge_session(None); self.runs_page.use_session(None)
             self.session.close(); self.session = None; self.ptimer.stop()
             self.wbtn.setText("Connect"); self.statusBar().showMessage("Disconnected")
             self.log.write("SYS", "wireless disconnected"); self._show_presence(None)
@@ -224,6 +227,7 @@ class MainWindow(QMainWindow):
         self.ptimer.start(); self.poll_presence()
         self.stream_page.start(url, self.bridge_tls.isChecked(), self.session.open_url)   # shares the in-memory JWT cookie
         self.link_page.use_bridge_session(self.session)
+        self.runs_page.use_session(self.session)
         # Live mode on the bridge: the droplet web pages stop showing simulated data while the exe is live.
         if not self.session.set_live_mode(True):
             self.console("Note: bridge live-mode flag not set (needs the command token); web pages still go live once telemetry arrives.")
@@ -232,7 +236,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, e):
         if isinstance(self.session, WirelessSession):
             try:
-                self.stream_page.stop(); self.link_page.use_bridge_session(None)
+                self.stream_page.stop(); self.link_page.use_bridge_session(None); self.runs_page.use_session(None)
                 self.session.set_live_mode(False); self.session.close()
             except Exception: pass
         super().closeEvent(e)
@@ -682,6 +686,7 @@ class MainWindow(QMainWindow):
             run = self.session.start_recording(name)
             self.record_status.setText("Recording: %s" % run.get("name", name))
             self.record_start.setEnabled(False); self.record_stop.setEnabled(True)
+            self.runs_page.refresh_runs()
         except Exception as e:
             QMessageBox.warning(self, "Recording not started", str(e)); self.sync_recording_state()
 
@@ -691,6 +696,7 @@ class MainWindow(QMainWindow):
             run = self.session.stop_recording()
             self.record_status.setText("Stopped: %s" % run.get("name", "run"))
             self.record_start.setEnabled(True); self.record_stop.setEnabled(False)
+            self.runs_page.refresh_runs()
         except Exception as e:
             QMessageBox.warning(self, "Recording not stopped", str(e)); self.sync_recording_state()
 

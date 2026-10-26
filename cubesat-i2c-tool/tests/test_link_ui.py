@@ -76,7 +76,7 @@ def test_main_window_has_link_tab_and_old_tabs(tmp_path, monkeypatch):
     app = QApplication.instance() or QApplication([])
     w = MainWindow(mock=True, mock_link=True)
     names = [w.tabs.tabText(i) for i in range(w.tabs.count())]
-    assert names == ["Connection", "Registers", "Add / Delete", "Sequences", "Test Log", "Link Health", "Streaming Telemetry"]
+    assert names == ["Connection", "Registers", "Add / Delete", "Sequences", "Test Log", "Link Health", "Streaming Telemetry", "Recordings"]
     time.sleep(0.6); w.link_page.refresh()
     assert w.link_page.t_state.value.text() in ("Connected", "Stale")
     w.link_page.disconnect_source(); w.close()

@@ -89,3 +89,12 @@ logging out clears the in-memory password, session and cookies.
 * `run.py --wireless http://host:8080` opens the app with this source selected.
 * `tools/export_register_map.py <repo>` re-exports the register map and the JS parity fixtures for the
   web Debug Mode page.
+
+## Recordings tab
+
+Browses bridge telemetry recordings (`/runs` API, requires `RECORDING_DB_PATH` on the bridge).
+Start/stop a named run (operator role, or command token when JWT auth is off), view run info
+(device, packet format, signed/unsigned provenance, linked runs), per-metric min/max/mean series
+with event markers and gaps, the event log, and export samples to CSV (100,000-row cap,
+formula-safe cells). The Streaming tab meta line shows `· signed` for HMAC-authenticated
+telemetry and `· ● REC` while a run is recording.

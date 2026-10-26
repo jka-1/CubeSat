@@ -252,7 +252,9 @@ class StreamingPage(QWidget):
         self.indicator.setStyleSheet("color:%s;border:1px solid %s;border-radius:10px;padding:3px 10px;font-weight:bold" % (col, col))
         age = s["ageMs"]
         self.meta.setText("" if not s["hasData"] else "%s · seq %s · last update %s · %d packets%s" % (
-            s["format"], s["seq"], fmt_age(age), s["packets"], "" if s["sseOpen"] or not self.running() else " · SSE reconnecting"))
+            s["format"], s["seq"], fmt_age(age), s["packets"],
+            ("" if s["sseOpen"] or not self.running() else " · SSE reconnecting")
+            + (" · signed" if s.get("signed") else "") + (" · ● REC" if s.get("recording") else "")))
         self.hidden_lbl.setText(" ".join(
             "<span style='color:%s;border:1px dashed %s'>&nbsp;%s · %s&nbsp;</span>" % (DIM, DIM, h["label"], h["state"].replace("_", " ").replace("error", "bus error"))
             for h in s["hidden"]))
