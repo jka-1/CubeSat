@@ -75,7 +75,13 @@ Create a private data directory owned by the bridge service account and add this
 ```ini
 Environment="RECORDING_DB_PATH=/var/lib/cubesat-telemetry/runs.sqlite"
 Environment="DEPLOYED_REVISION=replace-with-the-full-deployed-commit-sha"
+StateDirectory=cubesat-telemetry
+StateDirectoryMode=0750
+UMask=0077
 ```
+
+`StateDirectory` makes the private database path writable when the service uses systemd filesystem
+hardening such as `ProtectSystem=strict`; directory ownership alone does not override that sandbox.
 
 Do not change or remove `COMMAND_TOKEN`. Restart the service and verify:
 

@@ -29,8 +29,10 @@ export class Recorder {
         task.resolve(message.result);
       }
     });
-    this.worker.on('error', () => this.fail('Recording worker failed'));
-    this.worker.on('exit', () => { if (!this.closing) this.fail('Recording worker stopped'); });
+    this.worker.on('error', (error) => this.fail(`Recording worker failed: ${error.message}`));
+    this.worker.on('exit', (code) => {
+      if (!this.closing && !this.state.error) this.fail(`Recording worker stopped with exit code ${code}`);
+    });
   }
   fail(message) {
     this.state.error = message;

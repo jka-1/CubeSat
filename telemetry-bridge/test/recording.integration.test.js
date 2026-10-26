@@ -4,7 +4,7 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import dgram from 'node:dgram';
 import net from 'node:net';
-import { mkdtempSync, rmSync, readFileSync, statSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -133,4 +133,15 @@ test('bounded worker queue interrupts recording visibly and flushes the admitted
     assert.equal(store.get(run.id).end_reason, 'queue_overflow');
     assert.equal(store.get(run.id).sample_count, 1);
   } finally { store.close(); }
+});
+
+test('recording startup preserves the worker failure cause', async (t) => {
+  const dir = mkdtempSync(join(tmpdir(), 'record-startup-error-'));
+  t.after(() => rmSync(dir, { recursive: true, force: true }));
+  const blocker = join(dir, 'not-a-directory');
+  writeFileSync(blocker, 'file');
+  const recorder = new Recorder(join(blocker, 'runs.sqlite'));
+  await assert.rejects(recorder.ready, /Recording worker failed:.*(EEXIST|ENOTDIR|not a directory)/i);
+  assert.match(recorder.status().error, /(EEXIST|ENOTDIR|not a directory)/i);
+  await recorder.close();
 });
