@@ -10,7 +10,9 @@ This branch contains the hardened 1-4 telemetry handoff for Saturday, August 8, 
 The current firmware emits the `0x0004` combined packet. The bridge decodes its raw I²C values and
 new ADC peripheral readings into the dashboard view while retaining v1-v3 compatibility.
 
-Use [`LAB_HANDOFF.md`](LAB_HANDOFF.md) for the deployment and hardware acceptance checklist.
+Use [`LAB_HANDOFF.md`](LAB_HANDOFF.md) for the original command-path hardware checklist and
+[`TELEMETRY_TEST_PLAN.md`](TELEMETRY_TEST_PLAN.md) for the recording, login, run-analysis and
+provenance deployment plan.
 
 ## What this version covers
 
