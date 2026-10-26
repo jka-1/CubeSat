@@ -39,7 +39,7 @@ if [ -n "$expected_branch" ] && command -v git >/dev/null 2>&1; then
   fi
 fi
 
-if [ ! -d "$bridge_source_dir/auth" ] || [ ! -d "$bridge_source_dir/recording" ] || [ ! -f "$bridge_source_dir/tools/auth-user.mjs" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
+if [ ! -d "$bridge_source_dir/auth" ] || [ ! -d "$bridge_source_dir/recording" ] || [ ! -f "$bridge_source_dir/tools/auth-user.mjs" ] || [ ! -f "$bridge_source_dir/telemetry-auth.mjs" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
   echo "Missing bridge auth/recording modules or package lock." >&2
   exit 1
 fi
@@ -49,7 +49,7 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 # Prepare native dependencies for this server before replacing any live application files.
 npm ci --prefix "$bridge_source_dir" --omit=dev
-(cd "$bridge_source_dir" && node --input-type=module -e "import { jwtVerify } from 'jose'; import Database from 'better-sqlite3'; const db = new Database(':memory:'); db.close();")
+(cd "$bridge_source_dir" && node --input-type=module -e "import { jwtVerify } from 'jose'; import Database from 'better-sqlite3'; await import('./telemetry-auth.mjs'); const db = new Database(':memory:'); db.close();")
 
 backup_dir="$("$script_dir/backup-live.sh")"
 echo "Backup created at: $backup_dir"
@@ -58,6 +58,7 @@ cp -a "$site_source/." "$site_root/"
 cp "$bridge_source" "$bridge_file"
 cp "$bridge_package_source" "$bridge_package_file"
 cp "$bridge_source_dir/package-lock.json" "$bridge_dir/package-lock.json"
+cp "$bridge_source_dir/telemetry-auth.mjs" "$bridge_dir/telemetry-auth.mjs"
 cp -a "$bridge_source_dir/recording" "$bridge_dir/"
 cp -a "$bridge_source_dir/auth" "$bridge_dir/"
 cp -a "$bridge_source_dir/tools" "$bridge_dir/"
@@ -85,7 +86,12 @@ if command -v curl >/dev/null 2>&1; then
 
   if [ "$health_ok" != true ]; then
     echo "Deploy failed: bridge health check did not pass." >&2
-    echo "Rollback with: $script_dir/rollback-live.sh $backup_dir" >&2
+    echo "Restoring the pre-deploy backup: $backup_dir" >&2
+    if SERVICE_NAME="$service_name" "$script_dir/rollback-live.sh" "$backup_dir"; then
+      echo "Automatic rollback completed." >&2
+    else
+      echo "Automatic rollback failed. Retry with: $script_dir/rollback-live.sh $backup_dir" >&2
+    fi
     exit 1
   fi
 fi

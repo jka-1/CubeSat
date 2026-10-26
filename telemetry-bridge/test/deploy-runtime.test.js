@@ -20,6 +20,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('source/bridge/server.js', 'new server');
   write('source/bridge/package.json', '{}');
   write('source/bridge/package-lock.json', '{}');
+  write('source/bridge/telemetry-auth.mjs', 'new telemetry auth');
   write('source/bridge/recording/client.mjs', 'new module');
   write('source/bridge/auth/session.mjs', 'new auth');
   write('source/bridge/tools/auth-user.mjs', 'new account tool');
@@ -28,6 +29,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('live/bridge/server.js', 'old server');
   write('live/bridge/package.json', '{}');
   write('live/bridge/package-lock.json', '{}');
+  write('live/bridge/telemetry-auth.mjs', 'old telemetry auth');
   write('live/bridge/recording/client.mjs', 'old module');
   write('live/bridge/auth/session.mjs', 'old auth');
   write('live/bridge/tools/auth-user.mjs', 'old account tool');
@@ -36,6 +38,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   // These shims exercise deployment orchestration only; the actual native driver is tested separately.
   write('bin/node', '#!/bin/sh\nexit 0\n', 0o755);
   write('bin/curl', '#!/bin/sh\nprintf \'{"status":"ok"}\'\n', 0o755);
+  write('bin/sleep', '#!/bin/sh\nexit 0\n', 0o755);
   const npm = write('bin/npm', '#!/bin/sh\nexit 23\n', 0o755);
   const env = { ...process.env, PATH: join(root, 'bin') + ':' + process.env.PATH,
     SITE_SOURCE: join(source, 'site'), BRIDGE_SOURCE: join(source, 'bridge/server.js'),
@@ -47,10 +50,16 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(spawnSync('bash', [deploy], { env }).status, 23);
   assert.equal(readFileSync(join(live, 'bridge/server.js'), 'utf8'), 'old server');
   writeFileSync(npm, '#!/bin/sh\nexit 0\n');
+  writeFileSync(join(root, 'bin/curl'), '#!/bin/sh\nexit 22\n');
+  assert.notEqual(spawnSync('bash', [deploy], { env }).status, 0);
+  assert.equal(readFileSync(join(live, 'bridge/server.js'), 'utf8'), 'old server');
+  assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'old telemetry auth');
+  writeFileSync(join(root, 'bin/curl'), '#!/bin/sh\nprintf \'{"status":"ok"}\'\n');
   execFileSync('bash', [deploy], { env });
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'new module');
   assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'new auth');
   assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'new account tool');
+  assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'new telemetry auth');
   const backup = join(root, 'backups', readdirSync(join(root, 'backups'))[0]);
   execFileSync('bash', [rollback, backup], { env });
   assert.equal(readFileSync(join(live, 'site/index.html'), 'utf8'), 'old site');
@@ -58,6 +67,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'old module');
   assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'old auth');
   assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'old account tool');
+  assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'old telemetry auth');
   assert.equal(readFileSync(join(live, 'bridge/node_modules/example/index.js'), 'utf8'), 'old dependency');
   assert.equal(readFileSync(join(root, 'private/runs.sqlite'), 'utf8'), 'untouched recording data');
 });
