@@ -1,4 +1,4 @@
-import { apiFetch, canOperate } from './auth.js?v=20261022a';
+import { apiFetch, canOperate } from './auth.js?v=20261027a';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261014a';

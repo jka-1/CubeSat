@@ -1,6 +1,6 @@
 # JWT login — local milestone
 
-This implementation is opt-in and has not been deployed. It adds short-lived JWT sessions for the website while preserving the command token as a separate control for hardware actions.
+This implementation is opt-in and has not been deployed. It adds JWT login for the website while preserving the command token as a separate control for hardware actions.
 
 ## Authorization model
 
@@ -11,7 +11,9 @@ This implementation is opt-in and has not been deployed. It adds short-lived JWT
 
 When JWT login is enabled, `/health`, `/latest`, `/events`, `/runs`, `/input`, `/live-mode` and `/command` require a valid session. The public site pages and `GET /auth/status` remain available so the browser can present login. `GET /healthz` exposes only process readiness and server time for local service checks. The legacy `ALLOW_UNAUTHENTICATED_COMMANDS` setting cannot bypass JWT login or the command token while JWT mode is active.
 
-The JWT is stored only in an `HttpOnly`, `SameSite=Strict` cookie. Production cookies require HTTPS and include `Secure`. State-changing requests require both an operator session and an in-memory CSRF value tied to that session. JWT verification pins HS256 and validates the signature, issuer, audience, subject, role, ID, issued time and expiry. Logout revokes the server-side session and closes its telemetry streams; a bridge restart invalidates every existing session. Sessions default to 15 minutes and cannot exceed one hour.
+The JWT is stored only in an `HttpOnly`, `SameSite=Strict` cookie. Production cookies require HTTPS and include `Secure`. State-changing requests require both an operator session and an in-memory CSRF value tied to that session. JWT verification pins HS256 and validates the signature, issuer, audience, subject, role, ID and issued time. The server-side session is required for every request. Logout revokes it and closes its telemetry streams; a bridge restart invalidates every existing session. The cookie has a one-year browser retention limit, but an operator session has no routine inactivity timeout. Viewer sessions expire after inactivity, defaulting to 15 minutes; `AUTH_SESSION_SECONDS` accepts 60–86400 seconds. Successful authenticated requests reset a viewer's timeout. Viewer sessions have no concurrency cap.
+
+Only one operator holds control at a time. A second operator login receives HTTP 409 while the first operator's lease is active. The website renews control through `POST /auth/heartbeat` every 15 seconds while visible; `AUTH_OPERATOR_LEASE_SECONDS` defaults to 45 seconds and accepts 30–300 seconds. A control request also renews its owner's lease, supporting the existing Windows tool. A missed lease releases control for another operator without expiring the original authentication session. The former operator cannot send commands while another operator holds control. Explicit logout releases control immediately. The account view is a page with a Back button and does not overlay the dashboard.
 
 The Windows I²C tool follows the same flow when JWT is enabled. Its cookie jar, password and CSRF value remain in process memory; only the non-secret username and bridge URL are saved. Its SSE readers share that in-memory cookie jar. If an authenticated request receives `401`, the tool serializes one login renewal and retries that request once; concurrent readers reuse the renewed session. Logout, disconnect and failed connection cleanup erase the in-memory credentials and cookie jar. The existing command token remains separate and is still required for hardware commands after renewal.
 
@@ -26,7 +28,7 @@ printf '%s\n' "$CUBESAT_ACCOUNT_PASSWORD" | node tools/auth-user.mjs /absolute/p
 unset CUBESAT_ACCOUNT_PASSWORD
 ```
 
-Run the command again to add or replace an account. Usernames may contain letters, numbers, `.`, `_` and `-`; passwords must contain 12–256 characters. The generated file is mode 600 and contains a random signing key plus scrypt password hashes. Never commit or copy its contents into issue reports.
+Run the command again to add or replace an account. Usernames may contain letters, numbers, `.`, `_` and `-`; passwords may be shorter than 12 characters but must be non-empty, contain a non-whitespace character, and be at most 256 characters. Existing password hashes remain valid. The generated file is mode 600 and contains a random signing key plus scrypt password hashes. Never commit or copy its contents into issue reports.
 
 ## Local configuration
 
@@ -38,6 +40,7 @@ export AUTH_CONFIG_PATH=/absolute/private/path/auth.json
 export AUTH_ORIGIN=http://127.0.0.1:8090
 export AUTH_ALLOW_LOCAL_HTTP=true
 export AUTH_SESSION_SECONDS=900
+export AUTH_OPERATOR_LEASE_SECONDS=45
 export COMMAND_TOKEN='your-existing-private-command-token'
 ```
 
@@ -47,4 +50,4 @@ Omit `AUTH_CONFIG_PATH` to retain the pre-login behavior during local compatibil
 
 ## Deliberate limits
 
-Sessions and revocations are held in memory for one bridge process. This is suitable for the current single-process, single-droplet design and deliberately invalidates sessions on restart. The Windows client renews by submitting the still in-memory account password; the server does not issue a refresh token. A multi-process deployment would need a shared session store. Login limits use the TCP peer address; behind the current local Apache proxy, users share the conservative ten-attempts-per-minute limit. Password reset, self-registration, refresh tokens and federated identity are outside this milestone.
+Sessions, control leases and revocations are held in memory for one bridge process. This is suitable for the current single-process, single-droplet design and deliberately invalidates sessions on restart. The Windows client renews by submitting the still in-memory account password; the server does not issue a refresh token. A multi-process deployment would need a shared session store. Login limits use the TCP peer address; behind the current local Apache proxy, users share the conservative ten-attempts-per-minute limit. Password reset, self-registration, refresh tokens and federated identity are outside this milestone.

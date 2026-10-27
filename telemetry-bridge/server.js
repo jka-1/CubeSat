@@ -2067,6 +2067,13 @@ const httpServer = http.createServer(async (request, response) => {
         sendJson(response, 200, sessions.publicSession(session));
         return;
       }
+      if (request.method === 'POST' && requestUrl.pathname === '/auth/heartbeat') {
+        sessions.csrfCheck(request, session);
+        if (session.role !== 'operator') throw createHttpError(403, 'An operator account is required');
+        sessions.renewOperator(session);
+        sendJson(response, 200, sessions.publicSession(session));
+        return;
+      }
       if (request.method === 'POST' && requestUrl.pathname === '/auth/logout') {
         sessions.csrfCheck(request, session);
         sessions.revoke(session.id);

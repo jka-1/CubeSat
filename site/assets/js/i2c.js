@@ -1,4 +1,4 @@
-import { apiFetch, canOperate } from './auth.js?v=20261022a';
+import { apiFetch, canOperate } from './auth.js?v=20261027a';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,

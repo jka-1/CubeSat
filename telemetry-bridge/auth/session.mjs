@@ -10,7 +10,7 @@ const options = { N: 32768, r: 8, p: 1, maxmem: 64 * 1024 * 1024 };
 const fail = (statusCode, message) => Object.assign(new Error(message), { statusCode });
 const equal = (a, b) => typeof a === 'string' && typeof b === 'string' && Buffer.byteLength(a) === Buffer.byteLength(b) && timingSafeEqual(Buffer.from(a), Buffer.from(b));
 export async function passwordRecord(password) {
-  if (typeof password !== 'string' || password.length < 12 || password.length > 256) throw new Error('Password must contain 12–256 characters');
+  if (typeof password !== 'string' || !password.trim() || password.length > 256) throw new Error('Password must be non-empty and at most 256 characters');
   const salt = randomBytes(16).toString('hex');
   return { salt, hash: (await derive(password, salt, 64, options)).toString('hex') };
 }
@@ -47,12 +47,14 @@ export class Sessions {
     if (!this.secure && !(origin.protocol === 'http:' && env.AUTH_ALLOW_LOCAL_HTTP === 'true' && loopback.includes(origin.hostname) && loopback.includes(env.HTTP_BIND_ADDRESS || '127.0.0.1'))) throw new Error('JWT login requires HTTPS (local HTTP must be explicitly enabled on loopback)');
     this.origin = origin.origin;
     this.ttl = Number(env.AUTH_SESSION_SECONDS || 900);
-    if (!Number.isInteger(this.ttl) || this.ttl < 60 || this.ttl > 3600) throw new Error('AUTH_SESSION_SECONDS must be 60–3600');
+    if (!Number.isInteger(this.ttl) || this.ttl < 60 || this.ttl > 86400) throw new Error('AUTH_SESSION_SECONDS must be 60–86400');
+    this.leaseSeconds = Number(env.AUTH_OPERATOR_LEASE_SECONDS || 45);
+    if (!Number.isInteger(this.leaseSeconds) || this.leaseSeconds < 30 || this.leaseSeconds > 300) throw new Error('AUTH_OPERATOR_LEASE_SECONDS must be 30–300');
     this.sessions = new Map();
     this.attempts = new Map();
     this.busy = 0;
   }
-  cookie(jwt = '', maxAge = this.ttl) {
+  cookie(jwt = '', maxAge = 31536000) {
     return `cubesat_session=${jwt}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge}${this.secure ? '; Secure' : ''}`;
   }
   originCheck(request) {
@@ -60,7 +62,8 @@ export class Sessions {
   }
   prune() {
     const now = Date.now();
-    for (const [id, session] of this.sessions) if (session.expires <= now) this.revoke(id);
+    for (const [id, session] of this.sessions) if (session.role === 'viewer' && session.expires <= now) this.revoke(id);
+    if (this.operatorLeaseUntil <= now) this.operatorId = null;
     for (const [id, item] of this.attempts) if (item.until <= now) this.attempts.delete(id);
   }
   limit(request) {
@@ -72,7 +75,7 @@ export class Sessions {
       if (!item) { item = { count: 0, until: Date.now() + 60000 }; this.attempts.set(key, item); }
       if (++item.count > limit) throw fail(429, 'Too many login attempts. Try again in one minute.');
     }
-    if (this.busy >= 2 || this.sessions.size >= 256) throw fail(503, 'Login is busy. Try again shortly.');
+    if (this.busy >= 2) throw fail(503, 'Login is busy. Try again shortly.');
   }
   async login(request, body) {
     this.originCheck(request);
@@ -85,14 +88,22 @@ export class Sessions {
     finally { this.busy--; }
     if (!user || !equal(hash, user.hash)) throw fail(401, 'Incorrect username or password');
     const id = randomBytes(24).toString('hex'), csrf = randomBytes(24).toString('hex');
-    const now = Math.floor(Date.now() / 1000), exp = now + this.ttl;
+    const now = Math.floor(Date.now() / 1000);
     const jwt = await new SignJWT({ role: user.role }).setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
       .setSubject(user.username).setJti(id).setIssuer(this.origin).setAudience('cubesat-bridge')
-      .setIssuedAt(now).setExpirationTime(exp).sign(this.key);
+      .setIssuedAt(now).sign(this.key);
     // Replace this browser's prior session to avoid orphan sessions on repeated login.
-    try { const previous = await this.authenticate(request); this.revoke(previous.id); } catch {}
-    const session = { id, username: user.username, role: user.role, csrf, expires: exp * 1000, streams: new Set() };
+    let previous;
+    try { previous = await this.authenticate(request); } catch {}
+    if (user.role === 'operator' && this.operatorId && this.operatorId !== previous?.id) {
+      throw fail(409, 'Another operator is controlling the system. Try again after they disconnect or sign out.');
+    }
+    if (previous) this.revoke(previous.id);
+    const session = { id, username: user.username, role: user.role, csrf,
+      expires: user.role === 'viewer' ? Date.now() + this.ttl * 1000 : null, streams: new Set() };
     this.sessions.set(id, session);
+    if (user.role === 'viewer') this.scheduleViewer(session);
+    if (user.role === 'operator') this.renewOperator(session);
     return { jwt, session };
   }
   async authenticate(request) {
@@ -101,10 +112,14 @@ export class Sessions {
     if (cookies.length !== 1) throw fail(401, 'Sign in to continue');
     try {
       const { payload } = await jwtVerify(cookies[0].slice('cubesat_session='.length), this.key, {
-        algorithms: ['HS256'], issuer: this.origin, audience: 'cubesat-bridge', typ: 'JWT', requiredClaims: ['sub', 'jti', 'exp', 'iat', 'role']
+        algorithms: ['HS256'], issuer: this.origin, audience: 'cubesat-bridge', typ: 'JWT', requiredClaims: ['sub', 'jti', 'iat', 'role']
       });
       const session = this.sessions.get(payload.jti);
       if (!session || session.username !== payload.sub || session.role !== payload.role) throw new Error();
+      if (session.role === 'viewer') {
+        session.expires = Date.now() + this.ttl * 1000;
+        this.scheduleViewer(session);
+      }
       return session;
     } catch { throw fail(401, 'Session expired or invalid. Sign in again.'); }
   }
@@ -113,6 +128,7 @@ export class Sessions {
     if (!['GET', 'HEAD'].includes(request.method)) {
       if (session.role !== 'operator') throw fail(403, 'An operator account is required');
       this.csrfCheck(request, session);
+      this.renewOperator(session);
     }
     return session;
   }
@@ -121,17 +137,30 @@ export class Sessions {
     if (!equal(request.headers['x-csrf-token'], session.csrf)) throw fail(403, 'Session verification failed. Reload and try again.');
   }
   publicSession(session) {
-    return { enabled: true, user: { username: session.username, role: session.role }, csrf: session.csrf, expires_at: new Date(session.expires).toISOString() };
+    return { enabled: true, user: { username: session.username, role: session.role }, csrf: session.csrf,
+      expires_at: session.expires ? new Date(session.expires).toISOString() : null,
+      control_active: session.role === 'operator' ? this.operatorId === session.id : false };
+  }
+  renewOperator(session) {
+    this.prune();
+    if (this.operatorId && this.operatorId !== session.id) throw fail(409, 'Another operator is controlling the system.');
+    this.operatorId = session.id;
+    this.operatorLeaseUntil = Date.now() + this.leaseSeconds * 1000;
+  }
+  scheduleViewer(session) {
+    clearTimeout(session.timer);
+    session.timer = setTimeout(() => this.revoke(session.id), Math.max(1, session.expires - Date.now()));
+    session.timer.unref();
   }
   attachStream(session, response) {
     session.streams.add(response);
-    const timer = setTimeout(() => this.revoke(session.id), Math.max(1, session.expires - Date.now()));
-    timer.unref();
-    response.on('close', () => { clearTimeout(timer); session.streams.delete(response); });
+    response.on('close', () => session.streams.delete(response));
   }
   revoke(id) {
     const session = this.sessions.get(id);
     this.sessions.delete(id);
+    clearTimeout(session?.timer);
+    if (this.operatorId === id) { this.operatorId = null; this.operatorLeaseUntil = 0; }
     for (const response of session?.streams || []) response.end();
   }
 }

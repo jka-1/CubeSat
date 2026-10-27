@@ -1,4 +1,4 @@
-import { allowRoute } from './auth.js?v=20261022a';
+import { allowRoute, showAccount } from './auth.js?v=20261027a';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261022a';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261022a';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261022a';
@@ -56,7 +56,17 @@ function updateNav(route) {
 
 async function loadRoute(route) {
   const id = ++navigationId;
+  if (route === 'account') {
+    if (currentRoute && pageDestroyers[currentRoute]) pageDestroyers[currentRoute]();
+    currentRoute = null;
+    document.getElementById('page-root').hidden = true;
+    document.getElementById('accountPanel').hidden = false;
+    updateNav('account');
+    return;
+  }
   const safeRoute = resolveRoute(route);
+  document.getElementById('accountPanel').hidden = true;
+  if (!allowRoute(safeRoute)) { showAccount(currentRoute || 'home'); return; }
   history.replaceState(null, '', `#${safeRoute}`);
 
   if (currentRoute && pageDestroyers[currentRoute]) {
@@ -64,8 +74,7 @@ async function loadRoute(route) {
   }
 
   const root = document.getElementById('page-root');
-  root.hidden = !allowRoute(safeRoute);
-  if (root.hidden) { root.replaceChildren(); currentRoute = null; return; }
+  root.hidden = false;
   const response = await fetch(routes[safeRoute]);
   const html = await response.text();
   if (id !== navigationId) return;
