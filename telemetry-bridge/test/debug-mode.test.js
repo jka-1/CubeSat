@@ -242,7 +242,14 @@ test('debug commands validate, route, and support ?wait=1', async (t) => {
   await b.send(buildV5(30));
   await waitHealth(b, (x) => x.command_ready);
   for (const bad of [{ type: 'set_scan_period', period_ms: 100 }, { type: 'set_scan_period', period_ms: 6000 },
-    { type: 'set_scan_period', period_ms: 'x' }, { type: 'i2c_probe', addr: '0x05' }, { type: 'debug_control' }]) {
+    { type: 'set_scan_period', period_ms: 'x' }, { type: 'i2c_probe', addr: '0x05' }, { type: 'debug_control' },
+    { type: 'i2c_write', addr: '0x08', reg: '0x14', data: ['0x00', '0x00'] },
+    { type: 'i2c_write', addr: '0x6B', reg: '0x14', data: ['0x56'] },
+    { type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x0A'] },
+    { type: 'i2c_write', addr: '0x40', reg: '0x10', data: ['0x00'] },
+    { type: 'i2c_write', addr: '0x70', reg: '0x14', data: ['0x16'] },
+    { type: 'i2c_write', addr: '0x6B', reg: 'xyz', data: ['0x16'] },
+    { type: 'i2c_write', addr: '0x6B', reg: '0x14', data: ['0x100'] }]) {
     assert.equal((await b.post(bad)).status, 400, JSON.stringify(bad));
   }
   const unauth = await fetch(`${b.base}/command`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"type":"i2c_scan"}' });
@@ -277,6 +284,13 @@ test('debug commands validate, route, and support ?wait=1', async (t) => {
   await b.send(JSON.stringify({ version: 1, type: 'debug_result', command_type: 'i2c_read', request_id: c2.request_id, ok: false, status: 'error', error: 'ESP_FAIL' }));
   r = await (await pending).json();
   assert.equal(r.status, 'failed'); assert.equal(r.result.error, 'ESP_FAIL');
+
+  pending = b.post({ type: 'i2c_write', addr: '0x6B', reg: '0x14', data: ['0x16'] }, true);
+  cmd = await respond((c) => ({ addr: c.addr, reg: c.reg, len: 1, write_data: c.data }));
+  assert.equal(cmd.reg, '0x14');
+  r = await (await pending).json();
+  assert.equal(r.status, 'completed');
+  assert.equal(r.result.ok, true);
 
   // No device answer: synchronous call returns timed_out after the command timeout.
   pending = b.post({ type: 'i2c_scan' }, true);

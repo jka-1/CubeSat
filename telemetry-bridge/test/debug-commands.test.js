@@ -28,4 +28,6 @@ test('scan grid and result text', () => {
   assert.match(g[7], /6b/);
   assert.equal(describeResult({ type: 'i2c_probe' }, { status: 'completed', result: { addr: '0x6B', present: false, probe_result: 'ESP_ERR_NOT_FOUND' } }), 'probe 0x6B: no ACK (ESP_ERR_NOT_FOUND)');
   assert.equal(describeResult({ type: 'i2c_read' }, { status: 'failed', result: { error: 'ESP_FAIL' } }), 'failed ESP_FAIL');
+  assert.match(describeResult({ type: 'i2c_write' }, { status: 'completed', result: { ok: true, addr: '0x6B', reg: '0x14', write_data: ['0x16'] } }), /acknowledged.*no readback/);
+  assert.equal(describeResult({ type: 'i2c_write' }, { status: 'completed', result: {} }), 'Write result unconfirmed');
 });

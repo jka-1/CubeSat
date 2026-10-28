@@ -1,6 +1,7 @@
 // Pure helpers for the Debug Mode page: sequence-line parsing to bridge commands and scan formatting.
 // Accepts the page's short syntax and the Windows tool's i2c-tools syntax (i2cget/i2cset/i2cdetect).
 import { toInt } from './register-conversions.mjs?v=20261014a';
+import { commandErrorDetail } from './register-policy.mjs?v=20261027b';
 
 const hex = (v) => `0x${toInt(v).toString(16).toUpperCase().padStart(2, '0')}`;
 
@@ -75,12 +76,14 @@ export function formatScanGrid(addresses) {
 export function describeResult(body, response) {
   const r = response?.result || {};
   if (response?.status !== 'completed') {
-    const extra = response?.error && response.error !== r.error ? `: ${response.error}` : '';
-    return `${response?.status || 'error'}${r.error ? ` ${r.error}` : ''}${extra}`;
+    const error = r.error || response?.error;
+    return `${response?.status || 'error'}${error ? ` ${commandErrorDetail(error)}` : ''}`;
   }
   switch (body.type) {
     case 'i2c_read': return `read ${r.addr} ${r.reg} -> ${(r.data || []).join(' ')}`;
-    case 'i2c_write': return `wrote ${r.addr} ${r.reg} <- ${(r.write_data || []).join(' ')}`;
+    case 'i2c_write': return r.ok === true
+      ? `ESP32 acknowledged I²C write ${r.addr} ${r.reg} <- ${(r.write_data || []).join(' ')} (no readback)`
+      : 'Write result unconfirmed';
     case 'i2c_scan': return `scan found ${r.count} device(s): ${(r.addresses || []).join(' ') || 'none'} in ${r.scan_us} us`;
     case 'i2c_probe': return `probe ${r.addr}: ${r.present ? 'present' : 'no ACK'} (${r.probe_result})`;
     case 'debug_control': return `debug ${r.enabled ? 'enabled' : 'disabled'} (ack timeout ${r.ack_timeout_ms} ms)`;

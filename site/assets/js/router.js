@@ -1,7 +1,7 @@
 import { allowRoute, showAccount } from './auth.js?v=20261027a';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261022a';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261027b';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261022a';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261022a';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261027c';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261026a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
@@ -15,9 +15,9 @@ const assetVersion = '20260929e';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261019b`,
+  communication: `./modules/communication.html?v=20261027b`,
   'link-health': `./modules/link-health.html?v=20261013a`,
-  'debug-mode': `./modules/debug-mode.html?v=20261019b`,
+  'debug-mode': `./modules/debug-mode.html?v=20261027c`,
   runs: `./modules/runs.html?v=20261026a`,
   partners: `./modules/partners.html?v=${assetVersion}`
 };

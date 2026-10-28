@@ -1,7 +1,8 @@
 import { apiFetch, canOperate } from './auth.js?v=20261027a';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
-import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261014a';
+import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261027b';
+import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261027c';
 import { isStreamingMode, setStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 import { mountStreamingView } from './streaming-view.mjs?v=20261019b';
 
@@ -43,24 +44,38 @@ function updateControls() {
   document.querySelectorAll('.debug-mode-page [data-cmd]').forEach((b) => { b.disabled = !ready; });
   const reg = currentRegister();
   if ($('dmWrite') && reg && !String(reg.access).includes('W')) $('dmWrite').disabled = true;
+  if ($('dmAddRegister')) $('dmAddRegister').disabled = !canOperate() || state.busy;
   $('dmAuthPill').textContent = !st ? 'token --' : needsToken ? (token() ? 'token entered' : 'token required') : 'open commands';
   $('dmSeqPill').textContent = state.busy ? 'running' : 'idle';
 }
 
 async function sendCommand(body) {
+  if (!canOperate()) {
+    const error = 'An operator account is required.';
+    log('ERR', error);
+    if (body.type === 'i2c_write') $('dmRegisterFeedback').textContent = error;
+    return { status: 'rejected', error };
+  }
   const url = $('dmCommandUrl').value.trim() || '/telemetry/command';
   const headers = { 'Content-Type': 'application/json' };
   if (token()) headers['X-Command-Token'] = token();
   const started = performance.now();
   log('TX', JSON.stringify(body));
+  if (body.type === 'i2c_write') $('dmRegisterFeedback').textContent = 'Write submitted; waiting for ESP32 response.';
   let res; let j;
   try {
     res = await apiFetch(`${url}${url.includes('?') ? '&' : '?'}wait=1`, { method: 'POST', headers, body: JSON.stringify(body) });
     j = await res.json().catch(() => ({}));
-  } catch (e) { log('ERR', `bridge unreachable: ${e.message}`); return { status: 'error', error: e.message }; }
+  } catch { const error = 'Bridge unreachable or session expired.'; log('ERR', error); if (body.type === 'i2c_write') $('dmRegisterFeedback').textContent = error; return { status: 'error', error }; }
   const ms = Math.round(performance.now() - started);
-  if (!res.ok) { log('ERR', `HTTP ${res.status} ${j.error || ''}`.trim()); return { status: 'rejected', error: j.error || `HTTP ${res.status}` }; }
-  log(j.status === 'completed' ? 'RX' : 'ERR', `${describeResult(body, j)}  [${ms} ms]`);
+  if (!res.ok) {
+    const error = commandErrorDetail(j.error);
+    log('ERR', `HTTP ${res.status}: ${error}`);
+    if (body.type === 'i2c_write') $('dmRegisterFeedback').textContent = `Write rejected (HTTP ${res.status}): ${error}`;
+    return { status: 'rejected', error };
+  }
+  if (body.type === 'i2c_write') $('dmRegisterFeedback').textContent = registerWriteFeedback(j);
+  log(j.status === 'completed' ? 'RX' : j.status === 'pending' ? 'INFO' : 'ERR', `${describeResult(body, j)}  [${ms} ms]`);
   return j;
 }
 
@@ -71,6 +86,28 @@ function fillRegisters() {
   const d = currentDevice(); const sel = $('dmRegister'); if (!d || !sel) return;
   sel.innerHTML = d.registers.map((r, i) => `<option value="${i}">${r.addr}  ${r.name} (${r.access}, ${r.width} B)</option>`).join('');
   showRegInfo();
+}
+
+function addRegister() {
+  if (!canOperate()) { $('dmRegisterFeedback').textContent = 'An operator account is required to add registers.'; return; }
+  const device = currentDevice();
+  if (!device) { $('dmRegisterFeedback').textContent = 'Select a supported device first.'; return; }
+  try {
+    const address = parseRegisterAddress($('dmNewRegister').value);
+    let index = device.registers.findIndex((register) => register.addr === address);
+    if (index < 0) {
+      const width = Number($('dmNewRegisterWidth').value);
+      if (![1, 2].includes(width)) throw new Error('Read width must be 1 or 2 bytes.');
+      device.registers.push({ addr: address, name: 'Custom register', access: 'R', width,
+        endian: device.addr === '0x08' ? 'little' : 'big', scale: null,
+        notes: 'Temporary read-only entry. Writes require a verified register definition.' });
+      index = device.registers.length - 1;
+    }
+    fillRegisters();
+    $('dmRegister').value = String(index);
+    showRegInfo();
+    $('dmRegisterFeedback').textContent = `${device.addr} ${address} available. ${device.registers[index].access.includes('W') ? 'Write permission follows the register definition.' : 'Read only.'}`;
+  } catch (error) { $('dmRegisterFeedback').textContent = error.message; }
 }
 
 function showRegInfo() {
@@ -98,13 +135,18 @@ async function readRegister() {
   const j = await sendCommand({ type: 'i2c_read', addr: d.addr, reg: r.addr, len: Number(r.width) });
   state.busy = false; updateControls();
   if (j.status === 'completed' && j.result?.data) showRead(r, j.result.data);
-  else { $('dmRawBytes').textContent = '--'; $('dmRawValue').textContent = '--'; $('dmConverted').textContent = `read failed: ${j.result?.error || j.error || j.status}`; }
+  else { $('dmRawBytes').textContent = '--'; $('dmRawValue').textContent = '--'; $('dmConverted').textContent = `read failed: ${commandErrorDetail(j.result?.error || j.error || j.status)}`; }
 }
 
 async function writeRegister() {
   const d = currentDevice(); const r = currentRegister(); if (!d || !r) return;
   let data;
-  try { data = parseValueInput($('dmValue').value, Number(r.width), r.endian); } catch (e) { log('ERR', e.message); return; }
+  try {
+    if (!canOperate()) throw new Error('An operator account is required to write registers.');
+    if (/^\s*-/.test($('dmValue').value)) throw new Error('Write value must be non-negative and fit the register width.');
+    data = parseValueInput($('dmValue').value, Number(r.width), r.endian);
+    validateRegisterWrite(state.map, d.addr, r.addr, data);
+  } catch (e) { log('ERR', e.message); $('dmRegisterFeedback').textContent = e.message; return; }
   state.busy = true; updateControls();
   await sendCommand({ type: 'i2c_write', addr: d.addr, reg: r.addr, data: data.map((b) => `0x${b.toString(16).toUpperCase().padStart(2, '0')}`) });
   state.busy = false; updateControls();
@@ -256,12 +298,13 @@ function disconnect(updateButton = true) {
 }
 
 export async function initDebugModePage() {
-  try { state.map = await (await apiFetch('./assets/data/register-map.json?v=20261014a')).json(); }
+  try { state.map = await (await apiFetch('./assets/data/register-map.json?v=20261027c')).json(); }
   catch { state.map = { devices: [] }; log('ERR', 'register map failed to load'); }
   $('dmDevice').innerHTML = state.map.devices.map((d) => `<option value="${d.addr}">${d.addr}  ${d.name}</option>`).join('');
   fillRegisters();
   $('dmDevice').addEventListener('change', fillRegisters);
   $('dmRegister').addEventListener('change', showRegInfo);
+  $('dmAddRegister').addEventListener('click', addRegister);
   $('dmToken').addEventListener('input', updateControls);
   $('dmConnect').addEventListener('click', () => (state.es ? disconnect() : connect()));
   $('dmRead').addEventListener('click', readRegister);

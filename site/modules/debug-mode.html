@@ -63,6 +63,11 @@
         <div class="dm-grid dm-reg">
           <label>Device <select id="dmDevice" class="input"></select></label>
           <label>Register <select id="dmRegister" class="input"></select></label>
+          <label>Add register address <input id="dmNewRegister" class="input" placeholder="0x14" inputmode="text" /></label>
+          <div class="dm-buttons">
+            <select id="dmNewRegisterWidth" class="input" aria-label="New register read width"><option value="1">1 byte</option><option value="2">2 bytes</option></select>
+            <button id="dmAddRegister" class="button secondary" type="button">Add register</button>
+          </div>
           <label>Write value <input id="dmValue" class="input" placeholder="0x1234 or bytes 0x22 0x00" /></label>
           <div class="dm-buttons">
             <button id="dmRead" class="button" type="button" data-cmd>Read</button>
@@ -70,6 +75,7 @@
           </div>
         </div>
         <p id="dmRegInfo" class="dm-note"></p>
+        <p id="dmRegisterFeedback" class="dm-note" role="status" aria-live="polite">No register command submitted.</p>
         <table class="lh-table dm-result"><tbody>
           <tr><th>Raw bytes</th><td id="dmRawBytes">--</td><th>Raw value</th><td id="dmRawValue">--</td></tr>
           <tr><th>Converted</th><td id="dmConverted" colspan="3">--</td></tr>

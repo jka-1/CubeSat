@@ -220,6 +220,28 @@
      "source": "sheet"
     },
     {
+     "addr": "0x14",
+     "name": "REG14 Charger Control 5",
+     "access": "RW",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "BQ25798 charger control 5. Bit 6 is reserved and must remain 0; preserve other control bits when changing a setting.",
+     "source": "datasheet",
+     "bitfields": [
+      { "name": "SFET_PRESENT", "bits": 7 },
+      { "name": "EN_IBAT", "bits": 5 },
+      { "name": "IBAT_REG", "bits": [4, 3] },
+      { "name": "EN_IINDPM", "bits": 2 },
+      { "name": "EN_EXTILIM", "bits": 1 },
+      { "name": "EN_BATOC", "bits": 0 }
+     ]
+    },
+    {
      "addr": "0x1B",
      "name": "REG1B Charger Status 0",
      "access": "R",

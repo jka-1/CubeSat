@@ -149,6 +149,9 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
   const health = await (await request('/health', viewer)).json();
   assert.equal(health.command_auth_required, true, 'JWT mode keeps command-token authentication required');
   for (const path of ['/runs/start', '/runs/stop', '/live-mode', '/command', '/api/demo/command', '/input', '/api/demo/input']) assert.equal((await request(path, viewer, {}, { 'X-Command-Token': 'test-command' })).status, 403);
+  assert.equal((await request('/command', viewer,
+    { type: 'i2c_write', addr: '0x6B', reg: '0x14', data: ['0x16'] },
+    { 'X-Command-Token': 'test-command' })).status, 403);
   assert.equal((await request('/runs/events', viewer, { sequence_name: 'x', step_index: 0, step_text: 'x', phase: 'started' })).status, 403);
   const operator = await login('operator');
   assert.equal((await request('/auth/me', operator)).status, 200);

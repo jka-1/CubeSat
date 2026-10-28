@@ -1227,6 +1227,18 @@ h1 {
   gap: 7px;
 }
 
+.i2c-mock-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.i2c-mock-toggle input {
+  accent-color: var(--warning);
+}
+
 .legend-line {
   display: inline-block;
   width: 28px;

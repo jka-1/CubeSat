@@ -7,11 +7,15 @@
     <div class="i2c-mode-key" aria-label="Bus view legend">
       <span><i class="legend-line sda"></i>SDA data</span>
       <span><i class="legend-line scl"></i>SCL clock</span>
+      <label class="status-pill i2c-mock-toggle">
+        <input id="mockModeToggle" type="checkbox" />
+        Mock telemetry
+      </label>
     </div>
   </header>
 
   <p id="detailDataNote" class="i2c-data-note">
-    Mock data is active by default. Connect the live stream from System Overview when hardware is ready.
+    Waiting for live packets from the droplet event stream.
   </p>
 
   <section class="i2c-workspace" aria-label="Interactive I²C bus topology">
@@ -66,7 +70,7 @@
         <span class="bus-status-lights" aria-hidden="true"><i></i><i></i></span>
         <span>
           <small>Bus connection</small>
-          <strong id="i2cBusStatus" class="offline">Mock data active</strong>
+          <strong id="i2cBusStatus" class="offline">Waiting for live telemetry</strong>
         </span>
       </div>
     </div>
@@ -127,16 +131,15 @@
               <div class="metric-tile"><span>PV Power</span><strong id="summaryPvPower">-- W</strong></div>
             </div>
             <div class="panel-meta summary-meta">
-              <span>Device: <strong id="summaryDeviceId">Mock source</strong></span>
+              <span>Device: <strong id="summaryDeviceId">Waiting for live data</strong></span>
               <span>Sequence: <strong id="summarySequence">--</strong></span>
-              <span>Transmitted: <strong id="summaryTransmittedAt">Mock mode</strong></span>
-              <span>Received: <strong id="summaryReceivedAt">Local render</strong></span>
+              <span>Transmitted: <strong id="summaryTransmittedAt">Not supplied</strong></span>
+              <span>Received: <strong id="summaryReceivedAt">Not supplied</strong></span>
             </div>
             <div class="telemetry-box stream-box">
               <div class="telemetry-toolbar">
                 <input id="streamUrl" class="input" value="/telemetry/events" aria-label="Telemetry event stream URL" />
                 <button class="button" id="connectButton" type="button">Connect live</button>
-                <button class="button secondary" id="mockButton" type="button">Use mock data</button>
               </div>
               <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
             </div>
@@ -237,6 +240,6 @@
   </section>
 
   <p class="i2c-footnote">
-    Demonstration values are simulated until a live packet is connected. Supported followers: PV INA226 <code>0x40</code>, BQ76942 <code>0x08</code>, and BQ25798 <code>0x6B</code>.
+    Demonstration values are shown only when Mock telemetry is enabled. Supported followers: PV INA226 <code>0x40</code>, BQ76942 <code>0x08</code>, and BQ25798 <code>0x6B</code>.
   </p>
 </section>

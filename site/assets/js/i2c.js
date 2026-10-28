@@ -36,6 +36,12 @@ const mockMetadata = {
   transmittedAt: 'Mock mode',
   receivedAt: 'Local render'
 };
+const liveWaitingMetadata = {
+  deviceId: 'Waiting for live data',
+  sequence: '--',
+  transmittedAt: 'Not supplied',
+  receivedAt: 'Not supplied'
+};
 
 const sensorDefaults = {
   pv: '0x40',
@@ -51,14 +57,14 @@ const sensorGroups = [
 const allSensorMask = sensorGroups.reduce((mask, group) => mask | group.mask, 0);
 
 let state = structuredClone(initialTelemetry);
-let streamMetadata = { ...mockMetadata };
+let streamMetadata = { ...liveWaitingMetadata };
 let mockTimer = null;
 let eventSource = null;
 let streamErrorLogged = false;
 let sensorPollingState = null;
 let bridgeCommandReady = false;
 let commandAuthRequired = true;
-let dataMode = 'mock';
+let dataMode = 'live';
 let communicationRoot = null;
 let activeDetailTrigger = null;
 const pendingCommandIds = new Set();
@@ -75,63 +81,12 @@ const commandButtonIds = [
   'ledOffButton'
 ];
 
-// ---------------------------------------------------------------- no simulated data while live
-// The bridge reports live_mode (set by the Windows app) and telemetry_connected in /health. While either is
-// true this page never shows mock values: it connects the live stream instead (or shows blanks).
-let liveProbeTimer = null;
 const blankTelemetry = () => ({
   pv: { shuntVoltageMv: null, powerW: null, currentA: null },
   mppt: { switchState: 'unknown', faults: [] },
   bms: { cellVoltagesV: [null, null, null, null] },
   peripheral: peripheralTelemetryForMode('live')
 });
-
-export function deriveHealthUrl(streamUrl) {
-  const t = typeof streamUrl === 'string' ? streamUrl.trim() : '';
-  return t.endsWith('/events') ? `${t.slice(0, -'/events'.length)}/health` : '/telemetry/health';
-}
-
-export function bridgeReportsLive(health) {
-  return !!health && (health.live_mode === true || health.telemetry_connected === true);
-}
-
-async function probeBridgeLive() {
-  try {
-    const url = deriveHealthUrl(document.getElementById('streamUrl')?.value);
-    const response = await apiFetch(url, { cache: 'no-store' });
-    return bridgeReportsLive(await response.json());
-  } catch {
-    return false;
-  }
-}
-
-function stopLiveProbe() {
-  if (liveProbeTimer) { clearInterval(liveProbeTimer); liveProbeTimer = null; }
-}
-
-function startLiveProbe() {
-  stopLiveProbe();
-  const tick = async () => {
-    if (dataMode !== 'mock' || streaming || !communicationRoot) return;
-    if (await probeBridgeLive() && dataMode === 'mock' && !streaming && communicationRoot) {
-      writeLog('Bridge reports live telemetry: simulated data disabled.');
-      connectTelemetryStream();
-    }
-  };
-  liveProbeTimer = setInterval(tick, 5000);
-}
-
-async function startDefaultMode() {
-  dataMode = 'probe';
-  state = blankTelemetry();
-  renderTelemetry(state, streamMetadata);
-  setStreamStatus('Checking bridge…', false);
-  const live = await probeBridgeLive();
-  if (!communicationRoot || streaming || dataMode !== 'probe') return;
-  if (live) connectTelemetryStream();
-  else startMockData();
-  startLiveProbe();
-}
 
 function deriveCommandUrl(streamUrl) {
   if (typeof streamUrl !== 'string' || !streamUrl.trim()) {
@@ -237,7 +192,7 @@ function commandTokenValue() {
 function updateCommandControls() {
   const credentialReady = !commandAuthRequired || commandTokenValue().length > 0;
   const noCommandPending = pendingCommandIds.size === 0;
-  const enabled = bridgeCommandReady && credentialReady && noCommandPending;
+  const enabled = dataMode === 'live' && bridgeCommandReady && credentialReady && noCommandPending;
 
   commandButtonIds.forEach((buttonId) => {
     const button = document.getElementById(buttonId);
@@ -935,6 +890,7 @@ export function normalizePacket(envelope) {
 }
 
 function applyTelemetryPacket(packetEnvelope) {
+  if (dataMode !== 'live') return;
   if (packetEnvelope?.type === 'status') {
     const telemetryConnected = Boolean(packetEnvelope.telemetry_connected);
     bridgeCommandReady = Boolean(packetEnvelope.command_ready);
@@ -1135,6 +1091,7 @@ function startMockData() {
   if (mockTimer) clearInterval(mockTimer);
 
   dataMode = 'mock';
+  document.getElementById('mockModeToggle').checked = true;
   streamMetadata = { ...mockMetadata };
   bridgeCommandReady = false;
   pendingCommandIds.clear();
@@ -1142,7 +1099,7 @@ function startMockData() {
   setStreamStatus('Mock data active', false);
   sensorPollingState = null;
   setDetailNote(
-    'Mock data is active by default. Use Connect Live when the firmware begins sending the new I²C telemetry packet.'
+    'Mock telemetry active: displayed measurements are simulated. Turn off Mock telemetry to return to live data.'
   );
   setCommandTargetNote(
     'Commands are idle in mock mode. Connect to the live bridge before using MPPT, pause/resume, or debug controls.'
@@ -1170,6 +1127,7 @@ function connectTelemetryStream() {
 
   if (!url) {
     writeLog('Missing telemetry event-stream URL.');
+    document.getElementById('mockModeToggle').checked = dataMode === 'mock';
     return;
   }
 
@@ -1182,42 +1140,40 @@ function connectTelemetryStream() {
 
   if (typeof EventSource === 'undefined') {
     writeLog('This browser does not support EventSource / server-sent events.');
+    document.getElementById('mockModeToggle').checked = dataMode === 'mock';
     return;
   }
 
   stopMockData();
   closeLiveStream();
   dataMode = 'live';
-  state = {
-      pv: { shuntVoltageMv: null, powerW: null, currentA: null },
-    mppt: { switchState: 'unknown', faults: [] },
-    bms: { cellVoltagesV: [null, null, null, null] },
-      peripheral: peripheralTelemetryForMode('live')
-  };
-  renderTelemetry(state, {
-    deviceId: 'Waiting for live data',
-    sequence: '--',
-    transmittedAt: 'Not supplied',
-    receivedAt: 'Not supplied'
-  });
+  document.getElementById('mockModeToggle').checked = false;
+  state = blankTelemetry();
+  streamMetadata = { ...liveWaitingMetadata };
+  renderTelemetry(state, streamMetadata);
   streamErrorLogged = false;
+  setStreamStatus('Waiting for live telemetry', false);
   setDetailNote('Waiting for live packets from the droplet event stream.');
+  bridgeCommandReady = false;
+  updateCommandControls();
 
   try {
     eventSource = new EventSource(url);
   } catch (error) {
     writeLog(`Event stream creation failed: ${error.message}`);
-    startMockData();
     return;
   }
 
-  eventSource.addEventListener('open', () => {
+  const source = eventSource;
+  source.addEventListener('open', () => {
+    if (eventSource !== source || dataMode !== 'live') return;
     streamErrorLogged = false;
     setStreamStatus('Live stream connected', true);
     writeLog(`Connected to ${url}`);
   });
 
-  eventSource.addEventListener('message', (event) => {
+  source.addEventListener('message', (event) => {
+    if (eventSource !== source || dataMode !== 'live') return;
     try {
       applyTelemetryPacket(JSON.parse(event.data));
     } catch (error) {
@@ -1225,7 +1181,8 @@ function connectTelemetryStream() {
     }
   });
 
-  eventSource.addEventListener('error', () => {
+  source.addEventListener('error', () => {
+    if (eventSource !== source || dataMode !== 'live') return;
     setStreamStatus('Stream reconnecting', false);
     bridgeCommandReady = false;
     updateCommandControls();
@@ -1244,14 +1201,13 @@ function onConnectClick() {
   connectTelemetryStream();
 }
 
-async function onMockClick() {
-  if (await probeBridgeLive()) {
-    writeLog('Simulated data is unavailable while the bridge reports live telemetry.');
-    if (dataMode === 'mock') connectTelemetryStream();
-    return;
+function onMockToggle(event) {
+  if (event.target.checked) {
+    if (streaming) stopStreamingMode(true);
+    startMockData();
+  } else {
+    connectTelemetryStream();
   }
-  if (streaming) stopStreamingMode(true);
-  startMockData();
 }
 
 function applyStreamingVisibility(model) {
@@ -1293,12 +1249,8 @@ function startStreamingMode() {
   stopMockData();
   closeLiveStream();
   dataMode = 'live';
-  state = {
-      pv: { shuntVoltageMv: null, powerW: null, currentA: null },
-    mppt: { switchState: 'unknown', faults: [] },
-    bms: { cellVoltagesV: [null, null, null, null] },
-      peripheral: peripheralTelemetryForMode('live')
-  };
+  document.getElementById('mockModeToggle').checked = false;
+  state = blankTelemetry();
   renderTelemetry(state, { deviceId: 'Waiting for streaming telemetry', sequence: '--', transmittedAt: 'Not supplied', receivedAt: 'Not supplied' });
   setStreamStatus('Streaming Telemetry: waiting', false);
   const header = communicationRoot?.querySelector('.i2c-page-header');
@@ -1320,7 +1272,7 @@ function startStreamingMode() {
     applyStreamingVisibility(model);
   });
   section.querySelector('#i2cStreamToggle').addEventListener('change', (event) => {
-    if (!event.target.checked) { stopStreamingMode(true); startDefaultMode(); }
+    if (!event.target.checked) { stopStreamingMode(true); connectTelemetryStream(); }
   });
   streaming = { section, badge, view, unsubscribe };
   setDetailNote('Streaming Telemetry mode: live data from the shared stream; only devices present on the bus are shown.');
@@ -1343,6 +1295,7 @@ async function sendCommandRequest(payload) {
   const commandUrl = commandUrlElement?.value?.trim() || '/telemetry/command';
   const commandToken = commandTokenValue();
 
+  if (dataMode !== 'live') { writeLog('Commands are unavailable in mock mode.'); return; }
   if (!canOperate()) { writeLog('An operator account is required to send commands.'); return; }
   if (!bridgeCommandReady) {
     writeLog('Command blocked: wait for a fresh ESP32 command target.');
@@ -1528,7 +1481,7 @@ function onLedOffClick() {
 
 export function initI2CPage() {
   state = blankTelemetry();
-  streamMetadata = { ...mockMetadata };
+  streamMetadata = { ...liveWaitingMetadata };
   sensorPollingState = null;
   bridgeCommandReady = false;
   commandAuthRequired = true;
@@ -1552,7 +1505,7 @@ export function initI2CPage() {
   onSensorControlSelectChange();
 
   document.getElementById('connectButton')?.addEventListener('click', onConnectClick);
-  document.getElementById('mockButton')?.addEventListener('click', onMockClick);
+  document.getElementById('mockModeToggle')?.addEventListener('change', onMockToggle);
   document.getElementById('debugCommandType')?.addEventListener('change', applyDebugCommandMode);
   document.getElementById('sensorControlSelect')?.addEventListener('change', onSensorControlSelectChange);
   document.getElementById('commandTokenInput')?.addEventListener('input', updateCommandControls);
@@ -1568,14 +1521,14 @@ export function initI2CPage() {
   if (isStreamingMode()) {
     startStreamingMode();
   } else {
-    startDefaultMode();
+    connectTelemetryStream();
   }
 }
 
 export function destroyI2CPage() {
 
   document.getElementById('connectButton')?.removeEventListener('click', onConnectClick);
-  document.getElementById('mockButton')?.removeEventListener('click', onMockClick);
+  document.getElementById('mockModeToggle')?.removeEventListener('change', onMockToggle);
   document.getElementById('debugCommandType')?.removeEventListener('change', applyDebugCommandMode);
   document.getElementById('sensorControlSelect')?.removeEventListener('change', onSensorControlSelectChange);
   document.getElementById('commandTokenInput')?.removeEventListener('input', updateCommandControls);
@@ -1588,7 +1541,6 @@ export function destroyI2CPage() {
   communicationRoot?.removeEventListener('click', onCommunicationClick);
   window.removeEventListener('keydown', onDetailKeydown);
   stopStreamingMode(false);
-  stopLiveProbe();
   communicationRoot = null;
   activeDetailTrigger = null;
 

@@ -91,6 +91,13 @@ const supportedI2cDevices = new Map([
   [0x40, 'INA226 (PV)'],
   [0x6b, 'MPPT / BQ25798']
 ]);
+// Writable entries from cubesat-i2c-tool/cubesat_i2c/registers.py. Keep this
+// self-contained: production deploys server.js separately from the public site.
+const writableRegisterWidths = new Map([
+  ['0x08', new Map([['0x3E', 2]])],
+  ['0x6B', new Map([['0x0F', 1], ['0x10', 1], ['0x12', 1], ['0x13', 1], ['0x14', 1], ['0x2E', 1], ['0x30', 1]])],
+  ['0x40', new Map([['0x00', 2], ['0x05', 2], ['0x06', 2], ['0x07', 2]])]
+]);
 const sensorMaskTag = 0xa500;
 const defaultMpptFaultBitNames = [
   'VAC1_OVP_STAT',
@@ -344,8 +351,9 @@ function assertCommandAuthorized(request) {
 }
 
 function asByte(value, fieldName) {
-  if (typeof value === 'string' && value.trim() === '') {
-    throw new Error(`${fieldName} must not be blank`);
+  if (typeof value !== 'number' &&
+      (typeof value !== 'string' || !/^(?:0x[0-9a-f]+|[0-9]+)$/i.test(value.trim()))) {
+    throw new Error(`${fieldName} must be a byte from 0 through 255`);
   }
   const parsed = Number(value);
   if (!Number.isInteger(parsed) || parsed < 0 || parsed > 0xff) {
@@ -387,6 +395,15 @@ function normalizeWriteData(value) {
   return values.map((entry, index) =>
     formatHexByte(asByte(entry, `data[${index}]`))
   );
+}
+
+function validateRegisterWrite(address, registerAddress, data) {
+  const width = writableRegisterWidths.get(address)?.get(registerAddress);
+  if (!width) throw new Error(`Register ${registerAddress} on ${address} is not approved for writing.`);
+  if (data.length !== width) throw new Error(`Register ${registerAddress} requires exactly ${width} byte(s).`);
+  if (address === '0x6B' && registerAddress === '0x14' && (Number(data[0]) & 0x40)) {
+    throw new Error('BQ25798 register 0x14 bit 6 is reserved and must be 0.');
+  }
 }
 
 function normalizeSensorName(value) {
@@ -1671,6 +1688,7 @@ function buildJsonCommandMessage(body) {
         throw new Error('i2c_write must include data, value, or values');
       }
       payloadObject.data = normalizeWriteData(writePayload);
+      validateRegisterWrite(address, registerAddress, payloadObject.data);
       summary = `I2C_WRITE ${address} reg ${registerAddress} (${payloadObject.data.length} byte${payloadObject.data.length === 1 ? '' : 's'})`;
     }
   }
