@@ -1,4 +1,4 @@
-import { apiFetch, canOperate } from './auth.js?v=20261027a';
+import { apiFetch, canOperate } from './auth.js?v=20261028a';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,

@@ -1,10 +1,10 @@
-import { apiFetch, canOperate } from './auth.js?v=20261027a';
+import { apiFetch, canOperate } from './auth.js?v=20261028a';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
 import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261027b';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261027c';
 import { isStreamingMode, setStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261019b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261028a';
 
 let streamView = null;
 function applyStreamingToggle(on) {

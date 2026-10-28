@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CubeSat Battery Management and Power Delivery System</title>
+  <title>CubeSat Power System</title>
   <meta
     name="description"
-    content="Modular CubeSat Battery Management and Power Delivery System site with portfolio, live I²C telemetry, and partners pages."
+    content="CubeSat power system dashboard with telemetry, register tools, and saved runs."
   />
   <link rel="icon" type="image/png" href="./favicon.png?v=20261026a" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20261027b" />
-  <link rel="stylesheet" href="./assets/css/streaming.css?v=20261019b" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20261028a" />
+  <link rel="stylesheet" href="./assets/css/streaming.css?v=20261028a" />
 </head>
 <body>
   <header class="site-header">
@@ -18,7 +18,7 @@
       <a class="brand" href="#home" data-route="home" aria-label="CubeSat power system home">
         <span class="brand-mark">🛰️</span>
         <span>
-          CubeSat PMDS
+          CubeSat Power System
           <small>Battery Management · Power Delivery System</small>
         </span>
       </a>
@@ -32,13 +32,15 @@
         <a id="streamingNavBadge" class="st-nav-badge" href="#debug-mode" title="Streaming Telemetry mode is on" hidden><i></i>Streaming</a>
         <a class="nav-link" href="#partners" data-route="partners">Partners</a>
       </div>
-      <button id="accountButton" class="nav-link" type="button">Sign in</button>
+      <div class="account-control">
+        <button id="accountButton" class="nav-link" type="button" data-tooltip="Operator accounts can use hardware controls when permitted by the current session; hardware commands also require the command token. Viewer accounts can inspect telemetry and saved runs.">Sign in</button>
+      </div>
     </nav>
   </header>
 
   <main id="accountPanel" class="account-panel" aria-labelledby="accountTitle" hidden>
     <div class="account-heading"><h1 id="accountTitle">Sign in</h1><button id="accountBack" type="button">Back</button></div>
-    <p id="accountHelp">Use your CubeSat account to view telemetry and saved runs.</p>
+    <p id="accountHelp" data-tooltip="The account role identifies viewer or operator permissions. Operator hardware commands also require a valid command token.">Use your CubeSat account to view telemetry and saved runs.</p>
     <form id="accountForm">
       <label for="accountUsername">Username</label>
       <input id="accountUsername" name="username" autocomplete="username" maxlength="64" required>
@@ -55,6 +57,6 @@
     <noscript>Please enable JavaScript to load the modular pages.</noscript>
   </main>
 
-  <script type="module" src="./assets/js/app.js?v=20261027c"></script>
+  <script type="module" src="./assets/js/app.js?v=20261028a"></script>
 </body>
 </html>

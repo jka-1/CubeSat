@@ -20,6 +20,20 @@ test('run windows are bounded by the run and series query limit', () => {
   assert.equal(window.end - window.start, MAX_SERIES_WINDOW_MS);
 });
 
+test('24-hour run boundary and longer recordings retain duration while charting the latest day', () => {
+  const day = 24 * 60 * 60 * 1000;
+  const started = 1_000;
+  const exactlyDay = { ...run, started_ms: started, ended_ms: started + day };
+  assert.deepEqual(windowForPreset(exactlyDay, 'full'), { start: started, end: started + day });
+  assert.equal(formatDuration(day), '24h 0m 0s');
+
+  const longer = { ...run, started_ms: started, ended_ms: started + day + 3_661_000 };
+  const window = windowForPreset(longer, 'full');
+  assert.equal(window.end - window.start, day);
+  assert.equal(window.start, longer.ended_ms - day);
+  assert.equal(formatDuration(longer.ended_ms - longer.started_ms), '25h 1m 1s');
+});
+
 test('run search covers operational fields and respects filters', () => {
   assert.equal(runMatches(run, 'initialization', 'all'), true);
   assert.equal(runMatches(run, 'source switch', 'all'), false);

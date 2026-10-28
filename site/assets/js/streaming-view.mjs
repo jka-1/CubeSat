@@ -59,26 +59,33 @@ export function drawSparkline(canvas, series, { color } = {}) {
   const last = pts[pts.length - 1]; g.fillStyle = c; g.beginPath(); g.arc(x(last[0]), y(last[1]), 2.2, 0, 7); g.fill();
 }
 
-const metric = (key, label, unit, digits) => ({ key, label, unit, digits });
-const PV_METRICS = [metric('pv.busV', 'Bus voltage · 0x02', ' V', 3), metric('pv.powerMw', 'Power · 0x03', ' mW', 2),
-  metric('pv.currentMa', 'Current · 0x04', ' mA', 2), metric('pv.shuntMv', 'Shunt · 0x01', ' mV', 3)];
-const BMS_EXT = [metric('bms.packV', 'Pack voltage · 0x36', ' V', 2), metric('bms.intTempC', 'Internal temp · 0x68', ' °C', 1)];
-const MPPT_PATH = [metric('mppt.vbusV', 'VBUS · 0x35', ' V', 3), metric('mppt.vac1V', 'VAC1 · 0x37', ' V', 3),
-  metric('mppt.vbatV', 'VBAT · 0x3B', ' V', 3), metric('mppt.vsysV', 'VSYS · 0x3D', ' V', 3),
-  metric('mppt.ibusMa', 'IBUS · 0x31', ' mA', 0), metric('mppt.dieTempC', 'Die temp · 0x41', ' °C', 1)];
+const metric = (key, label, unit, digits, tooltip) => ({ key, label, unit, digits, tooltip });
+const PV_METRICS = [metric('pv.busV', 'Bus voltage · 0x02', ' V', 3, 'INA226 bus voltage reading.'),
+  metric('pv.powerMw', 'Power · 0x03', ' mW', 2, 'PV power reported by the INA226.'),
+  metric('pv.currentMa', 'Current · 0x04', ' mA', 2, 'PV current reported by the INA226.'),
+  metric('pv.shuntMv', 'Shunt · 0x01', ' mV', 3, 'Voltage measured across the INA226 shunt.')];
+const BMS_EXT = [metric('bms.packV', 'Pack voltage · 0x36', ' V', 2, 'BQ76942 PACK pin voltage.'),
+  metric('bms.intTempC', 'Internal temp · 0x68', ' °C', 1, 'BQ76942 internal temperature reading.')];
+const MPPT_PATH = [metric('mppt.vbusV', 'VBUS · 0x35', ' V', 3, 'BQ25798 bus voltage register.'),
+  metric('mppt.vac1V', 'VAC1 · 0x37', ' V', 3, 'BQ25798 input voltage register.'),
+  metric('mppt.vbatV', 'VBAT · 0x3B', ' V', 3, 'BQ25798 battery voltage register.'),
+  metric('mppt.vsysV', 'VSYS · 0x3D', ' V', 3, 'BQ25798 system voltage register.'),
+  metric('mppt.ibusMa', 'IBUS · 0x31', ' mA', 0, 'BQ25798 bus current register.'),
+  metric('mppt.dieTempC', 'Die temp · 0x41', ' °C', 1, 'BQ25798 die temperature register.')];
 
 function metricRow(m) {
-  return `<div class="st-metric" data-metric="${m.key}"><span class="st-label">${m.label}</span>
+  const tooltip = m.tooltip ? `data-tooltip="${m.tooltip}"` : '';
+  return `<div class="st-metric" data-metric="${m.key}"><span class="st-label" ${tooltip}>${m.label}</span>
     <strong class="st-value" data-v="${m.key}">--</strong><canvas class="st-spark" data-s="${m.key}"></canvas></div>`;
 }
 
 function template() {
   return `
   <div class="st-bar">
-    <span class="st-indicator" data-st="indicator"><i></i>Streaming Telemetry</span>
-    <span class="st-meta" data-st="meta">waiting for packets</span>
+    <span class="st-indicator" data-st="indicator" data-tooltip="Live indicates telemetry is current. Stale means packets have stopped arriving recently; it does not mean the displayed values are current."><i></i>Streaming Telemetry</span>
+    <span class="st-meta" data-st="meta" data-tooltip="Shows packet format, sequence, elapsed time since the last update, and received packet count.">Waiting for Packets</span>
     <span class="st-toggles" data-st="toggles">${CARD_TOGGLES.map((t) => `<label class="st-toggle"><input type="checkbox" data-toggle="${t.key}" checked />${t.label}</label>`).join('')}</span>
-    <label class="st-window">Window <select data-st="window">${WINDOWS.map((w) => `<option value="${w.ms}">${w.label}</option>`).join('')}</select></label>
+    <label class="st-window" data-tooltip="Controls how much recent telemetry is retained in the live sparklines.">Window <select data-st="window">${WINDOWS.map((w) => `<option value="${w.ms}">${w.label}</option>`).join('')}</select></label>
   </div>
   <div class="st-hidden" data-st="hidden"></div>
   <div class="st-empty" data-st="empty">No data</div>
@@ -90,21 +97,21 @@ function template() {
     <section class="st-card" data-card="bms" hidden>
       <header><h4>BMS · BQ76942</h4><small>0x08</small><span class="st-age" data-age></span></header>
       <div class="st-cells">${[0, 1, 2, 3].map((i) => `
-        <div class="st-cell"><span class="st-label"><span data-cell-label="${i}">Cell</span> · ${CELL_REGS[i]}</span>
+        <div class="st-cell"><span class="st-label" data-tooltip="Cell voltage reported by the BQ76942 BMS. Register address shown at left."><span data-cell-label="${i}">Cell</span> · ${CELL_REGS[i]}</span>
           <div class="st-gauge"><i data-gauge="${i}"></i></div>
           <strong class="st-value" data-v="bms.cell${i}">--</strong><canvas class="st-spark" data-s="bms.cell${i}"></canvas></div>`).join('')}
       </div>
-      <div class="st-stats"><span>min <b data-v="bms.min">--</b></span><span>max <b data-v="bms.max">--</b></span>
-        <span>Δ <b data-v="bms.deltaMv">--</b></span></div>
+      <div class="st-stats"><span data-tooltip="Lowest reported cell voltage.">Min <b data-v="bms.min">--</b></span><span data-tooltip="Highest reported cell voltage.">Max <b data-v="bms.max">--</b></span>
+        <span data-tooltip="Difference between the highest and lowest reported cell voltages.">Δ <b data-v="bms.deltaMv">--</b></span></div>
       ${BMS_EXT.map(metricRow).join('')}
-      <div class="st-metric"><span class="st-label">Cell spread</span><strong class="st-value" data-v="bms.deltaMv2">--</strong><canvas class="st-spark" data-s="bms.deltaMv"></canvas></div>
+      <div class="st-metric"><span class="st-label" data-tooltip="Difference between the highest and lowest reported cell voltages.">Cell Spread</span><strong class="st-value" data-v="bms.deltaMv2">--</strong><canvas class="st-spark" data-s="bms.deltaMv"></canvas></div>
     </section>
     <section class="st-card" data-card="mppt" hidden>
       <header><h4>MPPT · BQ25798</h4><small>0x6B</small><span class="st-age" data-age></span></header>
-      <div class="st-acdrv"><span class="st-label">ACDRV path · 0x13</span><strong data-v="mppt.acdrv" class="st-pill">--</strong>
+      <div class="st-acdrv"><span class="st-label" data-tooltip="Charger gate-drive path state reported from BQ25798 register 0x13.">ACDRV Path · 0x13</span><strong data-v="mppt.acdrv" class="st-pill">--</strong>
         <small data-v="mppt.reg13">REG13 --</small></div>
-      <div class="st-faults" data-v="mppt.faults"></div>
-      <div class="st-metric"><span class="st-label">Active faults · 0x20</span><strong class="st-value" data-v="mppt.activeFaults">--</strong><canvas class="st-spark" data-s="mppt.faults"></canvas></div>
+      <div class="st-faults" data-v="mppt.faults" data-tooltip="Each indicator corresponds to a fault bit reported by BQ25798 register 0x20."></div>
+      <div class="st-metric"><span class="st-label" data-tooltip="Count of active fault bits reported by BQ25798 register 0x20.">Active Faults · 0x20</span><strong class="st-value" data-v="mppt.activeFaults">--</strong><canvas class="st-spark" data-s="mppt.faults"></canvas></div>
       <h5 class="st-sub">Power path</h5>
       <div class="st-path">
         <div class="st-flow"><span>VAC1 <b data-v="mppt.vac1">--</b></span><i>→</i><span>VBUS <b data-v="mppt.vbus">--</b></span><i>→</i><span>VSYS <b data-v="mppt.vsys">--</b></span><i>→</i><span>VBAT <b data-v="mppt.vbat">--</b></span></div>
@@ -114,9 +121,9 @@ function template() {
     <section class="st-card st-small" data-card="peripheral" hidden>
       <header><h4>ADC devices</h4><small>ESP32-S3 ADC1</small></header>
       <div data-per="temp"><h5 class="st-sub">MCP9700 · TEMP_OUT <small data-v="adc.tempGpio">GPIO1</small></h5>
-        ${metricRow(metric('per.tempC', 'Temperature', ' °C', 1))}${metricRow(metric('per.tempMv', 'Output', ' mV', 0))}</div>
+        ${metricRow(metric('per.tempC', 'Temperature', ' °C', 1, 'MCP9700 temperature derived from its analog output. Physical mounting location is not specified.'))}${metricRow(metric('per.tempMv', 'Output', ' mV', 0, 'MCP9700 analog output voltage.'))}</div>
       <div data-per="light"><h5 class="st-sub">TEMT6000 · LIGHT_OUT <small data-v="adc.lightGpio">GPIO2</small></h5>
-        ${metricRow(metric('per.light', 'Light level', '', 0))}</div>
+        ${metricRow(metric('per.light', 'Light Level', '', 0, 'Relative light category and sensor output voltage; this is not a lux measurement.'))}</div>
     </section>
   </div>`;
 }
@@ -165,7 +172,7 @@ export function mountStreamingView(root, { url } = {}) {
           set(`bms.cell${i}`, fmt(c.v, 3, ' V'));
           root.querySelector(`[data-cell-label="${i}"]`).textContent = c.label;
           const pct = c.v === null ? 0 : Math.max(0, Math.min(100, ((c.v - CELL_RANGE.min) / (CELL_RANGE.max - CELL_RANGE.min)) * 100));
-          const gauge = root.querySelector(`[data-gauge="${i}"]`); gauge.style.width = `${pct.toFixed(1)}%`;
+          const gauge = root.querySelector(`[data-gauge="${i}"]`); gauge.style.transform = `scaleX(${(pct / 100).toFixed(3)})`;
           gauge.className = c.v === null ? '' : c.v < 3.2 || c.v > 4.25 ? 'bad' : c.v < 3.5 ? 'warn' : 'ok';
         });
         set('bms.min', fmt(x.minV, 3, ' V')); set('bms.max', fmt(x.maxV, 3, ' V'));
@@ -177,7 +184,7 @@ export function mountStreamingView(root, { url } = {}) {
         a.className = `st-pill ${x.acdrv === 'off' ? 'off' : x.acdrv === 'both' ? 'warn' : 'on'}`;
         set('mppt.reg13', x.reg13 === null ? 'REG13 --' : `REG13 0x${x.reg13.toString(16).toUpperCase().padStart(2, '0')}`);
         const fbox = $('[data-v="mppt.faults"]');
-        const html = x.faults.map((f) => `<span class="st-fault ${f.active ? 'lit' : ''}" title="REG20 bit ${f.bit ?? '?'}">${esc(f.name.replace(/_STAT$/, ''))}</span>`).join('');
+        const html = x.faults.map((f) => `<span class="st-fault ${f.active ? 'lit' : ''}" data-tooltip="BQ25798 REG20 fault bit ${f.bit ?? 'not identified'}.">${esc(f.name.replace(/_STAT$/, ''))}</span>`).join('');
         if (fbox.innerHTML !== html) fbox.innerHTML = html;
         set('mppt.activeFaults', String(x.activeFaults));
         for (const [k, v] of [['vac1', x.vac1V], ['vbus', x.vbusV], ['vsys', x.vsysV], ['vbat', x.vbatV]]) set(`mppt.${k}`, fmt(v, 2, ' V'));
@@ -189,7 +196,8 @@ export function mountStreamingView(root, { url } = {}) {
       const p = snap.peripheral;
       $('[data-per="temp"]').hidden = !toggles.mcp9700; $('[data-per="light"]').hidden = !toggles.temt6000;
       set('per.tempC', fmt(p.temperatureC, 1, ' °C'));
-      set('per.light', p.lightVoltageMv === null ? '--' : `${p.lightLevel ?? '--'} · ${Math.round(p.lightVoltageMv)} mV`);
+      const lightLevel = p.lightLevel === 'Lightly Lit' ? 'Low Light' : p.lightLevel ?? '--';
+      set('per.light', p.lightVoltageMv === null ? '--' : `${lightLevel} · ${Math.round(p.lightVoltageMv)} mV`);
       const a = snap.adc;
       if (a) {
         set('per.tempMv', fmt(a.temp.mv, 0, ' mV'));

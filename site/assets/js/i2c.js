@@ -1,11 +1,11 @@
-import { apiFetch, canOperate } from './auth.js?v=20261027a';
+import { apiFetch, canOperate } from './auth.js?v=20261028a';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,
   lightLevelFromMv
 } from './telemetry-model.mjs?v=20261019b';
 import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261019b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261019b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261028a';
 
 const initialTelemetry = {
   pv: {
@@ -578,9 +578,10 @@ function renderPeripheralCard(telemetry) {
     : peripheral.temperatureSaturated
       ? 'ADC SATURATED'
       : 'VALID';
+  const lightLevel = lightVoltageMv === null ? null : peripheral.lightLevel ?? lightLevelFromMv(lightVoltageMv);
   document.getElementById('relativeLightValue').textContent = lightVoltageMv === null
     ? 'Unavailable'
-    : (peripheral.lightLevel ?? lightLevelFromMv(lightVoltageMv));
+    : lightLevel === 'Lightly Lit' ? 'Low Light' : lightLevel;
   document.getElementById('lightVoltageValue').textContent = lightVoltageMv === null
     ? 'Unavailable'
     : `${formatNumber(lightVoltageMv, 0)} mV${peripheral.lightSaturated ? ' (lower bound)' : ''}`;
@@ -709,7 +710,9 @@ function mpptPowerPathRows(mppt) {
 function lightLevelText(peripheral) {
   const mv = numericValue(peripheral?.lightVoltageMv);
   if (mv === null) return '--';
-  return `${peripheral.lightLevel ?? lightLevelFromMv(mv)} · ${formatNumber(mv, 0)} mV${peripheral.lightSaturated ? ' (sat)' : ''}`;
+  const level = peripheral.lightLevel ?? lightLevelFromMv(mv);
+  const lightLevel = level === 'Lightly Lit' ? 'Low Light' : level;
+  return `${lightLevel} · ${formatNumber(mv, 0)} mV${peripheral.lightSaturated ? ' (sat)' : ''}`;
 }
 
 function renderBmsCard(telemetry) {
@@ -1047,7 +1050,7 @@ function applyTelemetryPacket(packetEnvelope) {
       `ESP32 node: ${packetEnvelope.network.remote_address}:${packetEnvelope.network.remote_port}`
     );
   }
-  setDetailNote('Live packet applied from the droplet event stream.');
+  setDetailNote('Live packet applied from the telemetry bridge event stream.');
   writeLog(
     `Telemetry packet applied from ${streamMetadata.deviceId} ` +
       `(seq ${streamMetadata.sequence}).`
@@ -1153,7 +1156,7 @@ function connectTelemetryStream() {
   renderTelemetry(state, streamMetadata);
   streamErrorLogged = false;
   setStreamStatus('Waiting for live telemetry', false);
-  setDetailNote('Waiting for live packets from the droplet event stream.');
+  setDetailNote('Waiting for live packets from the telemetry bridge event stream.');
   bridgeCommandReady = false;
   updateCommandControls();
 

@@ -19,8 +19,18 @@ function update(next) {
   state = next;
   $('accountButton').hidden = state.enabled === false;
   $('accountButton').textContent = state.user
-    ? (state.user.username.toLowerCase() === state.user.role ? state.user.role : `${state.user.username} · ${state.user.role}`)
+    ? `${state.user.role === 'operator' ? 'Operator' : 'Viewer'}${state.user.role === 'operator' ? ` · Controls ${state.control_active ? 'Active' : 'Inactive'}` : ''}`
     : 'Sign in';
+  $('accountButton').setAttribute('aria-label', state.user
+    ? `${state.user.username}, ${state.user.role}${state.user.role === 'operator' ? `, controls ${state.control_active ? 'active' : 'inactive'}` : ''}. Open account.`
+    : 'Sign in');
+  $('accountButton').dataset.tooltip = state.user?.role === 'operator'
+    ? state.control_active
+      ? `Signed in as ${state.user.username}. This operator session currently holds control. Hardware commands also require the command token.`
+      : `Signed in as ${state.user.username}. This operator session does not currently hold control; telemetry and saved runs remain available.`
+    : state.user
+      ? `Signed in as ${state.user.username}. Viewer access can inspect telemetry and saved runs but cannot issue hardware commands.`
+      : 'Operator accounts can issue hardware controls when session control is active and a valid command token is present. Viewer accounts are read-only.';
   $('accountForm').hidden = !!state.user || state.enabled !== true;
   $('accountLogout').hidden = !state.user;
   $('accountRetry').hidden = state.enabled !== null;

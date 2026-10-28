@@ -32,7 +32,7 @@
 .st-cells { display: grid; gap: 8px; }
 .st-cell { display: grid; grid-template-columns: 58px 1fr 84px 120px; align-items: center; gap: 10px; }
 .st-gauge { height: 10px; border-radius: 6px; background: rgba(255,255,255,0.08); overflow: hidden; }
-.st-gauge i { display: block; height: 100%; width: 0; border-radius: 6px; background: var(--gold); transition: width 0.6s ease, background 0.3s; }
+.st-gauge i { display: block; height: 100%; width: 100%; border-radius: 6px; background: var(--gold); transform: scaleX(0); transform-origin: left center; transition: transform 0.6s ease, background 0.3s; }
 .st-gauge i.ok { background: linear-gradient(90deg, var(--success-deep), var(--success)); }
 .st-gauge i.warn { background: var(--warning); }
 .st-gauge i.bad { background: var(--danger); }
@@ -104,7 +104,7 @@
 .st-toggle { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
 .st-toggle input { accent-color: var(--gold); margin: 0; }
 .st-root [data-per][hidden] { display: none; }
-/* TEMT6000 value ("Lightly Lit · 732 mV") needs a wider value column than the numeric rows. */
+/* TEMT6000 value ("Low Light · 732 mV") needs a wider value column than the numeric rows. */
 .st-metric[data-metric="per.light"], .st-small .st-metric[data-metric="per.light"] { grid-template-columns: auto minmax(130px, 1fr) 80px; }
 .st-metric[data-metric="per.light"] .st-value { white-space: normal; overflow-wrap: anywhere; }
 .st-cell { grid-template-columns: 82px 1fr 70px 80px; } .st-cell .st-label { white-space: nowrap; }

@@ -1,23 +1,23 @@
-<link rel="stylesheet" href="./assets/css/runs.css?v=20261026a" />
+<link rel="stylesheet" href="./assets/css/runs.css?v=20261028a" />
 <section id="runs" class="page active runs-page" aria-labelledby="runsTitle">
   <header class="runs-heading">
     <div>
-      <h2 id="runsTitle">Telemetry runs</h2>
+      <h2 id="runsTitle">Telemetry Runs</h2>
       <p>Record real UDP telemetry, inspect startup behavior, and trace debug or power-source boundaries back to packets.</p>
     </div>
-    <div id="runsBridgeState" class="status-pill offline">Checking recorder</div>
+    <div id="runsBridgeState" class="status-pill offline" data-tooltip="Recorder readiness reflects whether the bridge can accept and serve run history.">Checking Recorder</div>
   </header>
 
   <section class="runs-capture" aria-labelledby="captureTitle">
     <div>
-      <h3 id="captureTitle">Capture control</h3>
+      <h3 id="captureTitle">Capture Control</h3>
       <p id="captureHelp">A recording begins with the latest fresh hardware packet.</p>
     </div>
     <form id="runStartForm" class="runs-capture-form">
-      <label for="runName">Run name</label>
+      <label for="runName" data-tooltip="A descriptive name stored with this recording and shown in run search.">Run Name</label>
       <input id="runName" name="name" maxlength="120" placeholder="Initialization test 01" required />
-      <button id="runStart" class="run-button primary" type="submit">Start recording</button>
-      <button id="runStop" class="run-button danger" type="button">Stop recording</button>
+      <button id="runStart" class="run-button primary" type="submit" data-tooltip="Starts recording from the latest fresh hardware packet. Operator access is required.">Start Recording</button>
+      <button id="runStop" class="run-button danger" type="button" data-tooltip="Stops the active recording and saves its end time and reason.">Stop Recording</button>
     </form>
     <p id="captureMessage" class="runs-message" role="status" aria-live="polite"></p>
   </section>
@@ -82,12 +82,12 @@
             <div id="seriesState" class="series-state" role="status" aria-live="polite"></div>
           </div>
           <form id="seriesForm" class="series-controls">
-            <label for="analysisMode">Analysis<select id="analysisMode">
+            <label for="analysisMode" data-tooltip="Choose a time-domain timeline or an event-aligned frequency response view.">Analysis<select id="analysisMode">
               <option value="timeline">Timeline</option>
               <option value="response">Frequency response</option>
             </select></label>
-            <label for="seriesMetric">Measurement<select id="seriesMetric"></select></label>
-            <label id="timelineWindowControl" for="seriesWindow">Window<select id="seriesWindow">
+            <label for="seriesMetric" data-tooltip="Select a recorded telemetry field. Missing values remain unavailable rather than being inferred.">Measurement<select id="seriesMetric"></select></label>
+            <label id="timelineWindowControl" for="seriesWindow" data-tooltip="Full-run chart requests are limited to a 24-hour window; longer runs show the latest 24 hours.">Window<select id="seriesWindow">
               <option value="full">Full run</option><option value="30s">Last 30 seconds</option>
               <option value="1m">Last minute</option><option value="5m">Last 5 minutes</option>
               <option value="15m">Last 15 minutes</option><option value="custom">Custom range</option>

@@ -1,4 +1,4 @@
-import { apiFetch } from './auth.js?v=20261027a';
+import { apiFetch } from './auth.js?v=20261028a';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 
 const MAX_AGE_MS = 3_600_000;

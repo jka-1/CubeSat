@@ -36,6 +36,8 @@
 .runs-capture-form label { grid-column: 1; grid-row: 1; color: var(--runs-muted); font-size: 0.78rem; font-weight: 750; }
 .runs-capture-form input { grid-column: 1; grid-row: 2; }
 .runs-capture-form .run-button { grid-row: 2; align-self: end; }
+.runs-capture-form .info-tip-wrap:has(#runStart) { grid-column: 2; grid-row: 2; }
+.runs-capture-form .info-tip-wrap:has(#runStop) { grid-column: 3; grid-row: 2; }
 .runs-capture-form input, .run-search input, .series-controls input, .series-controls select {
   width: 100%; min-height: 44px; padding: 0 12px; color: var(--white); background: #090909;
   border: 1px solid var(--runs-line); border-radius: 8px; caret-color: var(--gold);
@@ -196,6 +198,8 @@
   .runs-capture-form label { grid-row: 1; }
   .runs-capture-form input { grid-row: 2; }
   .runs-capture-form .run-button { grid-row: 3; }
+  .runs-capture-form .info-tip-wrap:has(#runStart) { grid-column: 1; grid-row: 3; }
+  .runs-capture-form .info-tip-wrap:has(#runStop) { grid-column: 2; grid-row: 3; }
   .run-detail { padding: 14px; }
   .run-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .series-controls { grid-template-columns: 1fr; }
@@ -212,6 +216,7 @@
   .runs-capture-form { grid-template-columns: 1fr; }
   .runs-capture-form label, .runs-capture-form input { grid-column: 1; }
   .runs-capture-form .run-button { grid-row: auto; }
+  .runs-capture-form .info-tip-wrap:has(.run-button) { grid-column: 1; grid-row: auto; }
   .run-facts { grid-template-columns: 1fr; }
   .run-chain { flex-wrap: wrap; }
 }
