@@ -14,11 +14,7 @@ esp_err_t telemetry_packet_v4_build_words(
     }
 
     const telemetry_packet_v3_meta_t legacy_meta = {
-        .sequence = meta != NULL ? meta->sequence : 0u,
-        .has_mcu_temperature = meta != NULL && meta->has_mcu_temperature,
-        .mcu_temperature_centi_c = meta != NULL
-            ? meta->mcu_temperature_centi_c
-            : 0,
+        .sequence = meta != NULL ? meta->sequence : 0u
     };
 
     esp_err_t status = telemetry_packet_v3_build_words(

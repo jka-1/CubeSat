@@ -105,7 +105,6 @@ export function decodeDevices(packet) {
       dieTempC: num(m.dieTempC), adcEnabled: typeof m.adcEnabled === 'boolean' ? m.adcEnabled : null,
       hasExt: m.vbusV !== undefined
     },
-    mcu: { tempC: num(t.mcu?.temperatureC) },
     peripheral: per,
     // The two ADC1 devices: TEMP_OUT (MCP9700) and LIGHT_OUT (TEMT6000).
     adc: {
@@ -127,7 +126,7 @@ export const SERIES = {
   'bms.cell0': (d) => d.bms.cells[0].v, 'bms.cell1': (d) => d.bms.cells[1].v, 'bms.cell2': (d) => d.bms.cells[2].v,
   'bms.cell3': (d) => d.bms.cells[3].v, 'bms.deltaMv': (d) => d.bms.deltaMv,
   'mppt.faults': (d) => d.mppt.activeFaults,
-  'mcu.tempC': (d) => d.mcu.tempC, 'per.tempC': (d) => d.peripheral.temperatureC, 'per.light': (d) => d.peripheral.lightVoltageMv
+'per.tempC': (d) => d.peripheral.temperatureC, 'per.light': (d) => d.peripheral.lightVoltageMv
 };
 const SERIES_DEVICE = (k) => k.split('.')[0];
 
@@ -194,7 +193,6 @@ export class StreamingModel {
       format: pkt?.packet_format || null, seq: pkt?.seq ?? null,
       debug: pkt?.debug || null, link: pkt?.link || null,
       devices, hidden,
-      mcu: this.decoded && this.decoded.mcu.tempC !== null ? this.decoded.mcu : null,
       peripheral: per && (per.temperatureC !== null || per.lightVoltageMv !== null) ? per : null,
       adc: per && (per.temperatureC !== null || per.lightVoltageMv !== null) ? this.decoded.adc : null,
       bridgeConnected: this.status ? !!this.status.telemetry_connected : null

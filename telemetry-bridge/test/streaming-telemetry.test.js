@@ -28,7 +28,7 @@ for (const fmt of ['v4', 'v5']) {
       for (const h of s.hidden) assert.equal(h.state, fmt === 'v5' ? 'absent' : 'not_polled');
       assert.equal(s.devices.every((d) => d.source === (fmt === 'v5' ? 'v5' : 'polling-mask')), true);
       assert.equal(s.stale, false);
-      assert.ok(s.mcu && s.mcu.tempC === 26);
+      assert.equal(Object.hasOwn(s, 'mcu'), false);
       assert.equal(s.peripheral.relativeLightLevel, 0.5);
       // absent devices never feed sparkline series
       for (const k of ['pv', 'bms', 'mppt']) {

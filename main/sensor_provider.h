@@ -43,16 +43,5 @@ esp_err_t sensor_provider_set_bms_cell_voltage(
     float voltage_v
 );
 
-esp_err_t sensor_provider_set_load_shunt_voltage(
-    float shunt_voltage_mv
-);
-
-esp_err_t sensor_provider_set_load_power(
-    float power_w
-);
-
-esp_err_t sensor_provider_set_load_current(
-    float current_a
-);
 
 #endif

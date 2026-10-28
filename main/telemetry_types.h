@@ -10,8 +10,6 @@
     (TELEMETRY_PACKET_WORD_COUNT * 4u)
 
 typedef struct {
-    float mcu_temperature_c;
-
     float pv_shunt_voltage_mv;
     float pv_power_w;
     float pv_current_a;
@@ -20,10 +18,6 @@ typedef struct {
     uint16_t mppt_fault_mask;
 
     float bms_cell_voltages_v[4];
-
-    float load_shunt_voltage_mv;
-    float load_power_w;
-    float load_current_a;
 
     uint32_t sample_counter;
     uint64_t device_uptime_ms;

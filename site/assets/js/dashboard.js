@@ -161,23 +161,21 @@ function renderLiveTelemetry(envelope) {
 
   if (!telemetry || typeof telemetry !== 'object') return false;
 
-  const requiredValues = [
-    telemetry.solar_panel_current_a,
-    telemetry.battery_voltage_v,
-    telemetry.mppt_switch_temperature_c,
-    telemetry.esp32_temperature_c
-  ].map(Number);
-
-  if (!requiredValues.every(Number.isFinite)) return false;
+  const grouped = telemetry.pv && typeof telemetry.pv === 'object';
+  const pvCurrent = grouped ? telemetry.pv.currentA : telemetry.solar_panel_current_a;
+  const pvVoltage = grouped ? telemetry.pv.busVoltageV : null;
+  const pvPower = grouped ? telemetry.pv.powerW : null;
+  const externalTemp = telemetry.peripheral?.temperatureC;
+  if (pvCurrent == null || !Number.isFinite(Number(pvCurrent))) return false;
 
   document.getElementById('liveSolarCurrent').textContent =
-    `${formatNumber(telemetry.solar_panel_current_a, 3)} A`;
-  document.getElementById('liveBatteryVoltage').textContent =
-    `${formatNumber(telemetry.battery_voltage_v, 2)} V`;
-  document.getElementById('liveMpptTemp').textContent =
-    `${formatNumber(telemetry.mppt_switch_temperature_c, 1)} °C`;
-  document.getElementById('liveEsp32Temp').textContent =
-    `${formatNumber(telemetry.esp32_temperature_c, 1)} °C`;
+    `${formatNumber(pvCurrent, 3)} A`;
+  document.getElementById('livePvVoltage').textContent =
+    pvVoltage == null ? '-- V' : `${formatNumber(pvVoltage, 3)} V`;
+  document.getElementById('livePvPower').textContent =
+    pvPower == null ? '-- W' : `${formatNumber(pvPower, 2)} W`;
+  document.getElementById('liveExternalTemp').textContent =
+    externalTemp == null ? '-- °C' : `${formatNumber(externalTemp, 1)} °C`;
 
   document.getElementById('liveReceivedAt').textContent =
     formatTime(envelope.received_at);

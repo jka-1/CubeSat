@@ -321,8 +321,6 @@ static char *build_telemetry_hex_packet(
 {
     telemetry_packet_v4_meta_t packet_meta = {
         .sequence = sequence,
-        .has_mcu_temperature = false,
-        .mcu_temperature_centi_c = 0,
         .has_peripheral_temperature = false,
         .peripheral_temperature_saturated = false,
         .peripheral_temperature_centi_c = 0,
@@ -333,10 +331,6 @@ static char *build_telemetry_hex_packet(
     };
 
     if (meta != NULL) {
-        packet_meta.has_mcu_temperature =
-            meta->has_mcu_temperature;
-        packet_meta.mcu_temperature_centi_c =
-            meta->mcu_temperature_centi_c;
         packet_meta.has_peripheral_temperature =
             meta->has_peripheral_temperature;
         packet_meta.peripheral_temperature_saturated =

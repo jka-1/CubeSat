@@ -24,8 +24,6 @@ extern "C" {
 typedef struct
 {
     uint16_t sequence;
-    bool has_mcu_temperature;
-    int16_t mcu_temperature_centi_c;
     bool has_peripheral_temperature;
     bool peripheral_temperature_saturated;
     int16_t peripheral_temperature_centi_c;

@@ -25,7 +25,6 @@ idf_component_register(
         lwip
 
     PRIV_REQUIRES
-        esp_driver_tsens
         esp_driver_i2c
         esp_timer
         esp_adc

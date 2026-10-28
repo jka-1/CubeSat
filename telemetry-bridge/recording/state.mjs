@@ -21,7 +21,7 @@ export function confirmedMode(packet) {
     return packet.debug.enabled ? 'debug' : 'live_telemetry';
   }
   if (['hex-v1-raw-ina226', 'hex-v2-engineering', 'hex-v3-validated-raw',
-    'hex-v4-peripheral-sensors', 'ina226-load-v1'].includes(packet.packet_format)) return 'live_telemetry';
+    'hex-v4-peripheral-sensors'].includes(packet.packet_format)) return 'live_telemetry';
   return null;
 }
 

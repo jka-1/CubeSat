@@ -22,8 +22,6 @@ extern "C" {
 typedef struct
 {
     uint16_t sequence;
-    bool has_mcu_temperature;
-    int16_t mcu_temperature_centi_c;
 } telemetry_packet_v3_meta_t;
 
 esp_err_t telemetry_packet_v3_build_words(

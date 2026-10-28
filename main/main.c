@@ -19,30 +19,6 @@
 
 static const char *TAG = "demo_main";
 
-static esp_err_t load_mcu_temperature_meta(
-    telemetry_packet_v4_meta_t *out_meta)
-{
-    if (out_meta == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
-
-    telemetry_sample_t temperature_sample = {0};
-    const esp_err_t status =
-        sensor_provider_read_sample(&temperature_sample);
-
-    if (status != ESP_OK) {
-        out_meta->has_mcu_temperature = false;
-        out_meta->mcu_temperature_centi_c = 0;
-        return status;
-    }
-
-    out_meta->has_mcu_temperature = true;
-    out_meta->mcu_temperature_centi_c = (int16_t)(
-        temperature_sample.mcu_temperature_c * 100.0f);
-
-    return ESP_OK;
-}
-
 static void load_peripheral_sensor_meta(
     telemetry_packet_v4_meta_t *out_meta)
 {
@@ -202,8 +178,6 @@ static void telemetry_task(void *argument)
         telemetry.sample_number = ++sample_number;
         telemetry_packet_v4_meta_t meta = {
             .sequence = 0,
-            .has_mcu_temperature = false,
-            .mcu_temperature_centi_c = 0,
             .has_peripheral_temperature = false,
             .peripheral_temperature_saturated = false,
             .peripheral_temperature_centi_c = 0,
@@ -212,16 +186,6 @@ static void telemetry_task(void *argument)
             .light_voltage_mv = 0,
             .relative_light_basis_points = 0,
         };
-
-        const esp_err_t temperature_status =
-            load_mcu_temperature_meta(&meta);
-
-        if (temperature_status != ESP_OK) {
-            ESP_LOGW(
-                TAG,
-                "MCU temperature unavailable: %s",
-                esp_err_to_name(temperature_status));
-        }
 
         load_peripheral_sensor_meta(&meta);
 
@@ -274,7 +238,6 @@ static void telemetry_task(void *argument)
                 ESP_LOGI(
                     TAG,
                     "Streamed raw-v4 sequence=%" PRIu32
-                    " temp=%s"
                     " peripheral_temp=%s"
                     " light=%s"
                     " pv_cal=0x%02X%02X"
@@ -284,7 +247,6 @@ static void telemetry_task(void *argument)
                     " debug=%s present=0x%" PRIX32
                     " i2c=%" PRIu32 "us",
                     sequence,
-                    meta.has_mcu_temperature ? "yes" : "no",
                     meta.has_peripheral_temperature ? "yes" : "no",
                     meta.has_light ? "yes" : "no",
                     telemetry.ina226_calibration[0],
@@ -327,11 +289,7 @@ void app_main(void)
         "Starting CubeSat live telemetry demo firmware");
 
     ESP_ERROR_CHECK(board_led_init());
-    esp_err_t sensor_err = sensor_provider_init();
-    if (sensor_err != ESP_OK) {
-        /* MCU temperature is optional: packets carry 0x8000 when it is unavailable. */
-        ESP_LOGW(TAG, "MCU temperature sensor unavailable (%s); continuing without it", esp_err_to_name(sensor_err));
-    }
+    ESP_ERROR_CHECK(sensor_provider_init());
     ESP_ERROR_CHECK(peripheral_sensors_init());
     ESP_ERROR_CHECK(i2c_bus_monitor_init());
     ESP_ERROR_CHECK(debug_mode_init());

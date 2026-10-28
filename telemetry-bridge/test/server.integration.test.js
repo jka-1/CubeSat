@@ -576,7 +576,7 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
       ? body.latest.packet
       : null;
   });
-  assert.equal(decoded.telemetry.mcu.temperatureC, 26);
+  assert.equal(decoded.telemetry.mcu.temperatureC, null);
   // INA226 raw CAL 0x0A00 + default effective shunt 2 mOhm -> Current_LSB 1 mA (matches the Registers tab).
   assert.ok(Math.abs(decoded.telemetry.pv.currentA - 0.05) < 1e-9);
   assert.ok(Math.abs(decoded.telemetry.pv.powerW - 0.25) < 1e-9);
@@ -630,7 +630,6 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
       solar_panel_current_a: 0.5,
       battery_voltage_v: 16,
       mppt_switch_temperature_c: 30,
-      esp32_temperature_c: 31,
       peripheral: {
         temperatureC: null,
         temperatureSaturated: null,
@@ -646,26 +645,16 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
   assert.equal(normalizedJson.envelope.packet.telemetry.peripheral.temperatureC, null);
 });
 
-test('bridge supports the lightweight INA226 load telemetry and calibration lifecycle', async (context) => {
+test('retired load-only packets are ignored', async (context) => {
   const httpPort = await reserveTcpPort();
   const udpPort = await reserveUdpPort();
   const baseUrl = `http://127.0.0.1:${httpPort}`;
   const bridge = spawn(process.execPath, [bridgePath], {
     cwd: bridgeDirectory,
-    env: {
-      ...process.env,
-      HTTP_PORT: String(httpPort),
-      UDP_PORT: String(udpPort),
-      HTTP_BIND_ADDRESS: '127.0.0.1',
-      UDP_BIND_ADDRESS: '127.0.0.1',
-      COMMAND_TOKEN: commandToken,
-      COMMAND_TIMEOUT_MS: '100',
-      TELEMETRY_STALE_MS: '1000',
-      LOAD_INA226_SHUNT_OHMS: '0.002'
-    },
+    env: { ...process.env, HTTP_PORT: String(httpPort), UDP_PORT: String(udpPort),
+      HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1', COMMAND_TOKEN: commandToken },
     stdio: ['ignore', 'pipe', 'pipe']
   });
-
   let bridgeOutput = '';
   bridge.stdout.on('data', (chunk) => { bridgeOutput += chunk; });
   bridge.stderr.on('data', (chunk) => { bridgeOutput += chunk; });
@@ -673,124 +662,17 @@ test('bridge supports the lightweight INA226 load telemetry and calibration life
     if (bridge.exitCode === null) bridge.kill('SIGTERM');
     if (bridge.exitCode === null) await once(bridge, 'exit');
   });
-
-  await waitFor(async () => {
-    const response = await fetch(`${baseUrl}/health`);
-    return response.ok;
-  }).catch((error) => {
+  await waitFor(async () => (await fetch(`${baseUrl}/health`)).ok).catch((error) => {
     throw new Error(`${error.message}\nBridge output:\n${bridgeOutput}`);
   });
-
   const device = dgram.createSocket('udp4');
   device.bind(0, '127.0.0.1');
   await once(device, 'listening');
   context.after(() => device.close());
-  const receiveDeviceBytes = createBufferReceiver(device);
-
-  const telemetry = Buffer.from('0A00FF9C2EE00012FFF0', 'hex');
-  await sendUdp(device, telemetry, udpPort);
-
-  const decoded = await waitFor(async () => {
-    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
-    return body.latest?.packet?.packet_format === 'ina226-load-v1'
-      ? body.latest.packet
-      : null;
-  });
-  assert.equal(decoded.device_id, 'ina226-load');
-  assert.equal(decoded.seq, 0);
-  assert.deepEqual(decoded.raw.load, {
-    calibration: 0x0a00,
-    shunt: 0xff9c,
-    bus: 0x2ee0,
-    power: 0x0012,
-    current: 0xfff0
-  });
-  assert.equal(decoded.telemetry.load.shuntVoltageMv, -0.25);
-  assert.equal(decoded.telemetry.load.busVoltageV, 15);
-  assert.ok(Math.abs(decoded.telemetry.load.powerW - 0.45) < 1e-12);
-  assert.ok(Math.abs(decoded.telemetry.load.currentA - (-0.016)) < 1e-12);
-
-  const health = await fetch(`${baseUrl}/health`).then((response) => response.json());
-  assert.equal(health.telemetry_connected, true);
-  assert.equal(health.telemetry_packet_format, 'ina226-load-v1');
-  assert.equal(health.telemetry_endpoint.packet_format, 'ina226-load-v1');
-  assert.equal(health.command_ready, true);
-
-  const unsupportedRead = await postCommand(baseUrl, {
-    type: 'i2c_read', addr: '0x40', reg: '0x05', len: 1
-  });
-  assert.equal(unsupportedRead.status, 400);
-
-  const zeroCalibration = await postCommand(baseUrl, {
-    type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x00', '0x00']
-  });
-  assert.equal(zeroCalibration.status, 400);
-
-  const readResponse = await postCommand(baseUrl, {
-    type: 'i2c_read', addr: '0x40', reg: '0x05', len: 2
-  });
-  assert.equal(readResponse.status, 202);
-  const acceptedRead = await readResponse.json();
-  assert.equal(acceptedRead.transport, 'ina226-load-binary-v1');
-  assert.match(acceptedRead.request_id, /^[0-9A-F]{4}$/);
-
-  const readCommand = await receiveDeviceBytes();
-  assert.equal(
-    readCommand.toString('hex').toUpperCase(),
-    `49430101${acceptedRead.request_id}0000`
-  );
-
-  const overlappingCommand = await postCommand(baseUrl, {
-    type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x0A', '0x20']
-  });
-  assert.equal(overlappingCommand.status, 409);
-
-  const retriedReadCommand = await receiveDeviceBytes();
-  assert.deepEqual(retriedReadCommand, readCommand);
-
-  await sendUdp(
-    device,
-    Buffer.from(`49520101${acceptedRead.request_id}00010A000000`, 'hex'),
-    udpPort
-  );
-
-  await waitFor(async () => {
-    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
-    return body.latest_debug?.packet?.request_id === acceptedRead.request_id &&
-      body.latest_debug.packet.command_type === 'i2c_read';
-  });
-
-  const writeResponse = await postCommand(baseUrl, {
-    type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x0A', '0x20']
-  });
-  assert.equal(writeResponse.status, 202);
-  const accepted = await writeResponse.json();
-  assert.equal(accepted.transport, 'ina226-load-binary-v1');
-  assert.match(accepted.request_id, /^[0-9A-F]{4}$/);
-
-  const command = await receiveDeviceBytes();
-  assert.equal(
-    command.toString('hex').toUpperCase(),
-    `49430102${accepted.request_id}0A20`
-  );
-
-  await sendUdp(
-    device,
-    Buffer.from(`49520102${accepted.request_id}00010A200000`, 'hex'),
-    udpPort
-  );
-
-  const completed = await waitFor(async () => {
-    const body = await fetch(`${baseUrl}/latest`).then((response) => response.json());
-    return body.latest_debug?.packet?.request_id === accepted.request_id
-      ? body
-      : null;
-  });
-  assert.equal(completed.latest_debug.packet.ok, true);
-  assert.equal(completed.latest_debug.packet.readback_calibration, '0x0A20');
-  assert.deepEqual(completed.latest_debug.packet.write_data, ['0x0A', '0x20']);
-  assert.deepEqual(completed.latest_debug.packet.data, ['0x0A', '0x20']);
-  assert.equal(completed.latest_command.status, 'completed');
+  await sendUdp(device, Buffer.from('0A00FF9C2EE00012FFF0', 'hex'), udpPort);
+  await waitFor(() => bridgeOutput.includes('[UDP] rejected packet'));
+  const latest = await fetch(`${baseUrl}/latest`).then((response) => response.json());
+  assert.equal(latest.latest, null);
 });
 
 test('dashboard command controls match the hardened interface', async () => {
@@ -842,12 +724,13 @@ test('dashboard command controls match the hardened interface', async () => {
   assert.match(html, /id=["']i2cDetailLayer["']/);
   assert.doesNotMatch(html, /class=["']bank-connection["']/);
   assert.match(html, /ADC1 · not on I²C/);
-  assert.equal((html.match(/class=["']device-port["']/g) || []).length, 4);
+  assert.equal((html.match(/class=["']device-port["']/g) || []).length, 3);
   assert.equal((html.match(/class=["']page-port["']/g) || []).length, 1);
   assert.match(html, /id=["']commandResultLog["'] class=["']telemetry-log command-result-log["']/);
   assert.match(script, /openDetailPanel/);
   assert.match(script, /closeDetailPanel/);
-  assert.match(script, /normalizeLoadOnlyPacket/);
+  assert.doesNotMatch(script, /normalizeLoadOnlyPacket/);
+  assert.doesNotMatch(html, /data-detail-target=["'](?:mcu|load)["']/);
   assert.doesNotMatch(script, /0x41/);
   assert.match(styles, /\.i2c-detail-window\s*\{/);
   assert.match(

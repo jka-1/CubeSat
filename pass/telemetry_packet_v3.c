@@ -27,18 +27,13 @@ esp_err_t telemetry_packet_v3_build_words(
         return ESP_ERR_INVALID_ARG;
     }
 
-    const uint16_t mcu_temperature_word =
-        (meta != NULL && meta->has_mcu_temperature)
-            ? (uint16_t)meta->mcu_temperature_centi_c
-            : TELEMETRY_PACKET_V3_MCU_TEMP_NOT_SUPPLIED;
-
     const uint16_t sequence =
         (meta != NULL) ? meta->sequence : 0u;
 
     out_words[0] = TELEMETRY_PACKET_V3_MAGIC;
     out_words[1] = TELEMETRY_PACKET_V3_VERSION;
     out_words[2] = sequence;
-    out_words[3] = mcu_temperature_word;
+    out_words[3] = TELEMETRY_PACKET_V3_MCU_TEMP_NOT_SUPPLIED;
 
     /*
      * INA226 bytes are already arranged high-byte then low-byte in the

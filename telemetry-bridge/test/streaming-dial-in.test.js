@@ -12,7 +12,7 @@ const memStore = () => { const m = new Map(); return { getItem: (k) => (m.has(k)
 test('streaming card toggles default on and persist per IC / ADC device', async () => {
   globalThis.window ??= {};
   const v = await import('../../site/assets/js/streaming-view.mjs');
-  assert.deepEqual(v.CARD_TOGGLES.map((t) => t.key), ['pv', 'bms', 'mppt', 'mcu', 'mcp9700', 'temt6000']);
+  assert.deepEqual(v.CARD_TOGGLES.map((t) => t.key), ['pv', 'bms', 'mppt', 'mcp9700', 'temt6000']);
   const s = memStore();
   assert.ok(Object.values(v.getCardToggles(s)).every(Boolean));
   v.setCardToggle('temt6000', false, s);

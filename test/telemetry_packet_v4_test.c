@@ -9,7 +9,6 @@ int main(void)
     power_telemetry_t telemetry = {0};
     telemetry_packet_v4_meta_t meta = {
         .sequence = 7,
-        .has_mcu_temperature = false,
     };
     uint16_t words[TELEMETRY_PACKET_V4_WORD_COUNT] = {0};
 
@@ -20,6 +19,8 @@ int main(void)
     assert(words[0] == TELEMETRY_PACKET_V4_MAGIC);
     assert(words[1] == TELEMETRY_PACKET_V4_VERSION);
     assert(words[2] == 7u);
+    /* Keep the v6-compatible word position while removing the MCU sensor. */
+    assert(words[3] == 0x8000u);
     assert(words[16] == 0u);
     assert(words[17] == 0u);
     assert(words[18] == 0u);

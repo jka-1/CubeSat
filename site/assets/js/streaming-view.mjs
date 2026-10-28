@@ -8,7 +8,7 @@ const CELL_REGS = ['0x14', '0x16', '0x18', '0x1A'];
 // Per-card visibility toggles (by IC / ADC device), persisted in localStorage. Default: all on.
 export const CARD_TOGGLES = [
   { key: 'pv', label: 'INA226' }, { key: 'bms', label: 'BQ76942' }, { key: 'mppt', label: 'BQ25798' },
-  { key: 'mcu', label: 'ESP32-S3' }, { key: 'mcp9700', label: 'MCP9700' }, { key: 'temt6000', label: 'TEMT6000' }
+{ key: 'mcp9700', label: 'MCP9700' }, { key: 'temt6000', label: 'TEMT6000' }
 ];
 export const CARD_TOGGLE_KEY = 'cubesat.streamingCards';
 function toggleStore(storage) { try { return storage ?? globalThis.localStorage ?? null; } catch { return null; } }
@@ -111,10 +111,6 @@ function template() {
         ${MPPT_PATH.map(metricRow).join('')}
       </div>
     </section>
-    <section class="st-card st-small" data-card="mcu" hidden>
-      <header><h4>ESP32-S3</h4><small>on-die</small></header>
-      ${metricRow(metric('mcu.tempC', 'MCU temperature', ' °C', 1))}
-    </section>
     <section class="st-card st-small" data-card="peripheral" hidden>
       <header><h4>ADC devices</h4><small>ESP32-S3 ADC1</small></header>
       <div data-per="temp"><h5 class="st-sub">MCP9700 · TEMP_OUT <small data-v="adc.tempGpio">GPIO1</small></h5>
@@ -153,10 +149,9 @@ export function mountStreamingView(root, { url } = {}) {
     $('[data-st="meta"]').textContent = snap.hasData ? `${snap.format} · seq ${snap.seq} · last update ${age} ago · ${snap.packets} packets` : 'waiting for packets';
     root.classList.toggle('st-is-stale', snap.hasData && snap.stale);
     $('[data-st="hidden"]').innerHTML = snap.hidden.map((d) => `<span class="st-chip ${d.state}">${esc(d.label)} · ${HIDDEN_TEXT[d.state] || d.state}</span>`).join('');
-    $('[data-st="empty"]').hidden = !snap.hasData || snap.devices.length > 0 || !!snap.mcu || !!snap.peripheral;
+    $('[data-st="empty"]').hidden = !snap.hasData || snap.devices.length > 0 || !!snap.peripheral;
     const visible = new Set(snap.devices.map((d) => d.key));
     for (const key of ['pv', 'bms', 'mppt']) $(`[data-card="${key}"]`).hidden = !visible.has(key) || !toggles[key];
-    $('[data-card="mcu"]').hidden = !snap.mcu || !toggles.mcu;
     $('[data-card="peripheral"]').hidden = !snap.peripheral || (!toggles.mcp9700 && !toggles.temt6000);
     $$('[data-age]').forEach((el) => { el.textContent = age; });
     for (const d of snap.devices) {
@@ -190,7 +185,6 @@ export function mountStreamingView(root, { url } = {}) {
         set('mppt.vsysV', fmt(x.vsysV, 3, ' V')); set('mppt.ibusMa', fmt(x.ibusMa, 0, ' mA')); set('mppt.dieTempC', fmt(x.dieTempC, 1, ' °C'));
       }
     }
-    if (snap.mcu) set('mcu.tempC', fmt(snap.mcu.tempC, 1, ' °C'));
     if (snap.peripheral) {
       const p = snap.peripheral;
       $('[data-per="temp"]').hidden = !toggles.mcp9700; $('[data-per="light"]').hidden = !toggles.temt6000;

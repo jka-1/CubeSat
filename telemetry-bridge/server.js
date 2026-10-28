@@ -20,7 +20,6 @@ const signedTelemetry = new SignedTelemetryVerifier({
 });
 const maxUdpBytes = Number(process.env.MAX_UDP_BYTES || 4096);
 const hexDeviceId = process.env.HEX_DEVICE_ID || 'esp32-telemetry';
-const ina226LoadDeviceId = process.env.INA226_LOAD_DEVICE_ID || 'ina226-load';
 const hexPacketMagic = 0x4353;
 const hexPacketVersionRawIna226 = 0x0001;
 const hexPacketVersionEngineering = 0x0002;
@@ -56,16 +55,6 @@ const debugStatusNames = Object.freeze({
 });
 const scanPeriodMinMs = 200;
 const scanPeriodMaxMs = 5000;
-const ina226LoadCommandMagic = 0x4943;
-const ina226LoadResultMagic = 0x4952;
-const ina226LoadProtocolVersion = 0x01;
-const ina226LoadReadCalibrationOpcode = 0x01;
-const ina226LoadWriteCalibrationOpcode = 0x02;
-const ina226LoadTelemetryBytes = 10;
-const ina226LoadCommandBytes = 8;
-const ina226LoadResultBytes = 12;
-const ina226LoadAddress = 0x40;
-const ina226CalibrationRegister = 0x05;
 const hexPacketByteCounts = new Set([
   hexPacketLegacyWordCount * 2,
   hexPacketPeripheralWordCount * 2,
@@ -77,16 +66,9 @@ const pvCurrentLsbA = readFiniteNumber('PV_INA226_CURRENT_LSB_A', 0.001);
 // at 81 mA) gives 2 mOhm, i.e. Current_LSB = 0.00512/(2560*0.002) = 1 mA, matching the Registers tab.
 // The 100 Ohm figure is not across IN+/IN- (0.08 A x 100 Ohm = 8 V, far beyond the 81.92 mV shunt range).
 const pvShuntOhms = readFiniteNumber('PV_INA226_SHUNT_OHMS', 0.002);
-const loadCurrentLsbA = readFiniteNumber('LOAD_INA226_CURRENT_LSB_A', 0.001);
-const loadShuntOhms = readFiniteNumber('LOAD_INA226_SHUNT_OHMS', 100);
 const commandTargetHost = String(process.env.COMMAND_TARGET_HOST || '').trim();
 const commandTargetPort = readOptionalPort('COMMAND_TARGET_PORT');
-const configuredCommandPacketFormat = String(
-  process.env.COMMAND_PACKET_FORMAT || 'json'
-).trim().toLowerCase();
-if (!['json', 'ina226-load-v1'].includes(configuredCommandPacketFormat)) {
-  throw new Error('COMMAND_PACKET_FORMAT must be json or ina226-load-v1');
-}
+const configuredCommandPacketFormat = 'json';
 const commandToken = String(process.env.COMMAND_TOKEN || '');
 // Opt-in until the history/JWT UI milestone is ready. Never reuse the public site root.
 const recordingPath = process.env.RECORDING_DB_PATH || '';
@@ -98,10 +80,6 @@ const allowUnauthenticatedCommands = readBoolean(
 );
 const telemetryStaleMs = readPositiveInteger('TELEMETRY_STALE_MS', 5_000);
 const commandTimeoutMs = readPositiveInteger('COMMAND_TIMEOUT_MS', 4_000);
-const ina226LoadCommandRetries = readNonNegativeInteger(
-  'INA226_LOAD_COMMAND_RETRIES',
-  1
-);
 const sensorGroups = Object.freeze([
   { key: 'pv', label: 'PV / INA226', mask: 0x01 },
   { key: 'bms', label: 'BMS / BQ76942', mask: 0x02 },
@@ -110,7 +88,7 @@ const sensorGroups = Object.freeze([
 const allSensorMask = sensorGroups.reduce((mask, group) => mask | group.mask, 0);
 const supportedI2cDevices = new Map([
   [0x08, 'BMS / BQ76942'],
-  [0x40, 'INA226 (PV or Load test)'],
+  [0x40, 'INA226 (PV)'],
   [0x6b, 'MPPT / BQ25798']
 ]);
 const sensorMaskTag = 0xa500;
@@ -141,8 +119,6 @@ let latestDebugState = null;
 let sensorPollingState = null;
 let generatedSequence = 1_000_000;
 let lastBroadcastTelemetryConnected = null;
-let ina226LoadSampleCounter = 0;
-let nextIna226LoadRequestId = 1;
 const sseClients = new Set();
 const pendingCommands = new Map();
 
@@ -179,14 +155,6 @@ function readPositiveInteger(name, fallback) {
   const value = Number(process.env[name] || fallback);
   if (!Number.isInteger(value) || value < 1) {
     throw new Error(`${name} must be a positive integer`);
-  }
-  return value;
-}
-
-function readNonNegativeInteger(name, fallback) {
-  const value = Number(process.env[name] ?? fallback);
-  if (!Number.isInteger(value) || value < 0) {
-    throw new Error(`${name} must be a non-negative integer`);
   }
   return value;
 }
@@ -562,159 +530,6 @@ function formatHexWord(value) {
   return Number(value).toString(16).toUpperCase().padStart(4, '0');
 }
 
-function formatIna226RequestId(value) {
-  return Number(value).toString(16).toUpperCase().padStart(4, '0');
-}
-
-function createIna226RequestId() {
-  const requestId = nextIna226LoadRequestId;
-  nextIna226LoadRequestId = (nextIna226LoadRequestId + 1) & 0xffff;
-  return formatIna226RequestId(requestId);
-}
-
-function normalizeIna226RequestId(value) {
-  if (value === undefined || value === null || String(value).trim() === '') {
-    return createIna226RequestId();
-  }
-
-  if (typeof value === 'number') {
-    if (!Number.isInteger(value) || value < 0 || value > 0xffff) {
-      throw new Error('request_id must be a 16-bit unsigned integer');
-    }
-    return formatIna226RequestId(value);
-  }
-
-  const compact = String(value).trim().replace(/^0x/i, '');
-  if (!/^[0-9a-fA-F]{1,4}$/.test(compact)) {
-    throw new Error('request_id must contain 1 through 4 hexadecimal digits');
-  }
-  return formatIna226RequestId(Number.parseInt(compact, 16));
-}
-
-function normalizeIna226LoadTelemetry(buffer) {
-  if (!Buffer.isBuffer(buffer) || buffer.length !== ina226LoadTelemetryBytes) {
-    throw new Error(`INA226 load telemetry must contain ${ina226LoadTelemetryBytes} bytes`);
-  }
-
-  const words = [];
-  for (let offset = 0; offset < buffer.length; offset += 2) {
-    words.push(buffer.readUInt16BE(offset));
-  }
-
-  const calibration = words[0];
-  if (calibration > 0x7fff) {
-    throw new Error('INA226 calibration register has reserved bit 15 set');
-  }
-  const resolvedCurrentLsbA = decodeIna226CurrentLsbA(
-    calibration,
-    loadShuntOhms,
-    loadCurrentLsbA
-  );
-
-  const sampleCounter = ina226LoadSampleCounter;
-  ina226LoadSampleCounter = (ina226LoadSampleCounter + 1) >>> 0;
-
-  return {
-    version: 1,
-    type: 'telemetry',
-    packet_format: 'ina226-load-v1',
-    device_id: ina226LoadDeviceId,
-    seq: sampleCounter,
-    device_uptime_ms: 0,
-    sample_counter: sampleCounter,
-    transmitted_at: null,
-    telemetry: {
-      load: {
-        shuntVoltageMv: decodeIna226ShuntMv(words[1]),
-        busVoltageV: words[2] * 0.00125,
-        powerW: decodeIna226PowerW(words[3], resolvedCurrentLsbA),
-        currentA: decodeIna226CurrentA(words[4], resolvedCurrentLsbA)
-      }
-    },
-    raw: {
-      load: {
-        calibration,
-        shunt: words[1],
-        bus: words[2],
-        power: words[3],
-        current: words[4]
-      }
-    }
-  };
-}
-
-function normalizeIna226LoadResult(buffer) {
-  if (!Buffer.isBuffer(buffer) || buffer.length !== ina226LoadResultBytes) {
-    throw new Error(`INA226 load result must contain ${ina226LoadResultBytes} bytes`);
-  }
-  if (buffer.readUInt16BE(0) !== ina226LoadResultMagic) {
-    throw new Error('invalid INA226 load result magic');
-  }
-  if (buffer[2] !== ina226LoadProtocolVersion) {
-    throw new Error(
-      `unsupported INA226 load result version 0x${formatHexByte(buffer[2])}`
-    );
-  }
-
-  const opcode = buffer[3];
-  if (![ina226LoadReadCalibrationOpcode, ina226LoadWriteCalibrationOpcode].includes(opcode)) {
-    throw new Error(`unsupported INA226 load result opcode 0x${formatHexByte(opcode)}`);
-  }
-  const statusCode = buffer[6];
-  const requestId = formatIna226RequestId(buffer.readUInt16BE(4));
-  const readbackValid = buffer[7] === 1;
-  if (buffer[7] > 1) {
-    throw new Error('INA226 load result has invalid readback-valid flag');
-  }
-  const readback = buffer.readUInt16BE(8);
-  const driverError = buffer.readUInt16BE(10);
-  const commandType = opcode === ina226LoadReadCalibrationOpcode
-    ? 'i2c_read'
-    : 'i2c_write';
-  const statusMessages = new Map([
-    [0, commandType === 'i2c_read' ? 'Calibration read succeeded' : 'Calibration write verified'],
-    [1, 'Calibration command or value was rejected'],
-    [2, 'INA226 I2C write failed'],
-    [3, 'INA226 calibration readback failed'],
-    [4, 'INA226 calibration verification mismatch'],
-    [5, 'INA226 command request ID is stale']
-  ]);
-  const message = statusMessages.get(statusCode) ||
-    `Unknown INA226 result status 0x${formatHexWord(statusCode)}`;
-
-  return {
-    version: 1,
-    type: 'debug_result',
-    packet_format: 'ina226-load-result-v1',
-    device_id: ina226LoadDeviceId,
-    request_id: requestId,
-    command_type: commandType,
-    status: statusCode === 0 ? 'ok' : 'error',
-    ok: statusCode === 0,
-    addr: formatHexByte(ina226LoadAddress),
-    reg: formatHexByte(ina226CalibrationRegister),
-    len: 2,
-    write_data: commandType === 'i2c_write' && readbackValid ? [
-      formatHexByte(readback >> 8),
-      formatHexByte(readback & 0xff)
-    ] : [],
-    data: readbackValid ? [
-      formatHexByte(readback >> 8),
-      formatHexByte(readback & 0xff)
-    ] : [],
-    readback_valid: readbackValid,
-    readback_calibration: readbackValid ? `0x${formatHexWord(readback)}` : null,
-    result_code: statusCode,
-    driver_error: `0x${formatHexWord(driverError)}`,
-    note: statusCode === 0 ? message : null,
-    error: statusCode === 0 ? null : message
-  };
-}
-
-function decodeOptionalTemperatureC(word) {
-  return word === 0x8000 ? null : decodeSignedWord(word) / 100;
-}
-
 function decodeCentiMilliVolts(word) {
   return decodeSignedWord(word) / 100;
 }
@@ -839,7 +654,7 @@ function normalizeHexPacketWords(words) {
       transmitted_at: null,
       telemetry: {
         mcu: {
-          temperatureC: decodeSignedWord(words[3]) / 100
+          temperatureC: null
         },
         pv: {
           shuntVoltageMv: decodeIna226ShuntMv(words[4]),
@@ -858,11 +673,7 @@ function normalizeHexPacketWords(words) {
             words[12] / 1000
           ]
         },
-        load: {
-          shuntVoltageMv: decodeIna226ShuntMv(words[13]),
-          powerW: decodeIna226PowerW(words[14], loadCurrentLsbA),
-          currentA: decodeIna226CurrentA(words[15], loadCurrentLsbA)
-        }
+        load: null
       }
     };
   }
@@ -879,7 +690,7 @@ function normalizeHexPacketWords(words) {
       transmitted_at: null,
       telemetry: {
         mcu: {
-          temperatureC: decodeSignedWord(words[3]) / 100
+          temperatureC: null
         },
         pv: {
           shuntVoltageMv: decodeCentiMilliVolts(words[4]),
@@ -898,11 +709,7 @@ function normalizeHexPacketWords(words) {
             words[12] / 1000
           ]
         },
-        load: {
-          shuntVoltageMv: decodeCentiMilliVolts(words[13]),
-          powerW: decodeCentiWatts(words[14]),
-          currentA: decodeMilliamps(words[15])
-        }
+        load: null
       }
     };
   }
@@ -927,7 +734,7 @@ function normalizeHexPacketWords(words) {
       transmitted_at: null,
       telemetry: {
         mcu: {
-          temperatureC: decodeOptionalTemperatureC(words[3])
+          temperatureC: null
         },
         pv: {
           shuntVoltageMv: decodeIna226ShuntMv(words[5]),
@@ -1143,8 +950,7 @@ function normalizeLegacyTelemetry(value) {
   const telemetry = {
     solar_panel_current_a: Number(value.solar_panel_current_a),
     battery_voltage_v: Number(value.battery_voltage_v),
-    mppt_switch_temperature_c: Number(value.mppt_switch_temperature_c),
-    esp32_temperature_c: Number(value.esp32_temperature_c)
+    mppt_switch_temperature_c: Number(value.mppt_switch_temperature_c)
   };
 
   for (const [name, fieldValue] of Object.entries(telemetry)) {
@@ -1202,14 +1008,6 @@ function normalizeOptionalPeripheral(value) {
 }
 
 function normalizeGroupedTelemetry(value) {
-  const mcuTemperature = pickFirst(
-    value?.mcu?.temperatureC,
-    value?.mcu?.temperature_c,
-    value?.mcu_temp_c,
-    value?.mcuTemperatureC,
-    value?.esp32_temperature_c
-  );
-
   const pvShuntVoltageMv = pickFirst(
     value?.pv?.shuntVoltageMv,
     value?.pv?.shunt_voltage_mv,
@@ -1252,28 +1050,9 @@ function normalizeGroupedTelemetry(value) {
     value?.bms
   );
 
-  const loadShuntVoltageMv = pickFirst(
-    value?.load?.shuntVoltageMv,
-    value?.load?.shunt_voltage_mv,
-    value?.load?.shunt_mv,
-    value?.load_shunt_voltage_mv
-  );
-
-  const loadPowerW = pickFirst(
-    value?.load?.powerW,
-    value?.load?.power_w,
-    value?.load_power_w
-  );
-
-  const loadCurrentA = pickFirst(
-    value?.load?.currentA,
-    value?.load?.current_a,
-    value?.load_current_a
-  );
-
   const normalized = {
     mcu: {
-      temperatureC: asFiniteNumber(mcuTemperature, 'mcu.temperatureC')
+      temperatureC: null
     },
     pv: {
       shuntVoltageMv: asFiniteNumber(pvShuntVoltageMv, 'pv.shuntVoltageMv'),
@@ -1287,11 +1066,7 @@ function normalizeGroupedTelemetry(value) {
     bms: {
       cellVoltagesV: normalizeCellVoltages(bmsCellVoltages)
     },
-    load: {
-      shuntVoltageMv: asFiniteNumber(loadShuntVoltageMv, 'load.shuntVoltageMv'),
-      powerW: asFiniteNumber(loadPowerW, 'load.powerW'),
-      currentA: asFiniteNumber(loadCurrentA, 'load.currentA')
-    }
+    load: null
   };
 
   const peripheral = normalizeOptionalPeripheral(value?.peripheral);
@@ -1499,15 +1274,6 @@ function normalizeDebugPacket(value) {
 }
 
 function decodeUdpPacket(message) {
-  if (message.length === ina226LoadTelemetryBytes) {
-    if (requireSignedTelemetry) throw new Error('signed telemetry is required');
-    return normalizeIna226LoadTelemetry(message);
-  }
-
-  if (message.length === ina226LoadResultBytes) {
-    return normalizeIna226LoadResult(message);
-  }
-
   const text = message.toString('utf8').trim();
 
   if (text.startsWith('{')) {
@@ -1923,105 +1689,8 @@ function buildJsonCommandMessage(body) {
   };
 }
 
-function buildIna226LoadCommandMessage(body) {
-  const directCommandType = String(body?.type || '')
-    .trim()
-    .toLowerCase();
-
-  if (!['i2c_read', 'i2c_write'].includes(directCommandType)) {
-    throw new Error(
-      'The lightweight INA226 target only supports i2c_read or i2c_write for calibration register 0x05.'
-    );
-  }
-
-  if ([...pendingCommands.values()].some((pending) =>
-    pending.transport === 'ina226-load-binary-v1')) {
-    throw createHttpError(409, 'Only one lightweight INA226 command may be outstanding.');
-  }
-
-  const address = normalizeDeviceAddress(pickFirst(
-    body?.addr,
-    body?.address,
-    body?.device_address,
-    body?.deviceAddress
-  ));
-  const registerAddress = normalizeRegisterAddress(pickFirst(
-    body?.reg,
-    body?.register,
-    body?.register_address,
-    body?.registerAddress
-  ));
-  if (asByte(address, 'addr') !== ina226LoadAddress ||
-      asByte(registerAddress, 'reg') !== ina226CalibrationRegister) {
-    throw new Error(
-      'The lightweight target only permits INA226 address 0x40 calibration register 0x05.'
-    );
-  }
-
-  let calibration = 0;
-  let data = [];
-  let opcode = ina226LoadReadCalibrationOpcode;
-
-  if (directCommandType === 'i2c_read') {
-    const requestedLength = Number(pickFirst(body?.len, body?.length, 2));
-    if (requestedLength !== 2) {
-      throw new Error('INA226 calibration reads require exactly two bytes');
-    }
-  } else {
-    const writePayload = pickFirst(body?.data, body?.value, body?.values);
-    if (writePayload === undefined) {
-      throw new Error('i2c_write must include two calibration bytes');
-    }
-    data = normalizeWriteData(writePayload);
-    if (data.length !== 2) {
-      throw new Error('INA226 calibration writes require exactly two bytes');
-    }
-    calibration = (asByte(data[0], 'data[0]') << 8) |
-      asByte(data[1], 'data[1]');
-    if (calibration === 0 || calibration > 0x7fff) {
-      throw new Error('INA226 calibration must be from 0x0001 through 0x7FFF');
-    }
-    opcode = ina226LoadWriteCalibrationOpcode;
-  }
-
-  const requestId = normalizeIna226RequestId();
-  const requestIdNumber = Number.parseInt(requestId, 16);
-  const issuedAt = new Date().toISOString();
-  const payloadBuffer = Buffer.alloc(ina226LoadCommandBytes);
-  payloadBuffer.writeUInt16BE(ina226LoadCommandMagic, 0);
-  payloadBuffer[2] = ina226LoadProtocolVersion;
-  payloadBuffer[3] = opcode;
-  payloadBuffer.writeUInt16BE(requestIdNumber, 4);
-  payloadBuffer.writeUInt16BE(calibration, 6);
-  const payloadPreview = payloadBuffer.toString('hex').toUpperCase();
-  const summary = directCommandType === 'i2c_read'
-    ? 'INA226_LOAD READ CALIBRATION'
-    : `INA226_LOAD WRITE CALIBRATION 0x${formatHexWord(calibration)}`;
-
-  return {
-    transport: 'ina226-load-binary-v1',
-    payloadBuffer,
-    payloadPreview,
-    summary,
-    requestId,
-    commandType: directCommandType,
-    issuedAt,
-    maxRetries: ina226LoadCommandRetries,
-    expectedResult: {
-      type: directCommandType,
-      addr: address,
-      reg: registerAddress,
-      ...(directCommandType === 'i2c_read'
-        ? { len: 2 }
-        : { data, calibration: `0x${formatHexWord(calibration)}` })
-    }
-  };
-}
-
-function buildCommandMessage(body, target) {
-  return target?.packet_format === 'ina226-load-v1'
-    ? buildIna226LoadCommandMessage(body)
-    : buildJsonCommandMessage(body);
+function buildCommandMessage(body) {
+  return buildJsonCommandMessage(body);
 }
 
 function sendUdpMessage(buffer, target) {
@@ -2465,25 +2134,23 @@ udpSocket.on('message', (message, remoteInfo) => {
     recorder.capture('ingest', { envelope: { ...latestEnvelope, raw_auth_redacted: archived.redacted }, rawBase64: archived.rawBase64 });
   }
 
-  if (packet.packet_format !== 'ina226-load-v1') {
-    const acknowledgement = Buffer.from(JSON.stringify({
-      version: 1,
-      type: 'ack',
-      device_id: packet.device_id,
-      seq: packet.seq,
-      server_rx_ms: serverReceiveTime,
-      received_at: latestEnvelope.received_at
-    }));
+  const acknowledgement = Buffer.from(JSON.stringify({
+    version: 1,
+    type: 'ack',
+    device_id: packet.device_id,
+    seq: packet.seq,
+    server_rx_ms: serverReceiveTime,
+    received_at: latestEnvelope.received_at
+  }));
 
-    udpSocket.send(
-      acknowledgement,
-      remoteInfo.port,
-      remoteInfo.address,
-      (error) => {
-        if (error) console.error('[UDP] ACK send failed:', error);
-      }
-    );
-  }
+  udpSocket.send(
+    acknowledgement,
+    remoteInfo.port,
+    remoteInfo.address,
+    (error) => {
+      if (error) console.error('[UDP] ACK send failed:', error);
+    }
+  );
 
   broadcast(latestEnvelope);
   broadcastStatus();

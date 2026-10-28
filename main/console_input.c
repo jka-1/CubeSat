@@ -49,10 +49,7 @@ static void print_fields(void)
     printf("  cell2_v\n");
     printf("  cell3_v\n");
     printf("  cell4_v\n");
-    printf("  load_shunt_mv\n");
-    printf("  load_power_w\n");
-    printf("  load_current_a\n");
-    printf("  mcu_temp_c         (read-only hardware sensor)\n\n");
+    printf("\n");
 }
 
 static void print_help(void)
@@ -100,10 +97,6 @@ static void print_status(void)
 
     printf("\nCurrent telemetry:\n");
     printf(
-        "  MCU temperature:      %.2f C\n",
-        sample.mcu_temperature_c
-    );
-    printf(
         "  PV shunt voltage:     %.3f mV\n",
         sample.pv_shunt_voltage_mv
     );
@@ -126,15 +119,6 @@ static void print_status(void)
         sample.bms_cell_voltages_v[1],
         sample.bms_cell_voltages_v[2],
         sample.bms_cell_voltages_v[3]
-    );
-    printf(
-        "  Load shunt voltage:   %.3f mV\n",
-        sample.load_shunt_voltage_mv
-    );
-    printf(
-        "  Load power/current:   %.3f W / %.3f A\n",
-        sample.load_power_w,
-        sample.load_current_a
     );
     printf(
         "  Sample counter:       %" PRIu32 "\n\n",
@@ -293,33 +277,6 @@ static esp_err_t set_single_field(
         return parse_float_value(value_text, &float_value)
             ? sensor_provider_set_bms_cell_voltage(3u, float_value)
             : ESP_ERR_INVALID_ARG;
-    }
-
-    if (strcmp(field_name, "load_shunt_mv") == 0) {
-        return parse_float_value(value_text, &float_value)
-            ? sensor_provider_set_load_shunt_voltage(float_value)
-            : ESP_ERR_INVALID_ARG;
-    }
-
-    if (strcmp(field_name, "load_power_w") == 0) {
-        return parse_float_value(value_text, &float_value)
-            ? sensor_provider_set_load_power(float_value)
-            : ESP_ERR_INVALID_ARG;
-    }
-
-    if (strcmp(field_name, "load_current_a") == 0) {
-        return parse_float_value(value_text, &float_value)
-            ? sensor_provider_set_load_current(float_value)
-            : ESP_ERR_INVALID_ARG;
-    }
-
-    if (strcmp(field_name, "mcu_temp_c") == 0) {
-        printf(
-            "mcu_temp_c is read-only. It comes from the "
-            "ESP32-S3 internal temperature sensor.\n"
-        );
-
-        return ESP_ERR_NOT_SUPPORTED;
     }
 
     printf("Unknown telemetry field: %s\n", field_name);

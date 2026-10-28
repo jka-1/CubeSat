@@ -24,23 +24,18 @@
       <button class="topology-tile page-tile" type="button" data-detail-target="overview">
         <strong>Overview</strong>
         <span class="tile-meta">System telemetry</span>
-        <span id="overviewPreview" class="tile-value">PV -- W · LOAD -- W</span>
+        <span id="overviewPreview" class="tile-value">PV -- W</span>
         <span class="tile-action">
           Open page
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
         </span>
       </button>
 
-      <button class="topology-tile page-tile bus-leader-tile" type="button" data-detail-target="mcu">
+      <div class="topology-tile page-tile bus-leader-tile">
         <span class="page-port" aria-hidden="true"><i></i><i></i></span>
         <strong>ESP32-S3</strong>
         <span class="tile-meta">Controller · I²C leader</span>
-        <span id="mcuPreview" class="tile-value">-- °C</span>
-        <span class="tile-action">
-          Open page
-          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
-        </span>
-      </button>
+      </div>
 
       <button class="topology-tile page-tile non-i2c-tile" type="button" data-detail-target="environment">
         <strong>Light + temperature</strong>
@@ -101,13 +96,6 @@
         <span class="device-ack">ACK · --</span>
       </button>
 
-      <button class="topology-tile device-tile" type="button" data-detail-target="load">
-        <span class="device-port" aria-hidden="true"><i></i><i></i></span>
-        <strong>INA226</strong>
-        <span class="tile-meta">Load test · 0x40</span>
-        <span id="loadPreview" class="tile-value">Not wired</span>
-        <span class="device-ack idle">IDLE · optional</span>
-      </button>
     </div>
 
     <div id="i2cDetailLayer" class="i2c-detail-layer" aria-hidden="true">
@@ -133,13 +121,10 @@
         <div class="detail-window-body">
           <div class="detail-panel" data-detail-panel="overview" data-title="System overview" data-context="Telemetry page" hidden>
             <div class="pack-summary summary-grid">
-              <div class="metric-tile"><span>MCU Temp</span><strong id="summaryMcuTemp">-- °C</strong></div>
               <div class="metric-tile"><span>Peripheral Temp</span><strong id="summaryPeripheralTemp">Unavailable</strong></div>
               <div class="metric-tile"><span>Light Level</span><strong id="summaryRelativeLight">Unavailable</strong></div>
               <div class="metric-tile"><span>Input Select</span><strong id="summaryMpptState">--</strong></div>
               <div class="metric-tile"><span>PV Power</span><strong id="summaryPvPower">-- W</strong></div>
-              <div class="metric-tile"><span>Load Power</span><strong id="summaryLoadPower">-- W</strong></div>
-              <div class="metric-tile"><span>Net Power</span><strong id="summaryNetPower">-- W</strong></div>
             </div>
             <div class="panel-meta summary-meta">
               <span>Device: <strong id="summaryDeviceId">Mock source</strong></span>
@@ -155,14 +140,6 @@
               </div>
               <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
             </div>
-          </div>
-
-          <div class="detail-panel" data-detail-panel="mcu" data-title="ESP32-S3 controller" data-context="0x— · bus leader" hidden>
-            <div class="pack-summary">
-              <div class="metric-tile"><span>Temperature</span><strong id="mcuTemperatureValue">-- °C</strong></div>
-              <div class="metric-tile"><span>Status</span><strong id="mcuTemperatureStatus">--</strong></div>
-            </div>
-            <div id="mcuMeters" class="cells" aria-label="MCU temperature telemetry"></div>
           </div>
 
           <div class="detail-panel" data-detail-panel="environment" data-title="Light + temperature" data-context="ADC1 peripheral sensors · not connected to I²C" hidden>
@@ -208,15 +185,6 @@
               <div class="metric-tile"><span>Cell Delta</span><strong id="bmsCellDelta">-- mV</strong></div>
             </div>
             <div id="bmsCells" class="cells" aria-label="Battery cell voltages"></div>
-          </div>
-
-          <div class="detail-panel" data-detail-panel="load" data-title="Load current monitor" data-context="INA226 test peripheral · address 0x40" hidden>
-            <div class="pack-summary">
-              <div class="metric-tile"><span>Shunt Voltage</span><strong id="loadShuntValue">-- mV</strong></div>
-              <div class="metric-tile"><span>Power</span><strong id="loadPowerValue">-- W</strong></div>
-              <div class="metric-tile"><span>Current</span><strong id="loadCurrentValue">-- A</strong></div>
-            </div>
-            <div id="loadMeters" class="cells" aria-label="Load telemetry"></div>
           </div>
 
           <div class="detail-panel" data-detail-panel="console" data-title="Bus console" data-context="Server → ESP32 laboratory controls" hidden>

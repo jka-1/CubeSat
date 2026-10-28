@@ -4,7 +4,7 @@
       <div class="eyebrow"><span class="pulse"></span> Telemetry Dashboard</div>
       <h2>Power system health view</h2>
       <p>
-        Displays the four aggregate measurements currently transmitted by the telemetry system.
+        Displays the PV monitor and external temperature measurements in the current telemetry packet.
         Detailed battery-cell and solar-panel channels remain available as clearly marked mock data
         until those individual measurements are added to the live packet.
       </p>
@@ -20,20 +20,20 @@
     <div class="card-body">
       <div class="pack-summary">
         <div class="metric-tile">
-          <span>Solar Panel Current</span>
+          <span>PV Current</span>
           <strong id="liveSolarCurrent">-- A</strong>
         </div>
         <div class="metric-tile">
-          <span>Battery Voltage</span>
-          <strong id="liveBatteryVoltage">-- V</strong>
+          <span>PV Bus Voltage</span>
+          <strong id="livePvVoltage">-- V</strong>
         </div>
         <div class="metric-tile">
-          <span>MPPT Switch Temp.</span>
-          <strong id="liveMpptTemp">-- °C</strong>
+          <span>PV Power</span>
+          <strong id="livePvPower">-- W</strong>
         </div>
         <div class="metric-tile">
-          <span>ESP32 Temp.</span>
-          <strong id="liveEsp32Temp">-- °C</strong>
+          <span>External Temp.</span>
+          <strong id="liveExternalTemp">-- °C</strong>
         </div>
       </div>
       <div class="panel-meta">

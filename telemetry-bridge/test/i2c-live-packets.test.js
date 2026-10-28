@@ -15,7 +15,7 @@ test('live v4 envelope with null MCU temperature is accepted', async () => {
   assert.equal(env.packet.telemetry.mcu.temperatureC, null);
   const out = normalizePacket(env);
   assert.ok(out, 'packet rejected');
-  assert.equal(out.telemetry.mcu.temperatureC, null);
+  assert.equal(Object.hasOwn(out.telemetry, 'mcu'), false);
   assert.equal(out.telemetry.pv.currentA, env.packet.telemetry.pv.currentA);
   assert.deepEqual(out.telemetry.bms.cellVoltagesV, env.packet.telemetry.bms.cellVoltagesV);
   assert.equal(out.telemetry.peripheral.lightVoltageMv, env.packet.telemetry.peripheral.lightVoltageMv);
@@ -28,6 +28,19 @@ test('v6 envelope with an absent BMS is accepted with null cells', async () => {
   assert.ok(out, 'packet rejected');
   assert.deepEqual(out.telemetry.bms.cellVoltagesV, [null, null, null, null]);
   assert.equal(out.telemetry.pv.currentA, 0.05);
+});
+
+test('v6 mapping keeps PV measurements and external, BMS, and charger temperatures', async () => {
+  const envelopes = await load('streaming-envelopes.json');
+  const out = normalizePacket(envelopes.v6_all);
+  assert.equal(out.telemetry.pv.busVoltageV, 5.00375);
+  assert.equal(out.telemetry.pv.currentA, envelopes.v6_all.packet.telemetry.pv.currentA);
+  assert.equal(out.telemetry.pv.powerW, envelopes.v6_all.packet.telemetry.pv.powerW);
+  assert.equal(out.telemetry.peripheral.temperatureC, 25);
+  assert.equal(out.telemetry.bms.internalTempC, 24.75);
+  assert.equal(out.telemetry.mppt.dieTempC, 19);
+  assert.equal(Object.hasOwn(out.telemetry, 'mcu'), false);
+  assert.equal(Object.hasOwn(out.telemetry, 'load'), false);
 });
 
 test('non-telemetry objects are still rejected', () => {
