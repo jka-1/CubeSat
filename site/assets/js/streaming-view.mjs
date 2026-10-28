@@ -60,10 +60,10 @@ export function drawSparkline(canvas, series, { color } = {}) {
 }
 
 const metric = (key, label, unit, digits, tooltip) => ({ key, label, unit, digits, tooltip });
-const PV_METRICS = [metric('pv.busV', 'Bus voltage · 0x02', ' V', 3, 'INA226 bus voltage reading.'),
-  metric('pv.powerMw', 'Power · 0x03', ' mW', 2, 'PV power reported by the INA226.'),
-  metric('pv.currentMa', 'Current · 0x04', ' mA', 2, 'PV current reported by the INA226.'),
-  metric('pv.shuntMv', 'Shunt · 0x01', ' mV', 3, 'Voltage measured across the INA226 shunt.')];
+const PV_METRICS = [metric('pv.busV', 'Bus voltage · 0x02', ' V', 3),
+  metric('pv.powerMw', 'Power · 0x03', ' mW', 2),
+  metric('pv.currentMa', 'Current · 0x04', ' mA', 2),
+  metric('pv.shuntMv', 'Shunt · 0x01', ' mV', 3, 'Voltage measured across the INA226 current-sense shunt.')];
 const BMS_EXT = [metric('bms.packV', 'Pack voltage · 0x36', ' V', 2, 'BQ76942 PACK pin voltage.'),
   metric('bms.intTempC', 'Internal temp · 0x68', ' °C', 1, 'BQ76942 internal temperature reading.')];
 const MPPT_PATH = [metric('mppt.vbusV', 'VBUS · 0x35', ' V', 3, 'BQ25798 bus voltage register.'),
@@ -82,35 +82,35 @@ function metricRow(m) {
 function template() {
   return `
   <div class="st-bar">
-    <span class="st-indicator" data-st="indicator" data-tooltip="Live indicates telemetry is current. Stale means packets have stopped arriving recently; it does not mean the displayed values are current."><i></i>Streaming Telemetry</span>
-    <span class="st-meta" data-st="meta" data-tooltip="Shows packet format, sequence, elapsed time since the last update, and received packet count.">Waiting for Packets</span>
+    <span class="st-indicator" data-st="indicator" data-tooltip="Live means packets are arriving recently. Stale means the displayed values may no longer be current."><i></i>Streaming Telemetry</span>
+    <span class="st-meta" data-st="meta">Waiting for Packets</span>
     <span class="st-toggles" data-st="toggles">${CARD_TOGGLES.map((t) => `<label class="st-toggle"><input type="checkbox" data-toggle="${t.key}" checked />${t.label}</label>`).join('')}</span>
-    <label class="st-window" data-tooltip="Controls how much recent telemetry is retained in the live sparklines.">Window <select data-st="window">${WINDOWS.map((w) => `<option value="${w.ms}">${w.label}</option>`).join('')}</select></label>
+    <label class="st-window">Window <select data-st="window">${WINDOWS.map((w) => `<option value="${w.ms}">${w.label}</option>`).join('')}</select></label>
   </div>
   <div class="st-hidden" data-st="hidden"></div>
   <div class="st-empty" data-st="empty">No data</div>
   <div class="st-grid">
     <section class="st-card" data-card="pv" hidden>
-      <header><h4>PV · INA226</h4><small>0x40</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Photovoltaic monitor readings reported by the INA226.">PV · INA226</h4><small>0x40</small><span class="st-age" data-age></span></header>
       ${PV_METRICS.map(metricRow).join('')}
     </section>
     <section class="st-card" data-card="bms" hidden>
-      <header><h4>BMS · BQ76942</h4><small>0x08</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Battery management system telemetry reported by the BQ76942.">BMS · BQ76942</h4><small>0x08</small><span class="st-age" data-age></span></header>
       <div class="st-cells">${[0, 1, 2, 3].map((i) => `
-        <div class="st-cell"><span class="st-label" data-tooltip="Cell voltage reported by the BQ76942 BMS. Register address shown at left."><span data-cell-label="${i}">Cell</span> · ${CELL_REGS[i]}</span>
+        <div class="st-cell"><span class="st-label"><span data-cell-label="${i}">Cell</span> · ${CELL_REGS[i]}</span>
           <div class="st-gauge"><i data-gauge="${i}"></i></div>
           <strong class="st-value" data-v="bms.cell${i}">--</strong><canvas class="st-spark" data-s="bms.cell${i}"></canvas></div>`).join('')}
       </div>
-      <div class="st-stats"><span data-tooltip="Lowest reported cell voltage.">Min <b data-v="bms.min">--</b></span><span data-tooltip="Highest reported cell voltage.">Max <b data-v="bms.max">--</b></span>
-        <span data-tooltip="Difference between the highest and lowest reported cell voltages.">Δ <b data-v="bms.deltaMv">--</b></span></div>
+      <div class="st-stats"><span>Min <b data-v="bms.min">--</b></span><span>Max <b data-v="bms.max">--</b></span>
+        <span>Δ <b data-v="bms.deltaMv">--</b></span></div>
       ${BMS_EXT.map(metricRow).join('')}
-      <div class="st-metric"><span class="st-label" data-tooltip="Difference between the highest and lowest reported cell voltages.">Cell Spread</span><strong class="st-value" data-v="bms.deltaMv2">--</strong><canvas class="st-spark" data-s="bms.deltaMv"></canvas></div>
+      <div class="st-metric"><span class="st-label">Cell Spread</span><strong class="st-value" data-v="bms.deltaMv2">--</strong><canvas class="st-spark" data-s="bms.deltaMv"></canvas></div>
     </section>
     <section class="st-card" data-card="mppt" hidden>
-      <header><h4>MPPT · BQ25798</h4><small>0x6B</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Maximum power point tracking charger telemetry reported by the BQ25798.">MPPT · BQ25798</h4><small>0x6B</small><span class="st-age" data-age></span></header>
       <div class="st-acdrv"><span class="st-label" data-tooltip="Charger gate-drive path state reported from BQ25798 register 0x13.">ACDRV Path · 0x13</span><strong data-v="mppt.acdrv" class="st-pill">--</strong>
         <small data-v="mppt.reg13">REG13 --</small></div>
-      <div class="st-faults" data-v="mppt.faults" data-tooltip="Each indicator corresponds to a fault bit reported by BQ25798 register 0x20."></div>
+      <div class="st-faults" data-v="mppt.faults"></div>
       <div class="st-metric"><span class="st-label" data-tooltip="Count of active fault bits reported by BQ25798 register 0x20.">Active Faults · 0x20</span><strong class="st-value" data-v="mppt.activeFaults">--</strong><canvas class="st-spark" data-s="mppt.faults"></canvas></div>
       <h5 class="st-sub">Power path</h5>
       <div class="st-path">
@@ -184,7 +184,7 @@ export function mountStreamingView(root, { url } = {}) {
         a.className = `st-pill ${x.acdrv === 'off' ? 'off' : x.acdrv === 'both' ? 'warn' : 'on'}`;
         set('mppt.reg13', x.reg13 === null ? 'REG13 --' : `REG13 0x${x.reg13.toString(16).toUpperCase().padStart(2, '0')}`);
         const fbox = $('[data-v="mppt.faults"]');
-        const html = x.faults.map((f) => `<span class="st-fault ${f.active ? 'lit' : ''}" data-tooltip="BQ25798 REG20 fault bit ${f.bit ?? 'not identified'}.">${esc(f.name.replace(/_STAT$/, ''))}</span>`).join('');
+        const html = x.faults.map((f) => `<span class="st-fault ${f.active ? 'lit' : ''}">${esc(f.name.replace(/_STAT$/, ''))}</span>`).join('');
         if (fbox.innerHTML !== html) fbox.innerHTML = html;
         set('mppt.activeFaults', String(x.activeFaults));
         for (const [k, v] of [['vac1', x.vac1V], ['vbus', x.vbusV], ['vsys', x.vsysV], ['vbat', x.vbatV]]) set(`mppt.${k}`, fmt(v, 2, ' V'));

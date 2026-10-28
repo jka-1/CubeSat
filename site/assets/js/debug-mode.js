@@ -4,7 +4,7 @@ import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a
 import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261027b';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261027c';
 import { isStreamingMode, setStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261028a';
+import { mountStreamingView } from './streaming-view.mjs?v=20261028b';
 
 let streamView = null;
 function applyStreamingToggle(on) {

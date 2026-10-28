@@ -5,7 +5,7 @@ import {
   lightLevelFromMv
 } from './telemetry-model.mjs?v=20261019b';
 import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261019b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261028a';
+import { mountStreamingView } from './streaming-view.mjs?v=20261028b';
 
 const initialTelemetry = {
   pv: {

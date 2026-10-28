@@ -7,10 +7,12 @@
     <div class="i2c-mode-key" aria-label="Bus view legend">
       <span><i class="legend-line sda"></i>SDA data</span>
       <span><i class="legend-line scl"></i>SCL clock</span>
-      <label class="status-pill i2c-mock-toggle" data-tooltip="Mock telemetry is generated locally for display. It does not represent measurements received from the live device.">
-        <input id="mockModeToggle" type="checkbox" />
-        Mock Telemetry
-      </label>
+      <div class="i2c-mock-control" data-tooltip="Mock telemetry is generated locally for display. It does not represent measurements received from the live device.">
+        <label class="status-pill i2c-mock-toggle" for="mockModeToggle">
+          <input id="mockModeToggle" type="checkbox" />
+          Mock Telemetry
+        </label>
+      </div>
     </div>
   </header>
 
@@ -116,16 +118,16 @@
         <div class="detail-window-body">
           <div class="detail-panel" data-detail-panel="overview" data-title="System overview" data-context="Telemetry page" hidden>
             <div class="pack-summary summary-grid">
-              <div class="metric-tile"><span data-tooltip="Temperature measured by the peripheral sensor; its mounting location is not specified in telemetry.">Peripheral Temperature</span><strong id="summaryPeripheralTemp">Unavailable</strong></div>
-              <div class="metric-tile"><span data-tooltip="Relative light category derived from the peripheral light sensor. This is not a lux measurement.">Light Level</span><strong id="summaryRelativeLight">Unavailable</strong></div>
-              <div class="metric-tile"><span data-tooltip="Input path reported by the MPPT charger status.">Input Selection</span><strong id="summaryMpptState">--</strong></div>
-              <div class="metric-tile"><span data-tooltip="PV power reported by the live telemetry packet.">PV Power</span><strong id="summaryPvPower">-- W</strong></div>
+              <div class="metric-tile"><span>Peripheral Temperature</span><strong id="summaryPeripheralTemp">Unavailable</strong></div>
+              <div class="metric-tile"><span>Light Level</span><strong id="summaryRelativeLight">Unavailable</strong></div>
+              <div class="metric-tile"><span>Input Selection</span><strong id="summaryMpptState">--</strong></div>
+              <div class="metric-tile"><span>PV Power</span><strong id="summaryPvPower">-- W</strong></div>
             </div>
             <div class="panel-meta summary-meta">
               <span>Device: <strong id="summaryDeviceId">Waiting for live data</strong></span>
-              <span data-tooltip="Sequence number supplied by the sending device.">Sequence: <strong id="summarySequence">--</strong></span>
-              <span data-tooltip="Timestamp supplied by the sending device, if available.">Transmitted: <strong id="summaryTransmittedAt">Not supplied</strong></span>
-              <span data-tooltip="Time the telemetry bridge received the packet.">Received: <strong id="summaryReceivedAt">Not supplied</strong></span>
+              <span>Sequence: <strong id="summarySequence">--</strong></span>
+              <span>Transmitted: <strong id="summaryTransmittedAt">Not supplied</strong></span>
+              <span>Received: <strong id="summaryReceivedAt">Not supplied</strong></span>
             </div>
             <div class="telemetry-box stream-box">
               <div class="telemetry-toolbar">
@@ -144,7 +146,7 @@
                 <small id="peripheralTemperatureStatus" class="metric-detail">UNAVAILABLE</small>
               </div>
               <div class="metric-tile">
-                <span data-tooltip="TEMT6000 output is shown as a relative light category and voltage, not calibrated lux.">Light Level (TEMT6000)</span>
+                <span data-tooltip="Relative light category and sensor voltage; this is not a calibrated lux measurement.">Light Level (TEMT6000)</span>
                 <strong id="relativeLightValue">Unavailable</strong>
                 <small id="lightVoltageValue" class="metric-detail">Unavailable</small>
               </div>
@@ -157,8 +159,8 @@
           <div class="detail-panel" data-detail-panel="pv" data-title="PV current monitor" data-context="INA226 · address 0x40" hidden>
             <div class="pack-summary">
             <div class="metric-tile"><span data-tooltip="Voltage measured across the INA226 current-sense shunt.">Shunt Voltage</span><strong id="pvShuntValue">-- mV</strong></div>
-              <div class="metric-tile"><span data-tooltip="PV power reported by the INA226 telemetry fields.">Power</span><strong id="pvPowerValue">-- W</strong></div>
-              <div class="metric-tile"><span data-tooltip="PV current reported by the INA226 telemetry fields.">Current</span><strong id="pvCurrentValue">-- A</strong></div>
+              <div class="metric-tile"><span>Power</span><strong id="pvPowerValue">-- W</strong></div>
+              <div class="metric-tile"><span>Current</span><strong id="pvCurrentValue">-- A</strong></div>
             </div>
             <div id="pvMeters" class="cells" aria-label="PV telemetry"></div>
           </div>
@@ -166,7 +168,7 @@
           <div class="detail-panel" data-detail-panel="mppt" data-title="MPPT switch" data-context="BQ25798 / BQ25 · address 0x6B" hidden>
             <div class="pack-summary">
               <div class="metric-tile"><span data-tooltip="Input path state reported by the BQ25798 MPPT charger.">Selected Input</span><strong id="mpptStateValue">--</strong></div>
-              <div class="metric-tile"><span data-tooltip="Number of active fault conditions reported by the charger.">Fault Count</span><strong id="mpptFaultCount">--</strong></div>
+              <div class="metric-tile"><span data-tooltip="Count of active fault conditions reported by the BQ25798 charger.">Fault Count</span><strong id="mpptFaultCount">--</strong></div>
             </div>
             <div id="mpptFaults" class="cells" aria-label="MPPT fault status"></div>
           </div>
@@ -174,9 +176,9 @@
           <div class="detail-panel" data-detail-panel="bms" data-title="Battery management" data-context="BQ76942 · address 0x08" hidden>
             <div class="pack-summary summary-grid">
               <div class="metric-tile"><span data-tooltip="Battery pack voltage reported by the BQ76942 BMS when included in the packet.">Pack Voltage</span><strong id="bmsPackVoltage">-- V</strong></div>
-              <div class="metric-tile"><span data-tooltip="Arithmetic mean of the reported cell voltages.">Average Cell Voltage</span><strong id="bmsAverageVoltage">-- V</strong></div>
-              <div class="metric-tile"><span data-tooltip="Lowest cell voltage among the reported cells.">Lowest Cell Voltage</span><strong id="bmsLowestCell">-- V</strong></div>
-              <div class="metric-tile"><span data-tooltip="Difference between the highest and lowest reported cell voltages.">Cell Delta</span><strong id="bmsCellDelta">-- mV</strong></div>
+              <div class="metric-tile"><span>Average Cell Voltage</span><strong id="bmsAverageVoltage">-- V</strong></div>
+              <div class="metric-tile"><span>Lowest Cell Voltage</span><strong id="bmsLowestCell">-- V</strong></div>
+              <div class="metric-tile"><span>Cell Delta</span><strong id="bmsCellDelta">-- mV</strong></div>
             </div>
             <div id="bmsCells" class="cells" aria-label="Battery cell voltages"></div>
           </div>

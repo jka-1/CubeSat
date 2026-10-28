@@ -1247,6 +1247,8 @@ h1 {
   accent-color: var(--warning);
 }
 
+.i2c-mock-control { display: inline-flex; align-items: center; }
+
 .legend-line {
   display: inline-block;
   width: 28px;
@@ -2100,42 +2102,56 @@ h1 {
 #accountMessage:empty { display: none; }
 #accountMessage { color: var(--warning); }
 
-/* Compact, keyboard and touch accessible explanations for technical labels. */
+/* Quiet, keyboard and touch accessible explanations for technical labels. */
 [data-tooltip] { position: relative; }
 .info-tip {
+  appearance: none;
   display: inline-grid;
   place-items: center;
-  width: 19px;
-  height: 19px;
-  margin-inline-start: 6px;
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  margin-inline-start: 2px;
   padding: 0;
-  border: 1px solid rgba(212,175,55,.65);
+  border: 1px solid transparent;
   border-radius: 50%;
-  background: rgba(212,175,55,.12);
-  color: var(--gold-soft);
-  font: 700 12px/1 Arial, sans-serif;
+  background: transparent;
+  color: var(--white-soft);
+  opacity: .72;
+  font: 700 13px/1 Arial, sans-serif;
   vertical-align: middle;
   cursor: help;
 }
-.info-tip-wrap { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
-.info-tip:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
+.info-tip-wrap, .tooltip-status-wrap { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
+.info-tip:hover, .info-tip.is-open { border-color: rgba(212,175,55,.35); background: rgba(212,175,55,.07); color: var(--gold-soft); opacity: 1; }
+.info-tip:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; opacity: 1; }
 .info-tip-popup {
   position: fixed;
   z-index: 120;
   display: none;
   width: min(280px, calc(100vw - 24px));
-  padding: 10px 12px;
-  border: 1px solid var(--gold-deep);
+  max-height: min(18rem, calc(100vh - 16px));
+  overflow: auto;
+  padding: 9px 11px;
+  border: 1px solid var(--line);
   border-radius: 8px;
   background: #111;
   color: var(--white);
-  box-shadow: 0 8px 24px rgba(0,0,0,.45);
-  font: 500 13px/1.45 var(--font-ui);
+  box-shadow: 0 5px 16px rgba(0,0,0,.32);
+  font: 500 12px/1.45 var(--font-ui);
   text-align: left;
   white-space: normal;
   pointer-events: none;
 }
 .info-tip-popup.is-visible { display: block; }
+@media (max-width: 680px) and (hover: none) and (pointer: coarse) {
+  .account-control { gap: 0; }
+  #accountButton { max-width: min(190px, calc(48vw - 44px)); }
+  .account-control > .info-tip { margin-inline-start: 0; }
+}
+@media (hover: none) and (pointer: coarse) {
+  .info-tip { width: 44px; height: 44px; margin-inline-start: 0; }
+}
 
 @media (min-width: 681px) and (max-width: 1040px) {
   .nav { gap: 10px; }

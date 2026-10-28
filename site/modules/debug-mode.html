@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="./assets/css/link-health.css?v=20261013a" />
-<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261014a" />
+<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261028b" />
 <section id="debug-mode" class="page active debug-mode-page">
   <div class="section-header">
     <div>
@@ -11,16 +11,16 @@
         Windows I²C tool.
       </p>
     </div>
-    <div id="dmStatus" class="status-pill offline" data-tooltip="Bridge connection state is shown here. A connected event stream does not guarantee every device or register is responding.">Not Connected</div>
+    <div class="tooltip-status-wrap" data-tooltip="Bridge connection does not guarantee every device or register is responding."><div id="dmStatus" class="status-pill offline">Not Connected</div></div>
   </div>
 
   <section class="card">
-      <div class="card-header"><h3 class="card-title">Bridge</h3><span id="dmAuthPill" class="status-pill" data-tooltip="Indicates whether the bridge accepted the command token for protected command requests.">Token --</span></div>
+      <div class="card-header"><h3 class="card-title">Bridge</h3><span class="tooltip-status-wrap" data-tooltip="Shows whether the bridge accepted the command token for protected command requests."><span id="dmAuthPill" class="status-pill">Token --</span></span></div>
     <div class="card-body dm-grid dm-source">
-      <label data-tooltip="Same-origin Server-Sent Events endpoint used to receive telemetry and command acknowledgments.">Event Stream <input id="dmStreamUrl" class="input" value="/telemetry/events" /></label>
-      <label data-tooltip="Bridge health endpoint used for connection and command-target status.">Health <input id="dmHealthUrl" class="input" value="/telemetry/health" /></label>
-      <label data-tooltip="Bridge endpoint that accepts authorized command requests.">Command URL <input id="dmCommandUrl" class="input" value="/telemetry/command" /></label>
-      <label data-tooltip="Temporary credential required by the bridge for protected hardware commands.">Command Token <input id="dmToken" class="input" type="password" autocomplete="off" placeholder="temporary lab token" /></label>
+      <label>Event Stream <input id="dmStreamUrl" class="input" value="/telemetry/events" /></label>
+      <label>Health <input id="dmHealthUrl" class="input" value="/telemetry/health" /></label>
+      <label>Command URL <input id="dmCommandUrl" class="input" value="/telemetry/command" /></label>
+      <label>Command Token <input id="dmToken" class="input" type="password" autocomplete="off" placeholder="temporary lab token" /></label>
       <div class="dm-buttons"><button id="dmConnect" class="button" type="button">Connect</button></div>
     </div>
   </section>
@@ -31,9 +31,9 @@
       <div class="card-body dm-grid dm-ctl">
         <div class="dm-buttons">
           <button id="dmDebugOn" class="button" type="button" data-cmd data-tooltip="Requests debug mode from the device through the bridge. Requires operator access and a valid command token.">Enable Debug</button>
-          <button id="dmDebugOff" class="button secondary" type="button" data-cmd data-tooltip="Requests that the device leave debug mode.">Disable Debug</button>
+          <button id="dmDebugOff" class="button secondary" type="button" data-cmd>Disable Debug</button>
         </div>
-          <label data-tooltip="Requested interval for device scans. The permitted input range is 200 to 5000 ms.">Scan Period (ms, 200–5000)
+          <label>Scan Period (ms, 200–5000)
           <span class="dm-inline"><input id="dmPeriod" class="input" type="number" min="200" max="5000" step="50" value="1000" />
           <button id="dmPeriodApply" class="button secondary" type="button" data-cmd>Apply</button></span>
         </label>
@@ -58,24 +58,24 @@
 
   <div class="dm-row">
     <section class="card">
-      <div class="card-header"><h3 class="card-title">Register Access</h3><span id="dmRegPill" class="status-pill" data-tooltip="Current register selection and access state.">--</span></div>
+      <div class="card-header"><h3 class="card-title">Register Access</h3><span id="dmRegPill" class="status-pill">--</span></div>
       <div class="card-body">
         <div class="dm-grid dm-reg">
-          <label data-tooltip="Select the I²C device whose register map is shown.">Device <select id="dmDevice" class="input"></select></label>
-          <label data-tooltip="Register definitions include address, access mode, and width. Use read/write only as allowed by the selected definition.">Register <select id="dmRegister" class="input"></select></label>
-          <label data-tooltip="Adds a temporary read-only entry for a custom register address. It does not add a verified write definition.">Add Register Address <input id="dmNewRegister" class="input" placeholder="0x14" inputmode="text" /></label>
+          <label>Device <select id="dmDevice" class="input"></select></label>
+          <label>Register <select id="dmRegister" class="input"></select></label>
+          <label>Add Register Address <input id="dmNewRegister" class="input" placeholder="0x14" inputmode="text" /></label>
           <div class="dm-buttons">
             <select id="dmNewRegisterWidth" class="input" aria-label="New register read width"><option value="1">1 byte</option><option value="2">2 bytes</option></select>
-            <button id="dmAddRegister" class="button secondary" type="button">Add register</button>
+            <button id="dmAddRegister" class="button secondary" type="button" data-tooltip="Adds a temporary read-only address; it does not verify write access.">Add Register</button>
           </div>
-          <label data-tooltip="Enter a non-negative value that fits the selected register width. Writes are restricted to approved writable definitions.">Write Value <input id="dmValue" class="input" placeholder="0x1234 or bytes 0x22 0x00" /></label>
+          <label>Write Value <input id="dmValue" class="input" placeholder="0x1234 or bytes 0x22 0x00" /></label>
           <div class="dm-buttons">
             <button id="dmRead" class="button" type="button" data-cmd data-tooltip="Reads the selected register and displays raw bytes plus any available conversion.">Read</button>
-            <button id="dmWrite" class="button secondary" type="button" data-cmd data-tooltip="Submits a write to an approved writable register. The acknowledgment confirms the transaction; it may not include readback.">Write</button>
+            <button id="dmWrite" class="button secondary" type="button" data-cmd data-tooltip="The value must fit the selected register width and the register must be approved for writing. An acknowledgment confirms the transaction, but may not include readback.">Write</button>
           </div>
         </div>
         <p id="dmRegInfo" class="dm-note"></p>
-        <p id="dmRegisterFeedback" class="dm-note" role="status" aria-live="polite" data-tooltip="Feedback distinguishes submitted, acknowledged, rejected, and timed-out register operations.">No Register Command Submitted.</p>
+        <div class="dm-feedback-wrap" data-tooltip="Feedback distinguishes a submitted command, device acknowledgment, rejection, and timeout."><p id="dmRegisterFeedback" class="dm-note" role="status" aria-live="polite">No Register Command Submitted.</p></div>
         <table class="lh-table dm-result"><tbody>
           <tr><th>Raw bytes</th><td id="dmRawBytes">--</td><th>Raw value</th><td id="dmRawValue">--</td></tr>
           <tr><th>Converted</th><td id="dmConverted" colspan="3">--</td></tr>
@@ -90,7 +90,7 @@
 
   <div class="dm-row">
     <section class="card">
-      <div class="card-header"><h3 class="card-title">Sequence Runner</h3><span id="dmSeqPill" class="status-pill" data-tooltip="Sequence status reports whether the submitted command sequence is idle, running, or stopped.">Idle</span></div>
+      <div class="card-header"><h3 class="card-title">Sequence Runner</h3><span id="dmSeqPill" class="status-pill">Idle</span></div>
       <div class="card-body">
         <textarea id="dmSeq" class="input dm-text" rows="9" spellcheck="false"># one command per line; i2cget/i2cset syntax from the Windows tool also works
 debug on

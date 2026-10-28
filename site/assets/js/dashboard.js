@@ -87,9 +87,9 @@ function renderCells(cells) {
         <div class="bar-fill" style="width: ${Math.max(0, Math.min(100, cell.soc))}%"></div>
       </div>
       <div class="cell-meta">
-          <span data-tooltip="Simulated cell voltage for dashboard demonstration; not a live BMS reading.">Voltage: <strong>${formatNumber(cell.voltage, 3)} V</strong></span>
-        <span data-tooltip="Simulated cell temperature. The dashboard data does not define a physical sensor location.">Temperature: <strong>${formatNumber(cell.temperature, 1)} °C</strong></span>
-        <span data-tooltip="Simulated state of charge (SOC) for dashboard demonstration; not a live BMS reading.">SOC: <strong>${formatNumber(cell.soc, 0)}%</strong></span>
+          <span>Voltage: <strong>${formatNumber(cell.voltage, 3)} V</strong></span>
+        <span>Temperature: <strong>${formatNumber(cell.temperature, 1)} °C</strong></span>
+        <span>SOC: <strong>${formatNumber(cell.soc, 0)}%</strong></span>
       </div>
     </article>
   `).join('');
@@ -133,10 +133,10 @@ function renderPanels(panels) {
     return `
       <article class="panel-card">
         <h3>Panel ${panel.id}<span class="string-label">String ${panel.string}</span></h3>
-        <div class="large-value"><span class="metric-caption" data-tooltip="Simulated panel voltage for dashboard demonstration.">Voltage</span> ${formatNumber(panel.voltage, 2)} <small>V</small></div>
-        <div class="large-value"><span class="metric-caption" data-tooltip="Simulated panel current for dashboard demonstration.">Current</span> ${formatNumber(panel.current, 2)} <small>A</small></div>
+        <div class="large-value"><span class="metric-caption">Voltage</span> ${formatNumber(panel.voltage, 2)} <small>V</small></div>
+        <div class="large-value"><span class="metric-caption">Current</span> ${formatNumber(panel.current, 2)} <small>A</small></div>
         <div class="panel-meta">
-          <span data-tooltip="Calculated from the simulated panel voltage multiplied by panel current.">Power: <strong>${formatNumber(power, 2)} W</strong></span>
+          <span>Power: <strong>${formatNumber(power, 2)} W</strong></span>
         </div>
       </article>
     `;
@@ -148,8 +148,8 @@ function renderPanels(panels) {
       <h3>String ${entry.string} · ${entry.panels.length} panels parallel</h3>
       <div class="large-value">${formatNumber(entry.averageVoltage, 2)} <small>V avg</small></div>
       <div class="panel-meta">
-        <span data-tooltip="Sum of the simulated current readings for panels assigned to this string.">Current: <strong>${formatNumber(entry.currentTotal, 2)} A</strong></span>
-        <span data-tooltip="Estimated from average panel voltage multiplied by summed string current.">Power: <strong>${formatNumber(entry.power, 2)} W</strong></span>
+        <span>Current: <strong>${formatNumber(entry.currentTotal, 2)} A</strong></span>
+        <span>Power: <strong>${formatNumber(entry.power, 2)} W</strong></span>
       </div>
     </article>
   `).join('');

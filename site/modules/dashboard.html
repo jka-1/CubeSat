@@ -9,7 +9,7 @@
         until those individual measurements are added to the live packet.
       </p>
     </div>
-    <div id="streamStatus" class="status-pill offline" data-tooltip="Shows whether the page is using locally generated mock data or receiving a live telemetry stream.">Mock Data Active</div>
+    <div id="streamStatus" class="status-pill offline">Mock Data Active</div>
   </div>
 
   <section class="card">
@@ -20,15 +20,15 @@
     <div class="card-body">
       <div class="pack-summary">
         <div class="metric-tile">
-          <span data-tooltip="Current reported by the photovoltaic (PV) monitor in the latest live packet.">PV Current</span>
+          <span>PV Current</span>
           <strong id="liveSolarCurrent">-- A</strong>
         </div>
         <div class="metric-tile">
-          <span data-tooltip="PV monitor bus voltage, when supplied in the live packet.">PV Bus Voltage</span>
+          <span>PV Bus Voltage</span>
           <strong id="livePvVoltage">-- V</strong>
         </div>
         <div class="metric-tile">
-          <span data-tooltip="PV monitor power, when supplied in the live packet.">PV Power</span>
+          <span>PV Power</span>
           <strong id="livePvPower">-- W</strong>
         </div>
         <div class="metric-tile">
@@ -38,9 +38,9 @@
       </div>
       <div class="panel-meta">
         <span>Device: <strong id="liveDeviceId">Waiting for data</strong></span>
-        <span data-tooltip="Sequence number provided by the sending device; useful for identifying packet order.">Sequence: <strong id="liveSequence">--</strong></span>
-        <span data-tooltip="Timestamp supplied by the sending device, if present.">Transmitted: <strong id="liveTransmittedAt">Not supplied</strong></span>
-        <span data-tooltip="Time the telemetry bridge received this packet.">Received by Bridge: <strong id="liveReceivedAt">Waiting for data</strong></span>
+        <span>Sequence: <strong id="liveSequence">--</strong></span>
+        <span>Transmitted: <strong id="liveTransmittedAt">Not supplied</strong></span>
+        <span>Received by Bridge: <strong id="liveReceivedAt">Waiting for data</strong></span>
       </div>
     </div>
   </section>
@@ -58,19 +58,19 @@
       <div class="card-body">
         <div class="pack-summary">
           <div class="metric-tile">
-            <span data-tooltip="Sum of the displayed demo cell voltages. These values are simulated, not live BMS measurements.">Pack Voltage</span>
+            <span>Pack Voltage</span>
             <strong id="packVoltage">-- V</strong>
           </div>
           <div class="metric-tile">
-            <span data-tooltip="Average state of charge (SOC) across the displayed simulated cells.">Average SOC</span>
+            <span>Average SOC</span>
             <strong id="packSoc">--%</strong>
           </div>
           <div class="metric-tile">
-            <span data-tooltip="Highest temperature among the displayed simulated cells; physical sensor locations are not specified.">Maximum Cell Temperature</span>
+            <span>Maximum Cell Temperature</span>
             <strong id="packTemp">-- °C</strong>
           </div>
           <div class="metric-tile">
-            <span data-tooltip="Difference between the highest and lowest displayed simulated cell voltages.">Cell Delta</span>
+            <span>Cell Delta</span>
             <strong id="cellDelta">-- mV</strong>
           </div>
         </div>
@@ -96,8 +96,8 @@
               value="/telemetry/events"
               aria-label="Telemetry event stream URL"
             />
-            <button class="button" id="connectButton" type="button" data-tooltip="Connects this view to the configured Server-Sent Events telemetry stream.">Connect Live</button>
-            <button class="button secondary" id="mockButton" type="button" data-tooltip="Uses generated demonstration values. Mock values are not measurements from the hardware.">Use Mock Data</button>
+            <button class="button" id="connectButton" type="button">Connect Live</button>
+            <button class="button secondary" id="mockButton" type="button">Use Mock Data</button>
           </div>
           <pre id="telemetryLog" class="telemetry-log">Telemetry log initialized. Waiting for packets...</pre>
         </div>

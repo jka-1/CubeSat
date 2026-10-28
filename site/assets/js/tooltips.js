@@ -7,9 +7,9 @@ function addTooltipTrigger(target) {
   const button = document.createElement('button');
   button.className = 'info-tip';
   button.type = 'button';
-  button.setAttribute('aria-label', `More information: ${target.dataset.tooltip}`);
+  const label = (target.getAttribute('aria-label') || target.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 64);
+  button.setAttribute('aria-label', label ? `More information about ${label}` : 'More information');
   button.setAttribute('aria-describedby', id);
-  button.setAttribute('aria-expanded', 'false');
   const glyph = document.createElement('span');
   glyph.setAttribute('aria-hidden', 'true');
   glyph.textContent = 'i';
@@ -29,20 +29,39 @@ function addTooltipTrigger(target) {
   } else target.append(button);
   document.body.append(popup);
   const viewportListeners = new AbortController();
+  let touchPress = false;
 
   const place = () => {
     const rect = button.getBoundingClientRect();
-    popup.style.left = `${Math.max(8, Math.min(rect.left, innerWidth - popup.offsetWidth - 8))}px`;
-    popup.style.top = `${Math.max(8, Math.min(rect.bottom + 8, innerHeight - popup.offsetHeight - 8))}px`;
+    const margin = 8;
+    const gap = 8;
+    const { width, height } = popup.getBoundingClientRect();
+    const below = innerHeight - rect.bottom - gap - margin;
+    const above = rect.top - gap - margin;
+    const placeAbove = height > below && above > below;
+    const top = placeAbove ? rect.top - gap - height : rect.bottom + gap;
+    popup.style.left = `${Math.max(margin, Math.min(rect.left, innerWidth - width - margin))}px`;
+    popup.style.top = `${Math.max(margin, Math.min(top, innerHeight - height - margin))}px`;
+    popup.dataset.side = placeAbove ? 'top' : 'bottom';
   };
-  const show = () => { button.classList.add('is-open'); button.setAttribute('aria-expanded', 'true'); popup.classList.add('is-visible'); place(); };
-  const hide = () => { button.classList.remove('is-open'); button.setAttribute('aria-expanded', 'false'); popup.classList.remove('is-visible'); };
+  const show = () => { button.classList.add('is-open'); popup.classList.add('is-visible'); place(); };
+  const hide = () => { button.classList.remove('is-open'); popup.classList.remove('is-visible'); };
   button.hideTooltip = hide;
-  button.addEventListener('mouseenter', show);
-  button.addEventListener('mouseleave', hide);
-  button.addEventListener('focus', show);
+  button.addEventListener('pointerenter', (event) => { if (event.pointerType !== 'touch') show(); });
+  button.addEventListener('pointerleave', (event) => {
+    if (event.pointerType !== 'touch' && !button.matches(':focus')) hide();
+  });
+  button.addEventListener('focus', () => { if (!touchPress) show(); });
   button.addEventListener('blur', hide);
-  button.addEventListener('click', show);
+  button.addEventListener('pointerdown', (event) => { touchPress = event.pointerType === 'touch'; });
+  button.addEventListener('click', (event) => {
+    if (touchPress) {
+      if (button.classList.contains('is-open')) hide();
+      else show();
+      touchPress = false;
+    } else if (!button.classList.contains('is-open')) show();
+    if (event.detail === 0) show();
+  });
   window.addEventListener('resize', () => { if (button.classList.contains('is-open')) place(); }, { signal: viewportListeners.signal });
   window.addEventListener('scroll', () => { if (button.classList.contains('is-open')) place(); }, { capture: true, signal: viewportListeners.signal });
   button.destroyTooltip = () => { hide(); viewportListeners.abort(); popup.remove(); };
@@ -51,7 +70,8 @@ function addTooltipTrigger(target) {
 function refreshTooltip(target) {
   const trigger = target.parentElement?.querySelector('.info-tip');
   if (!trigger) return;
-  trigger.setAttribute('aria-label', `More information: ${target.dataset.tooltip}`);
+  const label = (target.getAttribute('aria-label') || target.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 64);
+  trigger.setAttribute('aria-label', label ? `More information about ${label}` : 'More information');
   const popup = document.getElementById(trigger.getAttribute('aria-describedby'));
   if (popup) popup.textContent = target.dataset.tooltip;
 }
@@ -80,7 +100,7 @@ export function initTooltips() {
     if (event.key === 'Escape') document.querySelectorAll('.info-tip.is-open').forEach((button) => button.hideTooltip());
   });
   document.addEventListener('click', (event) => {
-    if (!event.target.closest('.info-tip')) document.querySelectorAll('.info-tip.is-open').forEach((button) => {
+    if (!(event.target instanceof Element) || !event.target.closest('.info-tip')) document.querySelectorAll('.info-tip.is-open').forEach((button) => {
       button.hideTooltip();
     });
   });
