@@ -1,8 +1,8 @@
-import { allowRoute, showAccount } from './auth.js?v=20261028a';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261028b';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261028a';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261028b';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028b';
+import { allowRoute, showAccount } from './auth.js?v=20261028d';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261028d';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261028d';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261028d';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028d';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -11,14 +11,14 @@ function updateStreamingBadge() {
 }
 window.addEventListener('streaming-telemetry-mode', updateStreamingBadge);
 
-const assetVersion = '20261028b';
+const assetVersion = '20261028d';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261028b`,
+  communication: `./modules/communication.html?v=20261028c`,
   'link-health': `./modules/link-health.html?v=20261028a`,
-  'debug-mode': `./modules/debug-mode.html?v=20261028b`,
-  runs: `./modules/runs.html?v=20261028b`,
+  'debug-mode': `./modules/debug-mode.html?v=20261028c`,
+  runs: `./modules/runs.html?v=20261028c`,
   partners: `./modules/partners.html?v=${assetVersion}`
 };
 

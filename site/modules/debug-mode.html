@@ -1,5 +1,5 @@
 <link rel="stylesheet" href="./assets/css/link-health.css?v=20261013a" />
-<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261028b" />
+<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261028c" />
 <section id="debug-mode" class="page active debug-mode-page">
   <div class="section-header">
     <div>
@@ -11,11 +11,11 @@
         Windows I²C tool.
       </p>
     </div>
-    <div class="tooltip-status-wrap" data-tooltip="Bridge connection does not guarantee every device or register is responding."><div id="dmStatus" class="status-pill offline">Not Connected</div></div>
+    <div class="tooltip-status-wrap" data-tooltip="Bridge connection shows the event stream is available; individual devices may still be offline."><div id="dmStatus" class="status-pill offline">Not Connected</div></div>
   </div>
 
   <section class="card">
-      <div class="card-header"><h3 class="card-title">Bridge</h3><span class="tooltip-status-wrap" data-tooltip="Shows whether the bridge accepted the command token for protected command requests."><span id="dmAuthPill" class="status-pill">Token --</span></span></div>
+      <div class="card-header"><h3 class="card-title">Bridge</h3><span class="tooltip-status-wrap" data-tooltip="Shows whether the bridge accepted the command token required for hardware commands."><span id="dmAuthPill" class="status-pill">Token --</span></span></div>
     <div class="card-body dm-grid dm-source">
       <label>Event Stream <input id="dmStreamUrl" class="input" value="/telemetry/events" /></label>
       <label>Health <input id="dmHealthUrl" class="input" value="/telemetry/health" /></label>
@@ -66,16 +66,16 @@
           <label>Add Register Address <input id="dmNewRegister" class="input" placeholder="0x14" inputmode="text" /></label>
           <div class="dm-buttons">
             <select id="dmNewRegisterWidth" class="input" aria-label="New register read width"><option value="1">1 byte</option><option value="2">2 bytes</option></select>
-            <button id="dmAddRegister" class="button secondary" type="button" data-tooltip="Adds a temporary read-only address; it does not verify write access.">Add Register</button>
+          <button id="dmAddRegister" class="button secondary" type="button" data-tooltip="Adds a temporary address for reads. It does not grant write access.">Add Register</button>
           </div>
           <label>Write Value <input id="dmValue" class="input" placeholder="0x1234 or bytes 0x22 0x00" /></label>
           <div class="dm-buttons">
             <button id="dmRead" class="button" type="button" data-cmd data-tooltip="Reads the selected register and displays raw bytes plus any available conversion.">Read</button>
-            <button id="dmWrite" class="button secondary" type="button" data-cmd data-tooltip="The value must fit the selected register width and the register must be approved for writing. An acknowledgment confirms the transaction, but may not include readback.">Write</button>
+            <span class="info-tip-wrap" data-tooltip="Writes require an approved register and a value within its width. Acknowledgment does not confirm the stored value unless it is read back." data-tooltip-icon><button id="dmWrite" class="button secondary" type="button" data-cmd>Write</button></span>
           </div>
         </div>
         <p id="dmRegInfo" class="dm-note"></p>
-        <div class="dm-feedback-wrap" data-tooltip="Feedback distinguishes a submitted command, device acknowledgment, rejection, and timeout."><p id="dmRegisterFeedback" class="dm-note" role="status" aria-live="polite">No Register Command Submitted.</p></div>
+        <p id="dmRegisterFeedback" class="dm-note" role="status" aria-live="polite">No Register Command Submitted.</p>
         <table class="lh-table dm-result"><tbody>
           <tr><th>Raw bytes</th><td id="dmRawBytes">--</td><th>Raw value</th><td id="dmRawValue">--</td></tr>
           <tr><th>Converted</th><td id="dmConverted" colspan="3">--</td></tr>

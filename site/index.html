@@ -9,7 +9,7 @@
     content="CubeSat power system dashboard with telemetry, register tools, and saved runs."
   />
   <link rel="icon" type="image/png" href="./favicon.png?v=20261026a" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20261028b" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20261028d" />
   <link rel="stylesheet" href="./assets/css/streaming.css?v=20261028a" />
 </head>
 <body>
@@ -33,14 +33,15 @@
         <a class="nav-link" href="#partners" data-route="partners">Partners</a>
       </div>
       <div class="account-control">
-        <button id="accountButton" class="nav-link" type="button" data-tooltip="Operator accounts can use hardware controls when permitted by the current session; hardware commands also require the command token. Viewer accounts can inspect telemetry and saved runs.">Sign in</button>
+        <button id="accountButton" class="nav-link" type="button">Sign in</button>
       </div>
     </nav>
   </header>
 
   <main id="accountPanel" class="account-panel" aria-labelledby="accountTitle" hidden>
-    <div class="account-heading"><h1 id="accountTitle">Sign in</h1><button id="accountBack" type="button">Back</button></div>
-    <p id="accountHelp" data-tooltip="The account role identifies viewer or operator permissions. Operator hardware commands also require a valid command token.">Use your CubeSat account to view telemetry and saved runs.</p>
+    <p class="account-kicker">OrbitalAddress account</p>
+    <div class="account-heading"><h1 id="accountTitle">Sign in</h1><button id="accountBack" type="button" aria-label="Back to previous page">← Back</button></div>
+    <p id="accountHelp">Use your CubeSat account to view telemetry and saved runs.</p>
     <form id="accountForm">
       <label for="accountUsername">Username</label>
       <input id="accountUsername" name="username" autocomplete="username" maxlength="64" required>
@@ -57,6 +58,6 @@
     <noscript>Please enable JavaScript to load the modular pages.</noscript>
   </main>
 
-  <script type="module" src="./assets/js/app.js?v=20261028b"></script>
+  <script type="module" src="./assets/js/app.js?v=20261028d"></script>
 </body>
 </html>

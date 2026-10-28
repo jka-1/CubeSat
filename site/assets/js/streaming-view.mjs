@@ -63,7 +63,7 @@ const metric = (key, label, unit, digits, tooltip) => ({ key, label, unit, digit
 const PV_METRICS = [metric('pv.busV', 'Bus voltage · 0x02', ' V', 3),
   metric('pv.powerMw', 'Power · 0x03', ' mW', 2),
   metric('pv.currentMa', 'Current · 0x04', ' mA', 2),
-  metric('pv.shuntMv', 'Shunt · 0x01', ' mV', 3, 'Voltage measured across the INA226 current-sense shunt.')];
+  metric('pv.shuntMv', 'Shunt · 0x01', ' mV', 3, 'Voltage across the INA226 current-sense shunt, used to derive current.')];
 const BMS_EXT = [metric('bms.packV', 'Pack voltage · 0x36', ' V', 2, 'BQ76942 PACK pin voltage.'),
   metric('bms.intTempC', 'Internal temp · 0x68', ' °C', 1, 'BQ76942 internal temperature reading.')];
 const MPPT_PATH = [metric('mppt.vbusV', 'VBUS · 0x35', ' V', 3, 'BQ25798 bus voltage register.'),
@@ -82,7 +82,7 @@ function metricRow(m) {
 function template() {
   return `
   <div class="st-bar">
-    <span class="st-indicator" data-st="indicator" data-tooltip="Live means packets are arriving recently. Stale means the displayed values may no longer be current."><i></i>Streaming Telemetry</span>
+    <span class="st-indicator" data-st="indicator" data-tooltip="Live means recent packets are arriving. Stale means the displayed values may be outdated."><i></i>Streaming Telemetry</span>
     <span class="st-meta" data-st="meta">Waiting for Packets</span>
     <span class="st-toggles" data-st="toggles">${CARD_TOGGLES.map((t) => `<label class="st-toggle"><input type="checkbox" data-toggle="${t.key}" checked />${t.label}</label>`).join('')}</span>
     <label class="st-window">Window <select data-st="window">${WINDOWS.map((w) => `<option value="${w.ms}">${w.label}</option>`).join('')}</select></label>
@@ -91,11 +91,11 @@ function template() {
   <div class="st-empty" data-st="empty">No data</div>
   <div class="st-grid">
     <section class="st-card" data-card="pv" hidden>
-      <header><h4 data-tooltip="Photovoltaic monitor readings reported by the INA226.">PV · INA226</h4><small>0x40</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Photovoltaic (PV) voltage, current, and power from the INA226 monitor.">PV · INA226</h4><small>0x40</small><span class="st-age" data-age></span></header>
       ${PV_METRICS.map(metricRow).join('')}
     </section>
     <section class="st-card" data-card="bms" hidden>
-      <header><h4 data-tooltip="Battery management system telemetry reported by the BQ76942.">BMS · BQ76942</h4><small>0x08</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Battery management system (BMS) measurements from the BQ76942.">BMS · BQ76942</h4><small>0x08</small><span class="st-age" data-age></span></header>
       <div class="st-cells">${[0, 1, 2, 3].map((i) => `
         <div class="st-cell"><span class="st-label"><span data-cell-label="${i}">Cell</span> · ${CELL_REGS[i]}</span>
           <div class="st-gauge"><i data-gauge="${i}"></i></div>
@@ -107,7 +107,7 @@ function template() {
       <div class="st-metric"><span class="st-label">Cell Spread</span><strong class="st-value" data-v="bms.deltaMv2">--</strong><canvas class="st-spark" data-s="bms.deltaMv"></canvas></div>
     </section>
     <section class="st-card" data-card="mppt" hidden>
-      <header><h4 data-tooltip="Maximum power point tracking charger telemetry reported by the BQ25798.">MPPT · BQ25798</h4><small>0x6B</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Maximum power point tracking (MPPT) charger measurements from the BQ25798.">MPPT · BQ25798</h4><small>0x6B</small><span class="st-age" data-age></span></header>
       <div class="st-acdrv"><span class="st-label" data-tooltip="Charger gate-drive path state reported from BQ25798 register 0x13.">ACDRV Path · 0x13</span><strong data-v="mppt.acdrv" class="st-pill">--</strong>
         <small data-v="mppt.reg13">REG13 --</small></div>
       <div class="st-faults" data-v="mppt.faults"></div>

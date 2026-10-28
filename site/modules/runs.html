@@ -5,7 +5,7 @@
       <h2 id="runsTitle">Telemetry Runs</h2>
       <p>Record real UDP telemetry, inspect startup behavior, and trace debug or power-source boundaries back to packets.</p>
     </div>
-    <div class="tooltip-status-wrap" data-tooltip="Recorder readiness reflects whether the bridge can accept and serve run history."><div id="runsBridgeState" class="status-pill offline">Checking Recorder</div></div>
+    <div class="tooltip-status-wrap" data-tooltip="Shows whether the bridge can record telemetry and serve saved runs."><div id="runsBridgeState" class="status-pill offline">Checking Recorder</div></div>
   </header>
 
   <section class="runs-capture" aria-labelledby="captureTitle">
@@ -17,7 +17,7 @@
       <label for="runName">Run Name</label>
       <input id="runName" name="name" maxlength="120" placeholder="Initialization test 01" required />
       <button id="runStart" class="run-button primary" type="submit" data-tooltip="Starts recording from the latest fresh hardware packet. Operator access is required.">Start Recording</button>
-      <button id="runStop" class="run-button danger" type="button" data-tooltip="Stops the active recording and saves its end time and reason.">Stop Recording</button>
+      <button id="runStop" class="run-button danger" type="button">Stop Recording</button>
     </form>
     <p id="captureMessage" class="runs-message" role="status" aria-live="polite"></p>
   </section>
@@ -90,7 +90,7 @@
               </select>
             </div>
             <div class="series-field">
-              <div class="series-field-label" data-tooltip="Choose a recorded field. Missing values remain unavailable and are not inferred."><label for="seriesMetric">Measurement</label></div>
+              <div class="series-field-label"><label for="seriesMetric">Measurement</label></div>
               <select id="seriesMetric"></select>
             </div>
             <div id="timelineWindowControl" class="series-field">

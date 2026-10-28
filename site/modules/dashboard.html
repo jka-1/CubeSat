@@ -15,7 +15,7 @@
   <section class="card">
     <div class="card-header">
         <h3 class="card-title">Live System Summary</h3>
-        <span class="status-pill" data-tooltip="Telemetry packets are received over UDP by the bridge and forwarded to the browser over Server-Sent Events.">UDP → SSE Bridge</span>
+        <span class="status-pill" data-tooltip="The bridge receives ESP32 packets over UDP and sends updates to this page over Server-Sent Events (SSE).">UDP → SSE Bridge</span>
     </div>
     <div class="card-body">
       <div class="pack-summary">
@@ -32,7 +32,7 @@
           <strong id="livePvPower">-- W</strong>
         </div>
         <div class="metric-tile">
-          <span data-tooltip="Temperature reported by the external peripheral sensor. The packet does not identify its physical mounting location.">External Temperature</span>
+          <span data-tooltip="MCP9700 temperature reading. Telemetry does not specify where the sensor is mounted.">External Temperature</span>
           <strong id="liveExternalTemp">-- °C</strong>
         </div>
       </div>

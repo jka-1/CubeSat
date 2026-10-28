@@ -18,26 +18,17 @@ function update(next) {
     state.enabled !== next.enabled || state.control_active !== next.control_active;
   state = next;
   $('accountButton').hidden = state.enabled === false;
-  $('accountButton').textContent = state.user
-    ? `${state.user.role === 'operator' ? 'Operator' : 'Viewer'}${state.user.role === 'operator' ? ` · Controls ${state.control_active ? 'Active' : 'Inactive'}` : ''}`
-    : 'Sign in';
+  $('accountButton').textContent = state.user?.username || 'Sign in';
   $('accountButton').setAttribute('aria-label', state.user
-    ? `${state.user.username}, ${state.user.role}${state.user.role === 'operator' ? `, controls ${state.control_active ? 'active' : 'inactive'}` : ''}. Open account.`
+    ? `Open account for ${state.user.username}`
     : 'Sign in');
-  $('accountButton').dataset.tooltip = state.user?.role === 'operator'
-    ? state.control_active
-      ? `Signed in as ${state.user.username}. This operator session currently holds control. Hardware commands also require the command token.`
-      : `Signed in as ${state.user.username}. This operator session does not currently hold control; telemetry and saved runs remain available.`
-    : state.user
-      ? `Signed in as ${state.user.username}. Viewer access can inspect telemetry and saved runs but cannot issue hardware commands.`
-      : 'Operator accounts can issue hardware controls when session control is active and a valid command token is present. Viewer accounts are read-only.';
   $('accountForm').hidden = !!state.user || state.enabled !== true;
   $('accountLogout').hidden = !state.user;
   $('accountRetry').hidden = state.enabled !== null;
   $('accountTitle').textContent = state.user ? 'Your account' : 'Sign in';
   $('accountHelp').textContent = state.user
-    ? `Signed in as ${state.user.username}. ${state.user.role === 'viewer' ? 'You can view telemetry and saved runs.' : 'Hardware commands also require the command token.'}`
-    : 'Use your CubeSat account to view telemetry and saved runs. Ask the project administrator if you need an account.';
+    ? `Signed in as ${state.user.username} (${state.user.role}). ${state.user.role === 'viewer' ? 'You can view telemetry and saved runs.' : `Controls ${state.control_active ? 'active' : 'inactive'}; hardware commands also require the command token.`}`
+    : 'Sign in to view telemetry and saved runs.';
   if (changed) window.dispatchEvent(new Event('cubesat-auth-change'));
 }
 async function jsonRequest(path, options = {}) {

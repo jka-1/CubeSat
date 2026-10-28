@@ -1288,7 +1288,7 @@ h1 {
   min-height: 166px;
   padding: 34px 18px 16px;
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 14px;
   transform: translateX(-50%);
   border: 1px solid rgba(212, 175, 55, 0.24);
@@ -1317,6 +1317,34 @@ h1 {
   font: inherit;
   font-weight: 700;
 }
+
+.page-bank-label .bus-connection-status {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-width: 0;
+  color: var(--warning);
+  font-size: 0.69rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  line-height: 1.25;
+  text-align: right;
+  text-transform: none;
+}
+
+.bus-status-light {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--warning);
+}
+
+.bus-status-source { color: var(--white-soft); letter-spacing: 0.05em; text-transform: uppercase; }
+.bus-connection-status strong { font: inherit; }
+.bus-connection-status strong.online { color: var(--success); }
+.i2c-workspace[data-stream-state="online"] .bus-status-light { background: var(--success); }
 
 .topology-tile {
   position: relative;
@@ -1453,65 +1481,8 @@ h1 {
   color: #94efb9;
 }
 
-.bus-connection-status {
-  position: absolute;
-  left: 0;
-  top: -68px;
-  min-width: 174px;
-  min-height: 56px;
-  padding: 9px 12px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transform: none;
-  border: 1px solid rgba(242, 240, 232, 0.2);
-  border-radius: 12px;
-  background: #101415;
-  box-shadow: 0 9px 26px rgba(0, 0, 0, 0.34);
-  z-index: 2;
-}
-
-.bus-status-lights {
-  display: grid;
-  gap: 5px;
-}
-
-.bus-status-lights i {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  background: #e3bc57;
-  box-shadow: 0 0 9px rgba(227, 188, 87, 0.46);
-}
-
-.bus-connection-status small,
-.bus-connection-status strong {
-  display: block;
-}
-
-.bus-connection-status small {
-  margin-bottom: 3px;
-  color: #8f9993;
-  font-size: 0.64rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.bus-connection-status strong {
-  color: var(--warning);
-  font-size: 0.76rem;
-}
-
-.bus-connection-status strong.online { color: var(--success); }
-
 .i2c-workspace[data-stream-state="online"] .rail {
   animation: busSignal 1.3s ease-in-out infinite alternate;
-}
-
-.i2c-workspace[data-stream-state="online"] .bus-status-lights i {
-  background: var(--success);
-  box-shadow: 0 0 12px rgba(84, 239, 120, 0.72);
 }
 
 @keyframes busSignal {
@@ -1525,7 +1496,7 @@ h1 {
   left: 50%;
   width: min(10in, calc(100% - 56px));
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 18px;
   transform: translateX(-50%);
 }
@@ -1771,6 +1742,7 @@ h1 {
 
   .i2c-mode-key {
     padding-bottom: 0;
+    flex-wrap: wrap;
   }
 
   .i2c-workspace {
@@ -1790,9 +1762,12 @@ h1 {
 
   .telemetry-page-bank {
     min-height: 0;
-    padding: 38px 12px 12px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 48px 12px 12px;
+    grid-template-columns: 1fr;
   }
+
+  .page-bank-label { left: 12px; right: 12px; align-items: flex-start; }
+  .page-bank-label .bus-connection-status { max-width: 55%; }
 
   .i2c-rails {
     height: 70px;
@@ -1801,12 +1776,6 @@ h1 {
 
   .rail-sda { top: 0; }
   .rail-scl { bottom: 0; }
-
-  .bus-connection-status {
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
 
   .bus-leader-tile,
   .device-tile {
@@ -1865,7 +1834,7 @@ h1 {
   }
 
   .device-bank {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
     gap: 12px;
   }
 
@@ -1891,9 +1860,9 @@ h1 {
     min-height: 132px;
   }
 
-  .page-bank-label small {
-    display: none;
-  }
+  .telemetry-page-bank { padding-top: 68px; }
+  .page-bank-label { flex-direction: column; gap: 3px; }
+  .page-bank-label .bus-connection-status { max-width: 100%; text-align: left; }
 }
 
 .partners-grid {
@@ -2077,33 +2046,49 @@ h1 {
   }
 }
 
-/* Account controls extend the existing black/gold lab interface. */
+/* Account form uses the shared black and gold palette with a quieter card edge. */
 .account-panel {
   width: min(480px, calc(100% - 32px));
-  margin: 32px auto;
-  padding: 24px;
-  background: var(--black);
-  border: 1px solid var(--gold-deep);
-  border-radius: 12px;
+  margin: clamp(44px, 7vh, 88px) auto;
+  padding: clamp(28px, 4vw, 38px);
+  background: #0c0f0f;
+  border: 1px solid var(--line);
+  border-radius: 14px;
 }
 .account-panel[hidden], #accountForm[hidden], #accountLogout[hidden], #accountRetry[hidden], #accountButton[hidden] { display: none; }
 .account-control:has(#accountButton[hidden]) { display: none; }
-.account-heading { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-.account-heading h1 { margin: 0; font-size: 1.5rem; }
-.account-panel p { color: var(--white-soft); line-height: 1.6; overflow-wrap: anywhere; }
-.account-panel form { display: grid; gap: 10px; }
-.account-panel label:not(:first-child) { margin-block-start: 12px; }
-.account-panel input { min-width: 0; width: 100%; padding: 12px; font-size: 16px; background: var(--black); color: var(--white); border: 1px solid var(--gold-deep); border-radius: 6px; caret-color: var(--gold); }
+body:has(#accountPanel:not([hidden])) .nav-links,
+body:has(#accountPanel:not([hidden])) .account-control { display: none; }
+.account-panel .account-kicker { margin: 0 0 22px; color: var(--gold-soft); font-size: 0.7rem; font-weight: 800; letter-spacing: 0.13em; line-height: 1.3; text-transform: uppercase; }
+.account-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.account-heading h1 { margin: 0; font-size: clamp(1.85rem, 4vw, 2.15rem); letter-spacing: -0.035em; line-height: 1.15; }
+.account-panel p { color: var(--white-soft); line-height: 1.55; overflow-wrap: anywhere; }
+#accountHelp { margin: 12px 0 30px; font-size: 0.92rem; }
+.account-panel form { display: grid; gap: 0; }
+.account-panel label { margin-bottom: 8px; color: var(--white); font-size: 0.82rem; font-weight: 700; }
+.account-panel label:not(:first-child) { margin-block-start: 20px; }
+.account-panel input { min-width: 0; width: 100%; min-height: 50px; padding: 12px 14px; font-size: 16px; background: #111516; color: var(--white); border: 1px solid var(--line); border-radius: 8px; caret-color: var(--gold); }
+.account-panel input:hover { border-color: var(--gold-deep); }
+.account-panel input:focus-visible { border-color: var(--gold-soft); outline: 2px solid var(--gold-soft); outline-offset: 2px; }
 .account-panel button, #accountButton { min-height: 44px; padding: 10px 16px; background: var(--black); color: var(--gold-soft); border: 1px solid var(--gold-deep); border-radius: 6px; cursor: pointer; font-size: 16px; }
 .account-panel button:hover, #accountButton:hover { border-color: var(--gold); }
 .account-panel button:disabled { opacity: .65; cursor: wait; }
 .account-panel :focus-visible, #accountButton:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 3px; }
-#accountSubmit { margin-block-start: 14px; background: var(--gold); color: var(--black); font-weight: 700; }
+#accountBack { min-height: 30px; padding: 0; border: 0; background: transparent; color: var(--white-soft); font-size: 0.82rem; white-space: nowrap; }
+#accountBack:hover { border-color: transparent; color: var(--gold-soft); }
+#accountSubmit { min-height: 52px; margin-block-start: 28px; background: var(--gold); color: var(--black); font-weight: 800; }
+#accountSubmit:hover { background: var(--gold-soft); }
 #accountMessage:empty { display: none; }
-#accountMessage { color: var(--warning); }
+#accountMessage { margin: 20px 0 0; padding: 10px 12px; border-left: 2px solid var(--warning); background: rgba(255, 214, 107, 0.07); color: var(--warning); font-size: 0.86rem; }
+#accountLogout, #accountRetry { width: 100%; margin-top: 8px; }
+@media (max-width: 480px) {
+  .account-panel { margin: 28px auto; padding: 26px 22px; }
+  .account-panel .account-kicker { margin-bottom: 18px; }
+}
 
-/* Quiet, keyboard and touch accessible explanations for technical labels. */
-[data-tooltip] { position: relative; }
+/* Most explanations open from their labels; the icon is reserved for touch discovery. */
+.tooltip-target:not(button) { cursor: help; }
+.tooltip-target:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; border-radius: 3px; }
 .info-tip {
   appearance: none;
   display: inline-grid;
@@ -2122,7 +2107,8 @@ h1 {
   vertical-align: middle;
   cursor: help;
 }
-.info-tip-wrap, .tooltip-status-wrap { display: inline-flex; align-items: center; gap: 4px; max-width: 100%; }
+.info-tip-wrap, .tooltip-status-wrap { display: inline-flex; align-items: center; max-width: 100%; }
+.info-tip-wrap { gap: 4px; }
 .info-tip:hover, .info-tip.is-open { border-color: rgba(212,175,55,.35); background: rgba(212,175,55,.07); color: var(--gold-soft); opacity: 1; }
 .info-tip:focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; opacity: 1; }
 .info-tip-popup {
@@ -2144,11 +2130,6 @@ h1 {
   pointer-events: none;
 }
 .info-tip-popup.is-visible { display: block; }
-@media (max-width: 680px) and (hover: none) and (pointer: coarse) {
-  .account-control { gap: 0; }
-  #accountButton { max-width: min(190px, calc(48vw - 44px)); }
-  .account-control > .info-tip { margin-inline-start: 0; }
-}
 @media (hover: none) and (pointer: coarse) {
   .info-tip { width: 44px; height: 44px; margin-inline-start: 0; }
 }

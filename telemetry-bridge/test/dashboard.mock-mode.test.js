@@ -91,7 +91,7 @@ test('mock switch changes frames immediately and isolates closed live stream eve
   harness.node('mockModeToggle').checked = true;
   vm.runInContext('onMockToggle({ target: document.getElementById("mockModeToggle") })', harness.context);
   assert.equal(oldStream.closed, true);
-  assert.equal(harness.statuses.at(-1), 'Mock data active');
+  assert.equal(harness.statuses.at(-1), 'Mock telemetry');
   assert.equal(harness.frames.at(-1).metadata.deviceId, 'Mock source');
   assert.notEqual(harness.frames.at(-1).telemetry.pv.powerW, null);
   await vm.runInContext('sendCommandRequest({ type: "i2c_read" })', harness.context);
@@ -101,12 +101,12 @@ test('mock switch changes frames immediately and isolates closed live stream eve
   oldStream.emit('message', { data: JSON.stringify({ type: 'status', telemetry_connected: true, command_ready: true }) });
   oldStream.emit('open');
   assert.equal(harness.frames.length, frameCount);
-  assert.equal(harness.statuses.at(-1), 'Mock data active');
+  assert.equal(harness.statuses.at(-1), 'Mock telemetry');
 
   harness.node('mockModeToggle').checked = false;
   vm.runInContext('onMockToggle({ target: document.getElementById("mockModeToggle") })', harness.context);
   assert.equal(harness.streams.length, 2);
-  assert.equal(harness.statuses.at(-1), 'Waiting for live telemetry');
+  assert.equal(harness.statuses.at(-1), 'Waiting for telemetry');
   assert.equal(harness.frames.at(-1).telemetry.pv.powerW, null);
   assert.equal(harness.frames.at(-1).metadata.deviceId, 'Waiting for live data');
   assert.deepEqual(harness.commands, []);

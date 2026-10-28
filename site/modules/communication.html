@@ -7,7 +7,7 @@
     <div class="i2c-mode-key" aria-label="Bus view legend">
       <span><i class="legend-line sda"></i>SDA data</span>
       <span><i class="legend-line scl"></i>SCL clock</span>
-      <div class="i2c-mock-control" data-tooltip="Mock telemetry is generated locally for display. It does not represent measurements received from the live device.">
+      <div class="i2c-mock-control" data-tooltip="Mock Telemetry uses locally generated values. Turn it off to view packets from the ESP32." data-tooltip-icon>
         <label class="status-pill i2c-mock-toggle" for="mockModeToggle">
           <input id="mockModeToggle" type="checkbox" />
           Mock Telemetry
@@ -24,7 +24,11 @@
     <div class="telemetry-page-bank" aria-label="Telemetry and peripheral pages">
       <div class="page-bank-label">
         <span>Telemetry Pages</span>
-        <small>Physical bus branches shown individually</small>
+        <span class="bus-connection-status" data-tooltip="Shows whether recent ESP32 telemetry is reaching the browser through the bridge. It does not test each I²C device.">
+          <i class="bus-status-light" aria-hidden="true"></i>
+          <span class="bus-status-source">ESP32</span>
+          <strong id="i2cBusStatus" class="offline" aria-live="polite">Waiting for telemetry</strong>
+        </span>
       </div>
 
       <button class="topology-tile page-tile" type="button" data-detail-target="overview">
@@ -59,13 +63,6 @@
       <div class="rail rail-sda"><span>SDA · DATA</span></div>
       <div class="rail rail-scl"><span>SCL · CLOCK</span></div>
 
-      <div class="bus-connection-status" aria-live="polite">
-        <span class="bus-status-lights" aria-hidden="true"><i></i><i></i></span>
-        <span data-tooltip="This status reflects whether the browser is receiving live telemetry from the bridge. It does not independently confirm every sensor is responding.">
-          <small>Bus connection</small>
-          <strong id="i2cBusStatus" class="offline">Waiting for live telemetry</strong>
-        </span>
-      </div>
     </div>
 
     <div class="device-bank" aria-label="I²C follower devices">
@@ -141,12 +138,12 @@
           <div class="detail-panel" data-detail-panel="environment" data-title="Light + temperature" data-context="ADC1 peripheral sensors · not connected to I²C" hidden>
             <div class="pack-summary">
               <div class="metric-tile">
-                <span data-tooltip="MCP9700 peripheral sensor reading. The telemetry packet does not identify a physical mounting location.">Peripheral Temperature</span>
+                <span data-tooltip="MCP9700 temperature reading. Telemetry does not specify where the sensor is mounted.">Peripheral Temperature</span>
                 <strong id="peripheralTemperatureValue">Unavailable</strong>
                 <small id="peripheralTemperatureStatus" class="metric-detail">UNAVAILABLE</small>
               </div>
               <div class="metric-tile">
-                <span data-tooltip="Relative light category and sensor voltage; this is not a calibrated lux measurement.">Light Level (TEMT6000)</span>
+                <span data-tooltip="TEMT6000 reading shown as a relative light category and sensor voltage; it is not calibrated in lux.">Light Level (TEMT6000)</span>
                 <strong id="relativeLightValue">Unavailable</strong>
                 <small id="lightVoltageValue" class="metric-detail">Unavailable</small>
               </div>
@@ -158,7 +155,7 @@
 
           <div class="detail-panel" data-detail-panel="pv" data-title="PV current monitor" data-context="INA226 · address 0x40" hidden>
             <div class="pack-summary">
-            <div class="metric-tile"><span data-tooltip="Voltage measured across the INA226 current-sense shunt.">Shunt Voltage</span><strong id="pvShuntValue">-- mV</strong></div>
+            <div class="metric-tile"><span data-tooltip="Voltage across the INA226 current-sense shunt, used to derive current.">Shunt Voltage</span><strong id="pvShuntValue">-- mV</strong></div>
               <div class="metric-tile"><span>Power</span><strong id="pvPowerValue">-- W</strong></div>
               <div class="metric-tile"><span>Current</span><strong id="pvCurrentValue">-- A</strong></div>
             </div>
@@ -167,15 +164,15 @@
 
           <div class="detail-panel" data-detail-panel="mppt" data-title="MPPT switch" data-context="BQ25798 / BQ25 · address 0x6B" hidden>
             <div class="pack-summary">
-              <div class="metric-tile"><span data-tooltip="Input path state reported by the BQ25798 MPPT charger.">Selected Input</span><strong id="mpptStateValue">--</strong></div>
-              <div class="metric-tile"><span data-tooltip="Count of active fault conditions reported by the BQ25798 charger.">Fault Count</span><strong id="mpptFaultCount">--</strong></div>
+              <div class="metric-tile"><span data-tooltip="Input path selected by the BQ25798 charger, as reported in telemetry.">Selected Input</span><strong id="mpptStateValue">--</strong></div>
+              <div class="metric-tile"><span>Fault Count</span><strong id="mpptFaultCount">--</strong></div>
             </div>
             <div id="mpptFaults" class="cells" aria-label="MPPT fault status"></div>
           </div>
 
           <div class="detail-panel" data-detail-panel="bms" data-title="Battery management" data-context="BQ76942 · address 0x08" hidden>
             <div class="pack-summary summary-grid">
-              <div class="metric-tile"><span data-tooltip="Battery pack voltage reported by the BQ76942 BMS when included in the packet.">Pack Voltage</span><strong id="bmsPackVoltage">-- V</strong></div>
+              <div class="metric-tile"><span>Pack Voltage</span><strong id="bmsPackVoltage">-- V</strong></div>
               <div class="metric-tile"><span>Average Cell Voltage</span><strong id="bmsAverageVoltage">-- V</strong></div>
               <div class="metric-tile"><span>Lowest Cell Voltage</span><strong id="bmsLowestCell">-- V</strong></div>
               <div class="metric-tile"><span>Cell Delta</span><strong id="bmsCellDelta">-- mV</strong></div>

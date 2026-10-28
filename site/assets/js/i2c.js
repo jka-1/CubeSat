@@ -1,11 +1,11 @@
-import { apiFetch, canOperate } from './auth.js?v=20261028a';
+import { apiFetch, canOperate } from './auth.js?v=20261028d';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,
   lightLevelFromMv
 } from './telemetry-model.mjs?v=20261019b';
 import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261019b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261028b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261028c';
 
 const initialTelemetry = {
   pv: {
@@ -899,7 +899,7 @@ function applyTelemetryPacket(packetEnvelope) {
     bridgeCommandReady = Boolean(packetEnvelope.command_ready);
     commandAuthRequired = packetEnvelope.command_auth_required !== false;
     setStreamStatus(
-      telemetryConnected ? 'Live ESP32 telemetry' : 'ESP32 telemetry stale or unavailable',
+      telemetryConnected ? 'Live telemetry' : 'Telemetry stale',
       telemetryConnected,
       packetEnvelope.telemetry_packet_format
     );
@@ -1099,7 +1099,7 @@ function startMockData() {
   bridgeCommandReady = false;
   pendingCommandIds.clear();
   finishedCommandIds.clear();
-  setStreamStatus('Mock data active', false);
+  setStreamStatus('Mock telemetry', false);
   sensorPollingState = null;
   setDetailNote(
     'Mock telemetry active: displayed measurements are simulated. Turn off Mock telemetry to return to live data.'
@@ -1155,7 +1155,7 @@ function connectTelemetryStream() {
   streamMetadata = { ...liveWaitingMetadata };
   renderTelemetry(state, streamMetadata);
   streamErrorLogged = false;
-  setStreamStatus('Waiting for live telemetry', false);
+  setStreamStatus('Waiting for telemetry', false);
   setDetailNote('Waiting for live packets from the telemetry bridge event stream.');
   bridgeCommandReady = false;
   updateCommandControls();
@@ -1171,7 +1171,7 @@ function connectTelemetryStream() {
   source.addEventListener('open', () => {
     if (eventSource !== source || dataMode !== 'live') return;
     streamErrorLogged = false;
-    setStreamStatus('Live stream connected', true);
+    setStreamStatus('Stream connected', true);
     writeLog(`Connected to ${url}`);
   });
 
@@ -1186,7 +1186,7 @@ function connectTelemetryStream() {
 
   source.addEventListener('error', () => {
     if (eventSource !== source || dataMode !== 'live') return;
-    setStreamStatus('Stream reconnecting', false);
+    setStreamStatus('Reconnecting', false);
     bridgeCommandReady = false;
     updateCommandControls();
     if (!streamErrorLogged) {
@@ -1255,7 +1255,7 @@ function startStreamingMode() {
   document.getElementById('mockModeToggle').checked = false;
   state = blankTelemetry();
   renderTelemetry(state, { deviceId: 'Waiting for streaming telemetry', sequence: '--', transmittedAt: 'Not supplied', receivedAt: 'Not supplied' });
-  setStreamStatus('Streaming Telemetry: waiting', false);
+  setStreamStatus('Streaming: waiting', false);
   const header = communicationRoot?.querySelector('.i2c-page-header');
   const section = document.createElement('section');
   section.className = 'card st-i2c-section';

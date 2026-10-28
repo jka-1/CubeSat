@@ -26,7 +26,6 @@
 .dm-tile.error { border-color: var(--danger, #ff7b7b); }
 .dm-tile.paused strong { color: var(--warning, #ffd66b); }
 .dm-note { color: var(--white-soft); font-size: 0.8rem; margin: 10px 0; min-height: 1.2em; }
-.dm-feedback-wrap { display: flex; align-items: center; gap: 4px; }
 .dm-pre { margin: 0; padding: 10px; border-radius: 12px; background: rgba(0,0,0,0.45); color: var(--gold-soft, #f3dc8a);
   font: 12px/1.45 Consolas, 'Courier New', monospace; white-space: pre-wrap; overflow: auto; }
 .dm-log { height: 236px; }
