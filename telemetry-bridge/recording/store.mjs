@@ -34,7 +34,7 @@ export class RunStore {
     this.db.pragma('journal_mode = WAL');
     this.db.pragma('foreign_keys = ON');
     this.db.pragma('busy_timeout = 2000');
-    if (this.db.pragma('user_version', { simple: true }) > 1) throw new Error('Unsupported recording schema version');
+    if (this.db.pragma('user_version', { simple: true }) > 3) throw new Error('Unsupported recording schema version');
     this.db.exec(`
       CREATE TABLE IF NOT EXISTS recorder_owner (singleton INTEGER PRIMARY KEY CHECK(singleton=1), pid INTEGER NOT NULL, token TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS runs (
@@ -61,8 +61,30 @@ export class RunStore {
         at_ms INTEGER NOT NULL, type TEXT NOT NULL, details_json TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS events_window ON events(run_id,at_ms,id);
-      PRAGMA user_version = 1;
     `);
+    this.db.exec(`
+      CREATE TABLE IF NOT EXISTS sequences (
+        id TEXT PRIMARY KEY, revision INTEGER NOT NULL, name TEXT NOT NULL,
+        definition_json TEXT NOT NULL, updated_ms INTEGER NOT NULL
+      );
+      CREATE TABLE IF NOT EXISTS sequence_executions (
+        id TEXT PRIMARY KEY, sequence_id TEXT, revision INTEGER, definition_json TEXT NOT NULL,
+        mode TEXT NOT NULL, operator_name TEXT, recording_session_id TEXT, device_id TEXT,
+        state TEXT NOT NULL, reason TEXT, started_ms INTEGER NOT NULL, ended_ms INTEGER, recovery_ms INTEGER
+      );
+      CREATE TABLE IF NOT EXISTS sequence_events (
+        execution_id TEXT NOT NULL REFERENCES sequence_executions(id),
+        event_order INTEGER NOT NULL, at_ms INTEGER NOT NULL, type TEXT NOT NULL,
+        block_id TEXT, details_json TEXT NOT NULL,
+        PRIMARY KEY(execution_id,event_order)
+      );
+    `);
+    if (this.db.pragma('user_version', { simple: true }) < 3) {
+      this.db.transaction(() => {
+        this.db.exec('ALTER TABLE sequence_executions ADD COLUMN recording_run_id TEXT REFERENCES runs(id)');
+        this.db.pragma('user_version = 3');
+      })();
+    }
     // Never resume an acquisition silently after a crash/restart.
     try { this.db.transaction(() => {
       const owner = this.db.prepare('SELECT pid FROM recorder_owner WHERE singleton=1').get();
@@ -75,9 +97,79 @@ export class RunStore {
       for (const r of this.db.prepare("SELECT * FROM runs WHERE status='recording'").all()) {
         this.finish(r, now, 'bridge_restart', 'interrupted');
       }
+      for (const row of this.db.prepare("SELECT id FROM sequence_executions WHERE state IN ('idle','running','paused')").all()) {
+        this.db.prepare("UPDATE sequence_executions SET state='failed',reason='bridge_restart',ended_ms=? WHERE id=?").run(now, row.id);
+        this.sequenceEvent({ execution_id: row.id, order: this.nextSequenceOrder(row.id), at_ms: now,
+          type: 'state', block_id: null, details: { state: 'failed', reason: 'bridge_restart' } });
+      }
     })(); } catch (error) { this.db.close(); throw error; }
   }
   active() { return this.db.prepare("SELECT * FROM runs WHERE status='recording'").get() || null; }
+  nextSequenceOrder(id) {
+    return this.db.prepare('SELECT COALESCE(MAX(event_order),0)+1 AS next FROM sequence_events WHERE execution_id=?').get(id).next;
+  }
+  sequenceSave({ definition, expectedRevision = null, now = Date.now() }) {
+    const existing = this.db.prepare('SELECT revision FROM sequences WHERE id=?').get(definition.id);
+    if (existing && existing.revision !== expectedRevision) fail('Sequence revision conflict', 409);
+    if (!existing && expectedRevision !== null) fail('Sequence does not exist', 404);
+    const revision = existing ? existing.revision + 1 : 1;
+    const saved = { ...definition, revision };
+    this.db.prepare('INSERT INTO sequences(id,revision,name,definition_json,updated_ms) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,name=excluded.name,definition_json=excluded.definition_json,updated_ms=excluded.updated_ms')
+      .run(saved.id, revision, saved.name, JSON.stringify(saved), now);
+    return saved;
+  }
+  sequenceGet({ id }) {
+    const row = this.db.prepare('SELECT definition_json FROM sequences WHERE id=?').get(id);
+    if (!row) fail('Sequence not found', 404);
+    return JSON.parse(row.definition_json);
+  }
+  sequenceList() {
+    return this.db.prepare('SELECT id,revision,name,updated_ms FROM sequences ORDER BY updated_ms DESC LIMIT 100').all();
+  }
+  sequenceStart({ id, definition, mode, operator_name, recording_session_id, device_id, started_ms }) {
+    this.db.prepare('INSERT INTO sequence_executions(id,sequence_id,revision,definition_json,mode,operator_name,recording_session_id,device_id,state,started_ms) VALUES(?,?,?,?,?,?,?,?,?,?)')
+      .run(id, definition.id || null, definition.revision || null, JSON.stringify(definition), mode, operator_name, recording_session_id, device_id, 'running', started_ms);
+    return this.sequenceGetExecution({ id });
+  }
+  sequenceStartLive({ envelope, metadata, ...execution }) {
+    return this.db.transaction(() => {
+      const run = this.start({ name: execution.definition.name, envelope, metadata: { ...metadata, sequence_execution_id: execution.id }, now: execution.started_ms });
+      const saved = this.sequenceStart({ ...execution, recording_session_id: run.session_id });
+      this.db.prepare('UPDATE sequence_executions SET recording_run_id=? WHERE id=?').run(run.id, execution.id);
+      return { execution: this.sequenceGetExecution({ id: execution.id }), run };
+    })();
+  }
+  sequenceState({ id, state, reason, ended_ms }) {
+    const result = this.db.prepare("UPDATE sequence_executions SET state=?,reason=?,ended_ms=COALESCE(?,ended_ms) WHERE id=? AND state NOT IN ('completed','failed','canceled')").run(state, reason, ended_ms, id);
+    if (!result.changes) fail('Execution is already complete or was not found', 409);
+    return this.sequenceGetExecution({ id });
+  }
+  sequenceEvent(event) {
+    this.db.prepare('INSERT OR IGNORE INTO sequence_events(execution_id,event_order,at_ms,type,block_id,details_json) VALUES(?,?,?,?,?,?)')
+      .run(event.execution_id, event.order, event.at_ms, event.type, event.block_id, JSON.stringify(event.details));
+    return event;
+  }
+  sequenceGetExecution({ id }) {
+    const row = this.db.prepare('SELECT * FROM sequence_executions WHERE id=?').get(id);
+    if (!row) fail('Execution not found', 404);
+    const { definition_json, ...other } = row;
+    return { ...other, definition: JSON.parse(definition_json), completed_steps: this.db.prepare("SELECT COUNT(*) AS count FROM sequence_events WHERE execution_id=? AND type='block_completed'").get(id).count };
+  }
+  sequenceListExecutions() {
+    return this.db.prepare("SELECT e.id,e.sequence_id,e.revision,json_extract(e.definition_json,'$.name') AS name,e.mode,e.device_id,e.state,e.reason,e.started_ms,e.ended_ms,e.recording_run_id,(SELECT COUNT(*) FROM sequence_events v WHERE v.execution_id=e.id AND v.type='block_completed') AS completed_steps FROM sequence_executions e ORDER BY e.started_ms DESC LIMIT 100").all();
+  }
+  sequenceEvents({ id, after = 0, limit = 100 }) {
+    const rows = this.db.prepare('SELECT event_order,at_ms,type,block_id,details_json FROM sequence_events WHERE execution_id=? AND event_order>? ORDER BY event_order LIMIT ?').all(id, integer(after, 0, 0, Number.MAX_SAFE_INTEGER), integer(limit, 100, 1, 200));
+    return rows.map(({ details_json, ...row }) => ({ ...row, details: JSON.parse(details_json) }));
+  }
+  sequenceUnsafeStatus() {
+    return this.db.prepare("SELECT COUNT(*) AS count FROM sequence_executions WHERE mode='live' AND recovery_ms IS NULL AND reason IN ('command_outcome_unknown','bridge_restart')").get().count > 0;
+  }
+  sequenceRecover({ id, now = Date.now() } = {}) {
+    const result = this.db.prepare("UPDATE sequence_executions SET recovery_ms=? WHERE id=? AND mode='live' AND recovery_ms IS NULL AND reason IN ('command_outcome_unknown','bridge_restart')").run(now, id);
+    if (result.changes !== 1) fail('Execution does not require recovery', 409);
+    return { recovered: true, id };
+  }
   event(id, at, type, details) {
     return Number(this.db.prepare('INSERT INTO events(run_id,at_ms,type,details_json) VALUES(?,?,?,?)')
       .run(id, at, type, JSON.stringify(details)).lastInsertRowid);

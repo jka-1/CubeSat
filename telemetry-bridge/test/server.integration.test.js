@@ -719,7 +719,7 @@ test('dashboard command controls match the hardened interface', async () => {
     html,
     /class=["']i2c-workspace["'][\s\S]*?class=["']rail rail-sda["'][\s\S]*?class=["']rail rail-scl["']/
   );
-  assert.match(html, /data-detail-target=["']console["']/);
+  assert.doesNotMatch(html, /data-detail-target=["']console["']/);
   assert.match(html, /data-detail-panel=["']console["']/);
   assert.match(html, /id=["']i2cDetailLayer["']/);
   assert.doesNotMatch(html, /class=["']bank-connection["']/);

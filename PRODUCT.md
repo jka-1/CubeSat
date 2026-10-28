@@ -1,38 +1,53 @@
 # CubeSat PMDS telemetry product
 
-## Platform and users
+<!-- impeccable:product-schema 1 -->
 
-This is a browser-based lab interface backed by a Node.js telemetry bridge and SQLite recording store. It serves the CubeSat senior design team, lab operators who can control the hardware, and reviewers who need read-only access to telemetry evidence.
+## Platform
 
-## Purpose and operating context
+web
 
-The product receives real ESP32 telemetry over UDP, exposes current data to the browser through the bridge, and preserves named telemetry runs for later review. Operators use it during bench tests to inspect battery, photovoltaic, MPPT, and peripheral measurements; understand initialization transients; and explain debug, live-mode, and power-source transitions.
+## Users
 
-## Product constraints
+The CubeSat senior design team uses this browser-based lab interface. Operators control hardware and record bench tests; reviewers inspect telemetry evidence with read-only access.
 
-- A JWT session establishes the signed-in user and role. The existing command token remains required for hardware commands.
-- Viewer accounts can inspect telemetry and saved runs. Operator accounts can start and stop recordings and use authorized controls.
+## Product Purpose
+
+The product receives ESP32 telemetry over UDP, shows current measurements through a Node.js bridge, and preserves named runs for later review. It helps the team inspect battery, photovoltaic, MPPT, and peripheral measurements; study startup transients; and explain debug-mode, live-mode, and power-source transitions.
+
+## Positioning
+
+The bridge ties live telemetry to a private recording store with packet-level evidence and linked run segments at confirmed mode, source, and device-restart boundaries. Operators can also build saved visual sequences whose live execution is controlled by the backend, while simulation does not transmit hardware commands.
+
+## Operating Context
+
+Operators use the dashboard and Windows I²C tool during local bench tests. The ESP32 sends UDP packets to the bridge; Apache serves the dashboard, and the browser receives telemetry through SSE. The bridge is the only browser-to-SQL boundary. A private SQLite worker stores recordings, sequence definitions, execution snapshots, and ordered events. Development remains local until the team explicitly approves deployment.
+
+## Capabilities and Constraints
+
+- A JWT session establishes the signed-in user and role. Viewer accounts can inspect telemetry and saved runs. The authorized active operator can start and stop recordings and use controls. Hardware commands also require the existing command token.
 - Firmware-reported debug state is authoritative. A run is classified as `debug` or `live_telemetry` from real packets.
-- ACDRV1 enabled means photovoltaic power. ACDRV1 disabled means the confirmed battery or secondary source.
-- A debug-mode transition records an event. When the transition returns to live telemetry, it ends the current run and starts a linked successor.
-- A photovoltaic-to-battery or battery-to-photovoltaic transition outside debug mode ends the current run, records `source_switch` and `run_ended` markers, and starts a linked successor.
-- Recordings contain real UDP telemetry only. Cached, simulated, or unrelated device data cannot enter a run.
-- Missing measurements remain missing. The interface must not interpolate, invent, or relabel unavailable values.
-- The current frontend is static HTML, CSS, and browser ES modules. The bridge is the only browser-to-SQL boundary.
-- Development remains local until the team explicitly approves a deployment.
+- Confirmed ACDRV1 means photovoltaic power. Confirmed ACDRV2 or off is shown as BAT/secondary; it does not distinguish battery from another secondary source or prove measured power flow. Missing or contradictory source evidence remains unknown.
+- A debug-mode transition records an event. Returning to live telemetry ends the current run and starts a linked successor. A confirmed photovoltaic-to-BAT/secondary or reverse transition outside debug mode also ends the run, records source-switch and end markers, and starts a linked successor.
+- Recordings contain real UDP telemetry only. Cached, simulated, or unrelated device data cannot enter a run. Missing measurements remain missing; the interface does not interpolate or relabel unavailable values.
+- The visual sequence editor saves definitions through the bridge's approved persistence API. The backend sequence engine schedules live and simulated execution; the browser does not run a separate hardware execution engine. Live execution requires active operator ownership and backend preflight. Simulation sends no commands to hardware.
+- The frontend uses static HTML, CSS, and browser ES modules. Existing dashboard features and run recording remain part of the product.
 
-## Evidence and source material
+## Brand Commitments
 
-Product behavior is grounded in the recovered live implementation, the existing black-and-gold dashboard, Jaden's debug-application concept, the user's supplied telemetry screenshot, and the implemented SQLite recorder and query API. “Frequency response” is presented as startup or transient analysis because the current data describes value-over-time behavior rather than a frequency sweep.
+Keep the established CubeSat PMDS name, black-and-gold lab interface, current navigation, and existing telemetry vocabulary.
 
-## Design principles
+## Evidence on Hand
 
-- Preserve every raw packet and make derived summaries traceable to their time window and sample IDs.
-- Make run boundaries and their causes visible in the graph and event table.
+The recovered live implementation, existing dashboard, Jaden's debug-application concept, the user-supplied telemetry screenshot, and the local SQLite recorder and query API inform the product. The bridge's authentication, recording, and sequence documentation describe the implemented local behavior. The dashboard's “Frequency response” view presents startup or transient analysis: its value-over-time data does not establish a frequency sweep.
+
+## Product Principles
+
+- Preserve raw packet evidence and make summaries traceable to their time windows and sample IDs.
+- Make run boundaries and their causes visible in graphs and event tables.
 - Keep identity, read access, recording authority, and hardware-command authority explicit.
-- Prefer dense, readable lab controls over decorative dashboard elements.
-- Support keyboard operation, visible focus, loading, empty, error, and narrow-screen states.
+- Keep unavailable measurements and uncertain hardware outcomes visible rather than inferring values or success.
+- Support dense, readable lab controls with keyboard access and clear loading, empty, error, and narrow-screen states.
 
-## Brand and accessibility commitments
+## Accessibility & Inclusion
 
-Use the established CubeSat PMDS name, black-and-gold lab interface, current navigation, and existing telemetry vocabulary. Maintain readable contrast, 44-pixel touch targets where practical, semantic tables and forms, visible focus, and live status announcements. No formal accessibility conformance level has been specified.
+Maintain readable contrast, 44-pixel touch targets where practical, semantic tables and forms, visible focus, and live status announcements. No formal accessibility conformance level has been specified.

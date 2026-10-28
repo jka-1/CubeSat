@@ -147,6 +147,10 @@ export class Sessions {
     this.operatorId = session.id;
     this.operatorLeaseUntil = Date.now() + this.leaseSeconds * 1000;
   }
+  ownsOperator(id) {
+    this.prune();
+    return Boolean(id && this.operatorId === id && this.operatorLeaseUntil > Date.now() && this.sessions.get(id)?.role === 'operator');
+  }
   scheduleViewer(session) {
     clearTimeout(session.timer);
     session.timer = setTimeout(() => this.revoke(session.id), Math.max(1, session.expires - Date.now()));

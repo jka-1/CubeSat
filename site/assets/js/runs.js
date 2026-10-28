@@ -1,4 +1,5 @@
 import { apiFetch, canOperate } from './auth.js?v=20261028d';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261028a';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,
@@ -31,6 +32,7 @@ let eventAfter = null;
 let runOffset = 0;
 let hasMoreRuns = false;
 let filter = 'all';
+let historyView = null;
 
 const $ = (id) => document.getElementById(id);
 const text = (id, value) => { const node = $(id); if (node) node.textContent = value; };
@@ -553,6 +555,7 @@ function bindEvents() {
 
 export async function initRunsPage() {
   destroyed = false; controller = new AbortController();
+  historyView = mountSequenceHistory($('sequenceHistory'), { onRecording: (id) => selectRun(id) });
   const metricSelect = $('seriesMetric');
   for (const metric of RUN_METRICS) { const option = document.createElement('option'); option.value = metric.id; option.textContent = `${metric.label} (${metric.unit})`; metricSelect.append(option); }
   metricSelect.value = 'pv.powerW'; bindEvents(); await loadRuns();
@@ -560,6 +563,6 @@ export async function initRunsPage() {
 }
 
 export function destroyRunsPage() {
-  destroyed = true; clearInterval(refreshTimer); controller?.abort();
+  destroyed = true; clearInterval(refreshTimer); controller?.abort(); historyView?.dispose(); historyView = null;
   runs = []; selectedRun = null; series = []; events = []; currentWindow = null;
 }

@@ -5,6 +5,8 @@ import { Recorder } from './recording/client.mjs';
 import { Sessions } from './auth/session.mjs';
 import { archivePayload } from './recording/raw.mjs';
 import { SignedTelemetryVerifier } from './telemetry-auth.mjs';
+import { SequenceEngine } from './sequence/engine.mjs';
+import { validateSequence } from './sequence/model.mjs';
 
 const sessions = new Sessions();
 
@@ -128,6 +130,10 @@ let generatedSequence = 1_000_000;
 let lastBroadcastTelemetryConnected = null;
 const sseClients = new Set();
 const pendingCommands = new Map();
+const sequenceConfirmations = new Map();
+let sequenceOutcomeUnknown = false;
+let liveStartReserved = false;
+if (recorder) sequenceOutcomeUnknown = await recorder.call('sequenceUnsafeStatus');
 
 function readPort(name, fallback) {
   const value = Number(process.env[name] || fallback);
@@ -1404,6 +1410,8 @@ function createStatusMessage() {
     command_ready: commandTransportReady && isCommandAuthorizationConfigured(),
     command_target: activeCommandTarget,
     pending_commands: pendingCommands.size,
+    active_sequence: sequenceEngine.snapshot(),
+    sequence_outcome_unknown: sequenceOutcomeUnknown,
     debug_mode: latestDebugState,
     live_mode: liveMode.on,
     live_mode_source: liveMode.source,
@@ -1720,6 +1728,46 @@ function sendUdpMessage(buffer, target) {
   });
 }
 
+async function dispatchCommand(body, target) {
+  const command = { ...buildCommandMessage(body), target };
+  registerPendingCommand(command);
+  const outcome = waitForCommandResult(command.requestId, commandTimeoutMs + 1_000);
+  try {
+    await sendUdpMessage(command.payloadBuffer, target);
+  } catch (error) {
+    cancelPendingCommand(command.requestId);
+    publishCommandStatus('failed', command, { error: error.message });
+    throw error;
+  }
+  if (pendingCommands.has(command.requestId)) publishCommandStatus('pending', command);
+  return { request_id: command.requestId, ...(await outcome) };
+}
+
+function assertSequenceLive(run) {
+  if (!sessions.ownsOperator(run.sessionId)) throw new Error('operator_authorization_lost');
+  if (!isTelemetryConnected() || latestEnvelope?.source !== 'udp') throw new Error('stale_telemetry');
+  if (!run.telemetry || Date.now() - Date.parse(run.telemetry.received_at) > telemetryStaleMs) throw new Error('stale_accepted_telemetry');
+  if (latestEnvelope.packet.device_id !== run.deviceId ||
+      lastTelemetryEndpoint?.address !== run.target.address || lastTelemetryEndpoint?.port !== run.target.port) throw new Error('device_connection_changed');
+  if (!recorder?.status().ready || recorder.status().error) throw new Error('recording_unavailable');
+}
+
+const sequenceEngine = new SequenceEngine({
+  dispatch: (command, run) => dispatchCommand(command, run.target),
+  checkLive: assertSequenceLive,
+  persist: (operation, args) => operation === 'sequenceStart' && args.mode === 'live'
+    ? recorder.call('sequenceStartLive', { ...args, metadata: { sequence_id: args.definition.id, sequence_revision: args.definition.revision } })
+    : recorder.call(operation, args),
+  onEvent: broadcast,
+  onTerminal: async (run) => {
+    if (run.reason === 'command_outcome_unknown' || run.reason === 'storage_failure') sequenceOutcomeUnknown = true;
+    if (run.mode === 'live' && recorder?.status().active_run_id) {
+      await recorder.call('stop', { reason: `sequence_${run.state}`, status: run.state === 'completed' ? 'completed' : 'interrupted' }).catch(() => { sequenceOutcomeUnknown = true; });
+    }
+    broadcastStatus();
+  }
+});
+
 const httpServer = http.createServer(async (request, response) => {
   const requestUrl = new URL(
     request.url,
@@ -1770,7 +1818,93 @@ const httpServer = http.createServer(async (request, response) => {
       }
       throw createHttpError(404, 'Authentication route not found');
     }
-    const session = sessions.enabled ? await sessions.authorize(request) : null;
+    const sequenceRoute = requestUrl.pathname === '/sequences' || requestUrl.pathname.startsWith('/sequences/') || requestUrl.pathname === '/sequence-executions' || requestUrl.pathname.startsWith('/sequence-executions/');
+    const session = sessions.enabled ? sequenceRoute ? await sessions.authenticate(request) : await sessions.authorize(request) : null;
+    if (sequenceRoute) {
+      if (!sessions.enabled || !recorder) throw createHttpError(503, 'Sequences require authentication and recording');
+      if (request.method !== 'GET') {
+        if (session.role !== 'operator') throw createHttpError(403, 'An operator account is required');
+        sessions.csrfCheck(request, session);
+        if (!sessions.ownsOperator(session.id)) throw createHttpError(403, 'Active operator ownership is required');
+      }
+      const parts = requestUrl.pathname.split('/').filter(Boolean);
+      if (parts[0] === 'sequences') {
+        if (request.method === 'GET' && parts.length === 1) { sendJson(response, 200, { sequences: await recorder.call('sequenceList') }); return; }
+        if (request.method === 'GET' && parts.length === 2) { sendJson(response, 200, { sequence: await recorder.call('sequenceGet', { id: parts[1] }) }); return; }
+        if (request.method === 'POST' && parts.length === 1 || request.method === 'PUT' && parts.length === 2) {
+          const body = await readJsonBody(request);
+          const definition = validateSequence({ ...body, id: parts[1] || body.id || crypto.randomUUID() }, (command) => buildCommandMessage(command));
+          const saved = await recorder.call('sequenceSave', { definition, expectedRevision: request.method === 'PUT' ? body.revision : null });
+          sendJson(response, request.method === 'POST' ? 201 : 200, { sequence: saved }); return;
+        }
+        if (request.method === 'POST' && parts.length === 3 && parts[2] === 'preflight') {
+          assertCommandAuthorized(request);
+          if (sequenceEngine.active || liveStartReserved || pendingCommands.size || sequenceOutcomeUnknown) throw createHttpError(409, 'Live command control is busy or requires recovery');
+          if (recorder.status().active_run_id) throw createHttpError(409, 'Stop the current recording first');
+          if (!isTelemetryConnected() || latestEnvelope?.source !== 'udp') throw createHttpError(409, 'Fresh UDP telemetry is required');
+          const definition = validateSequence(await recorder.call('sequenceGet', { id: parts[1] }), (command) => buildCommandMessage(command));
+          const target = resolveCommandTarget();
+          if (target.address !== lastTelemetryEndpoint.address || target.port !== lastTelemetryEndpoint.port) throw createHttpError(409, 'Command target must match telemetry endpoint');
+          const token = crypto.randomBytes(24).toString('hex');
+          for (const [key, item] of sequenceConfirmations) if (item.expires < Date.now()) sequenceConfirmations.delete(key);
+          if (sequenceConfirmations.size >= 100) sequenceConfirmations.delete(sequenceConfirmations.keys().next().value);
+          sequenceConfirmations.set(token, { sessionId: session.id, id: definition.id, revision: definition.revision, target, deviceId: latestEnvelope.packet.device_id, expires: Date.now() + 30_000 });
+          sendJson(response, 200, { confirmation_token: token, expires_in_ms: 30_000, name: definition.name, revision: definition.revision, device_id: latestEnvelope.packet.device_id, target, hardware_actions: definition.steps.length }); return;
+        }
+        if (request.method === 'POST' && parts.length === 3 && parts[2] === 'execute') {
+          const body = await readJsonBody(request);
+          const definition = validateSequence(await recorder.call('sequenceGet', { id: parts[1] }), (command) => buildCommandMessage(command));
+          if (!['simulation', 'live'].includes(body.mode)) throw createHttpError(400, 'mode must be live or simulation');
+          if (body.execution_id !== undefined && (typeof body.execution_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.execution_id))) throw createHttpError(400, 'Invalid execution ID');
+          if (body.mode === 'live') assertCommandAuthorized(request);
+          if (body.execution_id) {
+            const active = sequenceEngine.active;
+            if (active?.id === body.execution_id) {
+              if (active.mode !== body.mode || active.definition.id !== definition.id || active.definition.revision !== definition.revision || active.sessionId !== (body.mode === 'live' ? session.id : null)) throw createHttpError(409, 'Execution ID belongs to another run');
+              sendJson(response, 200, { execution: sequenceEngine.snapshot(active), run_id: active.recordingRunId || null }); return;
+            }
+            let existing = null;
+            try { existing = await recorder.call('sequenceGetExecution', { id: body.execution_id }); }
+            catch (error) { if (error.statusCode !== 404) throw error; }
+            if (existing) {
+              if (existing.operator_name !== session.username || existing.mode !== body.mode || existing.sequence_id !== definition.id || existing.revision !== definition.revision) throw createHttpError(409, 'Execution ID belongs to another run');
+              sendJson(response, 200, { execution: existing, run_id: existing.recording_run_id || null }); return;
+            }
+          }
+          if (sequenceEngine.active || liveStartReserved) throw createHttpError(409, 'Another sequence is active');
+          if (body.mode === 'simulation') {
+            const simulationTelemetry = body.telemetry ? { type: 'telemetry', source: 'simulation', packet: { telemetry: body.telemetry, seq: 0 }, received_at: new Date().toISOString() } : null;
+            const execution = await sequenceEngine.start({ definition, mode: 'simulation', operatorName: session.username, simulationTelemetry, ...(body.execution_id ? { id: body.execution_id } : {}) });
+            sendJson(response, 202, { execution }); return;
+          }
+          const confirmation = sequenceConfirmations.get(body.confirmation_token);
+          if (!confirmation || confirmation.expires < Date.now() || confirmation.sessionId !== session.id || confirmation.id !== definition.id || confirmation.revision !== definition.revision) throw createHttpError(403, 'Valid live confirmation is required');
+          sequenceConfirmations.delete(body.confirmation_token);
+          if (pendingCommands.size || sequenceOutcomeUnknown || recorder.status().active_run_id) throw createHttpError(409, 'Live command control is busy or requires recovery');
+          if (!isTelemetryConnected() || latestEnvelope?.source !== 'udp' || latestEnvelope.packet.device_id !== confirmation.deviceId || lastTelemetryEndpoint?.address !== confirmation.target.address || lastTelemetryEndpoint?.port !== confirmation.target.port) throw createHttpError(409, 'Confirmed device is not connected');
+          liveStartReserved = true;
+          try {
+            sequenceEngine.onTelemetry(latestEnvelope);
+            const execution = await sequenceEngine.start({ definition, mode: 'live', sessionId: session.id, operatorName: session.username, recordingEnvelope: latestEnvelope, target: confirmation.target, deviceId: confirmation.deviceId, ...(body.execution_id ? { id: body.execution_id } : {}) });
+            sendJson(response, 202, { execution, run_id: execution.recording_run_id }); return;
+          } catch (error) {
+            if (recorder.status().active_run_id) await recorder.call('stop', { reason: 'sequence_start_failed', status: 'interrupted' }).catch(() => {});
+            throw error;
+          } finally { liveStartReserved = false; }
+        }
+      } else if (parts[0] === 'sequence-executions') {
+        if (request.method === 'GET' && parts.length === 1) { sendJson(response, 200, { executions: await recorder.call('sequenceListExecutions') }); return; }
+        if (request.method === 'GET' && parts.length === 2) { sendJson(response, 200, { execution: await recorder.call('sequenceGetExecution', { id: parts[1] }) }); return; }
+        if (request.method === 'GET' && parts.length === 3 && parts[2] === 'events') { sendJson(response, 200, { events: await recorder.call('sequenceEvents', { id: parts[1], after: Number(requestUrl.searchParams.get('after') || 0) }) }); return; }
+        if (request.method === 'POST' && parts.length === 3) {
+          if (parts[2] === 'pause') { sendJson(response, 200, { execution: await sequenceEngine.pause(parts[1]) }); return; }
+          if (parts[2] === 'resume') { assertCommandAuthorized(request); sendJson(response, 200, { execution: await sequenceEngine.resume(parts[1]) }); return; }
+          if (parts[2] === 'stop') { sendJson(response, 200, { execution: await sequenceEngine.cancel(parts[1]) }); return; }
+          if (parts[2] === 'recover') { assertCommandAuthorized(request); if (sequenceEngine.active) throw createHttpError(409, 'Sequence is active'); const result = await recorder.call('sequenceRecover', { id: parts[1] }); sequenceOutcomeUnknown = await recorder.call('sequenceUnsafeStatus'); sendJson(response, 200, result); return; }
+        }
+      }
+      throw createHttpError(404, 'Sequence route not found');
+    }
     if (requestUrl.pathname === '/runs' || requestUrl.pathname.startsWith('/runs/')) {
       if (!recorder) throw createHttpError(503, 'Recording is not enabled');
       // History access is private even when the legacy command bypass is enabled.
@@ -1786,6 +1920,7 @@ const httpServer = http.createServer(async (request, response) => {
         return;
       }
       if (request.method === 'POST' && parts.length === 2 && parts[1] === 'start') {
+        if (sequenceEngine.active?.mode === 'live' || liveStartReserved) throw createHttpError(409, 'Live sequence owns recording');
         const body = await readJsonBody(request);
         if (!isTelemetryConnected() || latestEnvelope?.source !== 'udp') {
           throw createHttpError(409, 'Fresh UDP telemetry is required to start recording');
@@ -1800,6 +1935,7 @@ const httpServer = http.createServer(async (request, response) => {
         return;
       }
       if (request.method === 'POST' && parts.length === 2 && parts[1] === 'stop') {
+        if (sequenceEngine.active?.mode === 'live' || liveStartReserved) throw createHttpError(409, 'Live sequence owns recording');
         const run = await recorder.call('stop', {});
         sendJson(response, 200, { run });
         broadcastStatus();
@@ -1836,6 +1972,7 @@ const httpServer = http.createServer(async (request, response) => {
       sseClients.add(response);
       if (session) sessions.attachStream(session, response);
       sendSse(response, createStatusMessage());
+      if (sequenceEngine.active) sendSse(response, { type: 'sequence_status', execution: sequenceEngine.snapshot() });
       if (latestEnvelope !== null) sendSse(response, latestEnvelope);
       if (latestDebugEnvelope !== null) sendSse(response, latestDebugEnvelope);
       if (latestCommandEnvelope !== null) sendSse(response, latestCommandEnvelope);
@@ -1948,6 +2085,8 @@ const httpServer = http.createServer(async (request, response) => {
     ) {
       assertCommandAuthorized(request);
       const body = await readJsonBody(request);
+      if (sequenceEngine.active?.mode === 'live' || liveStartReserved) throw createHttpError(409, 'Live sequence owns command control');
+      if (sequenceOutcomeUnknown && body.type !== 'i2c_read' && body.type !== 'i2c_probe' && body.type !== 'i2c_scan') throw createHttpError(409, 'Review unknown command outcome before another write');
       const target = resolveCommandTarget();
       const commandMessage = buildCommandMessage(body, target);
       const pendingCommand = {
@@ -2145,6 +2284,7 @@ udpSocket.on('message', (message, remoteInfo) => {
     remote_port: remoteInfo.port,
     bytes: remoteInfo.size
   });
+  sequenceEngine.onTelemetry(latestEnvelope);
 
   // Persist only validated hardware UDP telemetry, never /input or browser simulation.
   if (recorder) {

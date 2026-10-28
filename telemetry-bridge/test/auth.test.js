@@ -154,6 +154,35 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     { 'X-Command-Token': 'test-command' })).status, 403);
   assert.equal((await request('/runs/events', viewer, { sequence_name: 'x', step_index: 0, step_text: 'x', phase: 'started' })).status, 403);
   const operator = await login('operator');
+  const sequence = { schemaVersion: 1, name: 'Mock history', steps: [
+    { id: 'choice', type: 'if', condition: { op: '>', left: { metric: 'pv.busVoltageV' }, right: { constant: 5, unit: 'V' } },
+      then: [{ id: 'yes', type: 'delay', durationMs: 1 }], else: [{ id: 'no', type: 'delay', durationMs: 1 }] }
+  ] };
+  assert.equal((await request('/sequences', viewer)).status, 200);
+  assert.equal((await request('/sequences', viewer, sequence)).status, 403);
+  assert.equal((await request('/sequences/missing/execute', viewer, { mode: 'live' }, { 'X-Command-Token': 'test-command' })).status, 403);
+  const invalid = await request('/sequences', operator, { ...sequence, steps: [{ id: 'bad', type: 'unknown' }] });
+  assert.equal(invalid.status, 400);
+  const saved = await (await request('/sequences', operator, sequence)).json();
+  const executionId = '12345678-1234-4123-8123-123456789abc';
+  const runRequest = { mode: 'simulation', execution_id: executionId, telemetry: { pv: { available: true, busVoltageV: 2 } } };
+  const started = await request(`/sequences/${saved.sequence.id}/execute`, operator, runRequest);
+  assert.equal(started.status, 202);
+  assert.equal((await started.json()).execution.id, executionId);
+  let recorded;
+  for (let i = 0; i < 30; i++) {
+    recorded = await (await request(`/sequence-executions/${executionId}`, viewer)).json();
+    if (recorded.execution?.state === 'completed') break;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.equal(recorded.execution.state, 'completed');
+  assert.equal(recorded.execution.mode, 'simulation');
+  assert.equal(recorded.execution.completed_steps, 2);
+  const savedEvents = await (await request(`/sequence-executions/${executionId}/events`, viewer)).json();
+  assert.equal(savedEvents.events.find((event) => event.type === 'branch').details.selected, 'else');
+  assert.equal((await request(`/sequences/${saved.sequence.id}/execute`, operator, runRequest)).status, 200, 'retry returns the same run');
+  assert.equal((await (await request('/sequence-executions', viewer)).json()).executions.filter((item) => item.id === executionId).length, 1);
+  assert.equal((await (await request('/runs', viewer)).json()).runs.length, 0, 'simulation never creates a hardware recording');
   assert.equal((await request('/auth/me', operator)).status, 200);
   const duplicateOperator = await request('/auth/login', null, { username: 'operator', password });
   assert.equal(duplicateOperator.status, 409);

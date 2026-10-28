@@ -9,7 +9,9 @@ chmodSync(workerData.filename, 0o600);
 const store = new RunStore(workerData.filename);
 chmodSync(workerData.filename, 0o600);
 parentPort.postMessage({ ready: true });
-const operations = new Set(['start', 'stop', 'ingest', 'command', 'marker', 'get', 'list', 'samples', 'events', 'series']);
+const operations = new Set(['start', 'stop', 'ingest', 'command', 'marker', 'get', 'list', 'samples', 'events', 'series',
+  'sequenceSave', 'sequenceGet', 'sequenceList', 'sequenceStart', 'sequenceStartLive', 'sequenceState', 'sequenceEvent',
+  'sequenceGetExecution', 'sequenceListExecutions', 'sequenceEvents', 'sequenceUnsafeStatus', 'sequenceRecover']);
 parentPort.on('message', ({ id, operation, args }) => {
   try {
     if (operation === 'close') {

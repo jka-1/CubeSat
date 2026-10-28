@@ -2,7 +2,8 @@ import { allowRoute, showAccount } from './auth.js?v=20261028d';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261028d';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261028d';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261028d';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028d';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261028e';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028e';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -18,7 +19,8 @@ const routes = {
   communication: `./modules/communication.html?v=20261028c`,
   'link-health': `./modules/link-health.html?v=20261028a`,
   'debug-mode': `./modules/debug-mode.html?v=20261028c`,
-  runs: `./modules/runs.html?v=20261028c`,
+  runs: `./modules/runs.html?v=20261028e`,
+  sequences: `./modules/sequences.html?v=20261028e`,
   partners: `./modules/partners.html?v=${assetVersion}`
 };
 
@@ -28,6 +30,7 @@ const pageInitializers = {
   'link-health': initLinkHealthPage,
   'debug-mode': initDebugModePage,
   runs: initRunsPage,
+  sequences: initSequencesPage,
   partners: () => {}
 };
 
@@ -37,6 +40,7 @@ const pageDestroyers = {
   'link-health': destroyLinkHealthPage,
   'debug-mode': destroyDebugModePage,
   runs: destroyRunsPage,
+  sequences: destroySequencesPage,
   partners: () => {}
 };
 

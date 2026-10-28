@@ -24,6 +24,7 @@ export class Recorder {
         task.reject(Object.assign(new Error(message.error), { statusCode: message.statusCode }));
       } else {
         if (task.operation === 'start') this.state.active_run_id = message.result.id;
+        if (task.operation === 'sequenceStartLive') this.state.active_run_id = message.result.run.id;
         if (task.operation === 'stop' || task.operation === 'close') this.state.active_run_id = null;
         if (!this.state.error && task.operation === 'ingest' && message.result) this.state.active_run_id = message.result.run_id;
         task.resolve(message.result);
