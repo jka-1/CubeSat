@@ -1873,7 +1873,9 @@ const httpServer = http.createServer(async (request, response) => {
           }
           if (sequenceEngine.active || liveStartReserved) throw createHttpError(409, 'Another sequence is active');
           if (body.mode === 'simulation') {
-            const simulationTelemetry = body.telemetry ? { type: 'telemetry', source: 'simulation', packet: { telemetry: body.telemetry, seq: 0 }, received_at: new Date().toISOString() } : null;
+            const simulationTelemetry = body.telemetry ? { type: 'telemetry', source: 'simulation',
+              packet: { telemetry: body.telemetry.telemetry || body.telemetry,
+                ...(body.telemetry.raw ? { raw: body.telemetry.raw } : {}), seq: 0 }, received_at: new Date().toISOString() } : null;
             const execution = await sequenceEngine.start({ definition, mode: 'simulation', operatorName: session.username, simulationTelemetry, ...(body.execution_id ? { id: body.execution_id } : {}) });
             sendJson(response, 202, { execution }); return;
           }

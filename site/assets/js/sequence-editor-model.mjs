@@ -1,10 +1,11 @@
 import { RUN_METRICS } from './runs-model.mjs';
+import { CONDITION_REGISTERS, CONDITION_FAULTS } from './sequence-condition-fields.mjs';
 
 export const METRICS = RUN_METRICS.map(({ id, label, unit }) => ({ id, label, unit: unit === '°C' ? 'C' : unit }));
 export const OPERATORS = ['>', '>=', '<', '<=', '==', '!='];
 export const BLOCKS = [
   ['command', 'Command'], ['registerRead', 'Register read'], ['registerWrite', 'Register write'],
-  ['delay', 'Delay'], ['waitUntil', 'Wait for telemetry'], ['if', 'IF / ELSE']
+  ['delay', 'Delay'], ['waitUntil', 'Wait for value'], ['if', 'IF / ELSE']
 ];
 const uid = () => crypto.randomUUID();
 export const comparison = () => ({ op: '>', left: { metric: METRICS[0].id }, right: { constant: 0, unit: METRICS[0].unit } });
@@ -36,18 +37,30 @@ export function validateCondition(condition, path, errors, depth = 0) {
     else condition.conditions.forEach((item, i) => validateCondition(item, `${path} condition ${i + 1}`, errors, depth + 1));
   } else if (condition.op === 'NOT') validateCondition(condition.condition, `${path} NOT`, errors, depth + 1);
   else if (OPERATORS.includes(condition.op)) {
-    const units = [condition.left, condition.right].map((operand) => operand?.metric ? METRICS.find((metric) => metric.id === operand.metric)?.unit : operand?.unit);
-    if (!units[0] || units[0] !== units[1]) errors.push(`${path}: comparison units must match`);
-    if (!condition.left?.metric && !condition.right?.metric) errors.push(`${path}: comparison needs telemetry`);
-    for (const operand of [condition.left, condition.right]) if (operand && 'constant' in operand && !Number.isFinite(operand.constant)) errors.push(`${path}: enter a finite number`);
+    const type = (operand) => {
+      if (operand?.metric && Object.keys(operand).length === 1) return METRICS.find((metric) => metric.id === operand.metric)?.unit;
+      if (operand?.register && Object.keys(operand).length === 1) return CONDITION_REGISTERS.some((item) => item.id === operand.register) ? 'hex' : null;
+      if (operand?.fault && Object.keys(operand).length === 1) return CONDITION_FAULTS.includes(operand.fault) ? 'boolean' : null;
+      if (Object.keys(operand || {}).length === 2 && Object.hasOwn(operand, 'constant')) {
+        if (operand.unit === 'boolean') return typeof operand.constant === 'boolean' ? 'boolean' : null;
+        return typeof operand.constant === 'number' && Number.isFinite(operand.constant) && [...new Set(METRICS.map((item) => item.unit)), 'hex'].includes(operand.unit) &&
+          (operand.unit !== 'hex' || Number.isSafeInteger(operand.constant) && operand.constant >= 0 && operand.constant <= 0xffff) ? operand.unit : null;
+      }
+      return null;
+    };
+    const types = [type(condition.left), type(condition.right)];
+    if (!types[0] || !types[1]) errors.push(`${path}: enter a valid telemetry, register, fault flag, or constant value`);
+    else if (types[0] !== types[1]) errors.push(`${path}: comparison types or formats must match (${types.join(' versus ')})`);
+    if (types[0] === 'boolean' && !['==', '!='].includes(condition.op)) errors.push(`${path}: fault flags support == and != only`);
+    if (condition.left?.constant !== undefined && condition.right?.constant !== undefined) errors.push(`${path}: comparison needs telemetry, register, or fault flag`);
   } else errors.push(`${path}: choose a comparison or logical operator`);
 }
 export function validateDraft(definition) {
   const errors = [];
-  if (!definition.name?.trim()) errors.push('Enter a sequence name.');
+  if (!definition.name?.trim()) errors.push('Enter a Visual Code name.');
   if (definition.name?.length > 120) errors.push('Name must be 120 characters or fewer.');
-  if (!definition.steps.length) errors.push('Connect at least one block to the sequence.');
-  if (countBlocks(definition.steps) > 200) errors.push('Sequence exceeds 200 blocks.');
+  if (!definition.steps.length) errors.push('Connect at least one block to the Visual Code.');
+  if (countBlocks(definition.steps) > 200) errors.push('Visual Code exceeds 200 blocks.');
   const read = { '0x08': { one: '', two: '14 16 18 1A 36 3A 68 3E' }, '0x6B': { one: '0F 10 12 13 14 1B 1C 1E 2E 30 48', two: '31 33 35 37 39 3B 3D 41' }, '0x40': { one: '', two: '00 01 02 03 04 05 06 07 FE FF' } };
   const writable = { '0x08': { '0x3E': 2 }, '0x6B': Object.fromEntries('0F 10 12 13 14 2E 30'.split(' ').map((reg) => [`0x${reg}`, 1])), '0x40': Object.fromEntries('00 05 06 07'.split(' ').map((reg) => [`0x${reg}`, 2])) };
   const seen = new Set();
@@ -87,7 +100,7 @@ export function validateDraft(definition) {
       }
     }
   };
-  walk(definition.steps, 'Sequence', 0);
+  walk(definition.steps, 'Visual Code', 0);
   return errors;
 }
 export function cloneSequence(definition) {

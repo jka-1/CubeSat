@@ -94,9 +94,11 @@ a {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
   font-weight: 900;
   letter-spacing: 0.03em;
 }
+.brand > span:last-child { min-width: 0; }
 
 .brand-mark {
   width: 44px;
@@ -124,10 +126,13 @@ a {
   align-items: center;
   justify-content: flex-end;
   gap: 8px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   flex: 1;
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
+.nav-links > * { flex: 0 0 auto; white-space: nowrap; }
 .account-control { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
 #accountButton { white-space: nowrap; flex: 0 1 auto; max-width: min(260px, 32vw); overflow: hidden; text-overflow: ellipsis; }
 

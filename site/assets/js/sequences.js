@@ -1,6 +1,7 @@
 import { apiFetch, canOperate } from './auth.js?v=20261028d';
-import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock } from './sequence-editor-model.mjs?v=20261028a';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261028a';
+import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock } from './sequence-editor-model.mjs?v=20261029e';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261029e';
+import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from './sequence-condition-fields.mjs';
 
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -39,8 +40,13 @@ function stepById(id) {
 function optionMetrics(selected) { return METRICS.map((metric) => option(metric.id, `${metric.label} (${metric.unit})`, selected)).join(''); }
 function operandHtml(value, id) {
   const metric = METRICS.find((item) => item.id === value?.metric) || METRICS[0];
-  const kind = value?.metric ? 'metric' : 'constant';
-  return `<span class="seq-operand"><select class="seq-input" data-condition="${id}" data-field="kind">${option('metric', 'Telemetry', kind)}${option('constant', 'Number', kind)}</select>${kind === 'metric' ? `<select class="seq-input" data-condition="${id}" data-field="metric">${optionMetrics(value.metric)}</select>` : `<input class="seq-input" type="number" step="any" value="${esc(value?.constant ?? '')}" data-condition="${id}" data-field="constant" aria-label="Comparison value"><span>${esc(value?.unit || metric.unit)}</span>`}</span>`;
+  const kind = value?.metric ? 'metric' : value?.register ? 'register' : value?.fault ? 'fault' : 'constant';
+  const field = kind === 'metric' ? `<select class="seq-input" data-condition="${id}" data-field="metric">${optionMetrics(value.metric)}</select>`
+    : kind === 'register' ? `<select class="seq-input" data-condition="${id}" data-field="register">${CONDITION_REGISTERS.map((item) => option(item.id, item.label, value.register)).join('')}</select>`
+      : kind === 'fault' ? `<select class="seq-input" data-condition="${id}" data-field="fault">${CONDITION_FAULTS.map((name) => option(name, name, value.fault)).join('')}</select>`
+        : value?.unit === 'boolean' ? `<select class="seq-input" data-condition="${id}" data-field="constant">${option('true', 'Active', String(value.constant))}${option('false', 'Clear', String(value.constant))}</select>`
+          : `<input class="seq-input" type="${value?.unit === 'hex' ? 'text' : 'number'}" ${value?.unit === 'hex' ? 'pattern="0x[0-9a-fA-F]+" placeholder="0x00"' : 'step="any"'} value="${esc(value?.unit === 'hex' && Number.isInteger(value.constant) ? `0x${value.constant.toString(16).toUpperCase()}` : value?.constant ?? '')}" data-condition="${id}" data-field="constant" aria-label="Comparison value"><select class="seq-input" data-condition="${id}" data-field="unit" aria-label="Value format">${['V', 'A', 'W', 'C', 'mV', 'hex', 'boolean'].map((unit) => option(unit, unit === 'hex' ? 'Hex' : unit === 'boolean' ? 'Flag' : unit, value?.unit)).join('')}</select>`;
+  return `<span class="seq-operand"><select class="seq-input" data-condition="${id}" data-field="kind">${option('metric', 'Telemetry', kind)}${option('register', 'Register', kind)}${option('fault', 'Fault flag', kind)}${option('constant', 'Value', kind)}</select>${field}</span>`;
 }
 function conditionHtml(condition, address) {
   const key = encodeURIComponent(JSON.stringify(address));
@@ -55,7 +61,7 @@ function conditionHtml(condition, address) {
 function registerOptions(command, write) {
   const allowed = write ? { '0x08': '3E', '0x6B': '0F 10 12 13 14 2E 30', '0x40': '00 05 06 07' } : { '0x08': '14 16 18 1A 36 3A 68 3E', '0x6B': '0F 10 12 13 14 1B 1C 1E 2E 30 48 31 33 35 37 39 3B 3D 41', '0x40': '00 01 02 03 04 05 06 07 FE FF' };
   const regs = (allowed[command.addr] || '').split(' ').filter(Boolean);
-  return `<label>Device <select class="seq-input" data-field="addr">${Object.keys(allowed).map((addr) => option(addr, addr, command.addr)).join('')}</select></label><label>Register <select class="seq-input" data-field="reg">${regs.map((reg) => option(`0x${reg}`, `0x${reg}`, command.reg)).join('')}</select></label>${write ? `<label>Data bytes (hex, space separated) <input class="seq-input" data-field="data" value="${esc(command.data?.join(' ') || '')}" placeholder="0x00 0x00"></label>` : `<label>Width <select class="seq-input" data-field="len">${option('1', '1 byte', String(command.len))}${option('2', '2 bytes', String(command.len))}</select></label>`}`;
+  return `<label>Device <select class="seq-input" data-field="addr">${Object.keys(allowed).map((addr) => option(addr, DEVICE_LABELS[addr], command.addr)).join('')}</select></label><label>Register <select class="seq-input" data-field="reg">${regs.map((reg) => option(`0x${reg}`, `0x${reg}`, command.reg)).join('')}</select></label>${write ? `<label>Data bytes (hex, space separated) <input class="seq-input" data-field="data" value="${esc(command.data?.join(' ') || '')}" placeholder="0x00 0x00"></label>` : `<label>Width <select class="seq-input" data-field="len">${option('1', '1 byte', String(command.len))}${option('2', '2 bytes', String(command.len))}</select></label>`}`;
 }
 const commandTypes = [['led_control', 'LED'], ['debug_control', 'Debug mode'], ['sensor_control', 'Sensor polling'], ['mppt_acdrv_control', 'MPPT ACDRV'], ['i2c_read', 'I²C read'], ['i2c_write', 'I²C write'], ['set_scan_period', 'Scan period'], ['i2c_scan', 'I²C scan'], ['i2c_probe', 'I²C probe']];
 function commandHtml(step) {
@@ -64,7 +70,7 @@ function commandHtml(step) {
   let fields = `<label>Action <select class="seq-input" data-field="commandType">${commandTypes.map(([id, label]) => option(id, label, cmd.type)).join('')}</select></label>`;
   if (cmd.type === 'i2c_read' || cmd.type === 'i2c_write') fields += registerOptions(cmd, cmd.type === 'i2c_write');
   if (['led_control', 'debug_control', 'sensor_control'].includes(cmd.type)) fields += `<label>State <select class="seq-input" data-field="enabled">${option('true', 'On', String(cmd.enabled))}${option('false', 'Off', String(cmd.enabled))}</select></label>`;
-  if (cmd.type === 'sensor_control') fields += `<label>Sensor <select class="seq-input" data-field="sensor">${['pv', 'bms', 'mppt'].map((s) => option(s, s.toUpperCase(), cmd.sensor)).join('')}</select></label>`;
+  if (cmd.type === 'sensor_control') fields += `<label>Sensor <select class="seq-input" data-field="sensor">${[['pv', '0x40'], ['bms', '0x08'], ['mppt', '0x6B']].map(([s, addr]) => option(s, DEVICE_LABELS[addr], cmd.sensor)).join('')}</select></label>`;
   if (cmd.type === 'mppt_acdrv_control') fields += `<label>Source <select class="seq-input" data-field="state">${['acdrv1', 'acdrv2', 'disabled'].map((s) => option(s, s, cmd.state)).join('')}</select></label>`;
   if (cmd.type === 'set_scan_period') fields += `<label>Period (ms) <input class="seq-input" type="number" min="200" max="5000" data-field="period_ms" value="${esc(cmd.period_ms)}"></label>`;
   if (cmd.type === 'i2c_probe') fields += `<label>Address <input class="seq-input" data-field="probeAddr" value="${esc(cmd.addr)}"></label>`;
@@ -85,7 +91,7 @@ function render(updateCanvas = true) {
   if (updateCanvas) $('seqCanvas').innerHTML = listHtml(draft.steps, []);
   $('seqCount').textContent = `${countBlocks(draft.steps)} blocks`;
   const errors = validateDraft(draft);
-  $('seqValidation').innerHTML = errors.length ? `<strong>${errors.length} validation issue${errors.length === 1 ? '' : 's'}</strong><ul>${errors.map((error) => `<li>${esc(error)}</li>`).join('')}</ul>` : '<span class="seq-valid">Sequence is ready to save.</span>';
+  $('seqValidation').innerHTML = errors.length ? `<strong>${errors.length} validation issue${errors.length === 1 ? '' : 's'}</strong><ul>${errors.map((error) => `<li>${esc(error)}</li>`).join('')}</ul>` : '<span class="seq-valid">Visual Code is ready to save.</span>';
   $('seqSave').disabled = !canOperate() || busy || errors.length > 0;
   $('seqDuplicate').disabled = !draft.id || !canOperate() || busy;
   const dirty = !draft.id || JSON.stringify(draft) !== savedSnapshot;
@@ -112,7 +118,7 @@ function render(updateCanvas = true) {
   $('seqRecover').disabled = !recoveryNeeded || !canOperate() || !$('seqReviewed').checked || !$('seqToken').value.trim();
   $('seqEvents').innerHTML = events.slice(-30).map((event) => `<li><time>${esc(new Date(event.at_ms).toLocaleTimeString())}</time> ${esc(event.type.replaceAll('_', ' '))}${event.details?.selected ? ` · ${event.details.selected === 'then' ? 'TRUE' : 'FALSE'}` : ''}${event.details?.error ? ` · ${esc(event.details.error)}` : ''}</li>`).join('');
 }
-function updateSaved() { $('seqSaved').innerHTML = `<option value="">New sequence</option>${saved.map((item) => option(item.id, `${item.name} · r${item.revision}`, draft.id)).join('')}`; }
+function updateSaved() { $('seqSaved').innerHTML = `<option value="">New Visual Code</option>${saved.map((item) => option(item.id, `${item.name} · r${item.revision}`, draft.id)).join('')}`; }
 async function loadSaved() { saved = (await request('/sequences')).sequences || []; updateSaved(); }
 async function save() {
   const errors = validateDraft(draft); if (errors.length) { notice('Fix validation issues before saving.', true); render(); return false; }
@@ -203,9 +209,12 @@ function handleChange(event) {
   if (el.dataset.condition) {
     const [key, side] = el.dataset.condition.split(':'), condition = conditionAt(JSON.parse(decodeURIComponent(key))); if (!condition) return;
     const value = condition[side];
-    if (el.dataset.field === 'kind') condition[side] = el.value === 'metric' ? { metric: METRICS[0].id } : { constant: 0, unit: METRICS.find((metric) => metric.id === condition[side === 'left' ? 'right' : 'left']?.metric)?.unit || 'V' };
-    if (el.dataset.field === 'metric') { condition[side] = { metric: el.value }; const other = side === 'left' ? 'right' : 'left'; if (condition[other]?.constant !== undefined) condition[other].unit = METRICS.find((metric) => metric.id === el.value)?.unit || 'V'; }
-    if (el.dataset.field === 'constant') condition[side].constant = el.value === '' ? NaN : Number(el.value);
+    if (el.dataset.field === 'kind') condition[side] = el.value === 'metric' ? { metric: METRICS[0].id } : el.value === 'register' ? { register: CONDITION_REGISTERS[0].id } : el.value === 'fault' ? { fault: CONDITION_FAULTS[0] } : { constant: 0, unit: 'V' };
+    if (el.dataset.field === 'metric') condition[side] = { metric: el.value };
+    if (el.dataset.field === 'register') condition[side] = { register: el.value };
+    if (el.dataset.field === 'fault') condition[side] = { fault: el.value };
+    if (el.dataset.field === 'unit') condition[side] = { constant: el.value === 'boolean' ? false : 0, unit: el.value };
+    if (el.dataset.field === 'constant') condition[side].constant = condition[side].unit === 'boolean' ? el.value === 'true' : condition[side].unit === 'hex' ? /^0x[0-9a-f]+$/i.test(el.value) ? Number(el.value) : NaN : el.value === '' ? NaN : Number(el.value);
     render(); return;
   }
   const article = el.closest('.seq-block'); if (!article || !el.dataset.field) return;
@@ -248,7 +257,7 @@ export async function initSequencesPage() {
   $('seqPaletteList').addEventListener('click', handleClick); $('seqCanvas').addEventListener('click', handleClick);
   $('seqCanvas').addEventListener('change', handleChange);
   $('seqName').addEventListener('input', handleChange);
-  $('seqNew').addEventListener('click', () => { savedSnapshot = null; draft = fresh(); $('seqName').value = ''; selectedPath = []; selectedIndex = null; selectedId = null; updateSaved(); render(); notice('New sequence.'); });
+  $('seqNew').addEventListener('click', () => { savedSnapshot = null; draft = fresh(); $('seqName').value = ''; selectedPath = []; selectedIndex = null; selectedId = null; updateSaved(); render(); notice('New Visual Code.'); });
   $('seqLoad').addEventListener('click', async () => { const id = $('seqSaved').value; if (!id) return; try { draft = (await request(`/sequences/${encodeURIComponent(id)}`)).sequence; savedSnapshot = JSON.stringify(draft); $('seqName').value = draft.name; selectedPath = []; selectedIndex = null; selectedId = null; render(); notice(`Loaded revision ${draft.revision}.`); } catch (error) { notice(`Load failed: ${error.message}`, true); } });
   $('seqDuplicate').addEventListener('click', () => { draft = cloneSequence(draft); savedSnapshot = null; $('seqName').value = draft.name; updateSaved(); render(); notice('Copy created. Save to keep it.'); });
   $('seqSave').addEventListener('click', save);
@@ -266,6 +275,6 @@ export async function initSequencesPage() {
   for (const action of ['pause', 'resume', 'stop']) $(`seq${action[0].toUpperCase()}${action.slice(1)}`).addEventListener('click', () => control(action));
   wireDrag(); render();
   try { await loadSaved(); const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
-  catch (error) { notice(`Sequence service unavailable: ${error.message}`, true); }
+  catch (error) { notice(`Visual Code service unavailable: ${error.message}`, true); }
 }
 export function destroySequencesPage() { alive = false; clearInterval(timer); timer = null; historyView?.dispose(); historyView = null; }

@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { evaluateCondition } from './model.mjs';
+import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
 
 const terminal = new Set(['completed', 'failed', 'canceled']);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -29,7 +30,14 @@ function conditionEvidence(condition, envelope) {
     for (const side of ['left', 'right']) {
       const operand = part[side];
       if (operand.constant !== undefined) values[side] = operand.constant;
-      else {
+      else if (operand.register !== undefined) {
+        const field = CONDITION_REGISTERS.find((item) => item.id === operand.register);
+        values[side] = field?.path.reduce((value, key) => value?.[key], envelope?.packet?.raw) ?? null;
+      } else if (operand.fault !== undefined) {
+        const bit = CONDITION_FAULTS.indexOf(operand.fault), mask = envelope?.packet?.raw?.mppt?.fault20;
+        values[side] = Number.isInteger(mask) ? Boolean(mask & (1 << bit)) :
+          Array.isArray(envelope?.packet?.telemetry?.mppt?.faults) ? envelope.packet.telemetry.mppt.faults.includes(operand.fault) : null;
+      } else {
         const path = operand.metric.split('.');
         const group = envelope?.packet?.telemetry?.[path[0]];
         values[side] = path[0] === 'bms' && path[1]?.startsWith('cell')

@@ -1,4 +1,5 @@
 import { METRICS } from '../recording/store.mjs';
+import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
 
 const units = Object.freeze(Object.fromEntries(Object.keys(METRICS).map((key) => [key,
   key.endsWith('Mv') ? 'mV' : key.endsWith('A') ? 'A' : key.endsWith('W') ? 'W' : key.endsWith('C') ? 'C' : 'V'
@@ -26,10 +27,14 @@ const integer = (value, min, max, label) => {
 };
 
 function operand(value) {
-  keys(value, ['metric', 'constant', 'unit'], 'operand');
-  if (typeof value.metric === 'string' && Object.hasOwn(units, value.metric) && value.constant === undefined && value.unit === undefined) return units[value.metric];
-  if (typeof value.constant === 'number' && Number.isFinite(value.constant) && typeof value.unit === 'string' && Object.values(units).includes(value.unit) && value.metric === undefined) return value.unit;
-  bad('Invalid telemetry operand');
+  keys(value, ['metric', 'register', 'fault', 'constant', 'unit'], 'operand');
+  if (typeof value.metric === 'string' && Object.hasOwn(units, value.metric) && Object.keys(value).length === 1) return units[value.metric];
+  if (CONDITION_REGISTERS.some((item) => item.id === value.register) && Object.keys(value).length === 1) return 'hex';
+  if (CONDITION_FAULTS.includes(value.fault) && Object.keys(value).length === 1) return 'boolean';
+  if (typeof value.constant === 'number' && Number.isFinite(value.constant) && typeof value.unit === 'string' && [...Object.values(units), 'hex'].includes(value.unit) && Object.keys(value).length === 2 &&
+    (value.unit !== 'hex' || Number.isSafeInteger(value.constant) && value.constant >= 0 && value.constant <= 0xffff)) return value.unit;
+  if (typeof value.constant === 'boolean' && value.unit === 'boolean' && Object.keys(value).length === 2) return 'boolean';
+  bad('Invalid condition operand');
 }
 
 export function validateCondition(condition, depth = 0) {
@@ -44,8 +49,10 @@ export function validateCondition(condition, depth = 0) {
     validateCondition(condition.condition, depth + 1);
   } else if (comparisons.has(condition.op)) {
     keys(condition, ['op', 'left', 'right'], 'comparison');
-    if (operand(condition.left) !== operand(condition.right)) bad('Comparison units differ');
-    if (condition.left.metric === undefined && condition.right.metric === undefined) bad('Comparison requires telemetry');
+    const leftType = operand(condition.left), rightType = operand(condition.right);
+    if (leftType !== rightType) bad(`Comparison types or formats differ (${leftType} versus ${rightType})`);
+    if (leftType === 'boolean' && !['==', '!='].includes(condition.op)) bad('Fault flags support == and != only');
+    if (condition.left.constant !== undefined && condition.right.constant !== undefined) bad('Comparison requires telemetry, register, or fault flag');
   } else bad('Unsupported condition operator');
 }
 
@@ -61,6 +68,26 @@ export function evaluateCondition(condition, envelope) {
   }
   const read = (item) => {
     if (item.constant !== undefined) return item.constant;
+    const available = (group) => {
+      const mask = { pv: 1, bms: 2, mppt: 4 }[group];
+      const active = envelope?.packet?.sensor_polling?.active_sensor_mask;
+      return envelope?.packet?.telemetry?.[group]?.available !== false &&
+        (!Number.isInteger(active) || !mask || Boolean(active & mask)) &&
+        (!envelope?.packet?.debug?.devices?.[group]?.state || envelope.packet.debug.devices[group].state === 'present');
+    };
+    if (item.fault !== undefined) {
+      if (!available('mppt')) return null;
+      const mask = envelope?.packet?.raw?.mppt?.fault20;
+      if (Number.isInteger(mask)) return Boolean(mask & (1 << CONDITION_FAULTS.indexOf(item.fault)));
+      const faults = envelope?.packet?.telemetry?.mppt?.faults;
+      return Array.isArray(faults) ? faults.includes(item.fault) : null;
+    }
+    if (item.register !== undefined) {
+      const field = CONDITION_REGISTERS.find((entry) => entry.id === item.register);
+      if (!field || !available(field.group)) return null;
+      const value = field.path.reduce((current, key) => current?.[key], envelope?.packet?.raw);
+      return Number.isInteger(value) ? value : null;
+    }
     const parts = METRICS[item.metric].slice('$.packet.telemetry.'.length).replace(/\[(\d+)\]/g, '.$1').split('.');
     let value = envelope?.packet?.telemetry;
     for (const part of parts) value = value?.[part];

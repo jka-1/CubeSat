@@ -42,7 +42,7 @@ function summary(event) {
 
 export function mountSequenceHistory(container, { onRecording } = {}) {
   let disposed = false, selected = null;
-  container.innerHTML = '<div class="sequence-history-heading"><h3>Sequence runs</h3><button type="button" class="seq-history-refresh">Refresh</button></div><p class="seq-history-message" role="status"></p><div class="sequence-history-layout"><ol class="seq-history-list"></ol><div class="seq-history-detail">Select a run to inspect its saved results.</div></div>';
+  container.innerHTML = '<div class="sequence-history-heading"><h3>Visual Code runs</h3><button type="button" class="seq-history-refresh">Refresh</button></div><p class="seq-history-message" role="status"></p><div class="sequence-history-layout"><ol class="seq-history-list"></ol><div class="seq-history-detail">Select a run to inspect its saved results.</div></div>';
   const list = container.querySelector('.seq-history-list');
   const detail = container.querySelector('.seq-history-detail');
   const message = container.querySelector('.seq-history-message');
@@ -91,14 +91,14 @@ export function mountSequenceHistory(container, { onRecording } = {}) {
       if (disposed) return;
       list.replaceChildren();
       for (const run of executions) {
-        const item = document.createElement('li'), button = node('button', `${run.name || run.sequence_id || 'Sequence'} · r${run.revision} · ${run.mode === 'simulation' ? 'Simulation' : 'Live'} · ${run.state} · ${date(run.started_ms)}`);
+        const item = document.createElement('li'), button = node('button', `${run.name || run.sequence_id || 'Visual Code'} · r${run.revision} · ${run.mode === 'simulation' ? 'Simulation' : 'Live'} · ${run.state} · ${date(run.started_ms)}`);
         button.type = 'button'; button.className = 'seq-history-item';
         button.addEventListener('click', () => select(run.id)); item.append(button); list.append(item);
       }
-      message.textContent = executions.length ? `${executions.length} recent runs` : 'No sequence runs yet.';
+      message.textContent = executions.length ? `${executions.length} recent runs` : 'No Visual Code runs yet.';
       if (!selected && executions.length) selected = executions[0].id;
       if (selected && executions.some((run) => run.id === selected)) await select(selected);
-    } catch (error) { if (!disposed) message.textContent = `Sequence history unavailable: ${error.message}`; }
+    } catch (error) { if (!disposed) message.textContent = `Visual Code history unavailable: ${error.message}`; }
   }
   container.querySelector('.seq-history-refresh').addEventListener('click', () => refresh());
   refresh();

@@ -6,6 +6,7 @@ import { RunStore } from '../recording/store.mjs';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { CONDITION_FAULTS } from '../sequence/condition-fields.mjs';
 
 const metric = { metric: 'pv.busVoltageV' };
 const condition = (op, value) => ({ op, left: metric, right: { constant: value, unit: 'V' } });
@@ -39,6 +40,46 @@ test('validates blocks, register reads, commands and bounded conditions', () => 
   assert.throws(() => validateSequence(definition([{ ...command('a'), command: { type: 'led_control', enabled: true, request_id: 'forged' } }]), validate), /Unsafe/);
   assert.throws(() => validateSequence(definition([{ id: 'x', type: 'if', condition: { op: 'NOT', condition: { op: '>' } }, then: [] }]), validate), /operand|comparison|condition/i);
   assert.equal(evaluateCondition({ op: 'NOT', condition: condition('>', 5) }, null), null);
+});
+
+test('register words and all MPPT fault flags validate and evaluate without changing saved shape', () => {
+  const validate = (cmd) => ({ expectedResult: { addr: cmd.addr, reg: cmd.reg, len: cmd.len } });
+  const packet = telemetry(6);
+  packet.packet.raw = { pv: { bus: 0x100 }, mppt: { fault20: 0b10000101 } };
+  packet.packet.telemetry.mppt = { faults: ['VAC1_OVP_STAT', 'CONV_OCP_STAT', 'BAT_REG_STAT'] };
+  const register = { op: '==', left: { register: 'pv.bus' }, right: { constant: 0x100, unit: 'hex' } };
+  const wait = { id: 'raw', type: 'waitUntil', timeoutMs: 100, condition: register };
+  assert.deepEqual(validateSequence(definition([wait]), validate).steps[0], wait);
+  assert.equal(evaluateCondition(register, packet), true);
+  assert.throws(() => validateSequence(definition([{ ...wait, condition: { ...register, right: { constant: 256, unit: 'V' } } }]), validate), /types or formats differ/);
+  assert.throws(() => validateSequence(definition([{ ...wait, condition: { ...register, right: { constant: '0x100', unit: 'hex' } } }]), validate), /Invalid condition operand/);
+  for (const [bit, fault] of CONDITION_FAULTS.entries()) {
+    const condition = { op: '==', left: { fault }, right: { constant: Boolean(0b10000101 & (1 << bit)), unit: 'boolean' } };
+    assert.equal(validateSequence(definition([{ ...wait, condition }]), validate).steps.length, 1);
+    assert.equal(evaluateCondition(condition, packet), true);
+  }
+  assert.throws(() => validateSequence(definition([{ ...wait, condition: { op: '>', left: { fault: CONDITION_FAULTS[0] }, right: { constant: true, unit: 'boolean' } } }]), validate), /support == and != only/);
+  packet.packet.telemetry.mppt.available = false;
+  assert.equal(evaluateCondition({ op: '==', left: { fault: CONDITION_FAULTS[0] }, right: { constant: true, unit: 'boolean' } }, packet), null);
+});
+
+test('simulation waits on raw register and branches on fault with persisted comparison evidence', async () => {
+  const h = harness({ simulation: true });
+  const packet = telemetry(6);
+  packet.source = 'simulation';
+  packet.packet.raw = { pv: { bus: 0x100 }, mppt: { fault20: 0x20 } };
+  packet.packet.telemetry.mppt = { faults: ['VBAT_OVP_STAT'] };
+  const started = await h.engine.start({ definition: definition([
+    { id: 'raw', type: 'waitUntil', timeoutMs: 100, condition: { op: '==', left: { register: 'pv.bus' }, right: { constant: 0x100, unit: 'hex' } } },
+    { id: 'fault', type: 'if', condition: { op: '==', left: { fault: 'VBAT_OVP_STAT' }, right: { constant: true, unit: 'boolean' } }, then: [command('yes')], else: [command('no')] }
+  ]), mode: 'simulation', simulationTelemetry: packet });
+  const run = h.engine.active;
+  await run.done;
+  assert.equal(started.mode, 'simulation');
+  assert.equal(run.state, 'completed');
+  assert.equal(h.sent.length, 0);
+  assert.ok(h.stored.some(([operation, event]) => operation === 'sequenceEvent' && event.type === 'comparison' && event.details.evidence.comparisons[0].values.left === 0x100));
+  assert.ok(h.events.some((event) => event.details?.selected === 'then'));
 });
 
 test('successful command and branch execution records acknowledgment evidence', async () => {

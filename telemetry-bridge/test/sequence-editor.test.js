@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { makeBlock, moveBlock, validateDraft, cloneSequence, comparison } from '../../site/assets/js/sequence-editor-model.mjs';
+import { makeBlock, moveBlock, validateDraft, cloneSequence, comparison, BLOCKS } from '../../site/assets/js/sequence-editor-model.mjs';
+import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from '../../site/assets/js/sequence-condition-fields.mjs';
 
 const definition = (steps) => ({ schemaVersion: 1, name: 'Bench check', steps });
 
@@ -14,7 +15,7 @@ test('editor blocks match bridge shape and validate branches and units', () => {
   branch.else.push(makeBlock('registerWrite'));
   assert.deepEqual(validateDraft(draft), []);
   branch.condition.right.unit = 'A';
-  assert.match(validateDraft(draft).join(' '), /units must match/);
+  assert.match(validateDraft(draft).join(' '), /types or formats must match/);
   branch.condition = { op: 'AND', conditions: [comparison(), { op: 'NOT', condition: comparison() }] };
   assert.deepEqual(validateDraft(draft), []);
   branch.then[0].command.len = 1;
@@ -48,4 +49,29 @@ test('route exposes palette, canvas, persistence and execution controls', async 
   assert.match(script, /\/sequences\/\$\{encodeURIComponent\(draft.id\)\}\/preflight/);
   assert.match(script, /\/sequence-executions\/\$\{id\}\/events\?after=/);
   assert.match(script, /canOperate\(\)/);
+  assert.match(index, /data-route="sequences">Visual Codes<\/a>/);
+  assert.match(html, /Visual Codes/);
+  assert.equal(BLOCKS.find(([type]) => type === 'waitUntil')[1], 'Wait for value');
+  assert.deepEqual(Object.keys(DEVICE_LABELS), ['0x08', '0x40', '0x6B']);
+  assert.match(DEVICE_LABELS['0x6B'], /MPPT \/ BQ25798 \(0x6B\)/);
+  assert.match(script, /DEVICE_LABELS\[addr\]/);
+  const css = await readFile(new URL('../../site/assets/css/styles.css', import.meta.url), 'utf8');
+  assert.match(css, /\.nav-links\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;/s);
+});
+
+test('editor validates register and fault comparisons with explicit formats', () => {
+  const wait = makeBlock('waitUntil');
+  wait.condition = { op: '==', left: { register: 'mppt.fault20' }, right: { constant: 0x20, unit: 'hex' } };
+  assert.deepEqual(validateDraft(definition([wait])), []);
+  wait.condition.right.unit = 'V';
+  assert.match(validateDraft(definition([wait])).join(' '), /types or formats must match/);
+  wait.condition.right = { constant: 0x20, unit: 'hex' };
+  wait.condition.left = { fault: 'CONV_OCP_STAT' };
+  assert.match(validateDraft(definition([wait])).join(' '), /types or formats must match/);
+  wait.condition.right = { constant: true, unit: 'boolean' };
+  assert.deepEqual(validateDraft(definition([wait])), []);
+  wait.condition.op = '>';
+  assert.match(validateDraft(definition([wait])).join(' '), /support == and != only/);
+  assert.equal(CONDITION_REGISTERS.length, 7);
+  assert.equal(CONDITION_FAULTS.length, 8);
 });
