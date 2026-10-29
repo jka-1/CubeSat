@@ -1,5 +1,6 @@
 import { RUN_METRICS } from './runs-model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './sequence-condition-fields.mjs';
+import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
 
 export const METRICS = RUN_METRICS.map(({ id, label, unit }) => ({ id, label, unit: unit === '°C' ? 'C' : unit }));
 export const OPERATORS = ['>', '>=', '<', '<=', '==', '!='];
@@ -61,7 +62,6 @@ export function validateDraft(definition) {
   if (definition.name?.length > 120) errors.push('Name must be 120 characters or fewer.');
   if (!definition.steps.length) errors.push('Connect at least one block to the Visual Code.');
   if (countBlocks(definition.steps) > 200) errors.push('Visual Code exceeds 200 blocks.');
-  const read = { '0x08': { one: '', two: '14 16 18 1A 36 3A 68 3E' }, '0x6B': { one: '0F 10 12 13 14 1B 1C 1E 2E 30 48', two: '31 33 35 37 39 3B 3D 41' }, '0x40': { one: '', two: '00 01 02 03 04 05 06 07 FE FF' } };
   const writable = { '0x08': { '0x3E': 2 }, '0x6B': Object.fromEntries('0F 10 12 13 14 2E 30'.split(' ').map((reg) => [`0x${reg}`, 1])), '0x40': Object.fromEntries('00 05 06 07'.split(' ').map((reg) => [`0x${reg}`, 2])) };
   const seen = new Set();
   const walk = (steps, path, depth) => {
@@ -83,9 +83,7 @@ export function validateDraft(definition) {
       }
       if (['command', 'registerRead', 'registerWrite'].includes(step.type) && !step.command?.type) errors.push(`${label}: choose a command`);
       if (step.type === 'registerRead' || step.command?.type === 'i2c_read') {
-        const size = step.command?.len === 1 ? 'one' : 'two';
-        const registers = read[step.command?.addr]?.[size] || '';
-        if (!registers.split(' ').includes(step.command?.reg?.slice(2))) errors.push(`${label}: select a supported register and width`);
+        if (!READABLE_REGISTERS.some((item) => item.addr === step.command?.addr && item.reg === step.command?.reg && item.len === step.command?.len)) errors.push(`${label}: select a supported register and width`);
       }
       if (step.type === 'registerWrite' || step.command?.type === 'i2c_write') {
         const width = writable[step.command?.addr]?.[step.command?.reg];

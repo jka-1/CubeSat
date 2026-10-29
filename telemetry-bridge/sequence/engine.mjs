@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { evaluateCondition } from './model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
+import { bytesToRaw } from '../../site/assets/js/register-conversions.mjs';
 
 const terminal = new Set(['completed', 'failed', 'canceled']);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -21,7 +22,7 @@ function telemetrySnapshot(envelope) {
   return { source: envelope?.source ?? null, device_id: envelope?.packet?.device_id ?? null,
     seq: envelope?.packet?.seq ?? null, received_at: envelope?.received_at ?? null, metrics };
 }
-function conditionEvidence(condition, envelope) {
+function conditionEvidence(condition, envelope, registerValues = {}) {
   const comparisons = [];
   const visit = (part) => {
     if (part.op === 'NOT') return visit(part.condition);
@@ -32,7 +33,7 @@ function conditionEvidence(condition, envelope) {
       if (operand.constant !== undefined) values[side] = operand.constant;
       else if (operand.register !== undefined) {
         const field = CONDITION_REGISTERS.find((item) => item.id === operand.register);
-        values[side] = field?.path.reduce((value, key) => value?.[key], envelope?.packet?.raw) ?? null;
+        values[side] = field?.path ? field.path.reduce((value, key) => value?.[key], envelope?.packet?.raw) ?? null : registerValues[operand.register] ?? null;
       } else if (operand.fault !== undefined) {
         const bit = CONDITION_FAULTS.indexOf(operand.fault), mask = envelope?.packet?.raw?.mppt?.fault20;
         values[side] = Number.isInteger(mask) ? Boolean(mask & (1 << bit)) :
@@ -46,7 +47,7 @@ function conditionEvidence(condition, envelope) {
       }
     }
     comparisons.push({ op: part.op, left: part.left, right: part.right, values,
-      result: evaluateCondition(part, envelope) });
+      result: evaluateCondition(part, envelope, registerValues) });
   };
   visit(condition);
   return { condition, comparisons, seq: envelope?.packet?.seq ?? null,
@@ -121,20 +122,68 @@ export class SequenceEngine {
   async condition(run, blockId, condition, timeoutMs, acceptFalse) {
     const deadline = this.now() + timeoutMs;
     let lastEnvelope;
+    const registerValues = run.mode === 'simulation' ? run.telemetry?.packet?.register_values || {} : {};
+    const registers = new Map();
+    const collect = (part) => {
+      if (part.op === 'NOT') return collect(part.condition);
+      if (part.op === 'AND' || part.op === 'OR') return part.conditions.forEach(collect);
+      for (const side of ['left', 'right']) {
+        const field = CONDITION_REGISTERS.find((item) => item.id === part[side]?.register);
+        if (field?.addr) registers.set(field.id, field);
+      }
+    };
+    collect(condition);
+    let lastReadAt = -Infinity;
     while (this.now() <= deadline) {
       await this.check(run);
+      let readThisCycle = false;
+      if (run.mode === 'live' && registers.size && this.now() - lastReadAt >= 1_000) {
+        for (const field of registers.values()) {
+          await this.check(run);
+          while (Number.isFinite(run.lastCommandAt) && this.now() - run.lastCommandAt < 1_000) { await this.check(run); await sleep(100); }
+          const command = { type: 'i2c_read', addr: field.addr, reg: field.reg, len: field.len };
+          await this.event(run, 'command_intent', { block_id: blockId, command });
+          run.inFlight = true;
+          let result;
+          try { run.lastCommandAt = this.now(); result = await this.dispatch(command, run); }
+          catch (error) {
+            run.abortReason = 'command_outcome_unknown';
+            await this.event(run, 'command_error', { block_id: blockId, command, error: error.message, outcome_unknown: true });
+            throw new Error('command_outcome_unknown');
+          } finally { run.inFlight = false; }
+          await this.event(run, 'command_result', { block_id: blockId, command, ...result,
+            transport_acknowledged: result.status === 'completed' || result.status === 'failed',
+            device_reported_success: result.status === 'completed' && result.result?.ok === true });
+          if (result.status !== 'completed' || result.result?.ok !== true) {
+            if (result.status === 'timed_out') run.abortReason = 'command_outcome_unknown';
+            await this.event(run, 'command_error', { block_id: blockId, command,
+              status: result.status, error: result.error || result.result?.error || 'Device reported register read failure.',
+              outcome_unknown: result.status === 'timed_out' });
+            throw new Error(result.status === 'timed_out' ? 'command_outcome_unknown' : 'command_failed');
+          }
+          const bytes = result.result.data;
+          if (!Array.isArray(bytes) || bytes.length !== field.len || bytes.some((byte) => !/^0x[0-9a-f]{1,2}$/i.test(byte))) {
+            await this.event(run, 'command_error', { block_id: blockId, command, error: 'Invalid register read response', outcome_unknown: false });
+            throw new Error('Invalid register read response');
+          }
+          registerValues[field.id] = bytesToRaw(bytes.map(Number), field.len, field.endian);
+        }
+        lastReadAt = this.now();
+        readThisCycle = true;
+        await this.check(run);
+      }
       const envelope = run.telemetry;
-      if (envelope !== lastEnvelope) {
+      if (envelope !== lastEnvelope || readThisCycle) {
         lastEnvelope = envelope;
-        const result = evaluateCondition(condition, envelope);
-        const evidence = conditionEvidence(condition, envelope);
+        const result = evaluateCondition(condition, envelope, registerValues);
+        const evidence = conditionEvidence(condition, envelope, registerValues);
         await this.event(run, 'comparison', { block_id: blockId, result, evidence });
         if (result === true || acceptFalse && result === false) return { result, evidence };
       }
       await sleep(100);
     }
     const error = new Error('condition_timeout');
-    error.evidence = conditionEvidence(condition, run.telemetry);
+    error.evidence = conditionEvidence(condition, run.telemetry, registerValues);
     throw error;
   }
   async blocks(run, steps) {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { makeBlock, moveBlock, validateDraft, cloneSequence, comparison, BLOCKS } from '../../site/assets/js/sequence-editor-model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from '../../site/assets/js/sequence-condition-fields.mjs';
+import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
 
 const definition = (steps) => ({ schemaVersion: 1, name: 'Bench check', steps });
 
@@ -72,6 +73,20 @@ test('editor validates register and fault comparisons with explicit formats', ()
   assert.deepEqual(validateDraft(definition([wait])), []);
   wait.condition.op = '>';
   assert.match(validateDraft(definition([wait])).join(' '), /support == and != only/);
-  assert.equal(CONDITION_REGISTERS.length, 7);
+  assert.equal(CONDITION_REGISTERS.length, READABLE_REGISTERS.length + 7);
   assert.equal(CONDITION_FAULTS.length, 8);
+});
+
+test('every register read option is also a valid comparison operand', async () => {
+  const map = JSON.parse(await readFile(new URL('../../site/assets/data/register-map.json', import.meta.url), 'utf8'));
+  const expected = map.devices.flatMap((device) => device.registers.map((register) => `${device.addr}:${register.addr}`));
+  assert.deepEqual(new Set(READABLE_REGISTERS.map((item) => item.id)), new Set(expected));
+  for (const item of READABLE_REGISTERS) {
+    const wait = makeBlock('waitUntil');
+    wait.condition = { op: '==', left: { register: item.id }, right: { constant: 0, unit: 'hex' } };
+    assert.deepEqual(validateDraft(definition([wait])), [], item.id);
+    const read = makeBlock('registerRead');
+    read.command = { type: 'i2c_read', addr: item.addr, reg: item.reg, len: item.len };
+    assert.deepEqual(validateDraft(definition([read])), [], item.id);
+  }
 });

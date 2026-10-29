@@ -1,4 +1,4 @@
-import { initRouter } from './router.js?v=20261029f';
+import { initRouter } from './router.js?v=20261029g';
 import { initAuth } from './auth.js?v=20261028d';
 import { initTooltips } from './tooltips.js?v=20261028c';
 

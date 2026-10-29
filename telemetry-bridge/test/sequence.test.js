@@ -7,6 +7,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONDITION_FAULTS } from '../sequence/condition-fields.mjs';
+import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
 
 const metric = { metric: 'pv.busVoltageV' };
 const condition = (op, value) => ({ op, left: metric, right: { constant: value, unit: 'V' } });
@@ -61,6 +62,43 @@ test('register words and all MPPT fault flags validate and evaluate without chan
   assert.throws(() => validateSequence(definition([{ ...wait, condition: { op: '>', left: { fault: CONDITION_FAULTS[0] }, right: { constant: true, unit: 'boolean' } } }]), validate), /support == and != only/);
   packet.packet.telemetry.mppt.available = false;
   assert.equal(evaluateCondition({ op: '==', left: { fault: CONDITION_FAULTS[0] }, right: { constant: true, unit: 'boolean' } }, packet), null);
+});
+
+test('live conditions read supported registers and compare decoded values', async () => {
+  const h = harness({ result: { status: 'completed', result: { ok: true, data: ['0x34', '0x12'] } } });
+  const register = READABLE_REGISTERS.find((item) => item.id === '0x08:0x14');
+  const wait = { id: 'read-condition', type: 'waitUntil', timeoutMs: 1000,
+    condition: { op: '==', left: { register: register.id }, right: { constant: 0x1234, unit: 'hex' } } };
+  const validate = (cmd) => ({ expectedResult: { addr: cmd.addr, reg: cmd.reg, len: cmd.len } });
+  for (const item of READABLE_REGISTERS) {
+    const candidate = { ...wait, condition: { ...wait.condition, left: { register: item.id } } };
+    assert.equal(validateSequence(definition([candidate]), validate).steps.length, 1, item.id);
+  }
+  const { run } = await h.start([wait]);
+  assert.equal(run.state, 'completed');
+  assert.deepEqual(h.sent, [{ type: 'i2c_read', addr: register.addr, reg: register.reg, len: register.len }]);
+  assert.equal(h.events.find((event) => event.phase === 'comparison')?.details.evidence.comparisons[0].values.left, 0x1234);
+  assert.ok(h.stored.some(([operation, event]) => operation === 'sequenceEvent' && event.type === 'command_result'));
+});
+
+test('condition reads preserve simulation isolation and report device failures', async () => {
+  const register = '0x6B:0x13';
+  const wait = { id: 'read-condition', type: 'waitUntil', timeoutMs: 100,
+    condition: { op: '==', left: { register }, right: { constant: 0x61, unit: 'hex' } } };
+  const simulated = harness({ simulation: true });
+  const fixture = telemetry(6);
+  fixture.packet.register_values = { [register]: 0x61 };
+  const started = await simulated.engine.start({ definition: definition([wait]), mode: 'simulation', simulationTelemetry: fixture });
+  const simulationRun = simulated.engine.active;
+  await simulationRun.done;
+  assert.equal(started.mode, 'simulation');
+  assert.equal(simulationRun.state, 'completed');
+  assert.deepEqual(simulated.sent, []);
+
+  const failed = harness({ result: { status: 'failed', result: { ok: false, error: 'ESP_FAIL' } } });
+  const { run } = await failed.start([wait]);
+  assert.equal(run.reason, 'command_failed');
+  assert.equal(failed.events.find((event) => event.phase === 'command_error')?.details.error, 'ESP_FAIL');
 });
 
 test('simulation waits on raw register and branches on fault with persisted comparison evidence', async () => {

@@ -1,7 +1,8 @@
 import { apiFetch, canOperate } from './auth.js?v=20261028d';
-import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock } from './sequence-editor-model.mjs?v=20261029e';
+import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock } from './sequence-editor-model.mjs?v=20261029g';
 import { mountSequenceHistory } from './sequence-history.mjs?v=20261029e';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from './sequence-condition-fields.mjs';
+import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
 
 const $ = (id) => document.getElementById(id);
 const esc = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch]);
@@ -59,9 +60,9 @@ function conditionHtml(condition, address) {
   return `<div class="seq-condition"><label>Condition <select class="seq-input" data-cond-op="${key}">${choices}</select></label>${body}</div>`;
 }
 function registerOptions(command, write) {
-  const allowed = write ? { '0x08': '3E', '0x6B': '0F 10 12 13 14 2E 30', '0x40': '00 05 06 07' } : { '0x08': '14 16 18 1A 36 3A 68 3E', '0x6B': '0F 10 12 13 14 1B 1C 1E 2E 30 48 31 33 35 37 39 3B 3D 41', '0x40': '00 01 02 03 04 05 06 07 FE FF' };
-  const regs = (allowed[command.addr] || '').split(' ').filter(Boolean);
-  return `<label>Device <select class="seq-input" data-field="addr">${Object.keys(allowed).map((addr) => option(addr, DEVICE_LABELS[addr], command.addr)).join('')}</select></label><label>Register <select class="seq-input" data-field="reg">${regs.map((reg) => option(`0x${reg}`, `0x${reg}`, command.reg)).join('')}</select></label>${write ? `<label>Data bytes (hex, space separated) <input class="seq-input" data-field="data" value="${esc(command.data?.join(' ') || '')}" placeholder="0x00 0x00"></label>` : `<label>Width <select class="seq-input" data-field="len">${option('1', '1 byte', String(command.len))}${option('2', '2 bytes', String(command.len))}</select></label>`}`;
+  const allowed = write ? { '0x08': '3E', '0x6B': '0F 10 12 13 14 2E 30', '0x40': '00 05 06 07' } : Object.fromEntries(Object.keys(DEVICE_LABELS).map((addr) => [addr, '']));
+  const regs = write ? (allowed[command.addr] || '').split(' ').filter(Boolean).map((reg) => `0x${reg}`) : READABLE_REGISTERS.filter((item) => item.addr === command.addr).map((item) => item.reg);
+  return `<label>Device <select class="seq-input" data-field="addr">${Object.keys(allowed).map((addr) => option(addr, DEVICE_LABELS[addr], command.addr)).join('')}</select></label><label>Register <select class="seq-input" data-field="reg">${regs.map((reg) => option(reg, reg, command.reg)).join('')}</select></label>${write ? `<label>Data bytes (hex, space separated) <input class="seq-input" data-field="data" value="${esc(command.data?.join(' ') || '')}" placeholder="0x00 0x00"></label>` : `<label>Width <select class="seq-input" data-field="len">${option('1', '1 byte', String(command.len))}${option('2', '2 bytes', String(command.len))}</select></label>`}`;
 }
 const commandTypes = [['led_control', 'LED'], ['debug_control', 'Debug mode'], ['sensor_control', 'Sensor polling'], ['mppt_acdrv_control', 'MPPT ACDRV'], ['i2c_read', 'I²C read'], ['i2c_write', 'I²C write'], ['set_scan_period', 'Scan period'], ['i2c_scan', 'I²C scan'], ['i2c_probe', 'I²C probe']];
 function commandHtml(step) {
@@ -222,8 +223,8 @@ function handleChange(event) {
   const step = stepById(article.dataset.id), field = el.dataset.field; if (!step) return;
   if (field === 'commandType') step.command = commandFor(el.value);
   else if (field === 'durationMs' || field === 'timeoutMs') step[field] = el.value === '' ? NaN : Number(el.value);
-  else if (field === 'addr') { step.command.addr = el.value; const writing = step.type === 'registerWrite' || step.command.type === 'i2c_write'; step.command.reg = el.value === '0x40' ? (writing ? '0x05' : '0x00') : el.value === '0x08' ? (writing ? '0x3E' : '0x14') : '0x0F'; const width = el.value === '0x6B' ? 1 : 2; if (writing) { delete step.command.len; step.command.data = Array(width).fill('0x00'); } else step.command.len = width; }
-  else if (field === 'reg') { step.command.reg = el.value; const width = step.command.addr === '0x6B' && !['0x31','0x33','0x35','0x37','0x39','0x3B','0x3D','0x41'].includes(el.value) ? 1 : 2; if (step.type === 'registerWrite' || step.command.type === 'i2c_write') { delete step.command.len; step.command.data = Array(width).fill('0x00'); } else step.command.len = width; }
+  else if (field === 'addr') { step.command.addr = el.value; const writing = step.type === 'registerWrite' || step.command.type === 'i2c_write'; step.command.reg = el.value === '0x40' ? (writing ? '0x05' : '0x00') : el.value === '0x08' ? (writing ? '0x3E' : '0x14') : '0x0F'; const width = READABLE_REGISTERS.find((item) => item.addr === el.value && item.reg === step.command.reg)?.len ?? 2; if (writing) { delete step.command.len; step.command.data = Array(width).fill('0x00'); } else step.command.len = width; }
+  else if (field === 'reg') { step.command.reg = el.value; const width = READABLE_REGISTERS.find((item) => item.addr === step.command.addr && item.reg === el.value)?.len ?? 2; if (step.type === 'registerWrite' || step.command.type === 'i2c_write') { delete step.command.len; step.command.data = Array(width).fill('0x00'); } else step.command.len = width; }
   else if (field === 'data') step.command.data = el.value.trim().split(/\s+/).filter(Boolean);
   else if (field === 'len' || field === 'period_ms') step.command[field] = Number(el.value);
   else if (field === 'enabled') step.command.enabled = el.value === 'true';

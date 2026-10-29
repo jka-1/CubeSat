@@ -2,7 +2,7 @@ import { allowRoute, showAccount } from './auth.js?v=20261028d';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261028d';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261028d';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261028d';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261029f';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261029g';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028e';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 

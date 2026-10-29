@@ -1,15 +1,11 @@
 import { METRICS } from '../recording/store.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
+import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
 
 const units = Object.freeze(Object.fromEntries(Object.keys(METRICS).map((key) => [key,
   key.endsWith('Mv') ? 'mV' : key.endsWith('A') ? 'A' : key.endsWith('W') ? 'W' : key.endsWith('C') ? 'C' : 'V'
 ])));
 const actions = new Set(['i2c_read', 'i2c_write', 'sensor_control', 'mppt_acdrv_control', 'led_control', 'debug_control', 'set_scan_period', 'i2c_scan', 'i2c_probe']);
-const readWidths = new Map([
-  ['0x08', new Map('14 16 18 1A 36 3A 68 3E'.split(' ').map((reg) => [`0x${reg}`, 2]))],
-  ['0x6B', new Map([...('0F 10 12 13 14 1B 1C 1E 2E 30 48'.split(' ').map((reg) => [`0x${reg}`, 1])), ...('31 33 35 37 39 3B 3D 41'.split(' ').map((reg) => [`0x${reg}`, 2]))])],
-  ['0x40', new Map('00 01 02 03 04 05 06 07 FE FF'.split(' ').map((reg) => [`0x${reg}`, 2]))]
-]);
 const commandFields = {
   i2c_read: ['type', 'addr', 'reg', 'len'], i2c_write: ['type', 'addr', 'reg', 'data'],
   sensor_control: ['type', 'sensor', 'enabled'], mppt_acdrv_control: ['type', 'state'],
@@ -56,13 +52,13 @@ export function validateCondition(condition, depth = 0) {
   } else bad('Unsupported condition operator');
 }
 
-export function evaluateCondition(condition, envelope) {
+export function evaluateCondition(condition, envelope, registerValues = {}) {
   if (condition.op === 'NOT') {
-    const result = evaluateCondition(condition.condition, envelope);
+    const result = evaluateCondition(condition.condition, envelope, registerValues);
     return result === null ? null : !result;
   }
   if (condition.op === 'AND' || condition.op === 'OR') {
-    const values = condition.conditions.map((part) => evaluateCondition(part, envelope));
+    const values = condition.conditions.map((part) => evaluateCondition(part, envelope, registerValues));
     if (condition.op === 'AND') return values.includes(false) ? false : values.includes(null) ? null : true;
     return values.includes(true) ? true : values.includes(null) ? null : false;
   }
@@ -84,8 +80,8 @@ export function evaluateCondition(condition, envelope) {
     }
     if (item.register !== undefined) {
       const field = CONDITION_REGISTERS.find((entry) => entry.id === item.register);
-      if (!field || !available(field.group)) return null;
-      const value = field.path.reduce((current, key) => current?.[key], envelope?.packet?.raw);
+      if (!field || !field.addr && !available(field.group)) return null;
+      const value = field.path ? field.path.reduce((current, key) => current?.[key], envelope?.packet?.raw) : registerValues[field.id];
       return Number.isInteger(value) ? value : null;
     }
     const parts = METRICS[item.metric].slice('$.packet.telemetry.'.length).replace(/\[(\d+)\]/g, '.$1').split('.');
@@ -128,7 +124,7 @@ export function validateSequence(definition, validateCommand) {
         if (!object(step.command) || !actions.has(step.command.type) || Object.keys(step.command).some((key) => !commandFields[step.command.type].includes(key))) bad('Unsafe command');
         if (step.type === 'registerRead' && step.command.type !== 'i2c_read' || step.type === 'registerWrite' && step.command.type !== 'i2c_write') bad('Register block command mismatch');
         const normalized = validateCommand(step.command);
-        if (step.command.type === 'i2c_read' && readWidths.get(normalized.expectedResult.addr)?.get(normalized.expectedResult.reg) !== normalized.expectedResult.len) bad('Unsupported register read or width');
+        if (step.command.type === 'i2c_read' && !READABLE_REGISTERS.some((item) => item.addr === normalized.expectedResult.addr && item.reg === normalized.expectedResult.reg && item.len === normalized.expectedResult.len)) bad('Unsupported register read or width');
       } else if (step.type === 'delay') {
         keys(step, ['id', 'type', 'durationMs'], 'delay block');
         integer(step.durationMs, 1, 600_000, 'delay');
