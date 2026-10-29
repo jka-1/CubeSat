@@ -1,6 +1,6 @@
 import { METRICS } from '../recording/store.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
-import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
+import { READABLE_REGISTERS } from './register-catalog.mjs';
 
 const units = Object.freeze(Object.fromEntries(Object.keys(METRICS).map((key) => [key,
   key.endsWith('Mv') ? 'mV' : key.endsWith('A') ? 'A' : key.endsWith('W') ? 'W' : key.endsWith('C') ? 'C' : 'V'

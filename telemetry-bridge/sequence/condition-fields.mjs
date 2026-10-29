@@ -1,4 +1,4 @@
-import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
+import { READABLE_REGISTERS } from './register-catalog.mjs';
 
 // Preserve existing telemetry-backed IDs in saved definitions.
 export const CONDITION_REGISTERS = Object.freeze([

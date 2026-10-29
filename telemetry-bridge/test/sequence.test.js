@@ -7,7 +7,7 @@ import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { CONDITION_FAULTS } from '../sequence/condition-fields.mjs';
-import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
+import { READABLE_REGISTERS } from '../sequence/register-catalog.mjs';
 
 const metric = { metric: 'pv.busVoltageV' };
 const condition = (op, value) => ({ op, left: metric, right: { constant: value, unit: 'V' } });

@@ -1,10 +1,13 @@
 import { randomUUID } from 'node:crypto';
 import { evaluateCondition } from './model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
-import { bytesToRaw } from '../../site/assets/js/register-conversions.mjs';
 
 const terminal = new Set(['completed', 'failed', 'canceled']);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const registerValue = (bytes, endian) => {
+  const ordered = endian === 'little' ? bytes.slice().reverse() : bytes;
+  return ordered.reduce((value, byte) => value * 256 + Number(byte), 0);
+};
 function telemetrySnapshot(envelope) {
   const telemetry = envelope?.packet?.telemetry || {};
   const metrics = {};
@@ -166,7 +169,7 @@ export class SequenceEngine {
             await this.event(run, 'command_error', { block_id: blockId, command, error: 'Invalid register read response', outcome_unknown: false });
             throw new Error('Invalid register read response');
           }
-          registerValues[field.id] = bytesToRaw(bytes.map(Number), field.len, field.endian);
+          registerValues[field.id] = registerValue(bytes, field.endian);
         }
         lastReadAt = this.now();
         readThisCycle = true;

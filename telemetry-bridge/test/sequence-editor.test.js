@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 import { makeBlock, moveBlock, validateDraft, cloneSequence, comparison, BLOCKS } from '../../site/assets/js/sequence-editor-model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from '../../site/assets/js/sequence-condition-fields.mjs';
 import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
+import { READABLE_REGISTERS as BRIDGE_REGISTERS } from '../sequence/register-catalog.mjs';
 
 const definition = (steps) => ({ schemaVersion: 1, name: 'Bench check', steps });
 
@@ -81,6 +82,7 @@ test('every register read option is also a valid comparison operand', async () =
   const map = JSON.parse(await readFile(new URL('../../site/assets/data/register-map.json', import.meta.url), 'utf8'));
   const expected = map.devices.flatMap((device) => device.registers.map((register) => `${device.addr}:${register.addr}`));
   assert.deepEqual(new Set(READABLE_REGISTERS.map((item) => item.id)), new Set(expected));
+  assert.deepEqual(READABLE_REGISTERS.map(({ id, addr, group, reg, len, endian }) => ({ id, addr, group, reg, len, endian })), BRIDGE_REGISTERS);
   for (const item of READABLE_REGISTERS) {
     const wait = makeBlock('waitUntil');
     wait.condition = { op: '==', left: { register: item.id }, right: { constant: 0, unit: 'hex' } };
