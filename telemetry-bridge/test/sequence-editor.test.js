@@ -56,7 +56,7 @@ test('route exposes palette, canvas, persistence and execution controls', async 
   assert.match(DEVICE_LABELS['0x6B'], /MPPT \/ BQ25798 \(0x6B\)/);
   assert.match(script, /DEVICE_LABELS\[addr\]/);
   const css = await readFile(new URL('../../site/assets/css/styles.css', import.meta.url), 'utf8');
-  assert.match(css, /\.nav-links\s*\{[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;/s);
+  assert.match(css, /\.nav-links\s*\{[^}]*justify-content:\s*flex-start;[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;/s);
 });
 
 test('editor validates register and fault comparisons with explicit formats', () => {

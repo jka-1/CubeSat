@@ -204,7 +204,8 @@ function handleChange(event) {
   if (el.id === 'seqName') { draft.name = el.value; render(false); return; }
   if (el.dataset.condOp) {
     const address = JSON.parse(decodeURIComponent(el.dataset.condOp)), op = el.value;
-    replaceCondition(address, op === 'AND' || op === 'OR' ? { op, conditions: [comparison(), comparison()] } : op === 'NOT' ? { op, condition: comparison() } : { ...comparison(), op }); render(); return;
+    const current = conditionAt(address);
+    replaceCondition(address, op === 'AND' || op === 'OR' ? { op, conditions: [comparison(), comparison()] } : op === 'NOT' ? { op, condition: comparison() } : { ...(OPERATORS.includes(current?.op) ? current : comparison()), op }); render(); return;
   }
   if (el.dataset.condition) {
     const [key, side] = el.dataset.condition.split(':'), condition = conditionAt(JSON.parse(decodeURIComponent(key))); if (!condition) return;
