@@ -105,7 +105,7 @@ test('production route loads the current communication dashboard assets', async 
   ]);
 
   assert.match(index, /assets\/js\/app\.js\?v=20261029f/);
-  assert.match(index, /assets\/css\/styles\.css\?v=20261029f/);
+  assert.match(index, /assets\/css\/styles\.css\?v=20261029g/);
   assert.match(app, /router\.js\?v=20261029f/);
   assert.match(router, /i2c\.js\?v=20261028d/);
   assert.match(router, /communication\.html\?v=20261028c/);

@@ -125,7 +125,7 @@ a {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  gap: 8px;
+  gap: 4px;
   flex-wrap: nowrap;
   flex: 1;
   min-width: 0;
@@ -133,6 +133,7 @@ a {
   scrollbar-width: thin;
 }
 .nav-links > * { flex: 0 0 auto; white-space: nowrap; }
+.nav-links .nav-link { padding-inline: 8px; }
 .account-control { display: flex; align-items: center; gap: 4px; flex: 0 0 auto; }
 #accountButton { white-space: nowrap; flex: 0 1 auto; max-width: min(260px, 32vw); overflow: hidden; text-overflow: ellipsis; }
 
