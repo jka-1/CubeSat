@@ -39,8 +39,8 @@ if [ -n "$expected_branch" ] && command -v git >/dev/null 2>&1; then
   fi
 fi
 
-if [ ! -d "$bridge_source_dir/auth" ] || [ ! -d "$bridge_source_dir/recording" ] || [ ! -f "$bridge_source_dir/tools/auth-user.mjs" ] || [ ! -f "$bridge_source_dir/telemetry-auth.mjs" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
-  echo "Missing bridge auth/recording modules or package lock." >&2
+if [ ! -d "$bridge_source_dir/auth" ] || [ ! -d "$bridge_source_dir/recording" ] || [ ! -d "$bridge_source_dir/sequence" ] || [ ! -f "$bridge_source_dir/tools/auth-user.mjs" ] || [ ! -f "$bridge_source_dir/telemetry-auth.mjs" ] || [ ! -f "$bridge_source_dir/package-lock.json" ]; then
+  echo "Missing bridge auth/recording/sequence modules or package lock." >&2
   exit 1
 fi
 if ! command -v npm >/dev/null 2>&1; then
@@ -61,6 +61,7 @@ cp "$bridge_source_dir/package-lock.json" "$bridge_dir/package-lock.json"
 cp "$bridge_source_dir/telemetry-auth.mjs" "$bridge_dir/telemetry-auth.mjs"
 cp -a "$bridge_source_dir/recording" "$bridge_dir/"
 cp -a "$bridge_source_dir/auth" "$bridge_dir/"
+cp -a "$bridge_source_dir/sequence" "$bridge_dir/"
 cp -a "$bridge_source_dir/tools" "$bridge_dir/"
 cp -a "$bridge_source_dir/node_modules" "$bridge_dir/"
 

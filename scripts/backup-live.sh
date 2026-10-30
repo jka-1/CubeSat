@@ -31,7 +31,7 @@ fi
 
 bridge_dir="$(dirname "$bridge_file")"
 runtime_files=()
-for file in auth recording tools node_modules package-lock.json telemetry-auth.mjs; do
+for file in auth recording sequence tools node_modules package-lock.json telemetry-auth.mjs; do
   if [ -e "$bridge_dir/$file" ]; then runtime_files+=("$file"); fi
 done
 if [ "${#runtime_files[@]}" -gt 0 ]; then
