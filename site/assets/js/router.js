@@ -4,6 +4,7 @@ import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261028d';
 import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261029g';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028e';
+import { initTwinPage, destroyTwinPage } from './twin.js?v=20261103a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -21,6 +22,7 @@ const routes = {
   'debug-mode': `./modules/debug-mode.html?v=20261028c`,
   runs: `./modules/runs.html?v=20261028e`,
   sequences: `./modules/sequences.html?v=20261029e`,
+  twin: `./modules/twin.html?v=20261103a`,
   partners: `./modules/partners.html?v=${assetVersion}`
 };
 
@@ -31,6 +33,7 @@ const pageInitializers = {
   'debug-mode': initDebugModePage,
   runs: initRunsPage,
   sequences: initSequencesPage,
+  twin: initTwinPage,
   partners: () => {}
 };
 
@@ -41,6 +44,7 @@ const pageDestroyers = {
   'debug-mode': destroyDebugModePage,
   runs: destroyRunsPage,
   sequences: destroySequencesPage,
+  twin: destroyTwinPage,
   partners: () => {}
 };
 

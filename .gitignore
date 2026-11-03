@@ -94,3 +94,9 @@ telemetry-bridge/data/
 .pytest_cache/
 backups/
 *_backup_*/
+
+# Secrets / local env files (APS credentials etc.)
+.env
+.env.*
+*.env
+!*.env.example

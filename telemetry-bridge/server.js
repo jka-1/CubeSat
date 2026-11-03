@@ -7,6 +7,7 @@ import { archivePayload } from './recording/raw.mjs';
 import { SignedTelemetryVerifier } from './telemetry-auth.mjs';
 import { SequenceEngine } from './sequence/engine.mjs';
 import { validateSequence } from './sequence/model.mjs';
+import { ApsClient } from './aps.mjs';
 
 const sessions = new Sessions();
 
@@ -1768,6 +1769,8 @@ const sequenceEngine = new SequenceEngine({
   }
 });
 
+const aps = ApsClient.fromEnv();
+
 const httpServer = http.createServer(async (request, response) => {
   const requestUrl = new URL(
     request.url,
@@ -1906,6 +1909,18 @@ const httpServer = http.createServer(async (request, response) => {
         }
       }
       throw createHttpError(404, 'Sequence route not found');
+    }
+    if (request.method === 'GET' && requestUrl.pathname === '/aps/model') {
+      sendJson(response, 200, aps.model());
+      return;
+    }
+    if (request.method === 'GET' && requestUrl.pathname === '/aps/token') {
+      try {
+        sendJson(response, 200, await aps.viewerToken());
+      } catch (error) {
+        throw createHttpError(error.statusCode || 502, error.message);
+      }
+      return;
     }
     if (requestUrl.pathname === '/runs' || requestUrl.pathname.startsWith('/runs/')) {
       if (!recorder) throw createHttpError(503, 'Recording is not enabled');
