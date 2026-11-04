@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
-import { makeBlock, moveBlock, validateDraft, cloneSequence, comparison, BLOCKS } from '../../site/assets/js/sequence-editor-model.mjs';
+import { makeBlock, moveBlock, validateDraft, cloneSequence, comparison, BLOCKS, parseUserRegister } from '../../site/assets/js/sequence-editor-model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from '../../site/assets/js/sequence-condition-fields.mjs';
 import { READABLE_REGISTERS } from '../../site/assets/js/sequence-register-catalog.mjs';
 import { READABLE_REGISTERS as BRIDGE_REGISTERS } from '../sequence/register-catalog.mjs';
@@ -91,4 +91,21 @@ test('every register read option is also a valid comparison operand', async () =
     read.command = { type: 'i2c_read', addr: item.addr, reg: item.reg, len: item.len };
     assert.deepEqual(validateDraft(definition([read])), [], item.id);
   }
+});
+
+test('editor adds user registers with hex range checks and validates references', () => {
+  assert.deepEqual(parseUserRegister({ addr: '48', reg: '0x0', len: 2, endian: 'big', label: 'Temp' }).entry,
+    { id: 'user-48-00-2', addr: '0x48', reg: '0x00', len: 2, endian: 'big', label: 'Temp' });
+  for (const addr of ['0x07', '0x78', '0x80', 'zz', '']) assert.match(parseUserRegister({ addr, reg: '0x00' }).errors.join(' '), /7-bit/);
+  for (const reg of ['0x100', 'g1', '']) assert.match(parseUserRegister({ addr: '0x48', reg }).errors.join(' '), /0x00–0xFF/);
+  assert.match(parseUserRegister({ addr: '0x48', reg: '0x00', len: 3 }).errors.join(' '), /Width/);
+  const branch = makeBlock('if');
+  branch.then.push(makeBlock('delay')); branch.else.push(makeBlock('delay'));
+  branch.condition = { op: '>', left: { register: 'user-48-00-2' }, right: { constant: 0x10, unit: 'hex' } };
+  const draft = definition([branch]);
+  assert.match(validateDraft(draft).join(' '), /valid telemetry, register/);
+  draft.registers = [parseUserRegister({ addr: '0x48', reg: '0x00', len: 2 }).entry];
+  assert.deepEqual(validateDraft(draft), []);
+  draft.registers.push({ ...draft.registers[0] });
+  assert.match(validateDraft(draft).join(' '), /duplicate/);
 });

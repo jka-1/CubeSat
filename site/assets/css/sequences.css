@@ -62,3 +62,8 @@
 .seq-token-input input { max-width: 320px; }
 
 .seq-review { display: flex !important; align-items: center; gap: 8px; margin-bottom: 10px; }
+.seq-register-form { display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-end; flex-basis: 100%; padding: 8px; border: 1px dashed rgba(255,255,255,.25); border-radius: 8px; }
+.seq-register-form label { display: flex; flex-direction: column; gap: 2px; font-size: .8em; }
+.seq-register-form input { width: 90px; }
+.seq-register-error { flex-basis: 100%; color: #ff8a80; font-size: .85em; }
+.seq-register-error:empty { display: none; }

@@ -1,6 +1,6 @@
 import { apiFetch, canOperate } from './auth.js?v=20261028d';
-import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock } from './sequence-editor-model.mjs?v=20261104a';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261104a';
+import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock, parseUserRegister, userRegisterLabel, USER_REGISTER_LIMIT } from './sequence-editor-model.mjs?v=20261104c';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261104c';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from './sequence-condition-fields.mjs';
 import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
 
@@ -24,6 +24,31 @@ const request = async (path, options = {}) => {
 const jsonPost = (path, body, token = '') => request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Command-Token': token } : {}) }, body: JSON.stringify(body) });
 let draft, selectedPath = [], selectedIndex = null, selectedId = null, saved = [], execution = null, timer = null, lastEvent = 0, events = [], alive = false, busy = false, confirmation = null, savedSnapshot = null, polling = false;
 let historyView = null;
+let addingRegister = null;
+// Registers added from a condition are saved in the sequence JSON and in this browser's reusable list.
+const LIBRARY_KEY = 'cubesat.sequence.registers.v1';
+function registerLibrary() {
+  try { const list = JSON.parse(localStorage.getItem(LIBRARY_KEY) || '[]'); return Array.isArray(list) ? list.filter((item) => parseUserRegister(item).entry?.id === item.id) : []; }
+  catch { return []; }
+}
+function rememberRegister(entry) {
+  try { const list = registerLibrary().filter((item) => item.id !== entry.id); list.push(entry); localStorage.setItem(LIBRARY_KEY, JSON.stringify(list.slice(-64))); } catch { /* storage unavailable */ }
+}
+function userRegisters() {
+  const own = draft.registers || [], ids = new Set(own.map((item) => item.id));
+  return [...own, ...registerLibrary().filter((item) => !ids.has(item.id))];
+}
+function useRegister(id) {
+  if ((draft.registers || []).some((item) => item.id === id)) return true;
+  const entry = registerLibrary().find((item) => item.id === id);
+  if (!entry) return CONDITION_REGISTERS.some((item) => item.id === id);
+  if ((draft.registers || []).length >= USER_REGISTER_LIMIT) { notice(`A Branch Definition can hold at most ${USER_REGISTER_LIMIT} added registers.`, true); return false; }
+  draft.registers = [...(draft.registers || []), { ...entry }];
+  return true;
+}
+function addRegisterForm(id) {
+  return `<span class="seq-register-form" data-regform-for="${esc(id)}"><label>Device addr <input class="seq-input" data-regform="addr" placeholder="0x48" maxlength="4" size="5" aria-label="Device address (hex)"></label><label>Register <input class="seq-input" data-regform="reg" placeholder="0x00" maxlength="4" size="5" aria-label="Register (hex)"></label><label>Width <select class="seq-input" data-regform="len">${option('1', '1 byte', '1')}${option('2', '2 bytes', '1')}</select></label><label>Byte order <select class="seq-input" data-regform="endian">${option('big', 'Big endian', 'big')}${option('little', 'Little endian', 'big')}</select></label><label>Name (optional) <input class="seq-input" data-regform="label" maxlength="60" placeholder="e.g. Temp sensor"></label><button class="seq-mini" type="button" data-reg-add="${esc(id)}">Add</button><button class="seq-mini" type="button" data-reg-cancel>Cancel</button><span class="seq-register-error" role="alert"></span></span>`;
+}
 let pendingExecution = null;
 function executionId(mode) {
   if (!pendingExecution || pendingExecution.mode !== mode || pendingExecution.sequenceId !== draft.id || pendingExecution.revision !== draft.revision) {
@@ -56,7 +81,7 @@ function operandHtml(value, id) {
   const reads = readBlocks();
   const field = kind === 'step' ? `<select class="seq-input" data-condition="${id}" data-field="step">${reads.length ? reads.map((item) => option(item.id, item.label, value.step)).join('') : option('', 'Add a Register read block first', '')}</select>`
     : kind === 'metric' ? `<select class="seq-input" data-condition="${id}" data-field="metric">${optionMetrics(value.metric)}</select>`
-    : kind === 'register' ? `<select class="seq-input" data-condition="${id}" data-field="register">${CONDITION_REGISTERS.map((item) => option(item.id, item.label, value.register)).join('')}</select>`
+    : kind === 'register' ? `<select class="seq-input" data-condition="${id}" data-field="register">${userRegisters().length ? `<optgroup label="Added registers">${userRegisters().map((item) => option(item.id, userRegisterLabel(item), value.register)).join('')}</optgroup>` : ''}<optgroup label="Catalog">${CONDITION_REGISTERS.map((item) => option(item.id, item.label, value.register)).join('')}</optgroup></select><button class="seq-mini" type="button" data-reg-open="${id}"${addingRegister === id ? ' hidden' : ''}>Add register</button>${addingRegister === id ? addRegisterForm(id) : ''}`
       : kind === 'fault' ? `<select class="seq-input" data-condition="${id}" data-field="fault">${CONDITION_FAULTS.map((name) => option(name, name, value.fault)).join('')}</select>`
         : value?.unit === 'boolean' ? `<select class="seq-input" data-condition="${id}" data-field="constant">${option('true', 'Active', String(value.constant))}${option('false', 'Clear', String(value.constant))}</select>`
           : `<input class="seq-input" type="${value?.unit === 'hex' ? 'text' : 'number'}" ${value?.unit === 'hex' ? 'pattern="0x[0-9a-fA-F]+" placeholder="0x00"' : 'step="any"'} value="${esc(value?.unit === 'hex' && Number.isInteger(value.constant) ? `0x${value.constant.toString(16).toUpperCase()}` : value?.constant ?? '')}" data-condition="${id}" data-field="constant" aria-label="Comparison value"><select class="seq-input" data-condition="${id}" data-field="unit" aria-label="Value format">${['V', 'A', 'W', 'C', 'mV', 'hex', 'boolean'].map((unit) => option(unit, unit === 'hex' ? 'Hex' : unit === 'boolean' ? 'Flag' : unit, value?.unit)).join('')}</select>`;
@@ -226,7 +251,7 @@ function handleChange(event) {
     const value = condition[side];
     if (el.dataset.field === 'kind') condition[side] = el.value === 'step' ? { step: readBlocks()[0]?.id || '' } : el.value === 'metric' ? { metric: METRICS[0].id } : el.value === 'register' ? { register: CONDITION_REGISTERS[0].id } : el.value === 'fault' ? { fault: CONDITION_FAULTS[0] } : { constant: 0, unit: 'V' };
     if (el.dataset.field === 'metric') condition[side] = { metric: el.value };
-    if (el.dataset.field === 'register') condition[side] = { register: el.value };
+    if (el.dataset.field === 'register' && useRegister(el.value)) condition[side] = { register: el.value };
     if (el.dataset.field === 'step') condition[side] = { step: el.value };
     if (el.dataset.field === 'fault') condition[side] = { fault: el.value };
     if (el.dataset.field === 'unit') condition[side] = { constant: el.value === 'boolean' ? false : 0, unit: el.value };
@@ -251,6 +276,20 @@ function handleClick(event) {
   if (el.dataset.add) { if (countBlocks(draft.steps) >= 200) return; const list = currentList(); list.splice(selectedIndex === null ? list.length : selectedIndex, 0, makeBlock(el.dataset.add)); if (selectedIndex !== null) selectedIndex++; render(); return; }
   if (el.dataset.insert) { selectedPath = decodePath(el.dataset.insert); selectedIndex = Number(el.dataset.index); selectedId = null; render(); return; }
   if (el.dataset.select) { selectedId = selectedId === el.dataset.select ? null : el.dataset.select; render(); return; }
+  if (el.dataset.regOpen) { addingRegister = el.dataset.regOpen; render(); document.querySelector('[data-regform="addr"]')?.focus(); return; }
+  if (el.hasAttribute('data-reg-cancel')) { addingRegister = null; render(); return; }
+  if (el.dataset.regAdd) {
+    const form = el.closest('.seq-register-form'), field = (name) => form.querySelector(`[data-regform="${name}"]`).value;
+    const { entry, errors } = parseUserRegister({ addr: field('addr'), reg: field('reg'), len: Number(field('len')), endian: field('endian'), label: field('label') });
+    if (errors.length) { form.querySelector('.seq-register-error').textContent = errors.join(' '); return; }
+    const own = draft.registers || [], existing = own.findIndex((item) => item.id === entry.id);
+    if (existing < 0 && own.length >= USER_REGISTER_LIMIT) { form.querySelector('.seq-register-error').textContent = `At most ${USER_REGISTER_LIMIT} added registers per Branch Definition.`; return; }
+    draft.registers = existing < 0 ? [...own, entry] : own.map((item, i) => i === existing ? entry : item);
+    rememberRegister(entry);
+    const [key, side] = el.dataset.regAdd.split(':'), condition = conditionAt(JSON.parse(decodeURIComponent(key)));
+    if (condition) condition[side] = { register: entry.id };
+    addingRegister = null; notice(`Added register ${userRegisterLabel(entry)}.`); render(); return;
+  }
   if (el.dataset.condAdd) { const condition = conditionAt(JSON.parse(decodeURIComponent(el.dataset.condAdd))); condition.conditions.push(comparison()); render(); return; }
   if (el.dataset.condRemove) { const condition = conditionAt(JSON.parse(decodeURIComponent(el.dataset.condRemove))); condition.conditions.splice(Number(el.dataset.index), 1); render(); return; }
   const article = el.closest('.seq-block'); if (!article) return;

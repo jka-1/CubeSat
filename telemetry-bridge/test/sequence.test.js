@@ -298,3 +298,34 @@ test('IF / ELSE branches on the result of an earlier register read block', async
   assert.equal(masked.events.find((event) => event.phase === 'branch')?.details.selected, 'else');
   assert.equal(evaluateCondition({ op: '&', left: { step: 'x' }, right: { constant: 4, unit: 'hex' } }, null, { 'step:x': 6 }), true);
 });
+
+test('user-added condition registers validate, read live at evaluation time, and simulate', async () => {
+  const custom = { id: 'user-48-00-2', label: 'Temp', addr: '0x48', reg: '0x00', len: 2, endian: 'little' };
+  const wait = { id: 'user-condition', type: 'waitUntil', timeoutMs: 1000,
+    condition: { op: '==', left: { register: custom.id }, right: { constant: 0x1234, unit: 'hex' } } };
+  const validate = (cmd) => ({ expectedResult: { addr: cmd.addr, reg: cmd.reg, len: cmd.len } });
+  const withRegs = (registers, steps = [wait]) => ({ ...definition(steps), registers });
+  assert.equal(validateSequence(withRegs([custom]), validate).registers[0].addr, '0x48');
+  assert.throws(() => validateSequence(definition([wait]), validate), /Invalid condition operand/);
+  assert.throws(() => validateSequence(withRegs([{ ...custom, addr: '0x80' }]), validate), /7-bit/);
+  assert.throws(() => validateSequence(withRegs([{ ...custom, addr: '0x07' }]), validate), /7-bit/);
+  assert.throws(() => validateSequence(withRegs([{ ...custom, reg: '0x100' }]), validate), /0x00–0xFF/);
+  assert.throws(() => validateSequence(withRegs([{ ...custom, len: 3 }]), validate), /1 or 2/);
+  assert.throws(() => validateSequence(withRegs([custom, { ...custom }]), validate), /duplicate/);
+
+  const live = { ...withRegs([custom]), id: 'test', revision: 1 };
+  const h = harness({ result: { status: 'completed', result: { ok: true, data: ['0x34', '0x12'] } } });
+  await h.engine.start({ definition: live, mode: 'live', sessionId: 'operator', target: { address: '127.0.0.1', port: 3333 }, deviceId: 'eps' });
+  const liveRun = h.engine.active; await liveRun.done;
+  assert.equal(liveRun.state, 'completed');
+  assert.deepEqual(h.sent, [{ type: 'i2c_read', addr: '0x48', reg: '0x00', len: 2 }]);
+  assert.equal(h.events.find((event) => event.phase === 'comparison')?.details.evidence.comparisons[0].values.left, 0x1234);
+
+  const sim = harness({ simulation: true });
+  const fixture = telemetry(6);
+  fixture.packet.register_values = { '0x48:0x00': 0x1234 };
+  await sim.engine.start({ definition: live, mode: 'simulation', simulationTelemetry: fixture });
+  const simRun = sim.engine.active; await simRun.done;
+  assert.equal(simRun.state, 'completed');
+  assert.deepEqual(sim.sent, []);
+});

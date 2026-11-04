@@ -216,6 +216,21 @@ IF  Block result [Block 1]  &amp;  0x8000
   FALSE → Register write INA226 0x00 ...</pre>
 <div class="note">Evaluation happens in the telemetry bridge, which reuses the device reply to the <code>i2c_read</code> command. <strong>No firmware change or reflash is needed.</strong></div>
 
+<h3 id="add-register">Adding your own registers to a condition</h3>
+<p>A condition can also read a register directly, including one that is not in the built-in catalog, without a separate Register read block.</p>
+<ol>
+  <li>Set an operand to <strong>Register</strong> and click <strong>Add register</strong>.</li>
+  <li>Enter the <strong>device address</strong> in hex (7-bit, <code>0x08</code>–<code>0x77</code>), the <strong>register</strong> in hex (<code>0x00</code>–<code>0xFF</code>), the <strong>width</strong> (1 or 2 bytes), the <strong>byte order</strong> for 2-byte reads, and an optional <strong>name</strong>.</li>
+  <li>Click <strong>Add</strong>. The register is selected in that operand and appears under <em>Added registers</em> in every register picker.</li>
+  <li>Set the other operand to a <strong>Hex</strong> value and choose an operator as above.</li>
+</ol>
+<ul>
+  <li>Added registers are saved in the Branch Definition (its <code>registers</code> list), so they come back when you load it. They are also remembered in this browser, so they are offered in new Branch Definitions too; choosing one copies it into the current definition.</li>
+  <li>During a live run the bridge sends an <code>i2c_read</code> for each added register when the condition is evaluated (at most once per second while it waits), exactly like a Register read block, then compares the decoded value.</li>
+  <li>In simulation, supply the value under the register's id or <code>"&lt;addr&gt;:&lt;reg&gt;"</code>, for example <code>{"0x48:0x00": 25}</code>.</li>
+  <li>Reading some registers has side effects (for example clear-on-read status flags). Only add registers whose datasheet says a read is safe.</li>
+</ul>
+
 <h2 id="twin">10. Digital Twin</h2>
 <p>A 3D view of the CubeSat STEP assembly in Autodesk Viewer v7 (translated to SVF2). The camera opens looking at the model's <strong>Back</strong> face, so that face lies in the screen X–Y plane; this view is also set as Home. Use the ViewCube or mouse to orbit (left-drag), pan (right/middle-drag) and zoom (wheel). Click the Home icon to return to the Back view.</p>
 <p>The bridge issues a short-lived token scoped to <code>viewables:read</code>. APS credentials never reach the browser.</p>

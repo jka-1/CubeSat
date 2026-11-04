@@ -26,7 +26,7 @@ function telemetrySnapshot(envelope) {
   return { source: envelope?.source ?? null, device_id: envelope?.packet?.device_id ?? null,
     seq: envelope?.packet?.seq ?? null, received_at: envelope?.received_at ?? null, metrics };
 }
-function conditionEvidence(condition, envelope, registerValues = {}) {
+function conditionEvidence(condition, envelope, registerValues = {}, custom = []) {
   const comparisons = [];
   const visit = (part) => {
     if (part.op === 'NOT') return visit(part.condition);
@@ -52,7 +52,7 @@ function conditionEvidence(condition, envelope, registerValues = {}) {
       }
     }
     comparisons.push({ op: part.op, left: part.left, right: part.right, values,
-      result: evaluateCondition(part, envelope, registerValues) });
+      result: evaluateCondition(part, envelope, registerValues, custom) });
   };
   visit(condition);
   return { condition, comparisons, seq: envelope?.packet?.seq ?? null,
@@ -129,12 +129,18 @@ export class SequenceEngine {
     let lastEnvelope;
     const registerValues = { ...(run.mode === 'simulation' ? run.telemetry?.packet?.register_values || {} : {}),
       ...Object.fromEntries(Object.entries(run.stepValues || {}).map(([id, value]) => [`step:${id}`, value])) };
+    const custom = run.definition?.registers || [];
+    if (run.mode === 'simulation') for (const field of custom) {
+      const simulated = run.telemetry?.packet?.register_values || {};
+      const value = simulated[field.id] ?? simulated[`${field.addr}:${field.reg}`];
+      if (Number.isInteger(value)) registerValues[field.id] = value;
+    }
     const registers = new Map();
     const collect = (part) => {
       if (part.op === 'NOT') return collect(part.condition);
       if (part.op === 'AND' || part.op === 'OR') return part.conditions.forEach(collect);
       for (const side of ['left', 'right']) {
-        const field = CONDITION_REGISTERS.find((item) => item.id === part[side]?.register);
+        const field = CONDITION_REGISTERS.find((item) => item.id === part[side]?.register) || custom.find((item) => item.id === part[side]?.register);
         if (field?.addr) registers.set(field.id, field);
       }
     };
@@ -181,15 +187,15 @@ export class SequenceEngine {
       const envelope = run.telemetry;
       if (envelope !== lastEnvelope || readThisCycle) {
         lastEnvelope = envelope;
-        const result = evaluateCondition(condition, envelope, registerValues);
-        const evidence = conditionEvidence(condition, envelope, registerValues);
+        const result = evaluateCondition(condition, envelope, registerValues, custom);
+        const evidence = conditionEvidence(condition, envelope, registerValues, custom);
         await this.event(run, 'comparison', { block_id: blockId, result, evidence });
         if (result === true || acceptFalse && result === false) return { result, evidence };
       }
       await sleep(100);
     }
     const error = new Error('condition_timeout');
-    error.evidence = conditionEvidence(condition, run.telemetry, registerValues);
+    error.evidence = conditionEvidence(condition, run.telemetry, registerValues, custom);
     throw error;
   }
   async blocks(run, steps) {

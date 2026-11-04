@@ -2,8 +2,8 @@ import { allowRoute, showAccount } from './auth.js?v=20261028d';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261104a';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261104a';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261104a';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104a';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104a';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104c';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104c';
 import { initTwinPage, destroyTwinPage } from './twin.js?v=20261104a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
@@ -21,7 +21,7 @@ const routes = {
   'link-health': `./modules/link-health.html?v=20261104a`,
   'debug-mode': `./modules/debug-mode.html?v=20261104a`,
   runs: `./modules/runs.html?v=20261104a`,
-  sequences: `./modules/sequences.html?v=20261104a`,
+  sequences: `./modules/sequences.html?v=20261104c`,
   twin: `./modules/twin.html?v=20261104b`,
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };

@@ -9,6 +9,37 @@ export const BLOCKS = [
   ['delay', 'Delay'], ['waitUntil', 'Wait for value'], ['if', 'IF / ELSE']
 ];
 const uid = () => crypto.randomUUID();
+// User-added condition registers (sequence JSON `registers`), read live when the condition is evaluated.
+export const USER_REGISTER_LIMIT = 32;
+export const hex2 = (value) => `0x${Number(value).toString(16).toUpperCase().padStart(2, '0')}`;
+export function parseUserRegister({ addr, reg, len = 1, endian = 'big', label = '' } = {}) {
+  const errors = [];
+  const a = String(addr ?? '').trim(), r = String(reg ?? '').trim(), name = String(label ?? '').trim();
+  const asHex = (text) => /^(0x)?[0-9a-f]{1,2}$/i.test(text) ? parseInt(text.replace(/^0x/i, ''), 16) : NaN;
+  const addrValue = asHex(a), regValue = asHex(r);
+  if (!(addrValue >= 0x08 && addrValue <= 0x77)) errors.push('Device address must be a 7-bit hex address 0x08–0x77.');
+  if (!(regValue >= 0 && regValue <= 0xff)) errors.push('Register must be hex 0x00–0xFF.');
+  if (![1, 2].includes(Number(len))) errors.push('Width must be 1 or 2 bytes.');
+  if (!['big', 'little'].includes(endian)) errors.push('Byte order must be big or little endian.');
+  if (name.length > 60) errors.push('Label must be 60 characters or fewer.');
+  if (errors.length) return { errors };
+  const entry = { id: `user-${hex2(addrValue).slice(2)}-${hex2(regValue).slice(2)}-${Number(len)}`, addr: hex2(addrValue), reg: hex2(regValue), len: Number(len), endian };
+  if (name) entry.label = name;
+  return { entry, errors: [] };
+}
+export const userRegisterLabel = (item) => `${item.label ? `${item.label} · ` : ''}${item.addr} ${item.reg} (${item.len} B${item.len === 2 ? `, ${item.endian}` : ''})`;
+export function validateUserRegisters(list, errors = []) {
+  if (list === undefined) return errors;
+  if (!Array.isArray(list) || list.length > USER_REGISTER_LIMIT) { errors.push(`Added registers: at most ${USER_REGISTER_LIMIT}.`); return errors; }
+  const ids = new Set();
+  list.forEach((item, i) => {
+    const { entry, errors: problems } = parseUserRegister(item || {});
+    problems.forEach((problem) => errors.push(`Added register ${i + 1}: ${problem}`));
+    if (entry && (item.id !== entry.id || ids.has(item.id))) errors.push(`Added register ${i + 1}: invalid or duplicate id`);
+    ids.add(item?.id);
+  });
+  return errors;
+}
 export const comparison = () => ({ op: '>', left: { metric: METRICS[0].id }, right: { constant: 0, unit: METRICS[0].unit } });
 export function makeBlock(type) {
   const id = uid();
@@ -30,18 +61,18 @@ export function findList(steps, path) {
   return list;
 }
 export function countBlocks(steps) { return steps.reduce((total, step) => total + 1 + (step.type === 'if' ? countBlocks(step.then) + countBlocks(step.else) : 0), 0); }
-export function validateCondition(condition, path, errors, depth = 0) {
+export function validateCondition(condition, path, errors, depth = 0, custom = []) {
   if (depth > 8) { errors.push(`${path}: logical nesting exceeds 8`); return; }
   if (!condition || typeof condition !== 'object') { errors.push(`${path}: condition is missing`); return; }
   if (['AND', 'OR'].includes(condition.op)) {
     if (!Array.isArray(condition.conditions) || condition.conditions.length < 2 || condition.conditions.length > 8) errors.push(`${path}: ${condition.op} needs 2–8 conditions`);
-    else condition.conditions.forEach((item, i) => validateCondition(item, `${path} condition ${i + 1}`, errors, depth + 1));
-  } else if (condition.op === 'NOT') validateCondition(condition.condition, `${path} NOT`, errors, depth + 1);
+    else condition.conditions.forEach((item, i) => validateCondition(item, `${path} condition ${i + 1}`, errors, depth + 1, custom));
+  } else if (condition.op === 'NOT') validateCondition(condition.condition, `${path} NOT`, errors, depth + 1, custom);
   else if (OPERATORS.includes(condition.op)) {
     const type = (operand) => {
       if (operand?.metric && Object.keys(operand).length === 1) return METRICS.find((metric) => metric.id === operand.metric)?.unit;
       if (operand?.step && Object.keys(operand).length === 1) return typeof operand.step === 'string' ? 'hex' : null;
-      if (operand?.register && Object.keys(operand).length === 1) return CONDITION_REGISTERS.some((item) => item.id === operand.register) ? 'hex' : null;
+      if (operand?.register && Object.keys(operand).length === 1) return CONDITION_REGISTERS.some((item) => item.id === operand.register) || custom.some((item) => item.id === operand.register) ? 'hex' : null;
       if (operand?.fault && Object.keys(operand).length === 1) return CONDITION_FAULTS.includes(operand.fault) ? 'boolean' : null;
       if (Object.keys(operand || {}).length === 2 && Object.hasOwn(operand, 'constant')) {
         if (operand.unit === 'boolean') return typeof operand.constant === 'boolean' ? 'boolean' : null;
@@ -65,6 +96,8 @@ export function validateDraft(definition) {
   if (!definition.steps.length) errors.push('Connect at least one block to the Branch Definition.');
   if (countBlocks(definition.steps) > 200) errors.push('Branch Definition exceeds 200 blocks.');
   const writable = { '0x08': { '0x3E': 2 }, '0x6B': Object.fromEntries('0F 10 12 13 14 2E 30'.split(' ').map((reg) => [`0x${reg}`, 1])), '0x40': Object.fromEntries('00 05 06 07'.split(' ').map((reg) => [`0x${reg}`, 2])) };
+  validateUserRegisters(definition.registers, errors);
+  const custom = Array.isArray(definition.registers) ? definition.registers : [];
   const seen = new Set();
   const stepRefs = (condition, out = []) => {
     if (!condition || typeof condition !== 'object') return out;
@@ -86,10 +119,10 @@ export function validateDraft(definition) {
       if (step.type === 'delay' && (!Number.isSafeInteger(step.durationMs) || step.durationMs < 1 || step.durationMs > 600000)) errors.push(`${label}: delay must be 1–600000 ms`);
       if (step.type === 'waitUntil') {
         if (!Number.isSafeInteger(step.timeoutMs) || step.timeoutMs < 1 || step.timeoutMs > 600000) errors.push(`${label}: timeout must be 1–600000 ms`);
-        validateCondition(step.condition, label, errors);
+        validateCondition(step.condition, label, errors, 0, custom);
       }
       if (step.type === 'if') {
-        validateCondition(step.condition, label, errors);
+        validateCondition(step.condition, label, errors, 0, custom);
         if (!step.then?.length) errors.push(`${label}: TRUE path is disconnected`);
         if (!step.else?.length) errors.push(`${label}: FALSE path is disconnected`);
         walk(step.then || [], `${label} TRUE`, depth + 1, new Set(reads)); walk(step.else || [], `${label} FALSE`, depth + 1, new Set(reads));

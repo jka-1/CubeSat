@@ -19,3 +19,13 @@ Every execution creates a durable sequence run before its first block. The execu
 ## Block-result operands and bit masks (Branch Definition)
 
 A condition operand may be `{ "step": "<registerRead block id>" }`. It evaluates to the integer value that block read in the current execution, decoded with the register's byte order, and has type `hex`. The block must be a `registerRead` (or `i2c_read` command) that appears earlier on the same path; reads inside a sibling IF branch are not visible after that IF. Validation rejects other references. The comparison operator `&` (hex only) is TRUE when `(left & right) != 0`. Each read records a `register_value` event. In simulation, read values come from `telemetry.registers` keyed `"<addr>:<reg>"` (for example `{"0x40:0x00": 16679}`). No firmware change is required: the bridge reuses the `i2c_read` reply.
+
+## User-added condition registers
+
+A sequence may carry an optional top-level `registers` array (max 32) of registers added from the editor's condition picker:
+
+```json
+"registers": [{ "id": "user-48-00-2", "label": "Temp sensor", "addr": "0x48", "reg": "0x00", "len": 2, "endian": "big" }]
+```
+
+`id` is `user-<addr>-<reg>-<len>` (hex without `0x`). `addr` must be a 7-bit address `0x08`–`0x77`, `reg` `0x00`–`0xFF`, `len` 1 or 2, `endian` `big` or `little`, and `label` is optional (≤60 chars). Duplicate ids or duplicate addr/reg/len targets are rejected. A condition operand `{ "register": "user-48-00-2" }` has type `hex`. In live runs the engine issues an `i2c_read` for each referenced added register at condition-evaluation time (same paced path and events as catalog register operands: `command_intent`, `command_result`, and `command_error` on failure) and decodes it with the given byte order. In simulation the value comes from `telemetry.packet.register_values` keyed by the id or by `"<addr>:<reg>"`. The editor also remembers added registers in browser `localStorage` (`cubesat.sequence.registers.v1`) so they are offered for future definitions; that list is per browser, not shared through the bridge.
