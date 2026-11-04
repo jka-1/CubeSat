@@ -14,6 +14,7 @@ from .conversions import convert
 from .link_page import LinkHealthPage
 from .streaming_page import StreamingPage
 from .runs_page import RecordingsPage
+from .branch_page import BranchDefinitionPage
 from .wireless_session import WirelessSession
 
 MONO = QFont("Consolas", 10)
@@ -60,7 +61,7 @@ class MainWindow(QMainWindow):
 
     def __init__(self, mock=False, mock_link=False):
         super().__init__()
-        self.setWindowTitle("CubeSat I²C Tool (ESP32-S3 i2c-tools)")
+        self.setWindowTitle("CubeSat Power System Controller · I²C Tool")
         self.resize(1100, 760)
         self.store = Store()
         log_dir = os.path.join(self.store.root, "logs")
@@ -74,11 +75,13 @@ class MainWindow(QMainWindow):
         tabs.addTab(self._seq_tab(), "Sequences")
         tabs.addTab(self._log_tab(), "Test Log")
         self.link_page = LinkHealthPage(self.store, mock_default=mock_link)
-        tabs.addTab(self.link_page, "Link Health")
+        tabs.addTab(self.link_page, "Network Statistics")
         self.stream_page = StreamingPage(self.store)
-        tabs.addTab(self.stream_page, "Streaming Telemetry")
+        tabs.addTab(self.stream_page, "Programming")
         self.runs_page = RecordingsPage(self.store, on_recording_changed=lambda: self.sync_recording_state())
-        tabs.addTab(self.runs_page, "Recordings")
+        tabs.addTab(self.runs_page, "Logged Telemetry")
+        self.branch_page = BranchDefinitionPage(self.store, token_provider=lambda: self.bridge_token.text())
+        tabs.addTab(self.branch_page, "Branch Definition")
         self.tabs = tabs
         tabs.currentChanged.connect(lambda i: i == 4 and self.refresh_log())
         self.setCentralWidget(tabs)
@@ -203,7 +206,7 @@ class MainWindow(QMainWindow):
     def toggle_wireless(self):
         if isinstance(self.session, WirelessSession):
             self.session.set_live_mode(False)
-            self.stream_page.stop(); self.link_page.use_bridge_session(None); self.runs_page.use_session(None)
+            self.stream_page.stop(); self.link_page.use_bridge_session(None); self.runs_page.use_session(None); self.branch_page.use_session(None)
             self.session.close(); self.session = None; self.ptimer.stop()
             self.wbtn.setText("Connect"); self.statusBar().showMessage("Disconnected")
             self.log.write("SYS", "wireless disconnected"); self._show_presence(None)
@@ -228,6 +231,7 @@ class MainWindow(QMainWindow):
         self.stream_page.start(url, self.bridge_tls.isChecked(), self.session.open_url)   # shares the in-memory JWT cookie
         self.link_page.use_bridge_session(self.session)
         self.runs_page.use_session(self.session)
+        self.branch_page.use_session(self.session)
         # Live mode on the bridge: the droplet web pages stop showing simulated data while the exe is live.
         if not self.session.set_live_mode(True):
             self.console("Note: bridge live-mode flag not set (needs the command token); web pages still go live once telemetry arrives.")
@@ -236,7 +240,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, e):
         if isinstance(self.session, WirelessSession):
             try:
-                self.stream_page.stop(); self.link_page.use_bridge_session(None); self.runs_page.use_session(None)
+                self.stream_page.stop(); self.link_page.use_bridge_session(None); self.runs_page.use_session(None); self.branch_page.use_session(None)
                 self.session.set_live_mode(False); self.session.close()
             except Exception: pass
         super().closeEvent(e)

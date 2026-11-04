@@ -40,6 +40,13 @@ def format_detect(addresses):
     return "\n".join(lines)
 
 
+class SequenceConflict(IOError):
+    """Save rejected because the definition was saved elsewhere (web or another app) since it was loaded."""
+    def __init__(self, message, current=None):
+        super().__init__(message)
+        self.current = current or {}
+
+
 class WirelessSession(Session):
     def __init__(self, base_url, token="", log=None, timeout=6.0, verify_tls=True, opener=None):
         super().__init__(None, log, timeout)
@@ -61,6 +68,8 @@ class WirelessSession(Session):
         self.user = None
         self.auth_enabled = False
         self.active_run_id = None
+        self.edit_only = False
+        self.control_active = False
         self._auth_lock = threading.RLock()
         self._username = ""
         self._password = ""
@@ -141,14 +150,112 @@ class WirelessSession(Session):
             raise
 
     def login(self, username, password, renewal=False):
-        data = self._json("/auth/login", {"username": username, "password": password}, allow_reauth=False)
+        body = {"username": username, "password": password}
+        self.edit_only = False
+        try:
+            data = self._json("/auth/login", body, allow_reauth=False)
+        except IOError as e:
+            # Another operator (e.g. the web dashboard) holds control: sign in for editing only, so Branch
+            # Definitions can still be edited concurrently. Hardware control stays with the other client.
+            if "HTTP 409" not in str(e):
+                raise
+            data = self._json("/auth/login", dict(body, control=False), allow_reauth=False)
+            self.edit_only = True
         self.csrf, self.user = data.get("csrf", ""), data.get("user")
+        self.control_active = bool(data.get("control_active"))
         if not self.csrf or not self.user:
             raise IOError("Bridge login did not establish a session")
         self._username, self._password = username, password
-        self._log("SYS", "%s as %s (%s)" % ("session renewed" if renewal else "signed in",
-                                                self.user.get("username"), self.user.get("role")))
+        self._log("SYS", "%s as %s (%s)%s" % ("session renewed" if renewal else "signed in",
+                                                self.user.get("username"), self.user.get("role"),
+                                                " - editing only, another operator has control" if self.edit_only else ""))
         return self.user
+
+    def heartbeat(self):
+        """Keep (or try to take) the operator control lease, like the web page's 15 s heartbeat.
+        Returns True when this session controls the system; False when another operator does."""
+        if not self.auth_enabled:
+            return True
+        try:
+            data = self._json("/auth/heartbeat", {}, timeout=5)
+        except IOError as e:
+            if "HTTP 409" in str(e) or "HTTP 403" in str(e):
+                self.control_active = False
+                return False
+            raise
+        self.control_active = bool(data.get("control_active"))
+        if self.control_active:
+            self.edit_only = False
+        return self.control_active
+
+    # ------------------------------------------------- Branch Definitions (bridge /sequences API)
+    def _request(self, method, path, body=None, command_token=False, timeout=8.0, allow_reauth=True):
+        """JSON request returning (status, data); HTTP errors are returned, not raised (except 401 after renewal)."""
+        csrf = self.csrf
+        write = method != "GET"
+        req = urllib.request.Request(self.base + path, data=json.dumps(body if body is not None else {}).encode() if write else None,
+                                     headers=self._headers(write, command_token), method=method)
+        try:
+            with self._open(req, timeout) as r:
+                return r.status if hasattr(r, "status") else 200, json.loads(r.read().decode() or "{}")
+        except urllib.error.HTTPError as e:
+            if e.code == 401 and allow_reauth and self._renew_session(csrf):
+                return self._request(method, path, body, command_token, timeout, False)
+            try: data = json.loads(e.read().decode() or "{}")
+            except Exception: data = {}
+            return e.code, data
+
+    def _ok(self, method, path, body=None, command_token=False, timeout=8.0):
+        status, data = self._request(method, path, body, command_token, timeout)
+        if status >= 400:
+            raise IOError("HTTP %d %s" % (status, data.get("error", "")))
+        return data
+
+    def list_sequences(self):
+        return self._ok("GET", "/sequences").get("sequences") or []
+
+    def get_sequence(self, seq_id):
+        return self._ok("GET", "/sequences/" + urllib.parse.quote(seq_id, safe="")).get("sequence")
+
+    def save_sequence(self, definition):
+        """POST (new) or PUT (existing, with its revision). Raises SequenceConflict on a stale revision."""
+        if definition.get("id"):
+            status, data = self._request("PUT", "/sequences/" + urllib.parse.quote(definition["id"], safe=""), definition)
+        else:
+            status, data = self._request("POST", "/sequences", definition)
+        if status == 409 and data.get("code") == "revision_conflict":
+            raise SequenceConflict(data.get("error", "Sequence revision conflict"), data.get("current"))
+        if status >= 400:
+            raise IOError("HTTP %d %s" % (status, data.get("error", "")))
+        self._log("SEQ", "Branch Definition saved: %s r%s" % (data["sequence"].get("name"), data["sequence"].get("revision")))
+        return data["sequence"]
+
+    def preflight_sequence(self, seq_id):
+        return self._ok("POST", "/sequences/%s/preflight" % urllib.parse.quote(seq_id, safe=""), {}, command_token=True)
+
+    def execute_sequence(self, seq_id, mode, execution_id=None, telemetry=None, confirmation_token=None):
+        body = {"mode": mode}
+        if execution_id: body["execution_id"] = execution_id
+        if telemetry is not None: body["telemetry"] = telemetry
+        if confirmation_token: body["confirmation_token"] = confirmation_token
+        return self._ok("POST", "/sequences/%s/execute" % urllib.parse.quote(seq_id, safe=""), body,
+                        command_token=(mode == "live")).get("execution")
+
+    def list_executions(self):
+        return self._ok("GET", "/sequence-executions").get("executions") or []
+
+    def get_execution(self, exec_id):
+        return self._ok("GET", "/sequence-executions/" + urllib.parse.quote(exec_id, safe="")).get("execution")
+
+    def execution_events(self, exec_id, after=0):
+        return self._ok("GET", "/sequence-executions/%s/events?after=%d" % (urllib.parse.quote(exec_id, safe=""), int(after))).get("events") or []
+
+    def control_execution(self, exec_id, action):
+        if action not in ("pause", "resume", "stop", "recover"):
+            raise ValueError(action)
+        data = self._ok("POST", "/sequence-executions/%s/%s" % (urllib.parse.quote(exec_id, safe=""), action), {},
+                        command_token=action in ("resume", "recover"))
+        return data.get("execution", data)
 
     def logout(self):
         try: self._json("/auth/logout", {}, timeout=5, allow_reauth=False)

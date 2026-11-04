@@ -29,7 +29,7 @@ Opening the port sets DTR/RTS low to avoid resetting the board.
 Settings, devices and profiles: `%APPDATA%\CubeSatI2CTool\{settings,devices,profiles}.json`
 (override folder with env `CUBESAT_I2C_HOME`).
 
-- **Link Health**: wireless telemetry link monitor fed by the droplet bridge's SSE stream
+- **Network Statistics** (was Link Health): wireless telemetry link monitor fed by the droplet bridge's SSE stream
   (default `http://45.55.77.215/telemetry/events`, from `DEMO_SERVER_HOST`; optional health URL
   `.../telemetry/health`, polled every 5 s). Tiles: link state (Connected / Stale / Offline / Bridge unreachable),
   last-packet age, ESP32 endpoint with port-change and reboot counts, RSSI (v5 link-stats packets only, otherwise n/a),
@@ -90,7 +90,7 @@ logging out clears the in-memory password, session and cookies.
 * `tools/export_register_map.py <repo>` re-exports the register map and the JS parity fixtures for the
   web Debug Mode page.
 
-## Recordings tab
+## Logged Telemetry tab (was Recordings)
 
 Browses bridge telemetry recordings (`/runs` API, requires `RECORDING_DB_PATH` on the bridge).
 Start/stop a named run (operator role, or command token when JWT auth is off), view run info
@@ -98,3 +98,17 @@ Start/stop a named run (operator role, or command token when JWT auth is off), v
 with event markers and gaps, the event log, and export samples to CSV (100,000-row cap,
 formula-safe cells). The Streaming tab meta line shows `· signed` for HMAC-authenticated
 telemetry and `· ● REC` while a run is recording.
+
+## Branch Definition tab
+
+Same editor as the web Branch Definition page, on the same bridge `/sequences` API and JSON schema:
+Command, Register read, Register write, Delay, Wait until and If/Else blocks; conditions on telemetry, catalog
+registers, user-added registers (address 0x08-0x77, register 0x00-0xFF, 1 or 2 bytes, byte order, name up to 60,
+max 32, also kept in a local library), earlier Register read results, fault flags or constants, with
+`> >= < <= == != &` and AND/OR/NOT (JSON). Simulate, live run (review + confirm with the command token),
+Pause/Resume/Stop and recovery acknowledgement all go through the bridge, which stays the only executor.
+
+Concurrent editing: the saved list refreshes every 5 s and shows a notice when a definition you have open was
+saved elsewhere. Saves send the loaded revision; a stale save gets HTTP 409 and the tab asks whether to overwrite
+or load the latest (the web page does the same). If another operator (e.g. the web dashboard) holds control, the
+app signs in for editing only: it can edit and save but not run.
