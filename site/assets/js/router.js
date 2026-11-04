@@ -13,16 +13,16 @@ function updateStreamingBadge() {
 }
 window.addEventListener('streaming-telemetry-mode', updateStreamingBadge);
 
-const assetVersion = '20261104a';
+const assetVersion = '20261104b';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261104a`,
+  communication: `./modules/communication.html?v=20261104b`,
   'link-health': `./modules/link-health.html?v=20261104a`,
   'debug-mode': `./modules/debug-mode.html?v=20261104a`,
   runs: `./modules/runs.html?v=20261104a`,
   sequences: `./modules/sequences.html?v=20261104a`,
-  twin: `./modules/twin.html?v=20261104a`,
+  twin: `./modules/twin.html?v=20261104b`,
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };
 

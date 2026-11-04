@@ -89,7 +89,7 @@
 </ul>
 
 <h2 id="home">3. CubeSat (home)</h2>
-<p>The landing page titled <strong>CubeSat Power System Controller</strong>: a short description of the power architecture and shortcuts to <strong>View Dashboard</strong> and <strong>Open I²C Control</strong> (both open I²C Telemetry). It is public and needs no sign-in.</p>
+<p>The landing page titled <strong>CubeSat Power System Controller</strong>, with shortcuts to <strong>View Dashboard</strong> and <strong>Open I²C Control</strong> (both open I²C Telemetry). It is public and needs no sign-in.</p>
 
 <h2 id="i2c">4. I²C Telemetry</h2>
 <p>An interactive bus view. The <strong>Peripherals</strong> bank at the top holds page tiles (Overview, ESP32-S3 controller, Light + temperature ADC peripheral). The SDA (red) and SCL (green) lines connect the controller to follower tiles for INA226, BQ25798 and BQ76942.</p>
@@ -218,7 +218,7 @@ IF  Block result [Block 1]  &amp;  0x8000
 
 <h2 id="twin">10. Digital Twin</h2>
 <p>A 3D view of the CubeSat STEP assembly in Autodesk Viewer v7 (translated to SVF2). The camera opens looking at the model's <strong>Back</strong> face, so that face lies in the screen X–Y plane; this view is also set as Home. Use the ViewCube or mouse to orbit (left-drag), pan (right/middle-drag) and zoom (wheel). Click the Home icon to return to the Back view.</p>
-<p>The bridge issues a short-lived token scoped to <code>viewables:read</code>. APS credentials never reach the browser. A status pill appears only if something fails (for example “Not configured” or a load error).</p>
+<p>The bridge issues a short-lived token scoped to <code>viewables:read</code>. APS credentials never reach the browser.</p>
 
 <h2 id="windows">11. Windows CubeSatI2CTool</h2>
 <p><code>CubeSatI2CTool.exe</code> is built with <code>build_exe.bat</code> (tests, then PyInstaller → <code>dist\CubeSatI2CTool.exe</code>). For development, use <code>run_dev.bat</code>; <code>--mock</code> adds a simulated port, <code>--mock-link</code> a simulated link.</p>
@@ -276,7 +276,7 @@ IF  Block result [Block 1]  &amp;  0x8000
   <tr><td>Device shows absent / NACK</td><td>Wiring, power or address. Run Bus Scan + Probe; an absent device is re-probed every 5 s.</td></tr>
   <tr><td>Loss % or jitter spikes</td><td>AP congestion or modem sleep. Debug mode disables modem sleep; compare with Command RTT.</td></tr>
   <tr><td>If / Else validation: “must come from a Register read earlier on the same path”</td><td>Move the Register read above the IF, outside any other IF branch.</td></tr>
-  <tr><td>Digital Twin “Not configured” or load failed</td><td>APS environment variables are missing on the bridge, the token route returned 401 (sign in), or CSP blocks Autodesk hosts.</td></tr>
+  <tr><td>Digital Twin viewer stays blank</td><td>APS environment variables are missing on the bridge, the token route returned 401 (sign in), or CSP blocks Autodesk hosts.</td></tr>
   <tr><td>Old layout after an update</td><td>Hard refresh (Ctrl+F5); cache tags should change with each deploy.</td></tr>
 </table>
 
