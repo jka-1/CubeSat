@@ -2,7 +2,6 @@
   <header class="i2c-page-header">
     <div>
       <h1>I²C Power System</h1>
-      <p>Select any connected module to inspect its live telemetry without leaving the bus view.</p>
     </div>
     <div class="i2c-mode-key" aria-label="Bus view legend">
       <span><i class="legend-line sda"></i>SDA data</span>
@@ -16,14 +15,12 @@
     </div>
   </header>
 
-  <p id="detailDataNote" class="i2c-data-note">
-    Waiting for live packets from the telemetry bridge event stream.
-  </p>
+  <p id="detailDataNote" class="i2c-data-note" hidden></p>
 
   <section class="i2c-workspace" aria-label="Interactive I²C bus topology">
     <div class="telemetry-page-bank" aria-label="Telemetry and peripheral pages">
       <div class="page-bank-label">
-        <span>Telemetry Pages</span>
+        <span class="page-bank-title">Peripherals</span>
         <span class="bus-connection-status" data-tooltip="Shows whether recent ESP32 telemetry is reaching the browser through the bridge. It does not test each I²C device.">
           <i class="bus-status-light" aria-hidden="true"></i>
           <span class="bus-status-source">ESP32</span>

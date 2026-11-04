@@ -1,15 +1,9 @@
-<link rel="stylesheet" href="./assets/css/link-health.css?v=20261013a" />
-<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261028c" />
+<link rel="stylesheet" href="./assets/css/link-health.css?v=20261104a" />
+<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261104a" />
 <section id="debug-mode" class="page active debug-mode-page">
   <div class="section-header">
     <div>
-      <div class="eyebrow"><span class="pulse"></span> Wireless Debug</div>
-      <h2>Debug Mode</h2>
-      <p>
-        Register-level I²C access over the Wi-Fi bridge. Device presence comes from the firmware's v5/v6 debug packet
-        (probe at startup, every 5 s, and on demand). Register definitions and conversions are shared with the
-        Windows I²C tool.
-      </p>
+      <h2>Programming</h2>
     </div>
     <div class="tooltip-status-wrap" data-tooltip="Bridge connection shows the event stream is available; individual devices may still be offline."><div id="dmStatus" class="status-pill offline">Not Connected</div></div>
   </div>
@@ -50,15 +44,14 @@
     <div class="card-header"><h3 class="card-title">Streaming Telemetry</h3>
       <label class="st-section-toggle"><input type="checkbox" id="dmStreamToggle" /><span class="st-switch"></span><span id="dmStreamToggleText">Off</span></label></div>
     <div class="card-body">
-      <p id="dmStreamOffNote" class="st-off-note">Turn on to follow the live event stream and show decoded telemetry for present devices only.
-        The mode is remembered and also switches the I²C Telemetry page to this shared stream.</p>
+      <p id="dmStreamOffNote" class="st-off-note" hidden></p>
       <div id="dmStreamRoot"></div>
     </div>
   </section>
 
   <div class="dm-row">
     <section class="card">
-      <div class="card-header"><h3 class="card-title">Register Access</h3><span id="dmRegPill" class="status-pill">--</span></div>
+      <div class="card-header"><h3 class="card-title">Register Access</h3><span id="dmRegPill" class="status-pill" hidden>--</span></div>
       <div class="card-body">
         <div class="dm-grid dm-reg">
           <label>Device <select id="dmDevice" class="input"></select></label>

@@ -1,5 +1,5 @@
 import { apiFetch, canOperate } from './auth.js?v=20261028d';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261028a';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261104a';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,
@@ -547,7 +547,7 @@ function bindEvents() {
     if (event.key === 'Home') index = 0; if (event.key === 'End') index = valid.length - 1;
     chooseBucket(valid[index]);
   });
-  $('selectedBucket').addEventListener('dblclick', () => { selectedBucket = null; selectedBucketIndex = -1; updateChartSelection(); text('selectedBucket', 'Graph selection cleared.'); text('tableScope', 'Packets in the selected time window.'); loadSamples(true); });
+  $('selectedBucket').addEventListener('dblclick', () => { selectedBucket = null; selectedBucketIndex = -1; updateChartSelection(); text('selectedBucket', 'Graph selection cleared.'); text('tableScope', ''); loadSamples(true); });
   $('samplesLoadMore').addEventListener('click', () => loadSamples(false));
   $('exportCsv').addEventListener('click', exportCurrentCsv);
   $('packetsTab').addEventListener('click', () => setTab('packets')); $('eventsTab').addEventListener('click', () => setTab('events'));

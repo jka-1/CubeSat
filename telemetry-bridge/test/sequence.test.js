@@ -278,3 +278,23 @@ test('restart closes incomplete sequence exactly once and preserves completed st
   assert.equal(store.sequenceEvents({ id: 'interrupted' }).filter((event) => event.type === 'state').length, 1);
   store.close();
 });
+
+test('IF / ELSE branches on the result of an earlier register read block', async () => {
+  const validate = (cmd) => ({ expectedResult: { addr: cmd.addr, reg: cmd.reg, len: cmd.len } });
+  const read = { id: 'read-pv-config', type: 'registerRead', command: { type: 'i2c_read', addr: '0x40', reg: '0x00', len: 2 } };
+  const branch = (op, constant) => ({ id: 'branch', type: 'if', condition: { op, left: { step: read.id }, right: { constant, unit: 'hex' } },
+    then: [command('on-true')], else: [command('on-false')] });
+  assert.equal(validateSequence(definition([read, branch('==', 0x4127)]), validate).steps.length, 2);
+  assert.throws(() => validateSequence(definition([branch('==', 1), read]), validate), /earlier register read/);
+  assert.throws(() => validateSequence(definition([read, { ...branch('&', 1), condition: { op: '&', left: { step: read.id }, right: { constant: 1, unit: 'V' } } }]), validate), /differ|Bit-mask/);
+  const h = harness({ result: { status: 'completed', result: { ok: true, data: ['0x41', '0x27'] } } });
+  const { run } = await h.start([read, branch('==', 0x4127)]);
+  assert.equal(run.state, 'completed');
+  assert.equal(h.events.find((event) => event.phase === 'branch')?.details.selected, 'then');
+  assert.equal(h.events.find((event) => event.phase === 'register_value')?.details.value, 0x4127);
+  const masked = harness({ result: { status: 'completed', result: { ok: true, data: ['0x41', '0x27'] } } });
+  const second = await masked.start([read, branch('&', 0x8000)]);
+  assert.equal(second.run.state, 'completed');
+  assert.equal(masked.events.find((event) => event.phase === 'branch')?.details.selected, 'else');
+  assert.equal(evaluateCondition({ op: '&', left: { step: 'x' }, right: { constant: 4, unit: 'hex' } }, null, { 'step:x': 6 }), true);
+});

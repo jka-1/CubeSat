@@ -1,10 +1,10 @@
 import { allowRoute, showAccount } from './auth.js?v=20261028d';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261028d';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261028d';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261028d';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261029g';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261028e';
-import { initTwinPage, destroyTwinPage } from './twin.js?v=20261103a';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261104a';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261104a';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261104a';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104a';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104a';
+import { initTwinPage, destroyTwinPage } from './twin.js?v=20261104a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -13,17 +13,17 @@ function updateStreamingBadge() {
 }
 window.addEventListener('streaming-telemetry-mode', updateStreamingBadge);
 
-const assetVersion = '20261028d';
+const assetVersion = '20261104a';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261028c`,
-  'link-health': `./modules/link-health.html?v=20261028a`,
-  'debug-mode': `./modules/debug-mode.html?v=20261028c`,
-  runs: `./modules/runs.html?v=20261028e`,
-  sequences: `./modules/sequences.html?v=20261029e`,
-  twin: `./modules/twin.html?v=20261103a`,
-  partners: `./modules/partners.html?v=${assetVersion}`
+  communication: `./modules/communication.html?v=20261104a`,
+  'link-health': `./modules/link-health.html?v=20261104a`,
+  'debug-mode': `./modules/debug-mode.html?v=20261104a`,
+  runs: `./modules/runs.html?v=20261104a`,
+  sequences: `./modules/sequences.html?v=20261104a`,
+  twin: `./modules/twin.html?v=20261104a`,
+  partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };
 
 const pageInitializers = {

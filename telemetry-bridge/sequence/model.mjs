@@ -12,7 +12,7 @@ const commandFields = {
   led_control: ['type', 'enabled'], debug_control: ['type', 'enabled'],
   set_scan_period: ['type', 'period_ms'], i2c_scan: ['type'], i2c_probe: ['type', 'addr']
 };
-const comparisons = new Set(['==', '!=', '<', '<=', '>', '>=']);
+const comparisons = new Set(['==', '!=', '<', '<=', '>', '>=', '&']);
 const bad = (message) => { throw new Error(message); };
 const object = (value) => value && typeof value === 'object' && !Array.isArray(value);
 const keys = (value, allowed, label) => {
@@ -23,7 +23,8 @@ const integer = (value, min, max, label) => {
 };
 
 function operand(value) {
-  keys(value, ['metric', 'register', 'fault', 'constant', 'unit'], 'operand');
+  keys(value, ['metric', 'register', 'fault', 'constant', 'unit', 'step'], 'operand');
+  if (typeof value.step === 'string' && /^[A-Za-z0-9_-]{1,80}$/.test(value.step) && Object.keys(value).length === 1) return 'hex';
   if (typeof value.metric === 'string' && Object.hasOwn(units, value.metric) && Object.keys(value).length === 1) return units[value.metric];
   if (CONDITION_REGISTERS.some((item) => item.id === value.register) && Object.keys(value).length === 1) return 'hex';
   if (CONDITION_FAULTS.includes(value.fault) && Object.keys(value).length === 1) return 'boolean';
@@ -31,6 +32,14 @@ function operand(value) {
     (value.unit !== 'hex' || Number.isSafeInteger(value.constant) && value.constant >= 0 && value.constant <= 0xffff)) return value.unit;
   if (typeof value.constant === 'boolean' && value.unit === 'boolean' && Object.keys(value).length === 2) return 'boolean';
   bad('Invalid condition operand');
+}
+
+export function conditionSteps(condition, out = []) {
+  if (!object(condition)) return out;
+  if (condition.op === 'NOT') return conditionSteps(condition.condition, out);
+  if (condition.op === 'AND' || condition.op === 'OR') { (condition.conditions || []).forEach((part) => conditionSteps(part, out)); return out; }
+  for (const side of ['left', 'right']) if (typeof condition[side]?.step === 'string') out.push(condition[side].step);
+  return out;
 }
 
 export function validateCondition(condition, depth = 0) {
@@ -48,6 +57,7 @@ export function validateCondition(condition, depth = 0) {
     const leftType = operand(condition.left), rightType = operand(condition.right);
     if (leftType !== rightType) bad(`Comparison types or formats differ (${leftType} versus ${rightType})`);
     if (leftType === 'boolean' && !['==', '!='].includes(condition.op)) bad('Fault flags support == and != only');
+    if (condition.op === '&' && leftType !== 'hex') bad('Bit-mask AND (&) needs register or hex values');
     if (condition.left.constant !== undefined && condition.right.constant !== undefined) bad('Comparison requires telemetry, register, or fault flag');
   } else bad('Unsupported condition operator');
 }
@@ -64,6 +74,7 @@ export function evaluateCondition(condition, envelope, registerValues = {}) {
   }
   const read = (item) => {
     if (item.constant !== undefined) return item.constant;
+    if (item.step !== undefined) { const value = registerValues[`step:${item.step}`]; return Number.isInteger(value) ? value : null; }
     const available = (group) => {
       const mask = { pv: 1, bms: 2, mppt: 4 }[group];
       const active = envelope?.packet?.sensor_polling?.active_sensor_mask;
@@ -103,6 +114,7 @@ export function evaluateCondition(condition, envelope, registerValues = {}) {
     case '<=': return left <= right;
     case '>': return left > right;
     case '>=': return left >= right;
+    case '&': return (left & right) !== 0;
   }
 }
 
@@ -113,7 +125,10 @@ export function validateSequence(definition, validateCommand) {
   if (definition.revision !== undefined) integer(definition.revision, 1, 1_000_000, 'revision');
   const ids = new Set();
   let count = 0;
-  const walk = (steps, depth) => {
+  const refs = (condition, reads) => {
+    for (const id of conditionSteps(condition)) if (!reads.has(id)) bad('Condition references a block result that is not an earlier register read on this path');
+  };
+  const walk = (steps, depth, reads = new Set()) => {
     if (!Array.isArray(steps) || depth > 8) bad('Invalid sequence steps');
     for (const step of steps) {
       if (++count > 200) bad('Sequence block limit exceeded');
@@ -124,6 +139,7 @@ export function validateSequence(definition, validateCommand) {
         if (!object(step.command) || !actions.has(step.command.type) || Object.keys(step.command).some((key) => !commandFields[step.command.type].includes(key))) bad('Unsafe command');
         if (step.type === 'registerRead' && step.command.type !== 'i2c_read' || step.type === 'registerWrite' && step.command.type !== 'i2c_write') bad('Register block command mismatch');
         const normalized = validateCommand(step.command);
+        if (step.command.type === 'i2c_read') reads.add(step.id);
         if (step.command.type === 'i2c_read' && !READABLE_REGISTERS.some((item) => item.addr === normalized.expectedResult.addr && item.reg === normalized.expectedResult.reg && item.len === normalized.expectedResult.len)) bad('Unsupported register read or width');
       } else if (step.type === 'delay') {
         keys(step, ['id', 'type', 'durationMs'], 'delay block');
@@ -132,11 +148,13 @@ export function validateSequence(definition, validateCommand) {
         keys(step, ['id', 'type', 'condition', 'timeoutMs'], 'wait block');
         integer(step.timeoutMs, 1, 600_000, 'wait timeout');
         validateCondition(step.condition);
+        refs(step.condition, reads);
       } else if (step.type === 'if') {
         keys(step, ['id', 'type', 'condition', 'then', 'else'], 'IF block');
         validateCondition(step.condition);
-        walk(step.then, depth + 1);
-        walk(step.else || [], depth + 1);
+        refs(step.condition, reads);
+        walk(step.then, depth + 1, new Set(reads));
+        walk(step.else || [], depth + 1, new Set(reads));
       } else bad('Unsupported block type');
     }
   };

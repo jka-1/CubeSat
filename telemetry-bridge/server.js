@@ -1878,7 +1878,8 @@ const httpServer = http.createServer(async (request, response) => {
           if (body.mode === 'simulation') {
             const simulationTelemetry = body.telemetry ? { type: 'telemetry', source: 'simulation',
               packet: { telemetry: body.telemetry.telemetry || body.telemetry,
-                ...(body.telemetry.raw ? { raw: body.telemetry.raw } : {}), seq: 0 }, received_at: new Date().toISOString() } : null;
+                ...(body.telemetry.raw ? { raw: body.telemetry.raw } : {}),
+                ...(body.telemetry.registers && typeof body.telemetry.registers === 'object' ? { register_values: Object.fromEntries(Object.entries(body.telemetry.registers).filter(([, v]) => Number.isSafeInteger(v) && v >= 0 && v <= 0xffff)) } : {}), seq: 0 }, received_at: new Date().toISOString() } : null;
             const execution = await sequenceEngine.start({ definition, mode: 'simulation', operatorName: session.username, simulationTelemetry, ...(body.execution_id ? { id: body.execution_id } : {}) });
             sendJson(response, 202, { execution }); return;
           }

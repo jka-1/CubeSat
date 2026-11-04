@@ -1,20 +1,11 @@
 <section id="twin" class="page active twin-page">
   <div class="section-header">
     <div>
-      <div class="eyebrow"><span class="pulse"></span> Autodesk Platform Services</div>
       <h2>CubeSat Digital Twin</h2>
-      <p>
-        The CubeSat STEP assembly, translated to SVF2 by the APS Model Derivative service and shown in Autodesk Viewer v7.
-        The bridge issues a short-lived read-only viewer token; APS credentials never reach the browser.
-      </p>
     </div>
-    <div id="twinStatus" class="status-pill offline">Loading</div>
+    <div id="twinStatus" class="status-pill offline" hidden>Loading</div>
   </div>
   <section class="card">
-    <div class="card-header">
-      <h3 class="card-title">3D model</h3>
-      <span id="twinUrn" class="status-pill">APS SVF2</span>
-    </div>
     <div class="card-body">
       <div id="twinViewer" style="position:relative;width:100%;height:70vh;min-height:420px;border-radius:12px;overflow:hidden;background:#0b1020"></div>
     </div>

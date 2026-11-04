@@ -3,7 +3,7 @@ import { CONDITION_REGISTERS, CONDITION_FAULTS } from './sequence-condition-fiel
 import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
 
 export const METRICS = RUN_METRICS.map(({ id, label, unit }) => ({ id, label, unit: unit === '°C' ? 'C' : unit }));
-export const OPERATORS = ['>', '>=', '<', '<=', '==', '!='];
+export const OPERATORS = ['>', '>=', '<', '<=', '==', '!=', '&'];
 export const BLOCKS = [
   ['command', 'Command'], ['registerRead', 'Register read'], ['registerWrite', 'Register write'],
   ['delay', 'Delay'], ['waitUntil', 'Wait for value'], ['if', 'IF / ELSE']
@@ -40,6 +40,7 @@ export function validateCondition(condition, path, errors, depth = 0) {
   else if (OPERATORS.includes(condition.op)) {
     const type = (operand) => {
       if (operand?.metric && Object.keys(operand).length === 1) return METRICS.find((metric) => metric.id === operand.metric)?.unit;
+      if (operand?.step && Object.keys(operand).length === 1) return typeof operand.step === 'string' ? 'hex' : null;
       if (operand?.register && Object.keys(operand).length === 1) return CONDITION_REGISTERS.some((item) => item.id === operand.register) ? 'hex' : null;
       if (operand?.fault && Object.keys(operand).length === 1) return CONDITION_FAULTS.includes(operand.fault) ? 'boolean' : null;
       if (Object.keys(operand || {}).length === 2 && Object.hasOwn(operand, 'constant')) {
@@ -53,21 +54,33 @@ export function validateCondition(condition, path, errors, depth = 0) {
     if (!types[0] || !types[1]) errors.push(`${path}: enter a valid telemetry, register, fault flag, or constant value`);
     else if (types[0] !== types[1]) errors.push(`${path}: comparison types or formats must match (${types.join(' versus ')})`);
     if (types[0] === 'boolean' && !['==', '!='].includes(condition.op)) errors.push(`${path}: fault flags support == and != only`);
+    if (condition.op === '&' && types[0] && types[0] !== 'hex') errors.push(`${path}: bit-mask AND (&) needs register or hex values`);
     if (condition.left?.constant !== undefined && condition.right?.constant !== undefined) errors.push(`${path}: comparison needs telemetry, register, or fault flag`);
   } else errors.push(`${path}: choose a comparison or logical operator`);
 }
 export function validateDraft(definition) {
   const errors = [];
-  if (!definition.name?.trim()) errors.push('Enter a Visual Code name.');
+  if (!definition.name?.trim()) errors.push('Enter a Branch Definition name.');
   if (definition.name?.length > 120) errors.push('Name must be 120 characters or fewer.');
-  if (!definition.steps.length) errors.push('Connect at least one block to the Visual Code.');
-  if (countBlocks(definition.steps) > 200) errors.push('Visual Code exceeds 200 blocks.');
+  if (!definition.steps.length) errors.push('Connect at least one block to the Branch Definition.');
+  if (countBlocks(definition.steps) > 200) errors.push('Branch Definition exceeds 200 blocks.');
   const writable = { '0x08': { '0x3E': 2 }, '0x6B': Object.fromEntries('0F 10 12 13 14 2E 30'.split(' ').map((reg) => [`0x${reg}`, 1])), '0x40': Object.fromEntries('00 05 06 07'.split(' ').map((reg) => [`0x${reg}`, 2])) };
   const seen = new Set();
-  const walk = (steps, path, depth) => {
+  const stepRefs = (condition, out = []) => {
+    if (!condition || typeof condition !== 'object') return out;
+    if (condition.op === 'NOT') return stepRefs(condition.condition, out);
+    if (condition.op === 'AND' || condition.op === 'OR') { (condition.conditions || []).forEach((part) => stepRefs(part, out)); return out; }
+    for (const side of ['left', 'right']) if (condition[side]?.step) out.push(condition[side].step);
+    return out;
+  };
+  const checkRefs = (condition, reads, label) => {
+    for (const id of stepRefs(condition)) if (!reads.has(id)) errors.push(`${label}: the selected block result must come from a Register read earlier on the same path`);
+  };
+  const walk = (steps, path, depth, reads = new Set()) => {
     if (depth > 8) errors.push(`${path}: branch nesting exceeds 8`);
     for (const [index, step] of steps.entries()) {
       const label = `${path} block ${index + 1}`;
+      if (step.type === 'waitUntil' || step.type === 'if') checkRefs(step.condition, reads, label);
       if (!step.id || seen.has(step.id)) errors.push(`${label}: missing or duplicate block ID`);
       seen.add(step.id);
       if (step.type === 'delay' && (!Number.isSafeInteger(step.durationMs) || step.durationMs < 1 || step.durationMs > 600000)) errors.push(`${label}: delay must be 1–600000 ms`);
@@ -79,10 +92,11 @@ export function validateDraft(definition) {
         validateCondition(step.condition, label, errors);
         if (!step.then?.length) errors.push(`${label}: TRUE path is disconnected`);
         if (!step.else?.length) errors.push(`${label}: FALSE path is disconnected`);
-        walk(step.then || [], `${label} TRUE`, depth + 1); walk(step.else || [], `${label} FALSE`, depth + 1);
+        walk(step.then || [], `${label} TRUE`, depth + 1, new Set(reads)); walk(step.else || [], `${label} FALSE`, depth + 1, new Set(reads));
       }
       if (['command', 'registerRead', 'registerWrite'].includes(step.type) && !step.command?.type) errors.push(`${label}: choose a command`);
       if (step.type === 'registerRead' || step.command?.type === 'i2c_read') {
+        reads.add(step.id);
         if (!READABLE_REGISTERS.some((item) => item.addr === step.command?.addr && item.reg === step.command?.reg && item.len === step.command?.len)) errors.push(`${label}: select a supported register and width`);
       }
       if (step.type === 'registerWrite' || step.command?.type === 'i2c_write') {
@@ -98,7 +112,7 @@ export function validateDraft(definition) {
       }
     }
   };
-  walk(definition.steps, 'Visual Code', 0);
+  walk(definition.steps, 'Branch Definition', 0);
   return errors;
 }
 export function cloneSequence(definition) {

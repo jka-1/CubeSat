@@ -1,10 +1,9 @@
-<link rel="stylesheet" href="./assets/css/runs.css?v=20261028b" />
-<link rel="stylesheet" href="./assets/css/sequence-history.css?v=20261028a" />
+<link rel="stylesheet" href="./assets/css/runs.css?v=20261104a" />
+<link rel="stylesheet" href="./assets/css/sequence-history.css?v=20261104a" />
 <section id="runs" class="page active runs-page" aria-labelledby="runsTitle">
   <header class="runs-heading">
     <div>
-      <h2 id="runsTitle">Telemetry Runs</h2>
-      <p>Record real UDP telemetry, inspect startup behavior, and trace debug or power-source boundaries back to packets.</p>
+      <h2 id="runsTitle">Logged Telemetry</h2>
     </div>
     <div class="tooltip-status-wrap" data-tooltip="Shows whether the bridge can record telemetry and serve saved runs."><div id="runsBridgeState" class="status-pill offline">Checking Recorder</div></div>
   </header>
@@ -134,12 +133,12 @@
             </svg>
           </div>
           <div id="eventMarkers" class="event-markers" aria-label="Run events"></div>
-          <p id="selectedBucket" class="selected-bucket" aria-live="polite">Click the graph or use its arrow keys to inspect a bucket.</p>
+          <p id="selectedBucket" class="selected-bucket" aria-live="polite"></p>
         </section>
 
         <section class="run-data" aria-labelledby="dataTitle">
           <div class="run-data-heading">
-            <div><h3 id="dataTitle">Recorded data</h3><p id="tableScope">Packets in the selected time window.</p></div>
+            <div><h3 id="dataTitle">Recorded data</h3><p id="tableScope"></p></div>
             <div class="run-data-actions">
               <button id="exportCsv" class="run-button secondary" type="button">Export current CSV</button>
               <div class="run-tabs" role="tablist" aria-label="Recorded data tables">

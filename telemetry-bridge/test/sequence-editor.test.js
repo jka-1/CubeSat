@@ -51,8 +51,8 @@ test('route exposes palette, canvas, persistence and execution controls', async 
   assert.match(script, /\/sequences\/\$\{encodeURIComponent\(draft.id\)\}\/preflight/);
   assert.match(script, /\/sequence-executions\/\$\{id\}\/events\?after=/);
   assert.match(script, /canOperate\(\)/);
-  assert.match(index, /data-route="sequences">Visual Codes<\/a>/);
-  assert.match(html, /Visual Codes/);
+  assert.match(index, /data-route="sequences">Branch Definition<\/a>/);
+  assert.match(html, /Branch Definition/);
   assert.equal(BLOCKS.find(([type]) => type === 'waitUntil')[1], 'Wait for value');
   assert.deepEqual(Object.keys(DEVICE_LABELS), ['0x08', '0x40', '0x6B']);
   assert.match(DEVICE_LABELS['0x6B'], /MPPT \/ BQ25798 \(0x6B\)/);

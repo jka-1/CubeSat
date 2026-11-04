@@ -1318,6 +1318,14 @@ h1 {
   text-transform: uppercase;
 }
 
+.page-bank-label .page-bank-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #ffffff;
+  font-size: 0.8rem;
+}
+
 .page-bank-label small {
   color: #8f9993;
   font: inherit;
@@ -2145,4 +2153,8 @@ body:has(#accountPanel:not([hidden])) .account-control { display: none; }
   .brand { gap: 8px; }
   .nav-links { gap: 4px; }
   .nav-link { padding-inline: 10px; }
+}
+
+@media (max-width: 720px) {
+  .page-bank-label .page-bank-title { position: static; transform: none; }
 }

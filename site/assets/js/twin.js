@@ -5,9 +5,11 @@ const CDN = `https://developer.api.autodesk.com/modelderivative/v2/viewers/${VIE
 let viewer = null;
 let scriptPromise = null;
 
+// Only problems are shown; the status pill stays hidden while the model loads normally.
 function setStatus(text, ok) {
   const el = document.getElementById('twinStatus');
   if (!el) return;
+  el.hidden = Boolean(ok);
   el.textContent = text;
   el.classList.toggle('offline', !ok);
   el.classList.toggle('online', Boolean(ok));
@@ -40,7 +42,6 @@ export async function initTwinPage() {
   try {
     const model = await getJson('/model');
     if (!model.enabled || !model.urn) { setStatus('Not configured', false); return; }
-    document.getElementById('twinUrn').textContent = 'APS SVF2 · ready';
     await loadViewerAssets();
     const Av = window.Autodesk.Viewing;
     await new Promise((resolve) => Av.Initializer({
@@ -56,7 +57,16 @@ export async function initTwinPage() {
     Av.Document.load(`urn:${model.urn}`, (doc) => {
       const node = doc.getRoot().getDefaultGeometry();
       viewer.loadDocumentNode(doc, node).then(() => {
-        setStatus('Model loaded', true);
+        const showBack = () => {
+          // Look at the model's Back face so it lies in the screen X-Y plane, and make that the Home view.
+          try {
+            viewer.setViewCube('back');
+            setTimeout(() => { try { viewer.autocam?.setCurrentViewAsHome?.(false); } catch { /* keep default home */ } }, 1200);
+          } catch { /* ViewCube unavailable; leave the default camera */ }
+        };
+        if (viewer.model?.isLoadDone?.()) showBack();
+        else viewer.addEventListener(Av.GEOMETRY_LOADED_EVENT, showBack, { once: true });
+        setStatus('', true);
         window.__twinLoaded = true;
       });
     }, (code, msg) => setStatus(`Load failed (${code}) ${msg || ''}`, false));

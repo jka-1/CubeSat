@@ -1,13 +1,8 @@
-<link rel="stylesheet" href="./assets/css/link-health.css?v=20261013a" />
+<link rel="stylesheet" href="./assets/css/link-health.css?v=20261104a" />
 <section id="link-health" class="page active link-health-page">
   <div class="section-header">
     <div>
-      <div class="eyebrow"><span class="pulse"></span> Wireless Link</div>
-      <h2>Telemetry Link Health</h2>
-      <p>
-        ESP32-S3 Wi-Fi → UDP 3333 → telemetry bridge → SSE. Statistics come from packet sequence numbers and bridge
-        receive times. Signal strength appears only once the firmware sends v5 link-stats packets.
-      </p>
+      <h2>Telemetry Network Statistics</h2>
     </div>
     <div id="lhStatus" class="status-pill offline">Not connected</div>
   </div>
@@ -63,8 +58,4 @@
       <table class="lh-table" id="lhTable"><tbody></tbody></table>
     </div>
   </section>
-  <p class="footer-note">
-    Loss = sequence gaps (16-bit, skips 0). A backward jump &gt; 64 or forward jump ≥ 1000 counts as a reboot, not loss.
-    Jitter is measured against the nominal period because v4 packets carry no transmit timestamp.
-  </p>
 </section>

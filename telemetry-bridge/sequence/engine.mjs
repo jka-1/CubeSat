@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { evaluateCondition } from './model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
+import { READABLE_REGISTERS } from './register-catalog.mjs';
 
 const terminal = new Set(['completed', 'failed', 'canceled']);
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -34,6 +35,7 @@ function conditionEvidence(condition, envelope, registerValues = {}) {
     for (const side of ['left', 'right']) {
       const operand = part[side];
       if (operand.constant !== undefined) values[side] = operand.constant;
+      else if (operand.step !== undefined) values[side] = registerValues[`step:${operand.step}`] ?? null;
       else if (operand.register !== undefined) {
         const field = CONDITION_REGISTERS.find((item) => item.id === operand.register);
         values[side] = field?.path ? field.path.reduce((value, key) => value?.[key], envelope?.packet?.raw) ?? null : registerValues[operand.register] ?? null;
@@ -125,7 +127,8 @@ export class SequenceEngine {
   async condition(run, blockId, condition, timeoutMs, acceptFalse) {
     const deadline = this.now() + timeoutMs;
     let lastEnvelope;
-    const registerValues = run.mode === 'simulation' ? run.telemetry?.packet?.register_values || {} : {};
+    const registerValues = { ...(run.mode === 'simulation' ? run.telemetry?.packet?.register_values || {} : {}),
+      ...Object.fromEntries(Object.entries(run.stepValues || {}).map(([id, value]) => [`step:${id}`, value])) };
     const registers = new Map();
     const collect = (part) => {
       if (part.op === 'NOT') return collect(part.condition);
@@ -220,6 +223,20 @@ export class SequenceEngine {
             device_reported_success: result.status === 'completed' && result.result?.ok === true,
             hardware_state_verified: step.command.type === 'mppt_acdrv_control' && result.result?.verified === true,
             register_write_read_back: false });
+          if (step.command.type === 'i2c_read') {
+            // Keep the read value so a later IF / ELSE or Wait block can branch on it.
+            const field = READABLE_REGISTERS.find((item) => item.addr === step.command.addr && item.reg === step.command.reg);
+            const bytes = result.result?.data;
+            let value = null;
+            if (run.mode === 'simulation') {
+              const simulated = run.telemetry?.packet?.register_values?.[`${step.command.addr}:${step.command.reg}`];
+              value = Number.isInteger(simulated) ? simulated : null;
+            } else if (Array.isArray(bytes) && bytes.length === step.command.len && bytes.every((byte) => /^0x[0-9a-f]{1,2}$/i.test(byte))) {
+              value = registerValue(bytes, field?.endian || 'big');
+            }
+            run.stepValues = { ...(run.stepValues || {}), [step.id]: value };
+            await this.event(run, 'register_value', { block_id: step.id, addr: step.command.addr, reg: step.command.reg, value });
+          }
           if (run.mode === 'live' && (result.status !== 'completed' || result.result?.ok !== true)) {
             if (result.status === 'timed_out') run.abortReason = 'command_outcome_unknown';
             await this.event(run, 'command_error', { block_id: step.id, command: step.command,
