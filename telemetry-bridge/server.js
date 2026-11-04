@@ -1828,7 +1828,11 @@ const httpServer = http.createServer(async (request, response) => {
       if (request.method !== 'GET') {
         if (session.role !== 'operator') throw createHttpError(403, 'An operator account is required');
         sessions.csrfCheck(request, session);
-        if (!sessions.ownsOperator(session.id)) throw createHttpError(403, 'Active operator ownership is required');
+        // Saving a definition is not hardware control: any signed-in operator (web or desktop app) may save,
+        // guarded by the revision check below. Preflight/execute/controls still need the operator lease.
+        const parts0 = requestUrl.pathname.split('/').filter(Boolean);
+        const definitionSave = parts0[0] === 'sequences' && (request.method === 'POST' && parts0.length === 1 || request.method === 'PUT' && parts0.length === 2);
+        if (!definitionSave && !sessions.ownsOperator(session.id)) throw createHttpError(403, 'Active operator ownership is required');
       }
       const parts = requestUrl.pathname.split('/').filter(Boolean);
       if (parts[0] === 'sequences') {
@@ -1837,7 +1841,15 @@ const httpServer = http.createServer(async (request, response) => {
         if (request.method === 'POST' && parts.length === 1 || request.method === 'PUT' && parts.length === 2) {
           const body = await readJsonBody(request);
           const definition = validateSequence({ ...body, id: parts[1] || body.id || crypto.randomUUID() }, (command) => buildCommandMessage(command));
-          const saved = await recorder.call('sequenceSave', { definition, expectedRevision: request.method === 'PUT' ? body.revision : null });
+          let saved;
+          try { saved = await recorder.call('sequenceSave', { definition, expectedRevision: request.method === 'PUT' ? body.revision : null }); }
+          catch (error) {
+            if (error.statusCode !== 409) throw error;
+            let current = null;
+            try { const latest = await recorder.call('sequenceGet', { id: definition.id }); current = { id: latest.id, revision: latest.revision, name: latest.name }; } catch {}
+            sendJson(response, 409, { error: 'Sequence revision conflict: it was saved elsewhere since you loaded it', code: 'revision_conflict', expected_revision: body.revision ?? null, current }); return;
+          }
+          broadcast({ type: 'sequence_saved', sequence: { id: saved.id, revision: saved.revision, name: saved.name }, by: session.username, at: new Date().toISOString() });
           sendJson(response, request.method === 'POST' ? 201 : 200, { sequence: saved }); return;
         }
         if (request.method === 'POST' && parts.length === 3 && parts[2] === 'preflight') {

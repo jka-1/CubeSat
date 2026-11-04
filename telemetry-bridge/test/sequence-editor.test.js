@@ -109,3 +109,12 @@ test('editor adds user registers with hex range checks and validates references'
   draft.registers.push({ ...draft.registers[0] });
   assert.match(validateDraft(draft).join(' '), /duplicate/);
 });
+
+test('remoteChange flags a newer saved revision of the loaded definition', async () => {
+  const { remoteChange } = await import('../../site/assets/js/sequence-editor-model.mjs');
+  const list = [{ id: 'a', name: 'A', revision: 3 }, { id: 'b', name: 'B', revision: 1 }];
+  assert.deepEqual(remoteChange({ id: 'a', revision: 2 }, list), { id: 'a', name: 'A', revision: 3 });
+  assert.equal(remoteChange({ id: 'a', revision: 3 }, list), null);
+  assert.equal(remoteChange({ revision: 1 }, list), null);
+  assert.equal(remoteChange({ id: 'z', revision: 1 }, list), null);
+});

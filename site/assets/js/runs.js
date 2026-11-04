@@ -1,5 +1,5 @@
-import { apiFetch, canOperate } from './auth.js?v=20261028d';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261104c';
+import { apiFetch, canOperate } from './auth.js?v=20261104d';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261104d';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,

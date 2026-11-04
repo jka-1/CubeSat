@@ -1,4 +1,4 @@
-import { apiFetch, canOperate } from './auth.js?v=20261028d';
+import { apiFetch, canOperate } from './auth.js?v=20261104d';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,
@@ -1248,6 +1248,18 @@ function applyStreamingTelemetry(model) {
   }
 }
 
+function setStreamToggleUi(on) {
+  const toggle = document.getElementById('i2cStreamToggle');
+  if (toggle) toggle.checked = on;
+  const text = document.getElementById('i2cStreamToggleText');
+  if (text) text.textContent = on ? 'On' : 'Off';
+}
+
+function onStreamToggleChange(event) {
+  if (event.target.checked) { setStreamingMode(true); startStreamingMode(); }
+  else { stopStreamingMode(true); connectTelemetryStream(); }
+}
+
 function startStreamingMode() {
   stopMockData();
   closeLiveStream();
@@ -1257,12 +1269,8 @@ function startStreamingMode() {
   renderTelemetry(state, { deviceId: 'Waiting for streaming telemetry', sequence: '--', transmittedAt: 'Not supplied', receivedAt: 'Not supplied' });
   setStreamStatus('Streaming: waiting', false);
   const header = communicationRoot?.querySelector('.i2c-page-header');
-  const section = document.createElement('section');
-  section.className = 'card st-i2c-section';
-  section.innerHTML = `<div class="card-header"><h3 class="card-title">Streaming Telemetry</h3>
-    <label class="st-section-toggle"><input type="checkbox" id="i2cStreamToggle" checked /><span class="st-switch"></span><span>On</span></label></div>
-    <div class="card-body"><div id="i2cStreamRoot"></div></div>`;
-  header?.insertAdjacentElement('afterend', section);
+  const section = document.getElementById('i2cStreamCard');
+  setStreamToggleUi(true);
   const badge = document.createElement('span');
   badge.className = 'st-indicator live st-header-badge';
   badge.innerHTML = '<i></i>Streaming Telemetry';
@@ -1274,11 +1282,7 @@ function startStreamingMode() {
     if (model.latest && model.packets !== seenPackets) { seenPackets = model.packets; applyStreamingTelemetry(model); }
     applyStreamingVisibility(model);
   });
-  section.querySelector('#i2cStreamToggle').addEventListener('change', (event) => {
-    if (!event.target.checked) { stopStreamingMode(true); connectTelemetryStream(); }
-  });
   streaming = { section, badge, view, unsubscribe };
-  setDetailNote('Streaming Telemetry mode: live data from the shared stream; only devices present on the bus are shown.');
   writeLog('Streaming Telemetry mode active (shared stream, present devices only).');
 }
 
@@ -1286,8 +1290,8 @@ function stopStreamingMode(persistOff = false) {
   if (!streaming) return;
   streaming.unsubscribe();
   streaming.view.destroy();
-  streaming.section.remove();
   streaming.badge.remove();
+  setStreamToggleUi(false);
   communicationRoot?.querySelectorAll('.device-tile').forEach((tile) => { tile.hidden = false; });
   streaming = null;
   if (persistOff) setStreamingMode(false);
@@ -1520,6 +1524,7 @@ export function initI2CPage() {
   document.getElementById('ledOffButton')?.addEventListener('click', onLedOffClick);
   communicationRoot?.addEventListener('click', onCommunicationClick);
   window.addEventListener('keydown', onDetailKeydown);
+  document.getElementById('i2cStreamToggle')?.addEventListener('change', onStreamToggleChange);
 
   if (isStreamingMode()) {
     startStreamingMode();
@@ -1543,6 +1548,7 @@ export function destroyI2CPage() {
   document.getElementById('ledOffButton')?.removeEventListener('click', onLedOffClick);
   communicationRoot?.removeEventListener('click', onCommunicationClick);
   window.removeEventListener('keydown', onDetailKeydown);
+  document.getElementById('i2cStreamToggle')?.removeEventListener('change', onStreamToggleChange);
   stopStreamingMode(false);
   communicationRoot = null;
   activeDetailTrigger = null;

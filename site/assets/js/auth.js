@@ -46,6 +46,9 @@ export async function refreshSession() {
     else { update({ enabled: null, user: null }); notice('Cannot reach the login service. Check the bridge connection and retry.'); }
   }
 }
+// Saving Branch Definitions only needs an operator account; the exclusive control lease is for hardware.
+export function canEditSequences() { return state.enabled === false || state.user?.role === 'operator'; }
+export function controlActive() { return state.enabled === false || Boolean(state.control_active); }
 export function canOperate() { return state.enabled === false || (state.user?.role === 'operator' && state.control_active); }
 export function allowRoute(route) {
   if (['home', 'partners'].includes(route) || state.enabled === false || state.user) return true;
@@ -71,10 +74,17 @@ export async function initAuth() {
     event.preventDefault();
     const button = $('accountSubmit'); button.disabled = true; button.textContent = 'Signing in…'; notice('');
     try {
-      const data = await jsonRequest('login', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: $('accountUsername').value.trim(), password: $('accountPassword').value }) });
+      const credentials = { username: $('accountUsername').value.trim(), password: $('accountPassword').value };
+      const send = (body) => jsonRequest('login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      let data, editOnly = false;
+      try { data = await send(credentials); }
+      catch (error) {
+        // Another operator (e.g. the desktop app) holds control: sign in for editing only.
+        if (error.status !== 409) throw error;
+        data = await send({ ...credentials, control: false }); editOnly = true;
+      }
       $('accountPassword').value = ''; update(data); leaveAccount();
-      notice('');
+      notice(editOnly ? 'Another operator has control. You are signed in for editing; hardware controls stay inactive until control is free.' : '');
     } catch (error) { notice(error.message); }
     finally { button.disabled = false; button.textContent = 'Sign in'; }
   });

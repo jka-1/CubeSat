@@ -165,3 +165,10 @@ export function moveBlock(steps, sourcePath, id, targetPath, targetIndex) {
   target.splice(Math.max(0, Math.min(target.length, targetIndex - (source === target && index < targetIndex ? 1 : 0))), 0, block);
   return true;
 }
+
+// Returns { id, name, revision } when the saved list holds a newer revision of the loaded draft (edited in another client).
+export function remoteChange(definition, list) {
+  if (!definition?.id || !Array.isArray(list)) return null;
+  const item = list.find((entry) => entry.id === definition.id);
+  return item && Number(item.revision) > Number(definition.revision || 0) ? { id: item.id, name: item.name, revision: item.revision } : null;
+}

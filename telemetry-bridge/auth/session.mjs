@@ -95,7 +95,10 @@ export class Sessions {
     // Replace this browser's prior session to avoid orphan sessions on repeated login.
     let previous;
     try { previous = await this.authenticate(request); } catch {}
-    if (user.role === 'operator' && this.operatorId && this.operatorId !== previous?.id) {
+    // control:false signs an operator in for editing only (e.g. Branch Definition saves from a second client)
+    // without claiming or contesting the exclusive operator control lease.
+    const claim = body.control !== false;
+    if (claim && user.role === 'operator' && this.operatorId && this.operatorId !== previous?.id) {
       throw fail(409, 'Another operator is controlling the system. Try again after they disconnect or sign out.');
     }
     if (previous) this.revoke(previous.id);
@@ -103,7 +106,7 @@ export class Sessions {
       expires: user.role === 'viewer' ? Date.now() + this.ttl * 1000 : null, streams: new Set() };
     this.sessions.set(id, session);
     if (user.role === 'viewer') this.scheduleViewer(session);
-    if (user.role === 'operator') this.renewOperator(session);
+    if (user.role === 'operator' && claim) this.renewOperator(session);
     return { jwt, session };
   }
   async authenticate(request) {

@@ -1,10 +1,10 @@
-import { allowRoute, showAccount } from './auth.js?v=20261028d';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261104a';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261104a';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261104a';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104c';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104c';
-import { initTwinPage, destroyTwinPage } from './twin.js?v=20261104a';
+import { allowRoute, showAccount } from './auth.js?v=20261104d';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261104d';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261104d';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261104d';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104d';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104d';
+import { initTwinPage, destroyTwinPage } from './twin.js?v=20261104d';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -17,11 +17,11 @@ const assetVersion = '20261104b';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261104b`,
+  communication: `./modules/communication.html?v=20261104d`,
   'link-health': `./modules/link-health.html?v=20261104a`,
   'debug-mode': `./modules/debug-mode.html?v=20261104a`,
   runs: `./modules/runs.html?v=20261104a`,
-  sequences: `./modules/sequences.html?v=20261104c`,
+  sequences: `./modules/sequences.html?v=20261104d`,
   twin: `./modules/twin.html?v=20261104b`,
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };

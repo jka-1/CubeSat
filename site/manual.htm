@@ -98,7 +98,7 @@
   <li><strong>ESP32 status</strong> (top left of the Peripherals bank) shows whether recent telemetry is reaching the browser through the bridge. It does not test each I²C device.</li>
   <li>Each follower tile shows an ACK indicator and latest values; “no data” means no valid packet for that device yet.</li>
   <li><strong>Mock Telemetry</strong> toggle (top right) shows locally generated demonstration values. Turn it off to see packets from the ESP32. The page never starts mock data while the bridge reports live telemetry.</li>
-  <li>When <strong>Streaming Telemetry</strong> is turned on (Programming page), this page subscribes to the same shared stream, shows live cards above the bus view, hides tiles of devices that are not present, and shows a STREAMING badge in the nav.</li>
+  <li>A <strong>Streaming Telemetry</strong> card sits at the bottom of this page with the same On/Off toggle and live cards (including the ADC devices card) as the Programming page. The setting is shared: turning it on here or on Programming makes this page subscribe to the shared stream, show live cards below the bus view, hides tiles of devices that are not present, and shows a STREAMING badge in the nav.</li>
 </ul>
 
 <h2 id="netstats">5. Network Statistics</h2>
@@ -130,7 +130,7 @@
   <li>Presence tiles show each device as present, absent, NACK, timeout, paused or error (from v5/v6 packets).</li>
 </ul>
 <h3>Streaming Telemetry</h3>
-<p>Toggle On to show live cards for present devices only, with sparklines (1/5/15/60 min), last-update age and LIVE/STALE indicators. Absent or not-polled devices appear as small chips. The setting is remembered in the browser and also switches I²C Telemetry to the shared stream.</p>
+<p>Toggle On to show live cards for present devices only, with sparklines (1/5/15/60 min), last-update age and LIVE/STALE indicators. Absent or not-polled devices appear as small chips. The setting is remembered in the browser and also switches I²C Telemetry to the shared stream (its Streaming Telemetry card is at the bottom of that page).</p>
 <h3>Register Access</h3>
 <p>Pick a <strong>Device</strong> and <strong>Register</strong>, or add a register address. Reads show raw bytes and converted engineering values using the register map shared with the Windows tool. Writes are limited to approved registers.</p>
 <h3>Sequence Runner</h3>

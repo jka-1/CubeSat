@@ -1,4 +1,4 @@
-import { apiFetch, canOperate } from './auth.js?v=20261028d';
+import { apiFetch, canOperate } from './auth.js?v=20261104d';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
 import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261027b';

@@ -59,7 +59,7 @@
 .st-off-note { color: var(--white-soft); font-size: 0.85rem; opacity: 0.8; }
 @media (max-width: 700px) { .st-metric, .st-small .st-metric { grid-template-columns: 1fr 90px; } .st-spark { display: none; } .st-cell { grid-template-columns: 54px 1fr 76px; } .st-faults { grid-template-columns: repeat(2, 1fr); } }
 .i2c-page [data-detail-target][hidden] { display: none !important; }
-.st-i2c-section { margin: 0 0 18px; }
+.st-i2c-section { margin: 18px 0 0; }
 .st-header-badge { margin-top: 10px; }
 .st-nav-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--success); border: 1px solid rgba(84,239,120,0.5); border-radius: 999px; padding: 4px 10px; text-decoration: none; }

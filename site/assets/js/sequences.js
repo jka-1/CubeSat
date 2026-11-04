@@ -1,6 +1,6 @@
-import { apiFetch, canOperate } from './auth.js?v=20261028d';
-import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock, parseUserRegister, userRegisterLabel, USER_REGISTER_LIMIT } from './sequence-editor-model.mjs?v=20261104c';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261104c';
+import { apiFetch, canOperate, canEditSequences } from './auth.js?v=20261104d';
+import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock, parseUserRegister, userRegisterLabel, USER_REGISTER_LIMIT, remoteChange } from './sequence-editor-model.mjs?v=20261104d';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261104d';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from './sequence-condition-fields.mjs';
 import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
 
@@ -18,7 +18,7 @@ const failureText = { condition_timeout: 'Condition did not become TRUE before t
 const request = async (path, options = {}) => {
   const response = await apiFetch(`/telemetry${path}`, { cache: 'no-store', ...options });
   const data = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(data.error || `Bridge returned HTTP ${response.status}`);
+  if (!response.ok) throw Object.assign(new Error(data.error || `Bridge returned HTTP ${response.status}`), { status: response.status, data });
   return data;
 };
 const jsonPost = (path, body, token = '') => request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Command-Token': token } : {}) }, body: JSON.stringify(body) });
@@ -131,8 +131,8 @@ function render(updateCanvas = true) {
   $('seqCount').textContent = `${countBlocks(draft.steps)} blocks`;
   const errors = validateDraft(draft);
   $('seqValidation').innerHTML = errors.length ? `<strong>${errors.length} validation issue${errors.length === 1 ? '' : 's'}</strong><ul>${errors.map((error) => `<li>${esc(error)}</li>`).join('')}</ul>` : '<span class="seq-valid">Branch Definition is ready to save.</span>';
-  $('seqSave').disabled = !canOperate() || busy || errors.length > 0;
-  $('seqDuplicate').disabled = !draft.id || !canOperate() || busy;
+  $('seqSave').disabled = !canEditSequences() || busy || errors.length > 0;
+  $('seqDuplicate').disabled = !draft.id || !canEditSequences() || busy;
   const dirty = !draft.id || JSON.stringify(draft) !== savedSnapshot;
   $('seqSimulate').disabled = !canOperate() || busy || errors.length > 0 || dirty || !!execution && ['running', 'paused'].includes(execution.state);
   $('seqLive').disabled = $('seqSimulate').disabled;
@@ -157,16 +157,44 @@ function render(updateCanvas = true) {
   $('seqRecover').disabled = !recoveryNeeded || !canOperate() || !$('seqReviewed').checked || !$('seqToken').value.trim();
   $('seqEvents').innerHTML = events.slice(-30).map((event) => `<li><time>${esc(new Date(event.at_ms).toLocaleTimeString())}</time> ${esc(event.type.replaceAll('_', ' '))}${event.details?.selected ? ` · ${event.details.selected === 'then' ? 'TRUE' : 'FALSE'}` : ''}${event.details?.error ? ` · ${esc(event.details.error)}` : ''}</li>`).join('');
 }
+// Concurrent editing (web + desktop app): poll the saved list and warn when the loaded definition changed elsewhere.
+let listTimer = null, remoteNotice = '';
+async function refreshSavedList() {
+  if (!alive || document.hidden) return;
+  try {
+    const list = (await request('/sequences')).sequences || [];
+    const changed = JSON.stringify(list) !== JSON.stringify(saved);
+    const info = remoteChange(draft, list);
+    saved = list; if (changed) updateSaved();
+    const text = info ? `"${info.name}" was saved elsewhere as revision ${info.revision} (you have r${draft.revision}). ${JSON.stringify(draft) === savedSnapshot ? 'Click Load to get it.' : 'Saving will ask how to resolve the conflict.'}` : '';
+    if (text !== remoteNotice) { remoteNotice = text; $('seqRemote').textContent = text; $('seqRemote').hidden = !text; }
+  } catch { /* transient; next poll retries */ }
+}
+async function resolveConflict(error) {
+  const current = error.data?.current;
+  const message = `This Branch Definition was saved elsewhere (now revision ${current?.revision ?? '?'}; yours is based on r${draft.revision}).\n\nOK: overwrite it with your version as a new revision.\nCancel: discard your edits and load the latest.`;
+  if (confirm(message)) { draft.revision = current?.revision ?? draft.revision; return 'overwrite'; }
+  draft = (await request(`/sequences/${encodeURIComponent(draft.id)}`)).sequence; savedSnapshot = JSON.stringify(draft); $('seqName').value = draft.name; selectedPath = []; selectedIndex = null; selectedId = null;
+  notice(`Loaded the latest revision ${draft.revision}; your edits were discarded.`); return 'reloaded';
+}
 function updateSaved() { $('seqSaved').innerHTML = `<option value="">New Branch Definition</option>${saved.map((item) => option(item.id, `${item.name} · r${item.revision}`, draft.id)).join('')}`; }
 async function loadSaved() { saved = (await request('/sequences')).sequences || []; updateSaved(); }
 async function save() {
   const errors = validateDraft(draft); if (errors.length) { notice('Fix validation issues before saving.', true); render(); return false; }
-  if (!canOperate()) { notice('Active operator access is required.', true); return false; }
+  if (!canEditSequences()) { notice('An operator account is required to save.', true); return false; }
   busy = true; render();
   try {
-    const method = draft.id ? 'PUT' : 'POST';
-    const data = await request(draft.id ? `/sequences/${encodeURIComponent(draft.id)}` : '/sequences', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
-    draft = data.sequence; savedSnapshot = JSON.stringify(draft); await loadSaved(); notice(`Saved revision ${draft.revision}.`); return true;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const method = draft.id ? 'PUT' : 'POST';
+      try {
+        const data = await request(draft.id ? `/sequences/${encodeURIComponent(draft.id)}` : '/sequences', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(draft) });
+        draft = data.sequence; savedSnapshot = JSON.stringify(draft); await loadSaved(); await refreshSavedList(); notice(`Saved revision ${draft.revision}.`); return true;
+      } catch (error) {
+        if (error.status !== 409 || error.data?.code !== 'revision_conflict' || attempt) throw error;
+        if (await resolveConflict(error) === 'reloaded') { await refreshSavedList(); return false; }
+      }
+    }
+    return false;
   } catch (error) { notice(`Save failed: ${error.message}`, true); return false; }
   finally { busy = false; render(); }
 }
@@ -313,7 +341,7 @@ export async function initSequencesPage() {
   $('seqCanvas').addEventListener('change', handleChange);
   $('seqName').addEventListener('input', handleChange);
   $('seqNew').addEventListener('click', () => { savedSnapshot = null; draft = fresh(); $('seqName').value = ''; selectedPath = []; selectedIndex = null; selectedId = null; updateSaved(); render(); notice('New Branch Definition.'); });
-  $('seqLoad').addEventListener('click', async () => { const id = $('seqSaved').value; if (!id) return; try { draft = (await request(`/sequences/${encodeURIComponent(id)}`)).sequence; savedSnapshot = JSON.stringify(draft); $('seqName').value = draft.name; selectedPath = []; selectedIndex = null; selectedId = null; render(); notice(`Loaded revision ${draft.revision}.`); } catch (error) { notice(`Load failed: ${error.message}`, true); } });
+  $('seqLoad').addEventListener('click', async () => { const id = $('seqSaved').value; if (!id) return; try { draft = (await request(`/sequences/${encodeURIComponent(id)}`)).sequence; savedSnapshot = JSON.stringify(draft); $('seqName').value = draft.name; selectedPath = []; selectedIndex = null; selectedId = null; render(); notice(`Loaded revision ${draft.revision}.`); refreshSavedList(); } catch (error) { notice(`Load failed: ${error.message}`, true); } });
   $('seqDuplicate').addEventListener('click', () => { draft = cloneSequence(draft); savedSnapshot = null; $('seqName').value = draft.name; updateSaved(); render(); notice('Copy created. Save to keep it.'); });
   $('seqSave').addEventListener('click', save);
   $('seqSimulate').addEventListener('click', () => start('simulation'));
@@ -329,7 +357,8 @@ export async function initSequencesPage() {
   });
   for (const action of ['pause', 'resume', 'stop']) $(`seq${action[0].toUpperCase()}${action.slice(1)}`).addEventListener('click', () => control(action));
   wireDrag(); render();
+  clearInterval(listTimer); listTimer = setInterval(refreshSavedList, 5000);
   try { await loadSaved(); const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
   catch (error) { notice(`Branch Definition service unavailable: ${error.message}`, true); }
 }
-export function destroySequencesPage() { alive = false; clearInterval(timer); timer = null; historyView?.dispose(); historyView = null; }
+export function destroySequencesPage() { alive = false; clearInterval(timer); timer = null; clearInterval(listTimer); listTimer = null; remoteNotice = ''; historyView?.dispose(); historyView = null; }
