@@ -267,6 +267,8 @@ class StreamingModel:
                 "peripheral": per if per and (per["temperatureC"] is not None or per["lightVoltageMv"] is not None) else None,
                 "adc": (self.decoded or {}).get("adc") if per and (per["temperatureC"] is not None or per["lightVoltageMv"] is not None) else None,
                 "bridgeConnected": None if self.status is None else bool(self.status.get("telemetry_connected")),
+                "signed": None if self.latest is None else bool(((self.latest or {}).get("provenance") or {}).get("authenticated")),
+                "recording": None if self.status is None else bool(((self.status or {}).get("recording") or {}).get("active_run_id")),
                 "sseOpen": self.sse_open, "error": self.error,
             }
 
