@@ -513,6 +513,8 @@ h1 {
 }
 
 .card-body { padding: 20px; }
+.knight-eps-frame { display: block; width: 100%; min-height: 620px; height: min(82vh, 820px); border: 0; border-radius: 12px; background: #0b1020; }
+@media (max-width: 700px) { .knight-eps-frame { min-height: 740px; height: 88vh; } }
 
 .pack-summary {
   display: grid;

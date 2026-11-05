@@ -201,22 +201,22 @@ export class StreamingModel {
 }
 
 // ---------------------------------------------------------------- browser stream manager
-const shared = { es: null, url: null, model: new StreamingModel(), subs: new Set(), open: false, timer: null };
+const shared = { es: null, url: null, model: new StreamingModel(), subs: new Set(), open: false, transport: 'waiting', timer: null };
 export function sharedModel() { return shared.model; }
 export function streamUrl(storage) { return store(storage)?.getItem(STREAM_URL_KEY) || '/telemetry/events'; }
 export function isStreamOpen() { return shared.open; }
 
-function notify() { for (const fn of shared.subs) { try { fn(shared.model, { open: shared.open }); } catch (e) { console.error(e); } } }
+function notify() { for (const fn of shared.subs) { try { fn(shared.model, { open: shared.open, transport: shared.transport }); } catch (e) { console.error(e); } } }
 
 function ensureStream(url) {
   if (shared.es && shared.url === url) return;
   if (shared.es) shared.es.close();
   if (shared.url !== url) shared.model.reset();
-  shared.url = url; shared.open = false;
+  shared.url = url; shared.open = false; shared.transport = 'connecting';
   if (typeof EventSource === 'undefined') return;
   shared.es = new EventSource(url);
-  shared.es.addEventListener('open', () => { shared.open = true; notify(); });
-  shared.es.addEventListener('error', () => { shared.open = false; notify(); });
+  shared.es.addEventListener('open', () => { shared.open = true; shared.transport = 'connected'; notify(); });
+  shared.es.addEventListener('error', () => { shared.open = false; shared.transport = 'disconnected'; notify(); });
   shared.es.addEventListener('message', (m) => { try { if (shared.model.ingest(JSON.parse(m.data))) notify(); } catch { /* ignore malformed */ } });
   clearInterval(shared.timer); shared.timer = setInterval(notify, 1000); // age / stale ticking
 }
@@ -224,9 +224,9 @@ function ensureStream(url) {
 // Subscribe a view; returns an unsubscribe function. The EventSource closes when the last subscriber leaves.
 export function subscribe(fn, url = streamUrl()) {
   store()?.setItem(STREAM_URL_KEY, url);
-  shared.subs.add(fn); ensureStream(url); fn(shared.model, { open: shared.open });
+  shared.subs.add(fn); ensureStream(url); fn(shared.model, { open: shared.open, transport: shared.transport });
   return () => {
     shared.subs.delete(fn);
-    if (!shared.subs.size) { shared.es?.close(); shared.es = null; shared.open = false; clearInterval(shared.timer); }
+    if (!shared.subs.size) { shared.es?.close(); shared.es = null; shared.open = false; shared.transport = 'disconnected'; clearInterval(shared.timer); }
   };
 }

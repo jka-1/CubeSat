@@ -1,12 +1,9 @@
 <section id="twin" class="page active twin-page">
-  <div class="section-header">
-    <div>
-      <h2>CubeSat Digital Twin</h2>
-    </div>
-  </div>
-  <section class="card">
-    <div class="card-body">
-      <div id="twinViewer" style="position:relative;width:100%;height:70vh;min-height:420px;border-radius:12px;overflow:hidden;background:#0b1020"></div>
-    </div>
-  </section>
+  <div class="section-header"><div><h2>CubeSat Digital Twin</h2></div></div>
+  <section class="card"><div class="card-body">
+    <p id="twinIntegrationStatus" role="status">Loading Knight EPS digital twin…</p>
+    <iframe id="knight-eps-twin" class="knight-eps-frame"
+      src="./knight-eps-phase12/viewer/?v=12" title="Knight EPS Phase12 interactive digital twin"
+      loading="eager" allow="fullscreen"></iframe>
+  </div></section>
 </section>
