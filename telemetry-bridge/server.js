@@ -1840,12 +1840,13 @@ const httpServer = http.createServer(async (request, response) => {
       }
       throw createHttpError(404, 'Authentication route not found');
     }
-    // Only these read endpoints are public. All other JWT-mode resources stay private.
+    // Compatibility observation URLs now require the same session as the dashboard.
     const publicRead = request.method === 'GET' && ['/public/events', '/public/health', '/public/latest'].includes(requestUrl.pathname);
     if (requestUrl.pathname.startsWith('/public/') && !publicRead) throw createHttpError(404, 'Public observation route not found');
     if (publicRead) requestUrl.pathname = requestUrl.pathname.slice('/public'.length);
+    if (publicRead && !sessions.enabled) throw createHttpError(401, 'Sign in to access dashboard telemetry');
     const sequenceRoute = requestUrl.pathname === '/sequences' || requestUrl.pathname.startsWith('/sequences/') || requestUrl.pathname === '/sequence-executions' || requestUrl.pathname.startsWith('/sequence-executions/');
-    const session = sessions.enabled && !publicRead ? sequenceRoute ? await sessions.authenticate(request) : await sessions.authorize(request) : null;
+    const session = sessions.enabled ? sequenceRoute ? await sessions.authenticate(request) : await sessions.authorize(request) : null;
     if (!sessions.enabled && !['GET', 'HEAD'].includes(request.method)) assertCommandAuthorized(request);
     if (requestUrl.pathname.startsWith('/operator-pages/')) {
       if (!session) throw createHttpError(401, 'Sign in with an operator account');

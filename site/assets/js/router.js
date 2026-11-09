@@ -1,9 +1,9 @@
-import { allowRoute, isOperator } from './auth.js?v=20261109b';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261109b';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109b';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261109b';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261109b';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261109b';
+import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v=20261109e';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261109e';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109e';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261109e';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261109e';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261109e';
 import { initTwinPage, destroyTwinPage } from './twin.js?v=20261109b';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
 
@@ -97,6 +97,15 @@ function updateNav(route) {
   revealCurrentSection();
 }
 
+function showOperatorDenied(route) {
+  const root = document.getElementById('page-root');
+  root.hidden = false;
+  document.getElementById('accountPanel').hidden = true;
+  updateNav('home');
+  root.innerHTML = '<section class="page" aria-labelledby="accessDeniedTitle"><h1 id="accessDeniedTitle">Operator access required</h1><p>You do not have permission to open this dashboard section.</p><p>Sign in with an operator account to continue.</p><p><button id="operatorSignIn" class="button" type="button">Sign in as operator</button> <a class="button secondary" href="#dashboard">Back to dashboard</a></p></section>';
+  document.getElementById('operatorSignIn').addEventListener('click', () => showAccount(route, { operator: true }));
+}
+
 async function loadRoute(route) {
   const id = ++navigationId;
   if (route === 'account') {
@@ -109,7 +118,15 @@ async function loadRoute(route) {
     return;
   }
   const requestedRoute = resolveRoute(route);
-  const safeRoute = allowRoute(requestedRoute) ? requestedRoute : 'communication';
+  if (!allowRoute(requestedRoute)) {
+    if (currentRoute && pageDestroyers[currentRoute]) pageDestroyers[currentRoute]();
+    currentRoute = null;
+    document.getElementById('page-root').replaceChildren();
+    if (['debug-mode', 'sequences', 'manual', 'partners'].includes(requestedRoute)) showOperatorDenied(requestedRoute);
+    else showAccount(requestedRoute);
+    return;
+  }
+  const safeRoute = requestedRoute;
   document.getElementById('accountPanel').hidden = true;
   history.replaceState(null, '', `#${safeRoute}`);
 
@@ -127,6 +144,8 @@ async function loadRoute(route) {
   if (id !== navigationId || !allowRoute(safeRoute)) return;
 
   if (!response.ok) {
+    if (response.status === 401) { await refreshSession(); if (id === navigationId) loadRoute(safeRoute); return; }
+    if (response.status === 403) { showOperatorDenied(safeRoute); return; }
     root.innerHTML = '<section class="page"><p>Failed to load page module.</p></section>';
     return;
   }

@@ -1,4 +1,4 @@
-import { apiFetch, telemetryUrl } from './auth.js?v=20261109b';
+import { apiFetch, telemetryUrl } from './auth.js?v=20261109e';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 
 const MAX_AGE_MS = 3_600_000;

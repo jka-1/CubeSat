@@ -1,6 +1,6 @@
-import { apiFetch, canOperate, canEditSequences } from './auth.js?v=20261109b';
+import { apiFetch, canOperate, canEditSequences } from './auth.js?v=20261109e';
 import { METRICS, OPERATORS, BLOCKS, comparison, makeBlock, findList, countBlocks, validateDraft, cloneSequence, moveBlock, parseUserRegister, userRegisterLabel, USER_REGISTER_LIMIT, remoteChange } from './sequence-editor-model.mjs?v=20261104d';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261109b';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261109e';
 import { CONDITION_REGISTERS, CONDITION_FAULTS, DEVICE_LABELS } from './sequence-condition-fields.mjs';
 import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
 

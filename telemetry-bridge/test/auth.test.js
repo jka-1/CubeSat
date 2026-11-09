@@ -135,14 +135,9 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     Origin: origin, 'Content-Type': 'application/json', ...(session ? { Cookie: session.cookie, 'X-CSRF-Token': session.csrf } : {}), ...headers
   }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
   assert.equal((await request('/healthz')).status, 200);
-  for (const path of ['/public/health', '/public/latest']) assert.equal((await request(path)).status, 200);
+  for (const path of ['/public/health', '/public/latest', '/public/events']) assert.equal((await request(path)).status, 401);
   for (const path of ['/operator-pages/sequences', '/operator-pages/debug-mode', '/operator-pages/manual', '/operator-pages/manual-document', '/sequences', '/sequence-executions']) assert.equal((await request(path)).status, 401);
   assert.equal((await request('/public/command', null, {}, { 'X-Command-Token': 'test-command' })).status, 404);
-  const publicStream = await request('/public/events'), publicReader = publicStream.body.getReader();
-  const publicStatus = new TextDecoder().decode((await publicReader.read()).value);
-  assert.ok(publicStatus.includes('"command_ready":false'));
-  assert.ok(!publicStatus.includes('active_sequence'));
-  await publicReader.cancel();
   for (const path of ['/latest', '/api/demo/latest', '/health', '/events', '/runs']) assert.equal((await request(path)).status, 401);
   assert.equal((await request('/live-mode', null, { on: true }, { 'X-Command-Token': 'test-command' })).status, 401);
   const login = async (username) => {
@@ -152,6 +147,12 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     return { ...body, cookie: response.headers.get('set-cookie').split(';')[0] };
   };
   const viewer = await login('viewer');
+  for (const path of ['/public/health', '/public/latest']) assert.equal((await request(path, viewer)).status, 200);
+  const publicStream = await request('/public/events', viewer), publicReader = publicStream.body.getReader();
+  const publicStatus = new TextDecoder().decode((await publicReader.read()).value);
+  assert.ok(publicStatus.includes('"command_ready":false'));
+  assert.ok(!publicStatus.includes('active_sequence'));
+  await publicReader.cancel();
   for (const path of ['/operator-pages/sequences', '/operator-pages/debug-mode', '/operator-pages/manual', '/operator-pages/manual-document', '/sequences', '/sequence-executions']) assert.equal((await request(path, viewer)).status, 403);
   assert.equal((await request('/command', viewer, { role: 'operator' }, { 'X-Command-Token': 'test-command', 'X-Role': 'operator' })).status, 403);
   const anotherViewer = await login('viewer');
@@ -285,7 +286,7 @@ test('live branches share a recording, preserve packets and markers, and retain 
     const response = await request(path, body, method), value = await response.json();
     assert.ok(response.ok, `${path}: ${response.status} ${JSON.stringify(value)}`); return value;
   };
-  const publicStream = await fetch(origin + '/public/events');
+  const publicStream = await request('/public/events');
   const publicReader = publicStream.body.getReader();
   let observerText = '';
   const observing = (async () => {
@@ -310,7 +311,7 @@ test('live branches share a recording, preserve packets and markers, and retain 
     const hex = words.map((word) => word.toString(16).padStart(4, '0')).join('');
     device.send(hex, udp, '127.0.0.1');
     const latest = await waitFor(async () => { const value = await json('/latest'); return value.latest?.packet?.seq === current && value.latest; });
-    const publicLatest = await (await fetch(origin + '/public/latest')).json();
+    const publicLatest = await json('/public/latest');
     assert.equal(publicLatest.latest.packet.seq, current);
     assert.equal(publicLatest.latest_debug, null);
     emitted.push(latest); return latest;

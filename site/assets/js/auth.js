@@ -1,11 +1,14 @@
 // JWT stays in an HttpOnly cookie. Only the CSRF value lives in page memory.
 let state = { enabled: null, user: null };
 let returnRoute = 'home';
+let operatorLogin = false;
 const $ = (id) => document.getElementById(id);
 const authUrl = '/telemetry/auth/';
 function notice(message) { $('accountMessage').textContent = message; }
-export function showAccount(from = location.hash.slice(1) || 'home') {
+export function showAccount(from = location.hash.slice(1) || 'home', { operator = false } = {}) {
   if (from !== 'account') returnRoute = from;
+  operatorLogin = operator;
+  update(state);
   location.hash = 'account';
   requestAnimationFrame(() => ($('accountForm').hidden ? $('accountBack') : $('accountUsername')).focus());
 }
@@ -22,14 +25,17 @@ function update(next) {
   $('accountButton').setAttribute('aria-label', state.user
     ? `Open account for ${state.user.username}`
     : 'Sign in');
-  $('accountForm').hidden = !!state.user || state.enabled !== true;
+  const switchingOperator = operatorLogin && !isOperator();
+  $('accountForm').hidden = (!!state.user && !switchingOperator) || state.enabled !== true;
   $('accountLogout').hidden = !state.user;
   $('accountRetry').hidden = state.enabled !== null;
-  $('accountTitle').textContent = state.user ? 'Your account' : 'Sign in';
-  $('accountHelp').textContent = state.user
+  $('accountTitle').textContent = switchingOperator ? 'Sign in as operator' : state.user ? 'Your account' : 'Sign in';
+  $('accountHelp').textContent = switchingOperator
+    ? 'This dashboard section requires an operator account. Sign in with operator credentials to continue.'
+    : state.user
     ? `Signed in as ${state.user.username} (${state.user.role}). ${state.user.role === 'viewer' ? 'You can view telemetry and saved runs.' : `Controls ${state.control_active ? 'active' : 'inactive'}; hardware commands also require the command token.`}`
-    : state.enabled === false ? 'Website sign-in is not configured on this bridge. Public telemetry remains available.'
-    : 'Live telemetry is public. Sign in to view saved runs or use your assigned operator permissions.';
+    : state.enabled === false ? 'Website sign-in is not configured on this bridge. Dashboard access is unavailable.'
+    : 'Sign in to access the dashboard. Your assigned role determines which sections are available.';
   if (changed) window.dispatchEvent(new Event('cubesat-auth-change'));
 }
 async function jsonRequest(path, options = {}) {
@@ -54,7 +60,7 @@ export function canEditSequences() { return isOperator(); }
 export function controlActive() { return isOperator() && Boolean(state.control_active); }
 export function canOperate() { return controlActive(); }
 export function allowRoute(route) {
-  return ['home', 'dashboard', 'communication', 'link-health', 'runs', 'twin'].includes(route) || isOperator();
+  return route === 'home' || (isSignedIn() && (['dashboard', 'communication', 'link-health', 'runs', 'twin'].includes(route) || isOperator()));
 }
 export function telemetryUrl(url) {
   const target = new URL(url, location.href);
@@ -94,7 +100,12 @@ export async function initAuth() {
         if (error.status !== 409) throw error;
         data = await send({ ...credentials, control: false }); editOnly = true;
       }
-      $('accountPassword').value = ''; update(data); leaveAccount();
+      $('accountPassword').value = '';
+      if (operatorLogin && data.user?.role !== 'operator') {
+        update(data); notice('This account does not have operator access. Use an operator account to continue.'); return;
+      }
+      operatorLogin = false;
+      update(data); leaveAccount();
       notice(editOnly ? 'Another operator has control. You are signed in for editing; hardware controls stay inactive until control is free.' : '');
     } catch (error) { notice(error.message); }
     finally { button.disabled = false; button.textContent = 'Sign in'; }
@@ -104,10 +115,10 @@ export async function initAuth() {
     try {
       await jsonRequest('logout', { method: 'POST', headers: { 'X-CSRF-Token': state.csrf } });
       update({ enabled: true, user: null }); notice('You are signed out.');
-      location.hash = 'communication';
+      location.hash = 'home';
       window.dispatchEvent(new Event('cubesat-session-ended'));
     } catch (error) {
-      if (error.status === 401) { update({ enabled: true, user: null }); location.hash = 'communication'; notice('You are signed out.'); }
+      if (error.status === 401) { update({ enabled: true, user: null }); location.hash = 'home'; notice('You are signed out.'); }
       else notice(error.message);
     } finally { $('accountLogout').disabled = false; }
   });
