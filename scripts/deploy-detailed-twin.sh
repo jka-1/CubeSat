@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Site-only update. Run from the pushed release checkout, as root on the droplet.
 set -euo pipefail
+if [[ $# -gt 1 || ( $# -eq 1 && "$1" != --check ) ]]; then
+  echo "Usage: $0 [--check]" >&2
+  exit 2
+fi
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 site_root="${SITE_ROOT:-/var/www/html}"
