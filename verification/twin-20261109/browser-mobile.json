@@ -1,0 +1,461 @@
+[
+  {
+    "name": "Seven detailed sources loaded",
+    "pass": true,
+    "boards": [
+      {
+        "id": "INA226",
+        "source": "INA226_v12_high_detail.glb",
+        "sha256": "1c62b2c930960530af2f940acd04b923c625373a0cf31719b02218667b08f1c5",
+        "hasObsoleteMesh": false,
+        "triangles": 37486,
+        "draws": 18,
+        "worldBounds": [
+          [
+            -0.016714731231331825,
+            0.026897842493875074,
+            -0.09422258261114434
+          ],
+          [
+            0.017555268481373787,
+            0.07101784033132773,
+            -0.08012258134316425
+          ]
+        ]
+      },
+      {
+        "id": "LightSensor",
+        "source": "lightsens_high_detail.glb",
+        "sha256": "90782c23bb330ddf9055d7a9cb4960ddd75a3c8dd200ea24bd3148267b4ec6dc",
+        "hasObsoleteMesh": false,
+        "triangles": 14986,
+        "draws": 16,
+        "worldBounds": [
+          [
+            -0.1418187115341425,
+            0.1027267474784215,
+            -0.011045448795096096
+          ],
+          [
+            -0.11674871202558279,
+            0.11406674902413919,
+            0.010524546211111012
+          ]
+        ]
+      },
+      {
+        "id": "MCU_Final",
+        "source": "Final_MCU_v12_high_detail.glb",
+        "sha256": "590dd8021ce7bcea51e6e5339b1793129d6fa7256fad17b310f9ca5e9a686b27",
+        "hasObsoleteMesh": false,
+        "triangles": 337084,
+        "draws": 26,
+        "worldBounds": [
+          [
+            -0.1337599977850914,
+            0.006142837044217505,
+            -0.00043998239395180716
+          ],
+          [
+            -0.0642399974167347,
+            0.02507140310981451,
+            0.08844001387209191
+          ]
+        ]
+      },
+      {
+        "id": "Regulator_01",
+        "source": "Regulator_PCB_high_detail.glb",
+        "sha256": "bee1995dea979c42722bf822c8c6f627730eae8a896fe3522371e68b42fe08a7",
+        "hasObsoleteMesh": false,
+        "triangles": 56630,
+        "draws": 23,
+        "worldBounds": [
+          [
+            -0.09057500772178173,
+            0.025823584408965494,
+            -0.0938928278514628
+          ],
+          [
+            -0.05788500793278217,
+            0.06898358415141478,
+            -0.0823528281913049
+          ]
+        ]
+      },
+      {
+        "id": "Regulator_02",
+        "source": "Regulator_PCB_high_detail.glb",
+        "sha256": "bee1995dea979c42722bf822c8c6f627730eae8a896fe3522371e68b42fe08a7",
+        "hasObsoleteMesh": false,
+        "triangles": 56630,
+        "draws": 23,
+        "worldBounds": [
+          [
+            0.05679343827068806,
+            0.025823584408965494,
+            -0.0938928278514628
+          ],
+          [
+            0.08948343805968761,
+            0.06898358415141478,
+            -0.0823528281913049
+          ]
+        ]
+      },
+      {
+        "id": "TemperatureSensor",
+        "source": "tempsens_high_detail.glb",
+        "sha256": "77bee8f169cf2d18c4f9e1f91f0868479d711aa292890dfe8039cfe4118a4dfe",
+        "hasObsoleteMesh": false,
+        "triangles": 13510,
+        "draws": 13,
+        "worldBounds": [
+          [
+            0.13241960993036628,
+            0.03168109393145842,
+            -0.02013500106856264
+          ],
+          [
+            0.14375961059704423,
+            0.05929110452262005,
+            0.014135005835476718
+          ]
+        ]
+      },
+      {
+        "id": "Charger_BMS034A_EVM",
+        "source": "BMS034A_PCB_1_high_detail.glb",
+        "sha256": "2c23294f940ed7ceec1bd960a267f696e944112c2b3b3710014ab75aa846ff5a",
+        "hasObsoleteMesh": false,
+        "triangles": 121190,
+        "draws": 35,
+        "worldBounds": [
+          [
+            -0.05465309880673886,
+            0.0033666293992229025,
+            -0.07512236305918611
+          ],
+          [
+            0.035246593877673156,
+            0.022925463239109906,
+            0.020434573572699302
+          ]
+        ]
+      }
+    ]
+  },
+  {
+    "name": "Labels",
+    "pass": true
+  },
+  {
+    "name": "Integrated viewport",
+    "pass": true,
+    "appViewport": [
+      390,
+      800
+    ],
+    "siteViewport": [
+      390,
+      800
+    ],
+    "documentSize": [
+      390,
+      800
+    ],
+    "headerBottom": 131.5,
+    "frame": {
+      "x": 0,
+      "y": 131.5,
+      "width": 390,
+      "height": 668.5
+    },
+    "rootPadding": "0px",
+    "frameBorder": "0px",
+    "canvas": [
+      390,
+      669
+    ],
+    "sidebarOpen": "false",
+    "sidebarWidth": 0,
+    "state": {
+      "target": [
+        0,
+        0.04848609400579205,
+        3.94881785686918e-7
+      ],
+      "position": [
+        -1.006963031166976,
+        1.1057972767311164,
+        1.2587041838405058
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ],
+      "chassisCenter": [
+        0,
+        0.04848609400579205,
+        3.94881785686918e-7
+      ],
+      "aspect": 0.5829596412556054,
+      "zoom": 1,
+      "near": 0.0037394778667507343,
+      "far": 14.957911467002937,
+      "view": {
+        "enabled": true,
+        "fullWidth": 390,
+        "fullHeight": 669,
+        "offsetX": -2.5466777199749506,
+        "offsetY": 2.041032320627013,
+        "width": 390,
+        "height": 669
+      },
+      "viewport": [
+        390,
+        669
+      ],
+      "canvas": [
+        390,
+        669
+      ],
+      "pixelRatio": 1
+    },
+    "projectedBounds": {
+      "min": [
+        -0.8499999293210508,
+        -0.3607030327744585
+      ],
+      "max": [
+        0.8499999293210513,
+        0.36070303277445903
+      ]
+    }
+  },
+  {
+    "name": "Sidebar and stable orbit target",
+    "pass": true
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast INA226",
+    "pass": true,
+    "probe": {
+      "id": "INA226",
+      "x": 178.50096028610525,
+      "y": 371.7943154120693
+    }
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast Regulator_01",
+    "pass": true,
+    "probe": {
+      "id": "Regulator_01",
+      "x": 179.8219610525139,
+      "y": 373.6192016164654
+    }
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast Regulator_02",
+    "pass": true,
+    "probe": {
+      "id": "Regulator_02",
+      "x": 179.82196105251376,
+      "y": 373.61920161646555
+    }
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast MCU_Final",
+    "pass": true,
+    "probe": {
+      "id": "MCU_Final",
+      "x": 166.0127389636033,
+      "y": 359.60403723106475
+    }
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast LightSensor",
+    "pass": true,
+    "probe": {
+      "id": "LightSensor",
+      "x": 170.7541685969846,
+      "y": 360.5749142238066
+    }
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast TemperatureSensor",
+    "pass": true,
+    "probe": {
+      "id": "TemperatureSensor",
+      "x": 156.35541782272205,
+      "y": 360.4351417875383
+    }
+  },
+  {
+    "name": "Select, highlight, isolate, focus and raycast Charger_BMS034A_EVM",
+    "pass": true,
+    "probe": {
+      "id": "Charger_BMS034A_EVM",
+      "x": 168.24119598771827,
+      "y": 360.2582158110957
+    }
+  },
+  {
+    "name": "Lid, exploded PCB assemblies and six camera presets",
+    "pass": true,
+    "exploded": [
+      {
+        "id": "INA226",
+        "visible": true,
+        "position": [
+          0.00042026862502098083,
+          0.2871725857257843,
+          -0.0015282289823517203
+        ],
+        "worldPosition": [
+          0.00042026862502098083,
+          0.04895784265168192,
+          -0.0871725724530738
+        ],
+        "assembly": "Mounted_INA226",
+        "mountingId": "INA226",
+        "coverAttached": false
+      },
+      {
+        "id": "LightSensor",
+        "visible": true,
+        "position": [
+          0.020716294646263123,
+          0.0002608299255371094,
+          0.003910653948783871
+        ],
+        "worldPosition": [
+          -0.12928371131420135,
+          0.24839674583107638,
+          -0.0002604955970118007
+        ],
+        "assembly": "cover_left",
+        "mountingId": "LightSensor",
+        "coverAttached": true
+      },
+      {
+        "id": "MCU_Final",
+        "visible": true,
+        "position": [
+          -0.0989999994635582,
+          0.15600000321865082,
+          -0.03487762436270714
+        ],
+        "worldPosition": [
+          -0.0989999994635582,
+          0.015608488151073081,
+          0.04400001566728465
+        ],
+        "assembly": "Mounted_MCU_Final",
+        "mountingId": "MCU_Final",
+        "coverAttached": false
+      },
+      {
+        "id": "Regulator_01",
+        "visible": true,
+        "position": [
+          -0.07423000782728195,
+          0.28812283277511597,
+          -0.0030824870336800814
+        ],
+        "worldPosition": [
+          -0.07423000782728195,
+          0.04740358436567979,
+          -0.08812281899902313
+        ],
+        "assembly": "Mounted_Regulator_01",
+        "mountingId": "Regulator_01",
+        "coverAttached": false
+      },
+      {
+        "id": "Regulator_02",
+        "visible": true,
+        "position": [
+          0.07313843816518784,
+          0.28812283277511597,
+          -0.0030824870336800814
+        ],
+        "worldPosition": [
+          0.07313843816518784,
+          0.04740358436567979,
+          -0.08812281899902313
+        ],
+        "assembly": "Mounted_Regulator_02",
+        "mountingId": "Regulator_02",
+        "coverAttached": false
+      },
+      {
+        "id": "TemperatureSensor",
+        "visible": true,
+        "position": [
+          0.1380896121263504,
+          0.203000009059906,
+          -0.004999998491257429
+        ],
+        "worldPosition": [
+          0.1380896121263504,
+          0.04548609876137796,
+          -0.002999997616542821
+        ],
+        "assembly": "Mounted_TemperatureSensor",
+        "mountingId": "TemperatureSensor",
+        "coverAttached": false
+      },
+      {
+        "id": "Charger_BMS034A_EVM",
+        "visible": true,
+        "position": [
+          -0.009703250601887703,
+          0.22734391689300537,
+          -0.03734004497528076
+        ],
+        "worldPosition": [
+          -0.009703250601887703,
+          0.013146046009412132,
+          -0.02734389481908861
+        ],
+        "assembly": "Mounted_Charger_BMS034A_EVM",
+        "mountingId": "Charger_BMS034A_EVM",
+        "coverAttached": false
+      }
+    ]
+  },
+  {
+    "name": "Assembled presets and rendering quality",
+    "pass": true,
+    "performance": {
+      "fitCount": 29,
+      "fitMs": 1.7999999970197678,
+      "resizeCount": 1,
+      "drawCalls": 667,
+      "triangles": 1751896
+    }
+  },
+  {
+    "name": "Telemetry/display API with explicit synthetic fixtures",
+    "pass": true,
+    "note": "No hardware telemetry was connected."
+  },
+  {
+    "name": "Frame timing in this browser",
+    "medianMs": 16.600000008940697,
+    "p95Ms": 18.299999997019768,
+    "performance": {
+      "fitCount": 32,
+      "fitMs": 1.7000000029802322,
+      "resizeCount": 1,
+      "drawCalls": 347,
+      "triangles": 877691
+    }
+  },
+  {
+    "name": "PASS",
+    "pass": true
+  }
+]

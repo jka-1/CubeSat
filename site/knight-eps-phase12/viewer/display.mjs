@@ -3,7 +3,7 @@ import {normalizeTelemetry,telemetryHealth} from './telemetry.mjs';
 export {normalizeTelemetry} from './telemetry.mjs';
 export function createDisplay({onStatus,onTelemetry,staleMs=15000}){
  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=582;
- canvas.setAttribute('aria-label','Miner LCD: same snapshot as telemetry panel');
+ canvas.setAttribute('aria-label','Payload LCD: same snapshot as telemetry panel');
  const ctx=canvas.getContext('2d'),texture=new THREE.CanvasTexture(canvas);
  texture.colorSpace=THREE.SRGBColorSpace;texture.minFilter=THREE.LinearFilter;texture.flipY=false;
  const presets={standby:{message:'READY',lines:['Waiting for workload']},mining:{message:'MINING',lines:['Illustrative screen state']},low_power:{message:'LOW POWER',lines:['Illustrative screen state']},offline:{message:'OFFLINE',lines:['Presentation state']}};

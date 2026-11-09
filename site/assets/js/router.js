@@ -4,7 +4,7 @@ import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261104d';
 import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104d';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104d';
-import { initTwinPage, destroyTwinPage } from './twin.js?v=20261105a';
+import { initTwinPage, destroyTwinPage } from './twin.js?v=20261109a';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
 
 function updateStreamingBadge() {
@@ -22,7 +22,7 @@ const routes = {
   'debug-mode': `./modules/debug-mode.html?v=20261104a`,
   runs: `./modules/runs.html?v=20261104a`,
   sequences: `./modules/sequences.html?v=20261104d`,
-  twin: `./modules/twin.html?v=20261105a`,
+  twin: `./modules/twin.html?v=20261109a`,
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };
 

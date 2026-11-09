@@ -44,7 +44,7 @@
           -0.05000000447034836
         ],
         [
-          0.0,
+          0,
           0.3079996258020401,
           0.045999996364116676
         ]
@@ -52,12 +52,12 @@
       "triangles": 1596,
       "category": "chassis",
       "original_source_name": "cubesat.step",
-      "label": "Chassis \u00b7 Body A",
+      "label": "Chassis · Body A",
       "geometry_status": "native_cad",
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Chassis_Body_A",
       "cad_bbox_m": [
         [
@@ -66,7 +66,7 @@
           -0.05000000447034836
         ],
         [
-          0.0,
+          0,
           0.3079996258020401,
           0.045999996364116676
         ]
@@ -83,7 +83,7 @@
           -0.10799963833182956
         ],
         [
-          0.0,
+          0,
           0.09648612392375405,
           0.10800041454093638
         ]
@@ -91,11 +91,11 @@
       "world_center_m": [
         -0.07500000298023224,
         0.04848608709164311,
-        3.8810455341153904e-07
+        3.8810455341153904e-7
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Chassis \u00b7 Body A",
+        "name": "Chassis · Body A",
         "model": "6U XL prototype chassis",
         "purpose": "Holds the electronics and provides the frame for the cover and solar-panel supports.",
         "links": [],
@@ -115,7 +115,7 @@
       ],
       "bbox_m": [
         [
-          0.0,
+          0,
           0.09199960529804227,
           -0.05000000447034836
         ],
@@ -128,16 +128,16 @@
       "triangles": 1596,
       "category": "chassis",
       "original_source_name": "cubesat.step",
-      "label": "Chassis \u00b7 Body B",
+      "label": "Chassis · Body B",
       "geometry_status": "native_cad",
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Chassis_Body_B",
       "cad_bbox_m": [
         [
-          0.0,
+          0,
           0.09199960529804227,
           -0.05000000447034836
         ],
@@ -154,7 +154,7 @@
       ],
       "world_bbox_m": [
         [
-          0.0,
+          0,
           0.0004860502595321614,
           -0.10799963833182956
         ],
@@ -167,11 +167,11 @@
       "world_center_m": [
         0.07500000298023224,
         0.04848608709164311,
-        3.8810455341153904e-07
+        3.8810455341153904e-7
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Chassis \u00b7 Body B",
+        "name": "Chassis · Body B",
         "model": "6U XL prototype chassis",
         "purpose": "Holds the electronics and provides the frame for the cover and solar-panel supports.",
         "links": [],
@@ -180,7 +180,7 @@
     },
     "INA226": {
       "source": "sources/CAD/Complete_CubeSat_Assembly.step",
-      "description": "INA226 between regulators; original populated CAD geometry retained",
+      "description": "Measures current on the 5 V payload branch and reports measurements to the MCU over I²C.",
       "group": "side_wall_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -201,15 +201,15 @@
           0.020531770423986025
         ]
       ],
-      "triangles": 18672,
+      "triangles": 37486,
       "category": "electronics",
       "original_source_name": "cubesat.step",
       "label": "INA226 payload current monitor",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_INA226",
       "mounting_review_status": "candidate_requires_clip_flex",
       "required_clip_count": 3,
@@ -226,9 +226,9 @@
       "cover_attached": false,
       "mounting_surface": "side_wall",
       "mounting_normal": [
-        0.0,
-        -1.0,
-        0.0
+        0,
+        -1,
+        0
       ],
       "mounting_note": "3 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. One lower-edge clip and one per side.",
       "channel_clearance_mm": -0.4819667761230435,
@@ -237,42 +237,42 @@
       "cad_bbox_m": [
         [
           -0.016714731231331825,
-          0.2801225930452347,
-          -0.02358822838868946
+          0.2801225808916345,
+          -0.0235882179931194
         ],
         [
           0.017555268481373787,
-          0.2942225784063339,
-          0.020531770423986025
+          0.2942225817157734,
+          0.020531779792015637
         ]
       ],
       "cad_center_m": [
         0.00042026862502098083,
-        0.2871725857257843,
-        -0.0015282289823517169
+        0.28717258130370393,
+        -0.0015282191005518819
       ],
       "world_bbox_m": [
         [
           -0.016714731231331825,
-          0.0268978316951999,
-          -0.09422257998071172
+          0.026897841864653632,
+          -0.09422258414816109
         ],
         [
           0.017555268481373787,
-          0.07101783106785074,
-          -0.0801225938272523
+          0.07101784343870696,
+          -0.08012257146819575
         ]
       ],
       "world_center_m": [
         0.00042026862502098083,
-        0.04895783138152532,
-        -0.08717258690398201
+        0.048957842651680294,
+        -0.08717257780817841
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/INA226_v12_high_detail.glb",
       "display_info": {
         "name": "INA226 payload current monitor",
         "model": "INA226",
-        "purpose": "Measures current on the 5 V payload branch and reports measurements to the MCU over I\u00b2C.",
+        "purpose": "Measures current on the 5 V payload branch and reports measurements to the MCU over I²C.",
         "links": [
           {
             "label": "INA226 product page and datasheet",
@@ -280,11 +280,15 @@
           }
         ],
         "fields": []
+      },
+      "model_upgrade": {
+        "source_sha256": "1c62b2c930960530af2f940acd04b923c625373a0cf31719b02218667b08f1c5",
+        "report": "model-upgrades.json"
       }
     },
     "LightSensor": {
       "source": "sources/CAD/Complete_CubeSat_Assembly.step",
-      "description": "Original populated light-sensor CAD, grouped with removable cover at interaction time",
+      "description": "Measures local visible light for comparison with solar operating conditions.",
       "group": "removable_cover",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -305,15 +309,15 @@
           0.06358065456151962
         ]
       ],
-      "triangles": 5028,
+      "triangles": 14986,
       "category": "removable_cover",
       "original_source_name": "cubesat.step",
       "label": "Light sensor",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "cover_left",
       "mounting_review_status": "candidate_requires_clip_flex",
       "required_clip_count": 2,
@@ -330,9 +334,9 @@
       "cover_attached": true,
       "mounting_surface": "lid",
       "mounting_normal": [
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        1
       ],
       "mounting_note": "2 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. Two lid clips.",
       "channel_clearance_mm": -0.4819667761230435,
@@ -340,40 +344,40 @@
       "spring_flex_policy": "Ignored for visualization at user direction",
       "cad_bbox_m": [
         [
-          -0.14181870967149734,
-          0.18947544693946838,
-          0.05224065482616424
+          -0.1418187115341425,
+          0.18947543827773217,
+          0.0522406567295389
         ],
         [
-          -0.11674871295690536,
-          0.21104544401168823,
-          0.06358065456151962
+          -0.11674871202558279,
+          0.2110454331371491,
+          0.06358065728071295
         ]
       ],
       "cad_center_m": [
-        -0.12928371131420135,
-        0.2002604454755783,
-        0.057910654693841934
+        -0.12928371177986264,
+        0.20026043570744062,
+        0.057910657005125925
       ],
       "world_bbox_m": [
         [
-          -0.14181870967149734,
-          0.10272674519682179,
-          -0.011045459758352784
+          -0.1418187115341425,
+          0.10272674488823234,
+          -0.011045451206548491
         ],
         [
-          -0.11674871295690536,
-          0.11406674672595066,
-          0.010524537873846227
+          -0.11674871202558279,
+          0.11406675123564658,
+          0.010524546700126864
         ]
       ],
       "world_center_m": [
-        -0.12928371131420135,
-        0.10839674596138622,
-        -0.00026046094225327856
+        -0.12928371177986264,
+        0.10839674806193947,
+        -0.00026045225321081385
       ],
       "cover_leaf": "left",
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/lightsens_high_detail.glb",
       "display_info": {
         "name": "Light sensor",
         "model": "TEMT6000",
@@ -382,11 +386,15 @@
         "fields": [
           "light_level"
         ]
+      },
+      "model_upgrade": {
+        "source_sha256": "90782c23bb330ddf9055d7a9cb4960ddd75a3c8dd200ea24bd3148267b4ec6dc",
+        "report": "model-upgrades.json"
       }
     },
     "MCU_Final": {
       "source": "sources/CAD/Complete_CubeSat_Assembly.step",
-      "description": "Reoriented from vertical native STEP location to bottom floor as required",
+      "description": "Collects digital and analog measurements and transmits telemetry over Wi-Fi.",
       "group": "floor_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -407,15 +415,15 @@
           -0.02541470900177955
         ]
       ],
-      "triangles": 111190,
+      "triangles": 337084,
       "category": "electronics",
       "original_source_name": "cubesat.step",
       "label": "ESP32-S3 MCU board",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_MCU_Final",
       "mounting_review_status": "candidate_requires_clip_flex",
       "required_clip_count": 4,
@@ -432,9 +440,9 @@
       "cover_attached": false,
       "mounting_surface": "bottom",
       "mounting_normal": [
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        1
       ],
       "mounting_note": "4 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. Four floor clips.",
       "channel_clearance_mm": -0.4819667761230435,
@@ -443,38 +451,38 @@
       "cad_bbox_m": [
         [
           -0.1337599977850914,
-          0.11156000196933744,
-          -0.04434053972363472
+          0.11156000274600136,
+          -0.044343268750375815
         ],
         [
-          -0.064240001142025,
-          0.20044000446796417,
-          -0.02541470900177955
+          -0.0642399974167347,
+          0.20043999912500285,
+          -0.02541471058433366
         ]
       ],
       "cad_center_m": [
-        -0.0989999994635582,
-        0.15600000321865082,
-        -0.03487762436270714
+        -0.09899999760091305,
+        0.1560000009355021,
+        -0.03487898966735474
       ],
       "world_bbox_m": [
         [
           -0.1337599977850914,
-          0.0061455647721480825,
-          -0.0004399878455901077
+          0.006142825288129514,
+          -0.0004399869276630816
         ],
         [
-          -0.064240001142025,
-          0.025071407037965225,
-          0.08844001521300943
+          -0.0642399974167347,
+          0.025071407337804615,
+          0.08844001453777339
         ]
       ],
       "world_center_m": [
-        -0.0989999994635582,
-        0.015608485905056653,
-        0.04400001368370966
+        -0.09899999760091305,
+        0.015607116312967064,
+        0.04400001380505515
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/Final_MCU_v12_high_detail.glb",
       "display_info": {
         "name": "ESP32-S3 MCU board",
         "model": "ESP32-S3",
@@ -488,11 +496,15 @@
         "fields": [
           "esp32_temperature_c"
         ]
+      },
+      "model_upgrade": {
+        "source_sha256": "590dd8021ce7bcea51e6e5339b1793129d6fa7256fad17b310f9ca5e9a686b27",
+        "report": "model-upgrades.json"
       }
     },
     "Regulator_01": {
       "source": "sources/CAD/Complete_CubeSat_Assembly.step",
-      "description": "5 V regulator (front-most on occupied long wall); original populated CAD geometry retained",
+      "description": "Steps down the system supply for regulated power distribution.",
       "group": "side_wall_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -513,15 +525,15 @@
           0.017227512551471598
         ]
       ],
-      "triangles": 16278,
+      "triangles": 56630,
       "category": "electronics",
       "original_source_name": "cubesat.step",
       "label": "Voltage regulator 01",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_Regulator_01",
       "mounting_review_status": "candidate_requires_clip_flex",
       "required_clip_count": 3,
@@ -538,9 +550,9 @@
       "cover_attached": false,
       "mounting_surface": "side_wall",
       "mounting_normal": [
-        0.0,
-        -1.0,
-        0.0
+        0,
+        -1,
+        0
       ],
       "mounting_note": "3 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. One lower-edge clip and one per side.",
       "channel_clearance_mm": -0.048766776123043476,
@@ -548,50 +560,54 @@
       "spring_flex_policy": "Ignored for visualization at user direction",
       "cad_bbox_m": [
         [
-          -0.0912100076675415,
-          0.28235282003879547,
-          -0.02339248661883175
+          -0.09057500772178173,
+          0.2823528334898574,
+          -0.024662476001672744
         ],
         [
-          -0.0572500079870224,
-          0.29389284551143646,
-          0.017227512551471598
+          -0.05788500793278217,
+          0.29389283443343306,
+          0.018497523732008723
         ]
       ],
       "cad_center_m": [
         -0.07423000782728195,
-        0.28812283277511597,
-        -0.003082487033680076
+        0.28812283396164523,
+        -0.003082476134832011
       ],
       "world_bbox_m": [
         [
-          -0.0912100076675415,
-          0.02709357346504755,
-          -0.09389284067925935
+          -0.09057500772178173,
+          0.025823583879657833,
+          -0.09389283621278015
         ],
         [
-          -0.0572500079870224,
-          0.06771357304933046,
-          -0.08235281512569709
+          -0.05788500793278217,
+          0.06898358671434021,
+          -0.08235282367134644
         ]
       ],
       "world_center_m": [
         -0.07423000782728195,
-        0.047403573257189004,
-        -0.08812282790247822
+        0.04740358529699902,
+        -0.0881228299420633
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/Regulator_PCB_high_detail.glb",
       "display_info": {
         "name": "Voltage regulator 01",
         "model": "LM2679",
         "purpose": "Steps down the system supply for regulated power distribution.",
         "links": [],
         "fields": []
+      },
+      "model_upgrade": {
+        "source_sha256": "bee1995dea979c42722bf822c8c6f627730eae8a896fe3522371e68b42fe08a7",
+        "report": "model-upgrades.json"
       }
     },
     "Regulator_02": {
       "source": "sources/CAD/Complete_CubeSat_Assembly.step",
-      "description": "3.3 V regulator (rear-most on occupied long wall); original populated CAD geometry retained",
+      "description": "Steps down the system supply for regulated power distribution.",
       "group": "side_wall_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -612,15 +628,15 @@
           0.017227512551471598
         ]
       ],
-      "triangles": 16278,
+      "triangles": 56630,
       "category": "electronics",
       "original_source_name": "cubesat.step",
       "label": "Voltage regulator 02",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_Regulator_02",
       "mounting_review_status": "candidate_requires_clip_flex",
       "required_clip_count": 3,
@@ -637,9 +653,9 @@
       "cover_attached": false,
       "mounting_surface": "side_wall",
       "mounting_normal": [
-        0.0,
-        -1.0,
-        0.0
+        0,
+        -1,
+        0
       ],
       "mounting_note": "3 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. One lower-edge clip and one per side.",
       "channel_clearance_mm": -0.048766776123043476,
@@ -647,45 +663,49 @@
       "spring_flex_policy": "Ignored for visualization at user direction",
       "cad_bbox_m": [
         [
-          0.056158438324928284,
-          0.28235282003879547,
-          -0.02339248661883175
+          0.05679343827068806,
+          0.2823528334898574,
+          -0.024662476001672744
         ],
         [
-          0.09011843800544739,
-          0.29389284551143646,
-          0.017227512551471598
+          0.08948343805968761,
+          0.29389283443343306,
+          0.018497523732008723
         ]
       ],
       "cad_center_m": [
         0.07313843816518784,
-        0.28812283277511597,
-        -0.003082487033680076
+        0.28812283396164523,
+        -0.003082476134832011
       ],
       "world_bbox_m": [
         [
-          0.056158438324928284,
-          0.02709357346504755,
-          -0.09389284067925935
+          0.05679343827068806,
+          0.025823583879657833,
+          -0.09389283621278015
         ],
         [
-          0.09011843800544739,
-          0.06771357304933046,
-          -0.08235281512569709
+          0.08948343805968761,
+          0.06898358671434021,
+          -0.08235282367134644
         ]
       ],
       "world_center_m": [
         0.07313843816518784,
-        0.047403573257189004,
-        -0.08812282790247822
+        0.04740358529699902,
+        -0.0881228299420633
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/Regulator_PCB_high_detail.glb",
       "display_info": {
         "name": "Voltage regulator 02",
         "model": "LM2679",
         "purpose": "Steps down the system supply for regulated power distribution.",
         "links": [],
         "fields": []
+      },
+      "model_upgrade": {
+        "source_sha256": "bee1995dea979c42722bf822c8c6f627730eae8a896fe3522371e68b42fe08a7",
+        "report": "model-upgrades.json"
       }
     },
     "RemovableTop_Front_A": {
@@ -706,7 +726,7 @@
           0.046000000089406946
         ],
         [
-          0.0,
+          0,
           0.3079996258020401,
           0.054000001400709145
         ]
@@ -719,7 +739,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "cover_left",
       "motion_note": "Illustrative straight lift; native assembled cover contacts chassis/WingArm_02. No verified hinge, retention release or continuous sweep.",
       "cover_attached": true,
@@ -735,7 +755,7 @@
           0.046000000089406946
         ],
         [
-          0.0,
+          0,
           0.3079996258020401,
           0.054000001400709145
         ]
@@ -752,7 +772,7 @@
           -0.10799963968053022
         ],
         [
-          0.0,
+          0,
           0.10448611918227732,
           0.10800038217215466
         ]
@@ -760,7 +780,7 @@
       "world_center_m": [
         -0.07500000298023224,
         0.10048608700077966,
-        3.7124581221681385e-07
+        3.7124581221681385e-7
       ],
       "cover_leaf": "left",
       "extraction_enabled": false,
@@ -804,7 +824,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "wing_negative_y",
       "cad_bbox_m": [
         [
@@ -882,7 +902,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "wing_positive_y",
       "cad_bbox_m": [
         [
@@ -931,7 +951,7 @@
     },
     "TemperatureSensor": {
       "source": "sources/CAD/Complete_CubeSat_Assembly.step",
-      "description": "Moved from original STEP near top to rear interior wall; rear assumed at +X pending confirmation",
+      "description": "Measures local board temperature through an analog signal to the MCU.",
       "group": "rear_wall_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -952,15 +972,15 @@
           0.008805002551525831
         ]
       ],
-      "triangles": 3890,
+      "triangles": 13510,
       "category": "electronics",
       "original_source_name": "cubesat.step",
       "label": "Temperature sensor",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_TemperatureSensor",
       "mounting_review_status": "candidate_requires_clip_flex",
       "required_clip_count": 3,
@@ -977,9 +997,9 @@
       "cover_attached": false,
       "mounting_surface": "rear_wall",
       "mounting_normal": [
-        -1.0,
-        0.0,
-        0.0
+        -1,
+        0,
+        0
       ],
       "mounting_note": "3 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. One lower-edge clip and one per side.",
       "channel_clearance_mm": -0.4819667761230435,
@@ -987,39 +1007,39 @@
       "spring_flex_policy": "Ignored for visualization at user direction",
       "cad_bbox_m": [
         [
-          0.13241961225867271,
-          0.18586500734090805,
-          -0.018804999534040696
+          0.13241960993036628,
+          0.18586500254028598,
+          -0.018804991597167843
         ],
         [
-          0.1437596119940281,
-          0.22013501077890396,
-          0.008805002551525831
+          0.14375961059704423,
+          0.22013500202502936,
+          0.008805009785037635
         ]
       ],
       "cad_center_m": [
-        0.1380896121263504,
-        0.203000009059906,
-        -0.004999998491257433
+        0.13808961026370525,
+        0.2030000022826577,
+        -0.004999990906065104
       ],
       "world_bbox_m": [
         [
-          0.13241961225867271,
-          0.03168108482157148,
-          -0.020135010767484078
+          0.13241960993036628,
+          0.03168109393145842,
+          -0.02013500106856264
         ],
         [
-          0.1437596119940281,
-          0.05929109846211777,
-          0.01413500197990663
+          0.14375961059704423,
+          0.05929110452262005,
+          0.014135005835476718
         ]
       ],
       "world_center_m": [
-        0.1380896121263504,
-        0.045486091641844625,
-        -0.0030000043937887244
+        0.13808961026370525,
+        0.04548609922703924,
+        -0.0029999976165429616
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/tempsens_high_detail.glb",
       "display_info": {
         "name": "Temperature sensor",
         "model": "MCP9700AT",
@@ -1028,6 +1048,10 @@
         "fields": [
           "temperature_c"
         ]
+      },
+      "model_upgrade": {
+        "source_sha256": "77bee8f169cf2d18c4f9e1f91f0868479d711aa292890dfe8039cfe4118a4dfe",
+        "report": "model-upgrades.json"
       }
     },
     "WingArm_01": {
@@ -1061,7 +1085,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "wing_positive_y",
       "cad_bbox_m": [
         [
@@ -1137,7 +1161,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "wing_positive_y",
       "cad_bbox_m": [
         [
@@ -1213,7 +1237,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "wing_negative_y",
       "cad_bbox_m": [
         [
@@ -1235,7 +1259,7 @@
       "world_bbox_m": [
         [
           -0.12704148888587952,
-          -3.5240359699817425e-08,
+          -3.5240359699817425e-8,
           0.10799931555435148
         ],
         [
@@ -1267,7 +1291,7 @@
       "center_m": [
         0.11843544244766235,
         -0.025640912353992483,
-        7.194974023150627e-05
+        0.00007194974023150627
       ],
       "bbox_m": [
         [
@@ -1289,7 +1313,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "wing_negative_y",
       "cad_bbox_m": [
         [
@@ -1306,7 +1330,7 @@
       "cad_center_m": [
         0.11843544244766235,
         -0.025640912353992483,
-        7.194974023150627e-05
+        0.00007194974023150627
       ],
       "world_bbox_m": [
         [
@@ -1364,7 +1388,7 @@
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_BMS_BQ76942",
       "original_source_name": "bms_pcb.stp",
       "identity_status": "user_confirmed",
@@ -1383,9 +1407,9 @@
       "cover_attached": false,
       "mounting_surface": "bottom",
       "mounting_normal": [
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        1
       ],
       "mounting_note": "4 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. Four floor clips.",
       "channel_clearance_mm": -0.40596677612304344,
@@ -1443,7 +1467,7 @@
     },
     "Charger_BMS034A_EVM": {
       "source": "sources/CAD/Charger_BMS034A_Evaluation_Module.stp",
-      "description": "TI BMS034A family populated evaluation board. BQ25792 vs BQ25798 populated IC requires confirmation; existing J9 tessellation is within board-scale bounds",
+      "description": "Routes solar and protected battery power to the system output. Supports MPPT; charging is disabled for the laboratory discharge demonstration.",
       "group": "floor_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -1464,14 +1488,14 @@
           -0.027560641989111893
         ]
       ],
-      "triangles": 123634,
+      "triangles": 121190,
       "category": "electronics",
       "label": "Solar power-path controller",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "Mounted_Charger_BMS034A_EVM",
       "original_source_name": "BMS034A_PCB.stp",
       "identity_status": "charger_family_confirmed_chip_variant_unverified",
@@ -1490,9 +1514,9 @@
       "cover_attached": false,
       "mounting_surface": "bottom",
       "mounting_normal": [
-        0.0,
-        0.0,
-        1.0
+        0,
+        0,
+        1
       ],
       "mounting_note": "4 clips; board underside on support ledge. Spring flex intentionally omitted at user direction. Four floor clips.",
       "channel_clearance_mm": -0.3809667761230435,
@@ -1501,47 +1525,51 @@
       "cad_bbox_m": [
         [
           -0.05465309880673886,
-          0.17956544831395146,
-          -0.04711944796144962
+          0.17956544311105085,
+          -0.047119440202362126
         ],
         [
-          0.03524659760296345,
-          0.27512238547205925,
-          -0.027560641989111893
+          0.035246593877673156,
+          0.2751223776678545,
+          -0.02756063069739905
         ]
       ],
       "cad_center_m": [
-        -0.009703250601887706,
-        0.22734391689300537,
-        -0.03734004497528076
+        -0.009703252464532852,
+        0.22734391038945267,
+        -0.037340035449880585
       ],
       "world_bbox_m": [
         [
           -0.05465309880673886,
-          0.003366622665889706,
-          -0.07512236999851483
+          0.0033666288836694588,
+          -0.07512236472538776
         ],
         [
-          0.03524659760296345,
-          0.02292545461892599,
-          0.02043456886815246
+          0.035246593877673156,
+          0.022925464066477347,
+          0.020434575087210256
         ]
       ],
       "world_center_m": [
-        -0.009703250601887706,
-        0.013146038642407848,
-        -0.027343900565181187
+        -0.009703252464532852,
+        0.013146046475073402,
+        -0.027343894819088752
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "Final Models_V1/BMS034A_PCB_1_high_detail.glb",
       "display_info": {
         "name": "Solar power-path controller",
-        "model": "BQ25798 \u00b7 BMS034A evaluation board",
+        "model": "BQ25798 · BMS034A evaluation board",
         "purpose": "Routes solar and protected battery power to the system output. Supports MPPT; charging is disabled for the laboratory discharge demonstration.",
         "links": [],
         "fields": [
           "battery_voltage_v",
           "mppt_switch_temperature_c"
         ]
+      },
+      "model_upgrade": {
+        "source_sha256": "2c23294f940ed7ceec1bd960a267f696e944112c2b3b3710014ab75aa846ff5a",
+        "report": "model-upgrades.json"
       }
     },
     "BatteryHolder_4x18650_CAD": {
@@ -1575,7 +1603,7 @@
       "placement_status": "provisional",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "BatteryHolder_4x18650_CAD",
       "cad_bbox_m": [
         [
@@ -1609,7 +1637,7 @@
       "world_center_m": [
         0.1577102243900299,
         0.050486091144623185,
-        -1.4901149786306078e-08
+        -1.4901149786306078e-8
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
@@ -1653,7 +1681,7 @@
       "placement_status": "provisional",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "BatteryCell_01",
       "cad_bbox_m": [
         [
@@ -1729,7 +1757,7 @@
       "placement_status": "provisional",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "BatteryCell_02",
       "cad_bbox_m": [
         [
@@ -1805,7 +1833,7 @@
       "placement_status": "provisional",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "BatteryCell_03",
       "cad_bbox_m": [
         [
@@ -1881,7 +1909,7 @@
       "placement_status": "provisional",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "BatteryCell_04",
       "cad_bbox_m": [
         [
@@ -1927,7 +1955,7 @@
       }
     },
     "Mount_MCU_Final_01_Clip": {
-      "label": "ESP32-S3 MCU board \u00b7 clip 1",
+      "label": "ESP32-S3 MCU board · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -2010,7 +2038,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 clip 1",
+        "name": "ESP32-S3 MCU board · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -2018,7 +2046,7 @@
       }
     },
     "Mount_MCU_Final_01_Base": {
-      "label": "ESP32-S3 MCU board \u00b7 companion base 1",
+      "label": "ESP32-S3 MCU board · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -2101,7 +2129,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 companion base 1",
+        "name": "ESP32-S3 MCU board · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -2109,7 +2137,7 @@
       }
     },
     "Mount_MCU_Final_02_Clip": {
-      "label": "ESP32-S3 MCU board \u00b7 clip 2",
+      "label": "ESP32-S3 MCU board · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -2192,7 +2220,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 clip 2",
+        "name": "ESP32-S3 MCU board · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -2200,7 +2228,7 @@
       }
     },
     "Mount_MCU_Final_02_Base": {
-      "label": "ESP32-S3 MCU board \u00b7 companion base 2",
+      "label": "ESP32-S3 MCU board · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -2283,7 +2311,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 companion base 2",
+        "name": "ESP32-S3 MCU board · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -2291,7 +2319,7 @@
       }
     },
     "Mount_MCU_Final_03_Clip": {
-      "label": "ESP32-S3 MCU board \u00b7 clip 3",
+      "label": "ESP32-S3 MCU board · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -2374,7 +2402,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 clip 3",
+        "name": "ESP32-S3 MCU board · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -2382,7 +2410,7 @@
       }
     },
     "Mount_MCU_Final_03_Base": {
-      "label": "ESP32-S3 MCU board \u00b7 companion base 3",
+      "label": "ESP32-S3 MCU board · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -2465,7 +2493,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 companion base 3",
+        "name": "ESP32-S3 MCU board · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -2473,7 +2501,7 @@
       }
     },
     "Mount_MCU_Final_04_Clip": {
-      "label": "ESP32-S3 MCU board \u00b7 clip 4",
+      "label": "ESP32-S3 MCU board · clip 4",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -2556,7 +2584,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 clip 4",
+        "name": "ESP32-S3 MCU board · clip 4",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -2564,7 +2592,7 @@
       }
     },
     "Mount_MCU_Final_04_Base": {
-      "label": "ESP32-S3 MCU board \u00b7 companion base 4",
+      "label": "ESP32-S3 MCU board · companion base 4",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -2647,7 +2675,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "ESP32-S3 MCU board \u00b7 companion base 4",
+        "name": "ESP32-S3 MCU board · companion base 4",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -2655,7 +2683,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_01_Clip": {
-      "label": "Solar power-path controller \u00b7 clip 1",
+      "label": "Solar power-path controller · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -2691,7 +2719,7 @@
       "cover_attached": false,
       "mounting_surface": "bottom",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -2738,7 +2766,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 clip 1",
+        "name": "Solar power-path controller · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -2746,7 +2774,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_01_Base": {
-      "label": "Solar power-path controller \u00b7 companion base 1",
+      "label": "Solar power-path controller · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -2782,7 +2810,7 @@
       "cover_attached": false,
       "mounting_surface": "bottom",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -2829,7 +2857,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 companion base 1",
+        "name": "Solar power-path controller · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -2837,7 +2865,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_02_Clip": {
-      "label": "Solar power-path controller \u00b7 clip 2",
+      "label": "Solar power-path controller · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -2920,7 +2948,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 clip 2",
+        "name": "Solar power-path controller · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -2928,7 +2956,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_02_Base": {
-      "label": "Solar power-path controller \u00b7 companion base 2",
+      "label": "Solar power-path controller · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -3011,7 +3039,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 companion base 2",
+        "name": "Solar power-path controller · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -3019,7 +3047,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_03_Clip": {
-      "label": "Solar power-path controller \u00b7 clip 3",
+      "label": "Solar power-path controller · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -3102,7 +3130,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 clip 3",
+        "name": "Solar power-path controller · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -3110,7 +3138,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_03_Base": {
-      "label": "Solar power-path controller \u00b7 companion base 3",
+      "label": "Solar power-path controller · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -3193,7 +3221,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 companion base 3",
+        "name": "Solar power-path controller · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -3201,7 +3229,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_04_Clip": {
-      "label": "Solar power-path controller \u00b7 clip 4",
+      "label": "Solar power-path controller · clip 4",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -3284,7 +3312,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 clip 4",
+        "name": "Solar power-path controller · clip 4",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -3292,7 +3320,7 @@
       }
     },
     "Mount_Charger_BMS034A_EVM_04_Base": {
-      "label": "Solar power-path controller \u00b7 companion base 4",
+      "label": "Solar power-path controller · companion base 4",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -3375,7 +3403,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Solar power-path controller \u00b7 companion base 4",
+        "name": "Solar power-path controller · companion base 4",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -3383,7 +3411,7 @@
       }
     },
     "Mount_BMS_BQ76942_01_Clip": {
-      "label": "BQ76942 battery-management board \u00b7 clip 1",
+      "label": "BQ76942 battery-management board · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -3466,7 +3494,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 clip 1",
+        "name": "BQ76942 battery-management board · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -3474,7 +3502,7 @@
       }
     },
     "Mount_BMS_BQ76942_01_Base": {
-      "label": "BQ76942 battery-management board \u00b7 companion base 1",
+      "label": "BQ76942 battery-management board · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -3557,7 +3585,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 companion base 1",
+        "name": "BQ76942 battery-management board · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -3565,7 +3593,7 @@
       }
     },
     "Mount_BMS_BQ76942_02_Clip": {
-      "label": "BQ76942 battery-management board \u00b7 clip 2",
+      "label": "BQ76942 battery-management board · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -3648,7 +3676,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 clip 2",
+        "name": "BQ76942 battery-management board · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -3656,7 +3684,7 @@
       }
     },
     "Mount_BMS_BQ76942_02_Base": {
-      "label": "BQ76942 battery-management board \u00b7 companion base 2",
+      "label": "BQ76942 battery-management board · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -3739,7 +3767,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 companion base 2",
+        "name": "BQ76942 battery-management board · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -3747,7 +3775,7 @@
       }
     },
     "Mount_BMS_BQ76942_03_Clip": {
-      "label": "BQ76942 battery-management board \u00b7 clip 3",
+      "label": "BQ76942 battery-management board · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -3830,7 +3858,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 clip 3",
+        "name": "BQ76942 battery-management board · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -3838,7 +3866,7 @@
       }
     },
     "Mount_BMS_BQ76942_03_Base": {
-      "label": "BQ76942 battery-management board \u00b7 companion base 3",
+      "label": "BQ76942 battery-management board · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -3921,7 +3949,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 companion base 3",
+        "name": "BQ76942 battery-management board · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -3929,7 +3957,7 @@
       }
     },
     "Mount_BMS_BQ76942_04_Clip": {
-      "label": "BQ76942 battery-management board \u00b7 clip 4",
+      "label": "BQ76942 battery-management board · clip 4",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -4012,7 +4040,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 clip 4",
+        "name": "BQ76942 battery-management board · clip 4",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -4020,7 +4048,7 @@
       }
     },
     "Mount_BMS_BQ76942_04_Base": {
-      "label": "BQ76942 battery-management board \u00b7 companion base 4",
+      "label": "BQ76942 battery-management board · companion base 4",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -4103,7 +4131,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "BQ76942 battery-management board \u00b7 companion base 4",
+        "name": "BQ76942 battery-management board · companion base 4",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -4111,7 +4139,7 @@
       }
     },
     "Mount_INA226_01_Clip": {
-      "label": "INA226 payload current monitor \u00b7 clip 1",
+      "label": "INA226 payload current monitor · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -4194,7 +4222,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "INA226 payload current monitor \u00b7 clip 1",
+        "name": "INA226 payload current monitor · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -4202,7 +4230,7 @@
       }
     },
     "Mount_INA226_01_Base": {
-      "label": "INA226 payload current monitor \u00b7 companion base 1",
+      "label": "INA226 payload current monitor · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -4285,7 +4313,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "INA226 payload current monitor \u00b7 companion base 1",
+        "name": "INA226 payload current monitor · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -4293,7 +4321,7 @@
       }
     },
     "Mount_INA226_02_Clip": {
-      "label": "INA226 payload current monitor \u00b7 clip 2",
+      "label": "INA226 payload current monitor · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -4376,7 +4404,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "INA226 payload current monitor \u00b7 clip 2",
+        "name": "INA226 payload current monitor · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -4384,7 +4412,7 @@
       }
     },
     "Mount_INA226_02_Base": {
-      "label": "INA226 payload current monitor \u00b7 companion base 2",
+      "label": "INA226 payload current monitor · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -4467,7 +4495,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "INA226 payload current monitor \u00b7 companion base 2",
+        "name": "INA226 payload current monitor · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -4475,7 +4503,7 @@
       }
     },
     "Mount_INA226_03_Clip": {
-      "label": "INA226 payload current monitor \u00b7 clip 3",
+      "label": "INA226 payload current monitor · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -4558,7 +4586,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "INA226 payload current monitor \u00b7 clip 3",
+        "name": "INA226 payload current monitor · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -4566,7 +4594,7 @@
       }
     },
     "Mount_INA226_03_Base": {
-      "label": "INA226 payload current monitor \u00b7 companion base 3",
+      "label": "INA226 payload current monitor · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -4649,7 +4677,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "INA226 payload current monitor \u00b7 companion base 3",
+        "name": "INA226 payload current monitor · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -4657,7 +4685,7 @@
       }
     },
     "Mount_Regulator_01_01_Clip": {
-      "label": "Voltage regulator 01 \u00b7 clip 1",
+      "label": "Voltage regulator 01 · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -4707,48 +4735,53 @@
       "cad_bbox_m": [
         [
           -0.06372959539294243,
-          0.2869776301085949,
-          -0.024671263992786397
+          0.2869776208982094,
+          -0.025941253282037648
         ],
         [
           -0.058690402656793594,
-          0.29596998542547226,
-          -0.01662255078554152
+          0.29596997618278714,
+          -0.017892540042493403
         ]
       ],
       "cad_center_m": [
         -0.06120999902486801,
-        0.2914738077670336,
-        -0.020646907389163957
+        0.29147379854049826,
+        -0.021916896662265525
       ],
       "world_bbox_m": [
         [
           -0.06372959539294243,
-          0.025814796161894096,
-          -0.09596997655650963
+          0.024544805811731088,
+          -0.09596996689412907
         ],
         [
           -0.058690402656793594,
-          0.03386350929834367,
-          -0.08697761902979166
+          0.032593521467680506,
+          -0.08697760944671953
         ]
       ],
       "world_center_m": [
         -0.06120999902486801,
-        0.029839152730118883,
-        -0.09147379779315065
+        0.028569163639705797,
+        -0.0914737881704243
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 01 \u00b7 clip 1",
+        "name": "Voltage regulator 01 · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0,
+        0,
+        -0.00127
+      ]
     },
     "Mount_Regulator_01_01_Base": {
-      "label": "Voltage regulator 01 \u00b7 companion base 1",
+      "label": "Voltage regulator 01 · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -4798,48 +4831,53 @@
       "cad_bbox_m": [
         [
           -0.06765440478920937,
-          0.2945301719009876,
-          -0.02470361441373824
+          0.2945301622774822,
+          -0.0259736034433699
         ],
         [
           -0.05505642294883728,
-          0.2959299460053444,
-          -0.012105628848075853
+          0.29592993676513707,
+          -0.013375618261005785
         ]
       ],
       "cad_center_m": [
         -0.06135541386902332,
-        0.295230058953166,
-        -0.018404621630907045
+        0.2952300495213096,
+        -0.019674610852187843
       ],
       "world_bbox_m": [
         [
           -0.06765440478920937,
-          0.025782444385732628,
-          -0.09592993894338236
+          0.024512455404016337,
+          -0.09592992884375634
         ],
         [
           -0.05505642294883728,
-          0.03838043042336284,
-          -0.09453016059130248
+          0.03711044096252403,
+          -0.09453015097079911
         ]
       ],
       "world_center_m": [
         -0.06135541386902332,
-        0.03208143740454773,
-        -0.09523004976734242
+        0.030811448183270182,
+        -0.09523003990727773
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 01 \u00b7 companion base 1",
+        "name": "Voltage regulator 01 · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0,
+        0,
+        -0.00127
+      ]
     },
     "Mount_Regulator_01_02_Clip": {
-      "label": "Voltage regulator 01 \u00b7 clip 2",
+      "label": "Voltage regulator 01 · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -4888,49 +4926,54 @@
       "wall_role": "left_side",
       "cad_bbox_m": [
         [
-          -0.09248925792053338,
-          0.2869776301085949,
-          0.001088391989469556
+          -0.09185428110529835,
+          0.2869776054345947,
+          0.0010883869611067465
         ],
         [
-          -0.0844405447132885,
-          0.29596998542547226,
-          0.006127584725618397
+          -0.08380556573522166,
+          0.29596996215645555,
+          0.00612758171782915
         ]
       ],
       "cad_center_m": [
-        -0.08846490131691094,
-        0.2914738077670336,
-        0.0036079883575439765
+        -0.08782992342026,
+        0.29147378379552513,
+        0.0036079843394679484
       ],
       "world_bbox_m": [
         [
-          -0.09248925792053338,
-          0.05157445077543867,
-          -0.09596998451129027
+          -0.09185428110529835,
+          0.0515744472630814,
+          -0.09596996124227251
         ],
         [
-          -0.0844405447132885,
-          0.056613646543582766,
-          -0.08697762749532464
+          -0.08380556573522166,
+          0.056613642019804136,
+          -0.08697760282132272
         ]
       ],
       "world_center_m": [
-        -0.08846490131691094,
-        0.054094048659510716,
-        -0.09147380600330746
+        -0.08782992342026,
+        0.05409404464144277,
+        -0.09147378203179762
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 01 \u00b7 clip 2",
+        "name": "Voltage regulator 01 · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_01_02_Base": {
-      "label": "Voltage regulator 01 \u00b7 companion base 2",
+      "label": "Voltage regulator 01 · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -4979,49 +5022,54 @@
       "wall_role": "left_side",
       "cad_bbox_m": [
         [
-          -0.09252160834148522,
-          0.2945301719009876,
-          -0.002545587718486758
+          -0.09188663153494332,
+          0.29453014761935425,
+          -0.0025455918374579917
         ],
         [
-          -0.07992362277582285,
-          0.2959299460053444,
-          0.010052394121885334
+          -0.07928864258397907,
+          0.295929923125311,
+          0.010052391500338417
         ]
       ],
       "cad_center_m": [
-        -0.08622261555865404,
-        0.295230058953166,
-        0.003753403201699288
+        -0.0855876370594612,
+        0.2952300353723326,
+        0.003753399831440213
       ],
       "world_bbox_m": [
         [
-          -0.09252160834148522,
-          0.047940471080982844,
-          -0.09592994641450919
+          -0.09188663153494332,
+          0.04794046719800396,
+          -0.09592992353447488
         ],
         [
-          -0.07992362277582285,
-          0.06053845339332276,
-          -0.09453016806243059
+          -0.07928864258397907,
+          0.060538450535799364,
+          -0.0945301437807958
         ]
       ],
       "world_center_m": [
-        -0.08622261555865404,
-        0.0542394622371528,
-        -0.09523005723846989
+        -0.0855876370594612,
+        0.054239458866901666,
+        -0.09523003365763534
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 01 \u00b7 companion base 2",
+        "name": "Voltage regulator 01 · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_01_03_Clip": {
-      "label": "Voltage regulator 01 \u00b7 clip 3",
+      "label": "Voltage regulator 01 · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -5070,49 +5118,54 @@
       "wall_role": "right_side",
       "cad_bbox_m": [
         [
-          -0.06401945650577545,
-          0.28697760905448766,
-          0.004088385672855084
+          -0.06465445650577545,
+          0.2869776026931579,
+          0.004088395027487965
         ],
         [
-          -0.05597074329853058,
-          0.2959699660704533,
-          0.009127581440999184
+          -0.056605743298530575,
+          0.2959699590935333,
+          0.009127590450663602
         ]
       ],
       "cad_center_m": [
-        -0.059995099902153015,
-        0.29147378756247044,
-        0.006607983556927134
+        -0.06063009990215301,
+        0.29147378089334564,
+        0.006607992739075783
       ],
       "world_bbox_m": [
         [
-          -0.06401945650577545,
-          0.0545744474908261,
-          -0.09596996446870577
+          -0.06465445650577545,
+          0.05457445684546113,
+          -0.09596995749178898
         ],
         [
-          -0.05597074329853058,
-          0.059613640226974934,
-          -0.08697760915182842
+          -0.056605743298530575,
+          0.05961364923664171,
+          -0.0869776027905017
         ]
       ],
       "world_center_m": [
-        -0.059995099902153015,
-        0.05709404385890052,
-        -0.0914737868102671
+        -0.06063009990215301,
+        0.05709405304105142,
+        -0.09147378014114535
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 01 \u00b7 clip 3",
+        "name": "Voltage regulator 01 · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        -0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_01_03_Base": {
-      "label": "Voltage regulator 01 \u00b7 companion base 3",
+      "label": "Voltage regulator 01 · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -5161,49 +5214,54 @@
       "wall_role": "right_side",
       "cad_bbox_m": [
         [
-          -0.06853637844324112,
-          0.29453014962159363,
-          0.0001635788231151014
+          -0.06917137844324112,
+          0.29453014274323924,
+          0.0001635884464286641
         ],
         [
-          -0.055938392877578735,
-          0.29592992797367224,
-          0.012761561135455006
+          -0.05657339287757873,
+          0.29592992099949317,
+          0.012761569896347906
         ]
       ],
       "cad_center_m": [
-        -0.06223738566040993,
-        0.29523003879763293,
-        0.006462569979285054
+        -0.06287238566040992,
+        0.2952300318713662,
+        0.006462579171388285
       ],
       "world_bbox_m": [
         [
-          -0.06853637844324112,
-          0.05064963809455917,
-          -0.0959299250485779
+          -0.06917137844324112,
+          0.05064964771787506,
+          -0.0959299180744021
         ],
         [
-          -0.055938392877578735,
-          0.06324761993493125,
-          -0.09453015094422115
+          -0.05657339287757873,
+          0.06324762869582651,
+          -0.09453014406586972
         ]
       ],
       "world_center_m": [
-        -0.06223738566040993,
-        0.056948629014745206,
-        -0.09523003799639954
+        -0.06287238566040992,
+        0.05694863820685078,
+        -0.09523003107013592
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 01 \u00b7 companion base 3",
+        "name": "Voltage regulator 01 · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        -0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_02_01_Clip": {
-      "label": "Voltage regulator 02 \u00b7 clip 1",
+      "label": "Voltage regulator 02 · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -5253,48 +5311,53 @@
       "cad_bbox_m": [
         [
           0.0566384049016051,
-          0.2869776301085949,
-          -0.024671263992786397
+          0.2869776208982094,
+          -0.025941253282037648
         ],
         [
           0.061677597637753934,
-          0.29596998542547226,
-          -0.01662255078554152
+          0.29596997618278714,
+          -0.017892540042493403
         ]
       ],
       "cad_center_m": [
         0.05915800126967952,
-        0.2914738077670336,
-        -0.020646907389163957
+        0.29147379854049826,
+        -0.021916896662265525
       ],
       "world_bbox_m": [
         [
           0.0566384049016051,
-          0.025814796161894096,
-          -0.09596997655650963
+          0.024544805811731088,
+          -0.09596996689412907
         ],
         [
           0.061677597637753934,
-          0.03386350929834367,
-          -0.08697761902979166
+          0.032593521467680506,
+          -0.08697760944671953
         ]
       ],
       "world_center_m": [
         0.05915800126967952,
-        0.029839152730118883,
-        -0.09147379779315065
+        0.028569163639705797,
+        -0.0914737881704243
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 02 \u00b7 clip 1",
+        "name": "Voltage regulator 02 · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0,
+        0,
+        -0.00127
+      ]
     },
     "Mount_Regulator_02_01_Base": {
-      "label": "Voltage regulator 02 \u00b7 companion base 1",
+      "label": "Voltage regulator 02 · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -5344,48 +5407,53 @@
       "cad_bbox_m": [
         [
           0.05271359550533816,
-          0.2945301719009876,
-          -0.02470361441373824
+          0.2945301622774822,
+          -0.0259736034433699
         ],
         [
           0.06531157734571025,
-          0.2959299460053444,
-          -0.012105628848075853
+          0.29592993676513707,
+          -0.013375618261005785
         ]
       ],
       "cad_center_m": [
         0.059012586425524205,
-        0.295230058953166,
-        -0.018404621630907045
+        0.2952300495213096,
+        -0.019674610852187843
       ],
       "world_bbox_m": [
         [
           0.05271359550533816,
-          0.025782444385732628,
-          -0.09592993894338236
+          0.024512455404016337,
+          -0.09592992884375634
         ],
         [
           0.06531157734571025,
-          0.03838043042336284,
-          -0.09453016059130248
+          0.03711044096252403,
+          -0.09453015097079911
         ]
       ],
       "world_center_m": [
         0.059012586425524205,
-        0.03208143740454773,
-        -0.09523004976734242
+        0.030811448183270182,
+        -0.09523003990727773
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 02 \u00b7 companion base 1",
+        "name": "Voltage regulator 02 · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0,
+        0,
+        -0.00127
+      ]
     },
     "Mount_Regulator_02_02_Clip": {
-      "label": "Voltage regulator 02 \u00b7 clip 2",
+      "label": "Voltage regulator 02 · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -5434,49 +5502,54 @@
       "wall_role": "left_side",
       "cad_bbox_m": [
         [
-          0.05487874150276188,
-          0.2869776301085949,
-          0.004088398069143316
+          0.05551371831799691,
+          0.2869776053319089,
+          0.004088392938094737
         ],
         [
-          0.06292745471000676,
-          0.29596998542547226,
-          0.009127590805292157
+          0.0635624336880736,
+          0.29596996205376974,
+          0.00912758769481714
         ]
       ],
       "cad_center_m": [
-        0.05890309810638432,
-        0.2914738077670336,
-        0.006607994437217737
+        0.059538076003035255,
+        0.2914737836928393,
+        0.006607990316455939
       ],
       "world_bbox_m": [
         [
-          0.05487874150276188,
-          0.05457445685511226,
-          -0.09596998552281669
+          0.05551371831799691,
+          0.05457445324006925,
+          -0.09596996215111313
         ],
         [
-          0.06292745471000676,
-          0.05961365262325635,
-          -0.08697762850685106
+          0.0635624336880736,
+          0.05961364799679199,
+          -0.08697760373016333
         ]
       ],
       "world_center_m": [
-        0.05890309810638432,
-        0.0570940547391843,
-        -0.09147380701483387
+        0.059538076003035255,
+        0.05709405061843062,
+        -0.09147378294063824
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 02 \u00b7 clip 2",
+        "name": "Voltage regulator 02 · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_02_02_Base": {
-      "label": "Voltage regulator 02 \u00b7 companion base 2",
+      "label": "Voltage regulator 02 · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -5525,49 +5598,54 @@
       "wall_role": "left_side",
       "cad_bbox_m": [
         [
-          0.05484639108181004,
-          0.2945301719009876,
-          0.0004544183611869951
+          0.05548136788835194,
+          0.29453014751666845,
+          0.00045441413952999887
         ],
         [
-          0.06744437664747241,
-          0.2959299460053444,
-          0.013052400201559101
+          0.0680793568393162,
+          0.2959299230226252,
+          0.013052397477326408
         ]
       ],
       "cad_center_m": [
-        0.061145383864641224,
-        0.295230058953166,
-        0.006753409281373048
+        0.061780362363834065,
+        0.29523003526964686,
+        0.006753405808428203
       ],
       "world_bbox_m": [
         [
-          0.05484639108181004,
-          0.05094047716065643,
-          -0.09592994742603561
+          0.05548136788835194,
+          0.05094047317499181,
+          -0.0959299244433155
         ],
         [
-          0.06744437664747241,
-          0.06353845947299636,
-          -0.094530169073957
+          0.0680793568393162,
+          0.06353845651278722,
+          -0.09453014468963641
         ]
       ],
       "world_center_m": [
-        0.061145383864641224,
-        0.05723946831682639,
-        -0.09523005824999631
+        0.061780362363834065,
+        0.05723946484388952,
+        -0.09523003456647595
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 02 \u00b7 companion base 2",
+        "name": "Voltage regulator 02 · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_02_03_Clip": {
-      "label": "Voltage regulator 02 \u00b7 clip 3",
+      "label": "Voltage regulator 02 · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -5616,49 +5694,54 @@
       "wall_role": "right_side",
       "cad_bbox_m": [
         [
-          0.08334854478016496,
-          0.28697760905448766,
-          -0.004911613939714725
+          0.08271354478016496,
+          0.2869776030012145,
+          -0.004911604277025132
         ],
         [
-          0.09139725798740983,
-          0.2959699660704533,
-          0.00012758182842937532
+          0.09076225798740983,
+          0.2959699594015899,
+          0.0001275911461505047
         ]
       ],
       "cad_center_m": [
-        0.0873729013837874,
-        0.29147378756247044,
-        -0.0023920160556426748
+        0.0867379013837874,
+        0.2914737812014022,
+        -0.0023920065654373136
       ],
       "world_bbox_m": [
         [
-          0.08334854478016496,
-          0.045574447878256805,
-          -0.09596996143413279
+          0.08271354478016496,
+          0.045574457540948445,
+          -0.09596995476527269
         ],
         [
-          0.09139725798740983,
-          0.05061364061440564,
-          -0.08697760611725544
+          0.09076225798740983,
+          0.05061364993212902,
+          -0.08697760006398542
         ]
       ],
       "world_center_m": [
-        0.0873729013837874,
-        0.04809404424633122,
-        -0.09147378377569412
+        0.0867379013837874,
+        0.04809405373653873,
+        -0.09147377741462906
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 02 \u00b7 clip 3",
+        "name": "Voltage regulator 02 · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        -0.000635,
+        0,
+        0
+      ]
     },
     "Mount_Regulator_02_03_Base": {
-      "label": "Voltage regulator 02 \u00b7 companion base 3",
+      "label": "Voltage regulator 02 · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -5707,49 +5790,54 @@
       "wall_role": "right_side",
       "cad_bbox_m": [
         [
-          0.07883162284269929,
-          0.29453014962159363,
-          -0.008836420789454714
+          0.07819662284269929,
+          0.2945301430512958,
+          -0.008836410858084433
         ],
         [
-          0.09142960840836167,
-          0.29592992797367224,
-          0.003761561522885197
+          0.09079460840836168,
+          0.29592992130754975,
+          0.003761570591834809
         ]
       ],
       "cad_center_m": [
-        0.08513061562553048,
-        0.29523003879763293,
-        -0.0025374296332847587
+        0.08449561562553048,
+        0.2952300321794228,
+        -0.002537420133124812
       ],
       "world_bbox_m": [
         [
-          0.07883162284269929,
-          0.041649638481989874,
-          -0.09592992201400492
+          0.07819662284269929,
+          0.04164964841336237,
+          -0.09592991534788581
         ],
         [
-          0.09142960840836167,
-          0.05424762032236195,
-          -0.09453014790964817
+          0.09079460840836168,
+          0.05424762939131381,
+          -0.09453014133935343
         ]
       ],
       "world_center_m": [
-        0.08513061562553048,
-        0.04794862940217591,
-        -0.09523003496182655
+        0.08449561562553048,
+        0.047948638902338095,
+        -0.09523002834361963
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Voltage regulator 02 \u00b7 companion base 3",
+        "name": "Voltage regulator 02 · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
         "fields": []
-      }
+      },
+      "outline_correction_m": [
+        -0.000635,
+        0,
+        0
+      ]
     },
     "Mount_TemperatureSensor_01_Clip": {
-      "label": "Temperature sensor \u00b7 clip 1",
+      "label": "Temperature sensor · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -5785,7 +5873,7 @@
       "cover_attached": false,
       "mounting_surface": "rear_wall",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -5832,7 +5920,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Temperature sensor \u00b7 clip 1",
+        "name": "Temperature sensor · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -5840,7 +5928,7 @@
       }
     },
     "Mount_TemperatureSensor_01_Base": {
-      "label": "Temperature sensor \u00b7 companion base 1",
+      "label": "Temperature sensor · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -5876,7 +5964,7 @@
       "cover_attached": false,
       "mounting_surface": "rear_wall",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -5923,7 +6011,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Temperature sensor \u00b7 companion base 1",
+        "name": "Temperature sensor · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -5931,7 +6019,7 @@
       }
     },
     "Mount_TemperatureSensor_02_Clip": {
-      "label": "Temperature sensor \u00b7 clip 2",
+      "label": "Temperature sensor · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -6014,7 +6102,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Temperature sensor \u00b7 clip 2",
+        "name": "Temperature sensor · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -6022,7 +6110,7 @@
       }
     },
     "Mount_TemperatureSensor_02_Base": {
-      "label": "Temperature sensor \u00b7 companion base 2",
+      "label": "Temperature sensor · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -6105,7 +6193,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Temperature sensor \u00b7 companion base 2",
+        "name": "Temperature sensor · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -6113,7 +6201,7 @@
       }
     },
     "Mount_TemperatureSensor_03_Clip": {
-      "label": "Temperature sensor \u00b7 clip 3",
+      "label": "Temperature sensor · clip 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -6196,7 +6284,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Temperature sensor \u00b7 clip 3",
+        "name": "Temperature sensor · clip 3",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -6204,7 +6292,7 @@
       }
     },
     "Mount_TemperatureSensor_03_Base": {
-      "label": "Temperature sensor \u00b7 companion base 3",
+      "label": "Temperature sensor · companion base 3",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -6287,7 +6375,7 @@
       ],
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Temperature sensor \u00b7 companion base 3",
+        "name": "Temperature sensor · companion base 3",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -6295,7 +6383,7 @@
       }
     },
     "Mount_LightSensor_01_Clip": {
-      "label": "Light sensor \u00b7 clip 1",
+      "label": "Light sensor · clip 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -6331,7 +6419,7 @@
       "cover_attached": true,
       "mounting_surface": "lid",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -6379,7 +6467,7 @@
       "cover_leaf": "left",
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Light sensor \u00b7 clip 1",
+        "name": "Light sensor · clip 1",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -6387,7 +6475,7 @@
       }
     },
     "Mount_LightSensor_01_Base": {
-      "label": "Light sensor \u00b7 companion base 1",
+      "label": "Light sensor · companion base 1",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -6423,7 +6511,7 @@
       "cover_attached": true,
       "mounting_surface": "lid",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -6471,7 +6559,7 @@
       "cover_leaf": "left",
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Light sensor \u00b7 companion base 1",
+        "name": "Light sensor · companion base 1",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -6479,7 +6567,7 @@
       }
     },
     "Mount_LightSensor_02_Clip": {
-      "label": "Light sensor \u00b7 clip 2",
+      "label": "Light sensor · clip 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified supplied spring clip. Correct ledge engagement; spring flex intentionally omitted for project visualization at user direction.",
       "group": "pcb_fixtures",
@@ -6515,7 +6603,7 @@
       "cover_attached": true,
       "mounting_surface": "lid",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -6563,7 +6651,7 @@
       "cover_leaf": "left",
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Light sensor \u00b7 clip 2",
+        "name": "Light sensor · clip 2",
         "model": "",
         "purpose": "Supports and retains the circuit board.",
         "links": [],
@@ -6571,7 +6659,7 @@
       }
     },
     "Mount_LightSensor_02_Base": {
-      "label": "Light sensor \u00b7 companion base 2",
+      "label": "Light sensor · companion base 2",
       "source": "sources/Fixture/PCB+Fixture.stl",
       "description": "Unmodified second source body, interpreted as complementary slotted mounting base by geometry and screenshot; installed role/retention not physically verified.",
       "group": "pcb_fixtures",
@@ -6607,7 +6695,7 @@
       "cover_attached": true,
       "mounting_surface": "lid",
       "contact_projected_mm2": 146.8005041157303,
-      "contact_fraction": 1.0,
+      "contact_fraction": 1,
       "group_explode_offset_m": [
         0,
         0,
@@ -6655,7 +6743,7 @@
       "cover_leaf": "left",
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
-        "name": "Light sensor \u00b7 companion base 2",
+        "name": "Light sensor · companion base 2",
         "model": "",
         "purpose": "Provides the companion support for the board clip.",
         "links": [],
@@ -6675,7 +6763,7 @@
       ],
       "bbox_m": [
         [
-          0.0,
+          0,
           0.09199960529804228,
           0.046000000089406946
         ],
@@ -6693,7 +6781,7 @@
       "placement_status": "native_cad_only",
       "physically_verified": false,
       "default_visible": true,
-      "evidence": "Reference/IMG_0187\u20130189 are web-model screenshots, not installation photographs.",
+      "evidence": "Reference/IMG_0187–0189 are web-model screenshots, not installation photographs.",
       "assembly_id": "cover_right",
       "motion_note": "Illustrative straight lift; native assembled cover contacts chassis/WingArm_02. No verified hinge, retention release or continuous sweep.",
       "cover_attached": true,
@@ -6704,7 +6792,7 @@
       ],
       "cad_bbox_m": [
         [
-          0.0,
+          0,
           0.09199960529804228,
           0.046000000089406946
         ],
@@ -6721,7 +6809,7 @@
       ],
       "world_bbox_m": [
         [
-          0.0,
+          0,
           0.09648605481928199,
           -0.10799963968053022
         ],
@@ -6734,7 +6822,7 @@
       "world_center_m": [
         0.07500000298023224,
         0.10048608700077966,
-        3.7124581221681385e-07
+        3.7124581221681385e-7
       ],
       "cover_leaf": "right",
       "extraction_enabled": false,
@@ -6748,7 +6836,7 @@
       }
     },
     "NerdMiner_Case_Front": {
-      "label": "Miner \u00b7 Front case",
+      "label": "Payload · Front case",
       "description": "Transparent front protective frame; estimated geometry supplied with the miner model.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -6759,7 +6847,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -6768,7 +6856,7 @@
         "NerdMiner_Case_Front"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Front case",
+        "name": "Payload · Front case",
         "model": "",
         "purpose": "Transparent front protective frame.",
         "links": [],
@@ -6829,7 +6917,7 @@
       "triangles": 1728
     },
     "NerdMiner_Case_Rear": {
-      "label": "Miner \u00b7 Rear case",
+      "label": "Payload · Rear case",
       "description": "Transparent rear protective plate; estimated geometry supplied with the miner model.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -6840,7 +6928,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -6849,7 +6937,7 @@
         "NerdMiner_Case_Rear"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Rear case",
+        "name": "Payload · Rear case",
         "model": "",
         "purpose": "Transparent rear protective plate.",
         "links": [],
@@ -6910,7 +6998,7 @@
       "triangles": 1708
     },
     "NerdMiner_Brass_standoff_1": {
-      "label": "Miner \u00b7 Brass standoff 1",
+      "label": "Payload · Brass standoff 1",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -6921,7 +7009,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -6930,7 +7018,7 @@
         "NerdMiner_Brass_standoff_1"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Brass standoff 1",
+        "name": "Payload · Brass standoff 1",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -6991,7 +7079,7 @@
       "triangles": 672
     },
     "NerdMiner_Front_spacer_1": {
-      "label": "Miner \u00b7 Front spacer 1",
+      "label": "Payload · Front spacer 1",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7002,7 +7090,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7011,7 +7099,7 @@
         "NerdMiner_Front_spacer_1"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Front spacer 1",
+        "name": "Payload · Front spacer 1",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7072,7 +7160,7 @@
       "triangles": 672
     },
     "NerdMiner_Screw_front_1": {
-      "label": "Miner \u00b7 Screw front 1",
+      "label": "Payload · Screw front 1",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7083,7 +7171,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7092,7 +7180,7 @@
         "NerdMiner_Screw_front_1"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw front 1",
+        "name": "Payload · Screw front 1",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7153,7 +7241,7 @@
       "triangles": 380
     },
     "NerdMiner_Screw_rear_1": {
-      "label": "Miner \u00b7 Screw rear 1",
+      "label": "Payload · Screw rear 1",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7164,7 +7252,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7173,7 +7261,7 @@
         "NerdMiner_Screw_rear_1"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw rear 1",
+        "name": "Payload · Screw rear 1",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7234,7 +7322,7 @@
       "triangles": 380
     },
     "NerdMiner_Brass_standoff_2": {
-      "label": "Miner \u00b7 Brass standoff 2",
+      "label": "Payload · Brass standoff 2",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7245,7 +7333,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7254,7 +7342,7 @@
         "NerdMiner_Brass_standoff_2"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Brass standoff 2",
+        "name": "Payload · Brass standoff 2",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7315,7 +7403,7 @@
       "triangles": 672
     },
     "NerdMiner_Front_spacer_2": {
-      "label": "Miner \u00b7 Front spacer 2",
+      "label": "Payload · Front spacer 2",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7326,7 +7414,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7335,7 +7423,7 @@
         "NerdMiner_Front_spacer_2"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Front spacer 2",
+        "name": "Payload · Front spacer 2",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7396,7 +7484,7 @@
       "triangles": 672
     },
     "NerdMiner_Screw_front_2": {
-      "label": "Miner \u00b7 Screw front 2",
+      "label": "Payload · Screw front 2",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7407,7 +7495,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7416,7 +7504,7 @@
         "NerdMiner_Screw_front_2"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw front 2",
+        "name": "Payload · Screw front 2",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7477,7 +7565,7 @@
       "triangles": 380
     },
     "NerdMiner_Screw_rear_2": {
-      "label": "Miner \u00b7 Screw rear 2",
+      "label": "Payload · Screw rear 2",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7488,7 +7576,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7497,7 +7585,7 @@
         "NerdMiner_Screw_rear_2"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw rear 2",
+        "name": "Payload · Screw rear 2",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7558,7 +7646,7 @@
       "triangles": 380
     },
     "NerdMiner_Brass_standoff_3": {
-      "label": "Miner \u00b7 Brass standoff 3",
+      "label": "Payload · Brass standoff 3",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7569,7 +7657,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7578,7 +7666,7 @@
         "NerdMiner_Brass_standoff_3"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Brass standoff 3",
+        "name": "Payload · Brass standoff 3",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7639,7 +7727,7 @@
       "triangles": 672
     },
     "NerdMiner_Front_spacer_3": {
-      "label": "Miner \u00b7 Front spacer 3",
+      "label": "Payload · Front spacer 3",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7650,7 +7738,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7659,7 +7747,7 @@
         "NerdMiner_Front_spacer_3"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Front spacer 3",
+        "name": "Payload · Front spacer 3",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7720,7 +7808,7 @@
       "triangles": 672
     },
     "NerdMiner_Screw_front_3": {
-      "label": "Miner \u00b7 Screw front 3",
+      "label": "Payload · Screw front 3",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7731,7 +7819,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7740,7 +7828,7 @@
         "NerdMiner_Screw_front_3"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw front 3",
+        "name": "Payload · Screw front 3",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7801,7 +7889,7 @@
       "triangles": 380
     },
     "NerdMiner_Screw_rear_3": {
-      "label": "Miner \u00b7 Screw rear 3",
+      "label": "Payload · Screw rear 3",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7812,7 +7900,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7821,7 +7909,7 @@
         "NerdMiner_Screw_rear_3"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw rear 3",
+        "name": "Payload · Screw rear 3",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7882,7 +7970,7 @@
       "triangles": 380
     },
     "NerdMiner_Brass_standoff_4": {
-      "label": "Miner \u00b7 Brass standoff 4",
+      "label": "Payload · Brass standoff 4",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7893,7 +7981,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7902,7 +7990,7 @@
         "NerdMiner_Brass_standoff_4"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Brass standoff 4",
+        "name": "Payload · Brass standoff 4",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -7963,7 +8051,7 @@
       "triangles": 672
     },
     "NerdMiner_Front_spacer_4": {
-      "label": "Miner \u00b7 Front spacer 4",
+      "label": "Payload · Front spacer 4",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -7974,7 +8062,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -7983,7 +8071,7 @@
         "NerdMiner_Front_spacer_4"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Front spacer 4",
+        "name": "Payload · Front spacer 4",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -8044,7 +8132,7 @@
       "triangles": 672
     },
     "NerdMiner_Screw_front_4": {
-      "label": "Miner \u00b7 Screw front 4",
+      "label": "Payload · Screw front 4",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -8055,7 +8143,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -8064,7 +8152,7 @@
         "NerdMiner_Screw_front_4"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw front 4",
+        "name": "Payload · Screw front 4",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -8125,7 +8213,7 @@
       "triangles": 380
     },
     "NerdMiner_Screw_rear_4": {
-      "label": "Miner \u00b7 Screw rear 4",
+      "label": "Payload · Screw rear 4",
       "description": "Supplied miner enclosure spacer or fastening hardware; separate from CubeSat PCB clips.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -8136,7 +8224,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -8145,7 +8233,7 @@
         "NerdMiner_Screw_rear_4"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screw rear 4",
+        "name": "Payload · Screw rear 4",
         "model": "",
         "purpose": "Secures and spaces the miner enclosure.",
         "links": [],
@@ -8206,7 +8294,7 @@
       "triangles": 380
     },
     "NerdMiner_Screen": {
-      "label": "Miner \u00b7 Screen",
+      "label": "Payload · Screen",
       "description": "Displays the received EPS telemetry or selected presentation state.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -8217,7 +8305,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "reference_reconstruction",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -8226,7 +8314,7 @@
         "NerdMiner_Screen"
       ],
       "display_info": {
-        "name": "Miner \u00b7 Screen",
+        "name": "Payload · Screen",
         "model": "",
         "purpose": "Displays the received EPS telemetry or selected presentation state.",
         "links": [],
@@ -8290,7 +8378,7 @@
       "triangles": 2
     },
     "NerdMiner_Board_LCD": {
-      "label": "Heltec NerdMiner V2 \u00b7 board and LCD",
+      "label": "Payload · Board and LCD",
       "description": "ESP32-based demonstration payload with its supplied populated board, LCD, connectors, controls and silkscreen. The surrounding case/hardware are reference-based reconstruction in the supplied model.",
       "source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
       "active_source": "sources/Miner/Heltec_NerdMiner_V2_28.glb",
@@ -8301,7 +8389,7 @@
       "provisional": true,
       "physically_verified": false,
       "geometry_status": "supplied_mesh",
-      "identity_status": "User-supplied Heltec NerdMiner V2 2.8-inch visual model; not manufacturer-certified CAD",
+      "identity_status": "User-supplied Payload 2.8-inch visual model; not manufacturer-certified CAD",
       "placement": "Candidate external left wall; native-size miner at CAD translation [-163,205,-2] mm and +90 degrees about Z",
       "mounting_note": "No PCB-clip mounting inferred. Rearmost screw heads stand 2 mm outside the chassis envelope; physical attachment remains unspecified.",
       "extraction_enabled": false,
@@ -8400,7 +8488,7 @@
         "Miner_Source_Silkscreen.001"
       ],
       "display_info": {
-        "name": "Heltec NerdMiner V2 \u00b7 board and LCD",
+        "name": "Payload · Board and LCD",
         "model": "",
         "purpose": "ESP32-based demonstration payload with its board, LCD, connectors, controls and silkscreen.",
         "links": [],
@@ -8500,22 +8588,22 @@
     "source_cad_up_axis": "Z",
     "gltf_up_axis": "Y",
     "cad_to_gltf_root_matrix_column_major": [
-      1.0,
-      0.0,
-      0.0,
-      0.0,
-      0.0,
-      -3.371747936409264e-07,
+      1,
+      0,
+      0,
+      0,
+      0,
+      -3.371747936409264e-7,
       -0.9999999999999429,
-      0.0,
-      0.0,
+      0,
+      0,
       0.9999999999999429,
-      -3.371747936409264e-07,
-      0.0,
-      0.0,
+      -3.371747936409264e-7,
+      0,
+      0,
       0.050486158579587936,
       0.20000000298023224,
-      1.0
+      1
     ],
     "lowest_geometry_y_m": 0,
     "chassis_bottom_y_m": 0.0004861578345298767,

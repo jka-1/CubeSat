@@ -70,7 +70,7 @@ async function dashboardHarness() {
 test('dashboard defaults to live SSE and leaves simulated values out of waiting state', async () => {
   const html = await readFile(path.join(root, 'site/modules/communication.html'), 'utf8');
   assert.match(html, /id="mockModeToggle" type="checkbox"/);
-  assert.match(html, /Mock telemetry/);
+  assert.match(html, /<label\b[^>]*for="mockModeToggle"[^>]*>[\s\S]*?\bMock Telemetry\b[\s\S]*?<\/label>/);
   assert.doesNotMatch(html, /Mock data is active by default/);
 
   const harness = await dashboardHarness();

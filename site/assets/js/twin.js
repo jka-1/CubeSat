@@ -2,6 +2,7 @@ import { subscribe as subscribeStreaming, streamUrl } from './streaming-telemetr
 
 let unsubscribe = null;
 let activeFrame = null;
+let navigationObserver = null;
 
 // The shared decoder handles bridge envelopes, device presence, and duplicate SSE packets.
 // INA226 PV current is not a confirmed independent solar-panel current measurement.
@@ -27,7 +28,16 @@ export function initTwinPage() {
   const status = document.getElementById('twinIntegrationStatus');
   if (!frame) return;
   activeFrame = frame;
-  frame.addEventListener('load', async () => {
+  document.body.classList.add('twin-active');
+  const header = document.querySelector('.site-header');
+  const measureNavigation = () => document.documentElement.style.setProperty('--twin-nav-height', `${header?.getBoundingClientRect().height || 0}px`);
+  navigationObserver = new ResizeObserver(measureNavigation);
+  if (header) navigationObserver.observe(header);
+  measureNavigation();
+  let connecting = false;
+  const connect = async () => {
+    if (connecting || activeFrame !== frame) return;
+    connecting = true;
     try {
       const twin = frame.contentWindow?.knightEPSTwin;
       if (!twin) throw new Error('Viewer API unavailable');
@@ -55,11 +65,18 @@ export function initTwinPage() {
     } catch (error) {
       if (activeFrame === frame && status) status.textContent = `Digital twin unavailable: ${error.message}`;
     }
-  }, { once: true });
+  };
+  frame.addEventListener('load', connect, { once: true });
+  if (frame.contentWindow?.knightEPSTwin) connect();
 }
 
 export function destroyTwinPage() {
   unsubscribe?.();
   unsubscribe = null;
+  activeFrame?.contentWindow?.knightEPSTwin?.dispose();
   activeFrame = null;
+  navigationObserver?.disconnect();
+  navigationObserver = null;
+  document.body.classList.remove('twin-active');
+  document.documentElement.style.removeProperty('--twin-nav-height');
 }

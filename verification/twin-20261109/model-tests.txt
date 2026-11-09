@@ -1,0 +1,12 @@
+✔ all seven PCB assemblies use supplied detailed geometry with no legacy mesh (3.638091ms)
+✔ all existing component identities and board anchor transforms survive (39.221305ms)
+✔ substrate support planes remain seated, without scaling electronics (0.435646ms)
+✔ compiler packs only referenced geometry and valid binary ranges (0.735759ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 484.954282

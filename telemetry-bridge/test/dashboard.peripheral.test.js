@@ -104,11 +104,22 @@ test('production route loads the current communication dashboard assets', async 
     readFile(path.join(repositoryRoot, 'site/assets/js/router.js'), 'utf8')
   ]);
 
-  assert.match(index, /assets\/js\/app\.js\?v=20261029f/);
-  assert.match(index, /assets\/css\/styles\.css\?v=20261029g/);
-  assert.match(app, /router\.js\?v=20261029f/);
-  assert.match(router, /i2c\.js\?v=20261028d/);
-  assert.match(router, /communication\.html\?v=20261028c/);
+  // Versions change when assets are edited. Verify the actual versioned load
+  // chain and files instead of pinning unrelated historical release dates.
+  const assets = [
+    [index, /src=["'](\.\/assets\/js\/app\.js\?v=[\w-]+)["']/, 'site/index.html'],
+    [index, /href=["'](\.\/assets\/css\/styles\.css\?v=[\w-]+)["']/, 'site/index.html'],
+    [app, /from\s*["'](\.\/router\.js\?v=[\w-]+)["']/, 'site/assets/js/app.js'],
+    [router, /from\s*["'](\.\/i2c\.js\?v=[\w-]+)["']/, 'site/assets/js/router.js'],
+    [router, /communication:\s*`(\.\/modules\/communication\.html\?v=[\w-]+)`/, 'site/index.html']
+  ];
+  for (const [source, pattern, relativeTo] of assets) {
+    const match = source.match(pattern);
+    assert.ok(match, `Missing versioned asset reference: ${pattern}`);
+    const parent = new URL(`../../${relativeTo}`, import.meta.url);
+    const asset = new URL(match[1], parent);
+    assert.ok((await readFile(asset, 'utf8')).trim(), `Missing or empty asset: ${asset.pathname}`);
+  }
   assert.match(router, /communication:\s*`\.\/modules\/communication\.html/);
   assert.match(router, /communication:\s*initI2CPage/);
   assert.match(router, /route === 'dashboard'\) return 'communication'/);

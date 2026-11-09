@@ -1,0 +1,27 @@
+✔ v4 all: only present devices are shown (17.249951ms)
+✔ v4 subset_pv_mppt: only present devices are shown (0.329527ms)
+✔ v4 single_bms: only present devices are shown (0.333611ms)
+✔ v4 none: only present devices are shown (0.233661ms)
+✔ v5 all: only present devices are shown (0.250227ms)
+✔ v5 subset_pv_mppt: only present devices are shown (0.291694ms)
+✔ v5 single_bms: only present devices are shown (0.258658ms)
+✔ v5 none: only present devices are shown (0.217445ms)
+✔ conversions: INA226 bus V from raw, BMS min/max/delta, MPPT ACDRV and fault bits (0.660977ms)
+✔ v5 probe timeout hides the device as error; legacy packets without a mask assume present (0.340321ms)
+✔ stale handling, replay dedupe, clock skew and windowed series (0.999868ms)
+✔ mode persists in storage (0.308892ms)
+✔ view formatting: auto-scaled SI units for small PV currents/powers (3.145478ms)
+✔ v6 all: present-only cards + new fields, absent -> null (0.421255ms)
+✔ v6 subset_pv_mppt: present-only cards + new fields, absent -> null (0.395999ms)
+✔ v6 single_bms: present-only cards + new fields, absent -> null (0.315247ms)
+✔ v6 none: present-only cards + new fields, absent -> null (0.342847ms)
+✔ v5 packets: v6-only fields stay null and are flagged as not carried (0.305906ms)
+✔ TEMT6000 light level bands and MCP9700 conversion (1.411873ms)
+ℹ tests 19
+ℹ suites 0
+ℹ pass 19
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 288.026897
