@@ -72,14 +72,16 @@ bridge_before="$(sha256sum "$bridge_file")"
 mkdir -p "$backup_root"
 backup_dir="$(mktemp -d "$backup_root/detailed-twin-$(date -u +%Y%m%dT%H%M%SZ)-XXXXXX")"
 tar -czf "$backup_dir/site-files.tar.gz" -C "$site_root" "${existing[@]}"
-printf '%s\n' "${absent[@]}" > "$backup_dir/new-files.txt"
+printf '%s\n' "${absent[@]-}" > "$backup_dir/new-files.txt"
 printf '%s\n' "$revision" > "$backup_dir/deployed-revision.txt"
 echo "Pre-deploy backup: $backup_dir"
 
 rollback() {
   trap - ERR
   tar -xzf "$backup_dir/site-files.tar.gz" -C "$site_root"
-  for rel in "${absent[@]}"; do rm -f -- "$site_root/$rel"; done
+  for rel in "${absent[@]-}"; do
+    if [[ -n "$rel" ]]; then rm -f -- "$site_root/$rel"; fi
+  done
   echo "Deployment failed; restored site files from $backup_dir." >&2
 }
 trap 'rollback' ERR
