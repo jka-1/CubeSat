@@ -130,7 +130,7 @@ test('malformed v6 lengths cannot replace the last valid packet and v4 still fol
   // HTTP input exercises the same decoder and gives deterministic rejection feedback.
   for (const hex of [buildV6(121).slice(0, -4), buildV6(121) + '0000']) {
     const response = await fetch(`${b.base}/input`, { method: 'POST',
-      headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ hex }) });
+      headers: { 'Content-Type': 'application/json', 'X-Command-Token': token }, body: JSON.stringify({ hex }) });
     assert.equal(response.status, 400);
     assert.equal((await (await fetch(`${b.base}/latest`)).json()).latest.packet.seq, 120);
   }

@@ -1,5 +1,5 @@
-import { apiFetch, canOperate } from './auth.js?v=20261104d';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261104d';
+import { apiFetch, canOperate, isOperator, isSignedIn } from './auth.js?v=20261109b';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261109b';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,
@@ -555,7 +555,15 @@ function bindEvents() {
 
 export async function initRunsPage() {
   destroyed = false; controller = new AbortController();
-  historyView = mountSequenceHistory($('sequenceHistory'), { onRecording: (id) => selectRun(id) });
+  $('sequenceHistory').hidden = !isOperator();
+  if (isOperator()) historyView = mountSequenceHistory($('sequenceHistory'), { onRecording: (id) => selectRun(id) });
+  updateCapture();
+  if (!isSignedIn()) {
+    show('runListSkeleton', false);
+    show('runsSignIn', true);
+    text('runsBridgeState', 'Sign in for saved runs');
+    return;
+  }
   const metricSelect = $('seriesMetric');
   for (const metric of RUN_METRICS) { const option = document.createElement('option'); option.value = metric.id; option.textContent = `${metric.label} (${metric.unit})`; metricSelect.append(option); }
   metricSelect.value = 'pv.powerW'; bindEvents(); await loadRuns();

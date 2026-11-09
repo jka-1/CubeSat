@@ -1,0 +1,45 @@
+{
+  "desktopCheck": {
+    "overflow": false,
+    "primary": [
+      {
+        "label": "Home",
+        "top": 16.75
+      },
+      {
+        "label": "Dashboard",
+        "top": 16.75
+      },
+      {
+        "label": "Sign in",
+        "top": 15
+      }
+    ],
+    "tabs": [
+      "I²C Telemetry",
+      "Network Statistics",
+      "Logged Telemetry",
+      "Digital Twin"
+    ],
+    "width": 1440
+  },
+  "mobileCheck": {
+    "overflow": false,
+    "primary": [
+      {
+        "label": "Home",
+        "top": 76
+      },
+      {
+        "label": "Dashboard",
+        "top": 76
+      },
+      {
+        "label": "Sign in",
+        "top": 76
+      }
+    ],
+    "primaryOverflow": false,
+    "width": 390
+  }
+}

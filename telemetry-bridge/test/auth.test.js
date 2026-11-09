@@ -8,6 +8,7 @@ import { once } from 'node:events';
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import net from 'node:net';
+import httpClient from 'node:http';
 import dgram from 'node:dgram';
 import { SignJWT } from 'jose';
 import { Sessions, passwordRecord } from '../auth/session.mjs';
@@ -134,6 +135,14 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     Origin: origin, 'Content-Type': 'application/json', ...(session ? { Cookie: session.cookie, 'X-CSRF-Token': session.csrf } : {}), ...headers
   }, ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
   assert.equal((await request('/healthz')).status, 200);
+  for (const path of ['/public/health', '/public/latest']) assert.equal((await request(path)).status, 200);
+  for (const path of ['/operator-pages/sequences', '/operator-pages/debug-mode', '/operator-pages/manual', '/operator-pages/manual-document', '/sequences', '/sequence-executions']) assert.equal((await request(path)).status, 401);
+  assert.equal((await request('/public/command', null, {}, { 'X-Command-Token': 'test-command' })).status, 404);
+  const publicStream = await request('/public/events'), publicReader = publicStream.body.getReader();
+  const publicStatus = new TextDecoder().decode((await publicReader.read()).value);
+  assert.ok(publicStatus.includes('"command_ready":false'));
+  assert.ok(!publicStatus.includes('active_sequence'));
+  await publicReader.cancel();
   for (const path of ['/latest', '/api/demo/latest', '/health', '/events', '/runs']) assert.equal((await request(path)).status, 401);
   assert.equal((await request('/live-mode', null, { on: true }, { 'X-Command-Token': 'test-command' })).status, 401);
   const login = async (username) => {
@@ -143,6 +152,8 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     return { ...body, cookie: response.headers.get('set-cookie').split(';')[0] };
   };
   const viewer = await login('viewer');
+  for (const path of ['/operator-pages/sequences', '/operator-pages/debug-mode', '/operator-pages/manual', '/operator-pages/manual-document', '/sequences', '/sequence-executions']) assert.equal((await request(path, viewer)).status, 403);
+  assert.equal((await request('/command', viewer, { role: 'operator' }, { 'X-Command-Token': 'test-command', 'X-Role': 'operator' })).status, 403);
   const anotherViewer = await login('viewer');
   assert.equal((await request('/latest', anotherViewer)).status, 200);
   for (const path of ['/latest', '/health', '/runs']) assert.equal((await request(path, viewer)).status, 200);
@@ -154,11 +165,12 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     { 'X-Command-Token': 'test-command' })).status, 403);
   assert.equal((await request('/runs/events', viewer, { sequence_name: 'x', step_index: 0, step_text: 'x', phase: 'started' })).status, 403);
   const operator = await login('operator');
+  for (const path of ['/operator-pages/sequences', '/operator-pages/debug-mode', '/operator-pages/manual', '/operator-pages/manual-document']) assert.equal((await request(path, operator)).status, 200);
   const sequence = { schemaVersion: 1, name: 'Mock history', steps: [
     { id: 'choice', type: 'if', condition: { op: '>', left: { metric: 'pv.busVoltageV' }, right: { constant: 5, unit: 'V' } },
       then: [{ id: 'yes', type: 'delay', durationMs: 1 }], else: [{ id: 'no', type: 'delay', durationMs: 1 }] }
   ] };
-  assert.equal((await request('/sequences', viewer)).status, 200);
+  assert.equal((await request('/sequences', viewer)).status, 403);
   assert.equal((await request('/sequences', viewer, sequence)).status, 403);
   assert.equal((await request('/sequences/missing/execute', viewer, { mode: 'live' }, { 'X-Command-Token': 'test-command' })).status, 403);
   const invalid = await request('/sequences', operator, { ...sequence, steps: [{ id: 'bad', type: 'unknown' }] });
@@ -171,17 +183,17 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
   assert.equal((await started.json()).execution.id, executionId);
   let recorded;
   for (let i = 0; i < 30; i++) {
-    recorded = await (await request(`/sequence-executions/${executionId}`, viewer)).json();
+    recorded = await (await request(`/sequence-executions/${executionId}`, operator)).json();
     if (recorded.execution?.state === 'completed') break;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
   assert.equal(recorded.execution.state, 'completed');
   assert.equal(recorded.execution.mode, 'simulation');
   assert.equal(recorded.execution.completed_steps, 2);
-  const savedEvents = await (await request(`/sequence-executions/${executionId}/events`, viewer)).json();
+  const savedEvents = await (await request(`/sequence-executions/${executionId}/events`, operator)).json();
   assert.equal(savedEvents.events.find((event) => event.type === 'branch').details.selected, 'else');
   assert.equal((await request(`/sequences/${saved.sequence.id}/execute`, operator, runRequest)).status, 200, 'retry returns the same run');
-  assert.equal((await (await request('/sequence-executions', viewer)).json()).executions.filter((item) => item.id === executionId).length, 1);
+  assert.equal((await (await request('/sequence-executions', operator)).json()).executions.filter((item) => item.id === executionId).length, 1);
   assert.equal((await (await request('/runs', viewer)).json()).runs.length, 0, 'simulation never creates a hardware recording');
   assert.equal((await request('/auth/me', operator)).status, 200);
   const duplicateOperator = await request('/auth/login', null, { username: 'operator', password });
@@ -229,8 +241,135 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
   let timer; await Promise.race([ended, new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('SSE did not close')), 2000); })]).finally(() => clearTimeout(timer));
   assert.equal((await request('/latest', viewer)).status, 401);
   assert.equal((await request('/latest', operator)).status, 200);
+  // A body that finishes after logout must not dispatch using an earlier authorization.
+  const commandBody = JSON.stringify({ type: 'led_control', enabled: true });
+  let finishSlow;
+  const slowResponse = new Promise((resolve, reject) => {
+    const pending = httpClient.request(origin + '/command', { method: 'POST', headers: {
+      Origin: origin, Cookie: operator.cookie, 'X-CSRF-Token': operator.csrf,
+      'X-Command-Token': 'test-command', 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(commandBody)
+    } }, (response) => { response.resume(); response.on('end', () => resolve(response.statusCode)); });
+    pending.on('error', reject); pending.write(commandBody.slice(0, 5));
+    finishSlow = () => pending.end(commandBody.slice(5));
+  });
+  await new Promise((resolve) => setTimeout(resolve, 30));
   assert.equal((await request('/auth/logout', operator, {})).status, 200);
+  finishSlow();
+  assert.equal(await slowResponse, 401);
   assert.equal((await request('/command', operator, {}, { 'X-Command-Token': 'test-command' })).status, 401);
   const replacement = await login('operator');
   assert.equal((await request('/latest', replacement)).status, 200);
+});
+
+test('live branches share a recording, preserve packets and markers, and retain independent runs', async (t) => {
+  const { file, dir } = await config(t);
+  const http = await freePort(), udp = await freePort(true), origin = `http://127.0.0.1:${http}`;
+  const server = spawn(process.execPath, [fileURLToPath(new URL('../server.js', import.meta.url))], { env: {
+    ...process.env, ...settings(file), AUTH_ORIGIN: origin, HTTP_PORT: String(http), UDP_PORT: String(udp),
+    HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1', COMMAND_TOKEN: 'test-command',
+    RECORDING_DB_PATH: join(dir, 'runs.sqlite')
+  }, stdio: ['ignore', 'ignore', 'pipe'] });
+  let logs = ''; server.stderr.on('data', (d) => { logs += d; });
+  t.after(async () => { if (server.exitCode === null) { const ended = once(server, 'exit'); server.kill(); await ended; } });
+  const waitFor = async (fn) => {
+    for (let i = 0; i < 200; i++) { const result = await fn(); if (result) return result; await new Promise((r) => setTimeout(r, 20)); }
+    throw new Error('Timed out: ' + logs);
+  };
+  await waitFor(async () => { try { return (await fetch(origin + '/auth/status')).ok; } catch { return false; } });
+  const login = await fetch(origin + '/auth/login', { method: 'POST', headers: { Origin: origin, 'Content-Type': 'application/json' }, body: JSON.stringify({ username: 'operator', password }) });
+  const session = await login.json(), cookie = login.headers.get('set-cookie').split(';')[0];
+  const request = (path, body, method = body === undefined ? 'GET' : 'POST') => fetch(origin + path, { method,
+    headers: { Origin: origin, Cookie: cookie, 'X-CSRF-Token': session.csrf, 'X-Command-Token': 'test-command', 'Content-Type': 'application/json' },
+    ...(body === undefined ? {} : { body: JSON.stringify(body) }) });
+  const json = async (path, body, method) => {
+    const response = await request(path, body, method), value = await response.json();
+    assert.ok(response.ok, `${path}: ${response.status} ${JSON.stringify(value)}`); return value;
+  };
+  const publicStream = await fetch(origin + '/public/events');
+  const publicReader = publicStream.body.getReader();
+  let observerText = '';
+  const observing = (async () => {
+    while (true) { const { done, value } = await publicReader.read(); if (done) break; observerText += new TextDecoder().decode(value); }
+  })();
+  t.after(async () => { await publicReader.cancel(); await observing; });
+  const device = dgram.createSocket('udp4'); device.bind(0, '127.0.0.1'); await once(device, 'listening');
+  t.after(() => device.close());
+  let commands = 0, seq = 0, failNext = false;
+  const emitted = [];
+  device.on('message', (bytes, peer) => {
+    let command; try { command = JSON.parse(bytes); } catch { return; }
+    if (command.type !== 'led_control') return;
+    commands++;
+    const ok = !failNext; failNext = false;
+    device.send(JSON.stringify({ type: 'debug_result', device_id: 'esp32-telemetry', request_id: command.request_id,
+      command_type: 'led_control', ok, enabled: true, gpio: 38 }), peer.port, peer.address);
+  });
+  const send = async () => {
+    const current = ++seq;
+    const words = [0x4353, 4, current, 2600, 0x0a00, 40, 4003, 10, 50, 3813, 3807, 3676, 3677, 0x61, 0, 0xa507, 3, 2500, 1550, 5000];
+    const hex = words.map((word) => word.toString(16).padStart(4, '0')).join('');
+    device.send(hex, udp, '127.0.0.1');
+    const latest = await waitFor(async () => { const value = await json('/latest'); return value.latest?.packet?.seq === current && value.latest; });
+    const publicLatest = await (await fetch(origin + '/public/latest')).json();
+    assert.equal(publicLatest.latest.packet.seq, current);
+    assert.equal(publicLatest.latest_debug, null);
+    emitted.push(latest); return latest;
+  };
+  await send();
+  let definition = (await json('/sequences', { schemaVersion: 1, name: 'Concurrent branch', steps: [
+    { id: 'choice', type: 'if', condition: { op: '>', left: { metric: 'pv.busVoltageV' }, right: { constant: 1, unit: 'V' } },
+      then: [{ id: 'led', type: 'command', command: { type: 'led_control', enabled: true } }, { id: 'hold', type: 'delay', durationMs: 200 }],
+      else: [{ id: 'fallback', type: 'delay', durationMs: 1 }] }
+  ] })).sequence;
+  const execute = async (during) => {
+    const confirmation = await json(`/sequences/${definition.id}/preflight`, {});
+    const started = await json(`/sequences/${definition.id}/execute`, { mode: 'live', confirmation_token: confirmation.confirmation_token });
+    await send();
+    if (during) await during(started);
+    const saved = await waitFor(async () => { const row = (await json(`/sequence-executions/${started.execution.id}`)).execution; return ['completed', 'failed'].includes(row.state) && row; });
+    return saved;
+  };
+  const before = await execute();
+  assert.equal((await json('/runs')).recording.active_run_id, null, 'independent branch closes only its own recording');
+  assert.equal((await json(`/runs/${before.recording_run_id}`)).run.status, 'completed');
+  const run = (await json('/runs/start', { name: 'Uninterrupted acquisition' })).run;
+  const first = await execute(async () => {
+    assert.equal((await request('/command', { type: 'led_control', enabled: true })).status, 409, 'manual command cannot overlap branch control');
+    assert.equal((await request('/runs/start', { name: 'duplicate' })).status, 409);
+    definition = (await json(`/sequences/${definition.id}`, { ...definition, name: 'Edited during recording' }, 'PUT')).sequence;
+  });
+  const second = await execute();
+  assert.equal(first.state, 'completed'); assert.equal(second.state, 'completed');
+  failNext = true;
+  const failed = await execute();
+  assert.equal(failed.reason, 'command_failed');
+  assert.equal(failed.recording_run_id, run.id);
+  assert.equal(first.recording_run_id, run.id); assert.equal(second.recording_run_id, run.id);
+  assert.equal(first.recording_session_id, run.session_id); assert.equal(second.recording_session_id, run.session_id);
+  await send();
+  assert.equal((await json('/runs')).recording.active_run_id, run.id);
+  assert.equal((await json(`/runs/${run.id}`)).run.status, 'recording');
+  const stopped = (await json('/runs/stop', {})).run;
+  assert.equal(stopped.id, run.id); assert.equal(stopped.status, 'completed');
+  const samples = (await json(`/runs/${run.id}/samples`)).items;
+  assert.deepEqual(samples.map((sample) => sample.seq), emitted.slice(2).map((envelope) => envelope.packet.seq));
+  assert.deepEqual(samples.map((sample) => sample.received_ms), emitted.slice(2).map((envelope) => Date.parse(envelope.received_at)));
+  const events = (await json(`/runs/${run.id}/events?limit=500`)).items;
+  for (const execution of [first, second]) {
+    assert.ok(events.some((event) => event.type === 'sequence_step' && event.details.execution_id === execution.id && event.details.phase === 'branch'));
+  }
+  const after = await execute();
+  assert.notEqual(after.recording_run_id, run.id);
+  assert.equal((await json('/runs')).recording.active_run_id, null);
+  assert.equal(commands, 5);
+  await publicReader.cancel(); await observing;
+  const publicEvents = observerText.split('\n').filter((line) => line.startsWith('data: ')).map((line) => JSON.parse(line.slice(6)));
+  assert.ok(publicEvents.some((event) => event.type === 'telemetry'));
+  assert.ok(publicEvents.some((event) => event.type === 'command_status' && Number.isFinite(event.round_trip_ms)));
+  for (const event of publicEvents) {
+    assert.ok(['status', 'telemetry', 'command_status'].includes(event.type));
+    assert.equal(event.active_sequence, undefined);
+    assert.equal(event.definition, undefined);
+    if (event.type === 'command_status') { assert.equal(event.result, undefined); assert.equal(event.target, undefined); }
+  }
 });

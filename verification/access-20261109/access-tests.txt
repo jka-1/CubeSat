@@ -1,0 +1,15 @@
+✔ JWT verification pins algorithm, claims, expiry and revocable session; config fails closed (776.827891ms)
+✔ login rejects wrong passwords, rate limits attempts and ignores forwarded peer headers (760.927725ms)
+✔ viewer sessions are concurrent, expire after inactivity, and support long passwords (898.142909ms)
+✔ account creation and login accept short passwords but reject blank passwords (589.036699ms)
+✔ operator control is exclusive, survives refresh, and can be reclaimed after a missed lease (670.66975ms)
+✔ HTTP JWT login enforces roles, CSRF and command token; logout closes SSE (2682.209837ms)
+✔ live branches share a recording, preserve packets and markers, and retain independent runs (6244.343394ms)
+ℹ tests 7
+ℹ suites 0
+ℹ pass 7
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 13246.991996

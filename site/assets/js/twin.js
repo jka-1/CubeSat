@@ -1,4 +1,4 @@
-import { subscribe as subscribeStreaming, streamUrl } from './streaming-telemetry.mjs?v=20261019b';
+import { subscribe as subscribeStreaming, streamUrl } from './streaming-telemetry.mjs?v=20261109b';
 
 let unsubscribe = null;
 let activeFrame = null;

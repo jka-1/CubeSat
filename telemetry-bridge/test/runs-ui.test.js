@@ -13,7 +13,7 @@ test('run explorer route exposes graph, packet table, events, and recording cont
     readFile(path.join(root, 'site/modules/runs.html'), 'utf8'),
     readFile(path.join(root, 'site/assets/js/runs.js'), 'utf8')
   ]);
-  assert.match(index, /data-route="runs"/);
+  assert.match(index, /data-route="runs"[^>]*>Logged Telemetry/);
   assert.match(router, /runs:\s*initRunsPage/);
   for (const id of ['runStartForm', 'runStop', 'analysisMode', 'responseTrigger', 'responseBefore',
     'responseAfter', 'responseSummary', 'seriesChart', 'chartPoints', 'exportCsv', 'sampleRows', 'eventRows']) {

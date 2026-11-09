@@ -7,8 +7,9 @@
     </div>
     <div class="tooltip-status-wrap" data-tooltip="Shows whether the bridge can record telemetry and serve saved runs."><div id="runsBridgeState" class="status-pill offline">Checking Recorder</div></div>
   </header>
+  <p id="runsSignIn" hidden>Saved recordings require an account. <a href="#account">Sign in to view logged telemetry.</a></p>
 
-  <section class="runs-capture" aria-labelledby="captureTitle">
+  <section class="runs-capture" aria-labelledby="captureTitle" data-operator-controls hidden>
     <div>
       <h3 id="captureTitle">Capture Control</h3>
       <p id="captureHelp">A recording begins with the latest fresh hardware packet.</p>

@@ -1,0 +1,126 @@
+<link rel="stylesheet" href="./assets/css/link-health.css?v=20261104a" />
+<link rel="stylesheet" href="./assets/css/debug-mode.css?v=20261104a" />
+<section id="debug-mode" class="page active debug-mode-page">
+  <div class="section-header">
+    <div>
+      <h2>Programming</h2>
+    </div>
+    <div class="tooltip-status-wrap" data-tooltip="Bridge connection shows the event stream is available; individual devices may still be offline."><div id="dmStatus" class="status-pill offline">Not Connected</div></div>
+  </div>
+
+  <section class="card">
+      <div class="card-header"><h3 class="card-title">Bridge</h3><span class="tooltip-status-wrap" data-tooltip="Shows whether the bridge accepted the command token required for hardware commands."><span id="dmAuthPill" class="status-pill">Token --</span></span></div>
+    <div class="card-body dm-grid dm-source">
+      <label>Event Stream <input id="dmStreamUrl" class="input" value="/telemetry/events" /></label>
+      <label>Health <input id="dmHealthUrl" class="input" value="/telemetry/health" /></label>
+      <label>Command URL <input id="dmCommandUrl" class="input" value="/telemetry/command" /></label>
+      <label>Command Token <input id="dmToken" class="input" type="password" autocomplete="off" placeholder="temporary lab token" /></label>
+      <div class="dm-buttons"><button id="dmConnect" class="button" type="button">Connect</button></div>
+    </div>
+  </section>
+
+  <div class="dm-row">
+    <section class="card dm-control">
+      <div class="card-header"><h3 class="card-title">Debug control</h3><span id="dmDebugPill" class="status-pill">debug --</span></div>
+      <div class="card-body dm-grid dm-ctl">
+        <div class="dm-buttons">
+          <button id="dmDebugOn" class="button" type="button" data-cmd data-tooltip="Requests debug mode from the device through the bridge. Requires operator access and a valid command token.">Enable Debug</button>
+          <button id="dmDebugOff" class="button secondary" type="button" data-cmd>Disable Debug</button>
+        </div>
+          <label>Scan Period (ms, 200–5000)
+          <span class="dm-inline"><input id="dmPeriod" class="input" type="number" min="200" max="5000" step="50" value="1000" />
+          <button id="dmPeriodApply" class="button secondary" type="button" data-cmd>Apply</button></span>
+        </label>
+        <div class="dm-buttons">
+          <button id="dmScan" class="button secondary" type="button" data-cmd data-tooltip="Scans supported I²C addresses and probes devices; results appear in the bus scan panel.">Bus Scan + Probe</button>
+        </div>
+        <small id="dmDebugDetail" class="metric-detail">waiting for v5/v6 packets</small>
+      </div>
+    </section>
+    <div class="dm-tiles" id="dmTiles"></div>
+  </div>
+
+  <section class="card dm-stream-card" id="dmStreamCard">
+    <div class="card-header"><h3 class="card-title">Streaming Telemetry</h3>
+      <label class="st-section-toggle"><input type="checkbox" id="dmStreamToggle" /><span class="st-switch"></span><span id="dmStreamToggleText">Off</span></label></div>
+    <div class="card-body">
+      <p id="dmStreamOffNote" class="st-off-note" hidden></p>
+      <div id="dmStreamRoot"></div>
+    </div>
+  </section>
+
+  <div class="dm-row">
+    <section class="card">
+      <div class="card-header"><h3 class="card-title">Register Access</h3><span id="dmRegPill" class="status-pill" hidden>--</span></div>
+      <div class="card-body">
+        <div class="dm-grid dm-reg">
+          <label>Device <select id="dmDevice" class="input"></select></label>
+          <label>Register <select id="dmRegister" class="input"></select></label>
+          <label>Add Register Address <input id="dmNewRegister" class="input" placeholder="0x14" inputmode="text" /></label>
+          <div class="dm-buttons">
+            <select id="dmNewRegisterWidth" class="input" aria-label="New register read width"><option value="1">1 byte</option><option value="2">2 bytes</option></select>
+          <button id="dmAddRegister" class="button secondary" type="button" data-tooltip="Adds a temporary address for reads. It does not grant write access.">Add Register</button>
+          </div>
+          <label>Write Value <input id="dmValue" class="input" placeholder="0x1234 or bytes 0x22 0x00" /></label>
+          <div class="dm-buttons">
+            <button id="dmRead" class="button" type="button" data-cmd data-tooltip="Reads the selected register and displays raw bytes plus any available conversion.">Read</button>
+            <span class="info-tip-wrap" data-tooltip="Writes require an approved register and a value within its width. Acknowledgment does not confirm the stored value unless it is read back." data-tooltip-icon><button id="dmWrite" class="button secondary" type="button" data-cmd>Write</button></span>
+          </div>
+        </div>
+        <p id="dmRegInfo" class="dm-note"></p>
+        <p id="dmRegisterFeedback" class="dm-note" role="status" aria-live="polite">No Register Command Submitted.</p>
+        <table class="lh-table dm-result"><tbody>
+          <tr><th>Raw bytes</th><td id="dmRawBytes">--</td><th>Raw value</th><td id="dmRawValue">--</td></tr>
+          <tr><th>Converted</th><td id="dmConverted" colspan="3">--</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-header"><h3 class="card-title">Bus Scan (0x08–0x77)</h3><span id="dmScanPill" class="status-pill">Not Run</span></div>
+      <div class="card-body"><pre id="dmScanGrid" class="dm-pre">run a scan to list responding addresses</pre></div>
+    </section>
+  </div>
+
+  <div class="dm-row">
+    <section class="card">
+      <div class="card-header"><h3 class="card-title">Sequence Runner</h3><span id="dmSeqPill" class="status-pill">Idle</span></div>
+      <div class="card-body">
+        <textarea id="dmSeq" class="input dm-text" rows="9" spellcheck="false"># one command per line; i2cget/i2cset syntax from the Windows tool also works
+debug on
+period 500
+scan
+read 0x40 0xFE
+read 0x08 0x14
+write 0x40 0x05 0x0A 0x00
+delay 200
+i2cget -c 0x40 -r 0x05 -l 2</textarea>
+        <div class="dm-buttons dm-seqbar">
+          <label class="dm-check"><input id="dmStopOnError" type="checkbox" checked /> stop on error</label>
+          <button id="dmSeqRun" class="button" type="button" data-cmd>Run</button>
+          <button id="dmSeqStop" class="button secondary" type="button">Stop</button>
+        </div>
+      </div>
+    </section>
+    <section class="card">
+      <div class="card-header"><h3 class="card-title">Session Log</h3>
+        <span class="dm-buttons"><button id="dmLogDownload" class="button secondary" type="button">Download .txt</button>
+        <button id="dmLogClear" class="button secondary" type="button">Clear</button></span></div>
+      <div class="card-body"><pre id="dmLog" class="dm-pre dm-log"></pre></div>
+    </section>
+  </div>
+
+  <section class="card">
+    <div class="card-header"><h3 class="card-title">Link health (last 5 min)</h3><a class="status-pill" href="#link-health" data-route="link-health">full page →</a></div>
+    <div class="card-body">
+      <div class="lh-tiles dm-lh-tiles">
+        <div class="metric-tile"><span>Packets / lost</span><strong id="dmLhPackets">--</strong><small id="dmLhLoss" class="metric-detail">--</small></div>
+        <div class="metric-tile"><span>Interval p50 / p95</span><strong id="dmLhInterval">--</strong><small id="dmLhJitter" class="metric-detail">--</small></div>
+        <div class="metric-tile"><span>RSSI</span><strong id="dmLhRssi">n/a</strong><small id="dmLhRssiDetail" class="metric-detail">--</small></div>
+        <div class="metric-tile"><span>Last ACK RTT</span><strong id="dmLhAck">--</strong><small id="dmLhLinkErr" class="metric-detail">--</small></div>
+        <div class="metric-tile"><span>Command RTT p50</span><strong id="dmLhCmd">--</strong><small id="dmLhCmdDetail" class="metric-detail">--</small></div>
+        <div class="metric-tile"><span>Wi-Fi reconnects</span><strong id="dmLhReconnects">--</strong><small id="dmLhUptime" class="metric-detail">--</small></div>
+      </div>
+      <canvas id="dmLhChart" class="dm-chart" height="120"></canvas>
+    </div>
+  </section>
+</section>

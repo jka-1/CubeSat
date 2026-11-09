@@ -98,8 +98,9 @@ test('opt-in bridge recording authenticates history, persists UDP runs and expos
   assert.equal(samples.length, 3);
   assert.equal(samples[0].raw_base64, Buffer.from(raw).toString('base64'));
   assert.deepEqual(samples.map((s) => s.mode), ['live_telemetry', 'debug', 'debug']);
-  // Legacy injection remains separate and cannot silently contaminate the archive.
-  assert.equal((await request('/input', { hex: hex(99, false, 0) }, '')).status, 200);
+  // Injection requires operator credentials and still cannot contaminate the archive.
+  assert.equal((await request('/input', { hex: hex(99, false, 0) }, '')).status, 401);
+  assert.equal((await request('/input', { hex: hex(99, false, 0) })).status, 200);
   assert.equal((await json(`/runs/${last.id}`)).run.sample_count, 1);
   const series = await json(`/runs/${first.id}/series?metric=pv.currentA&points=1`);
   assert.equal(series.points[0].sample_count, 3);

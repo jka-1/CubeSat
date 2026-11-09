@@ -1,11 +1,11 @@
-import { apiFetch, canOperate } from './auth.js?v=20261104d';
+import { apiFetch, canOperate, telemetryUrl } from './auth.js?v=20261109b';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,
   lightLevelFromMv
 } from './telemetry-model.mjs?v=20261019b';
-import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261019b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261028c';
+import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261109b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261109b';
 
 const initialTelemetry = {
   pv: {
@@ -192,7 +192,7 @@ function commandTokenValue() {
 function updateCommandControls() {
   const credentialReady = !commandAuthRequired || commandTokenValue().length > 0;
   const noCommandPending = pendingCommandIds.size === 0;
-  const enabled = dataMode === 'live' && bridgeCommandReady && credentialReady && noCommandPending;
+  const enabled = canOperate() && dataMode === 'live' && bridgeCommandReady && credentialReady && noCommandPending;
 
   commandButtonIds.forEach((buttonId) => {
     const button = document.getElementById(buttonId);
@@ -1161,7 +1161,7 @@ function connectTelemetryStream() {
   updateCommandControls();
 
   try {
-    eventSource = new EventSource(url);
+    eventSource = new EventSource(telemetryUrl(url));
   } catch (error) {
     writeLog(`Event stream creation failed: ${error.message}`);
     return;

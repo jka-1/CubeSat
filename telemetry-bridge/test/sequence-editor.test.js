@@ -42,7 +42,7 @@ test('route exposes palette, canvas, persistence and execution controls', async 
   const [index, router, html, script] = await Promise.all([
     readFile(new URL('../../site/index.html', import.meta.url), 'utf8'),
     readFile(new URL('../../site/assets/js/router.js', import.meta.url), 'utf8'),
-    readFile(new URL('../../site/modules/sequences.html', import.meta.url), 'utf8'),
+    readFile(new URL('../auth/views/sequences.html', import.meta.url), 'utf8'),
     readFile(new URL('../../site/assets/js/sequences.js', import.meta.url), 'utf8')
   ]);
   assert.match(index, /data-route="sequences"/);
@@ -51,14 +51,14 @@ test('route exposes palette, canvas, persistence and execution controls', async 
   assert.match(script, /\/sequences\/\$\{encodeURIComponent\(draft.id\)\}\/preflight/);
   assert.match(script, /\/sequence-executions\/\$\{id\}\/events\?after=/);
   assert.match(script, /canOperate\(\)/);
-  assert.match(index, /data-route="sequences">Branch Definition<\/a>/);
+  assert.match(index, /data-route="sequences"[^>]*>Branch Definition<\/a>/);
   assert.match(html, /Branch Definition/);
   assert.equal(BLOCKS.find(([type]) => type === 'waitUntil')[1], 'Wait for value');
   assert.deepEqual(Object.keys(DEVICE_LABELS), ['0x08', '0x40', '0x6B']);
   assert.match(DEVICE_LABELS['0x6B'], /MPPT \/ BQ25798 \(0x6B\)/);
   assert.match(script, /DEVICE_LABELS\[addr\]/);
   const css = await readFile(new URL('../../site/assets/css/styles.css', import.meta.url), 'utf8');
-  assert.match(css, /\.nav-links\s*\{[^}]*justify-content:\s*flex-start;[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;/s);
+  assert.match(css, /\.nav-links\s*\{[^}]*justify-content:\s*center;[^}]*flex-wrap:\s*nowrap;[^}]*overflow-x:\s*auto;/s);
 });
 
 test('editor validates register and fault comparisons with explicit formats', () => {

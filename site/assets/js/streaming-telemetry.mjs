@@ -203,7 +203,11 @@ export class StreamingModel {
 // ---------------------------------------------------------------- browser stream manager
 const shared = { es: null, url: null, model: new StreamingModel(), subs: new Set(), open: false, transport: 'waiting', timer: null };
 export function sharedModel() { return shared.model; }
-export function streamUrl(storage) { return store(storage)?.getItem(STREAM_URL_KEY) || '/telemetry/events'; }
+export function streamUrl(storage) {
+  const url = store(storage)?.getItem(STREAM_URL_KEY) || '/telemetry/public/events';
+  // Shared viewing streams never need access to programming or command results.
+  return url.replace(/\/telemetry\/events(?=\?|$)/, '/telemetry/public/events');
+}
 export function isStreamOpen() { return shared.open; }
 
 function notify() { for (const fn of shared.subs) { try { fn(shared.model, { open: shared.open, transport: shared.transport }); } catch (e) { console.error(e); } } }

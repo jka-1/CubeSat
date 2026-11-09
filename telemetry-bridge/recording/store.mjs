@@ -133,11 +133,18 @@ export class RunStore {
   }
   sequenceStartLive({ envelope, metadata, ...execution }) {
     return this.db.transaction(() => {
-      const run = this.start({ name: execution.definition.name, envelope, metadata: { ...metadata, sequence_execution_id: execution.id }, now: execution.started_ms });
-      const saved = this.sequenceStart({ ...execution, recording_session_id: run.session_id });
+      const active = this.active();
+      if (active && (active.device_id !== envelope?.packet?.device_id || active.remote_address !== envelope?.network?.remote_address)) fail('Recording belongs to another telemetry source', 409);
+      const run = active || this.start({ name: execution.definition.name, envelope, metadata: { ...metadata, sequence_execution_id: execution.id }, now: execution.started_ms });
+      this.sequenceStart({ ...execution, recording_session_id: run.session_id });
       this.db.prepare('UPDATE sequence_executions SET recording_run_id=? WHERE id=?').run(run.id, execution.id);
-      return { execution: this.sequenceGetExecution({ id: execution.id }), run };
+      return { execution: this.sequenceGetExecution({ id: execution.id }), run, owns_recording: !active };
     })();
+  }
+  sequenceFinishRecording({ session_id, reason, status }) {
+    const active = this.active();
+    // A sequence may only close the session it created, including its linked segments.
+    return active?.session_id === session_id ? this.stop({ reason, status }) : null;
   }
   sequenceState({ id, state, reason, ended_ms }) {
     const result = this.db.prepare("UPDATE sequence_executions SET state=?,reason=?,ended_ms=COALESCE(?,ended_ms) WHERE id=? AND state NOT IN ('completed','failed','canceled')").run(state, reason, ended_ms, id);
@@ -145,8 +152,16 @@ export class RunStore {
     return this.sequenceGetExecution({ id });
   }
   sequenceEvent(event) {
-    this.db.prepare('INSERT OR IGNORE INTO sequence_events(execution_id,event_order,at_ms,type,block_id,details_json) VALUES(?,?,?,?,?,?)')
-      .run(event.execution_id, event.order, event.at_ms, event.type, event.block_id, JSON.stringify(event.details));
+    this.db.transaction(() => {
+      const inserted = this.db.prepare('INSERT OR IGNORE INTO sequence_events(execution_id,event_order,at_ms,type,block_id,details_json) VALUES(?,?,?,?,?,?)')
+        .run(event.execution_id, event.order, event.at_ms, event.type, event.block_id, JSON.stringify(event.details));
+      const execution = this.sequenceGetExecution({ id: event.execution_id });
+      const active = this.active();
+      if (inserted.changes && active && execution.mode === 'live' && active.session_id === execution.recording_session_id) {
+        this.event(active.id, event.at_ms, 'sequence_step', { sequence_name: execution.definition.name,
+          execution_id: event.execution_id, phase: event.type, block_id: event.block_id, ...event.details });
+      }
+    })();
     return event;
   }
   sequenceGetExecution({ id }) {

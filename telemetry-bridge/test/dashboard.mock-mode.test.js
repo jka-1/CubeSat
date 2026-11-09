@@ -42,6 +42,7 @@ async function dashboardHarness() {
     clearInterval: () => {},
     apiFetch: async (...args) => { commands.push(args); },
     canOperate: () => true,
+    telemetryUrl: (url) => url,
     peripheralTelemetryForMode: (mode) => ({ temperatureC: mode === 'mock' ? 25 : null }),
     isStreamingMode: () => false,
     setStreamingMode: () => {},

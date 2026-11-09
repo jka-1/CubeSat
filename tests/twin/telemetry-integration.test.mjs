@@ -76,7 +76,7 @@ function harness({ ready = Promise.resolve() } = {}) {
 test('opening the SSE connection alone does not create live measurements', async t => {
   const h = harness(); t.after(() => h.destroy());
   h.init(); await h.load();
-  assert.equal(h.streams[0].url, '/telemetry/events');
+  assert.equal(h.streams[0].url, '/telemetry/public/events');
   assert.deepEqual(h.transports, ['connecting']);
   h.streams[0].emit('open'); h.tick();
   assert.deepEqual(h.transports, ['connecting', 'connected']);

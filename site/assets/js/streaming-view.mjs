@@ -1,6 +1,6 @@
 // Streaming Telemetry view: present-only device cards with sparklines, driven by streaming-telemetry.mjs.
 // Shared by the Debug Mode page and the I²C telemetry page. Vanilla DOM + canvas.
-import { WINDOWS, getStoredWindowMs, setStoredWindowMs, subscribe } from './streaming-telemetry.mjs?v=20261019b';
+import { WINDOWS, getStoredWindowMs, setStoredWindowMs, subscribe } from './streaming-telemetry.mjs?v=20261109b';
 
 const CELL_RANGE = { min: 3.0, max: 4.3 };
 const CELL_REGS = ['0x14', '0x16', '0x18', '0x1A'];

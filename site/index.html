@@ -9,7 +9,7 @@
     content="CubeSat power system dashboard with telemetry, register tools, and saved runs."
   />
   <link rel="icon" type="image/png" href="./favicon.png?v=20261026a" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20261109a" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20261109d" />
   <link rel="stylesheet" href="./assets/css/streaming.css?v=20261104d" />
 </head>
 <body>
@@ -23,26 +23,37 @@
       </a>
 
       <div class="nav-links">
-        <a class="nav-link active" href="#home" data-route="home">CubeSat</a>
-        <a class="nav-link" href="#communication" data-route="communication">I²C Telemetry</a>
-        <a class="nav-link" href="#link-health" data-route="link-health">Network Statistics</a>
-        <a class="nav-link" href="#debug-mode" data-route="debug-mode">Programming</a>
-        <a class="nav-link" href="#runs" data-route="runs">Logged Telemetry</a>
-        <a class="nav-link" href="#sequences" data-route="sequences">Branch Definition</a>
-        <a class="nav-link" href="#twin" data-route="twin">Digital Twin</a>
-        <a id="streamingNavBadge" class="st-nav-badge" href="#debug-mode" title="Streaming Telemetry mode is on" hidden><i></i>Streaming</a>
-        <a class="nav-link" href="./manual.htm" target="_blank" rel="noopener">Manual</a>
-      </div>
-      <div class="account-control">
-        <button id="accountButton" class="nav-link" type="button">Sign in</button>
+        <a class="nav-link active" href="#home" data-route="home">Home</a>
+        <a class="nav-link" href="#dashboard" data-route="dashboard">Dashboard</a>
+        <div class="account-control">
+          <button id="accountButton" class="nav-link" type="button">Sign in</button>
+        </div>
       </div>
     </nav>
+    <div id="dashboardNavigation" class="dashboard-navigation" hidden>
+      <button id="dashboardPrevious" class="dashboard-scroll" type="button" aria-label="Scroll dashboard sections left" aria-controls="dashboardTabs" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
+      </button>
+      <nav id="dashboardTabs" class="dashboard-tabs" aria-label="Dashboard sections" hidden>
+        <a class="nav-link" href="#communication" data-route="communication">I²C Telemetry</a>
+        <a class="nav-link" href="#link-health" data-route="link-health">Network Statistics</a>
+        <a class="nav-link" href="#runs" data-route="runs">Logged Telemetry</a>
+        <a class="nav-link" href="#twin" data-route="twin">Digital Twin</a>
+        <a class="nav-link" href="#debug-mode" data-route="debug-mode" data-operator-only hidden>Programming</a>
+        <a class="nav-link" href="#sequences" data-route="sequences" data-operator-only hidden>Branch Definition</a>
+        <a class="nav-link" href="#manual" data-route="manual" data-operator-only hidden>Manual</a>
+        <a id="streamingNavBadge" class="st-nav-badge" href="#communication" title="Streaming Telemetry mode is on" hidden><i></i>Streaming</a>
+      </nav>
+      <button id="dashboardNext" class="dashboard-scroll" type="button" aria-label="Scroll dashboard sections right" aria-controls="dashboardTabs" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
+      </button>
+    </div>
   </header>
 
   <main id="accountPanel" class="account-panel" aria-labelledby="accountTitle" hidden>
     <p class="account-kicker">OrbitalAddress account</p>
     <div class="account-heading"><h1 id="accountTitle">Sign in</h1><button id="accountBack" type="button" aria-label="Back to previous page">← Back</button></div>
-    <p id="accountHelp">Use your CubeSat account to view telemetry and saved runs.</p>
+    <p id="accountHelp">Live telemetry is public. Sign in to view saved runs or use operator controls.</p>
     <form id="accountForm">
       <label for="accountUsername">Username</label>
       <input id="accountUsername" name="username" autocomplete="username" maxlength="64" required>
@@ -59,6 +70,6 @@
     <noscript>Please enable JavaScript to load the modular pages.</noscript>
   </main>
 
-  <script type="module" src="./assets/js/app.js?v=20261109a"></script>
+  <script type="module" src="./assets/js/app.js?v=20261109d"></script>
 </body>
 </html>

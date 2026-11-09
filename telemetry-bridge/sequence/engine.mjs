@@ -102,8 +102,14 @@ export class SequenceEngine {
     try {
       const saved = await this.persist('sequenceStart', { id, definition: run.definition, mode, operator_name: operatorName, device_id: deviceId, started_ms: run.startedMs, envelope: recordingEnvelope });
       run.recordingRunId = saved?.run?.id || null;
+      run.recordingSessionId = saved?.run?.session_id || null;
+      run.ownsRecording = saved?.owns_recording === true;
       await this.state(run, 'running');
-    } catch (error) { this.active = null; throw error; }
+    } catch (error) {
+      if (run.ownsRecording) await this.onTerminal({ ...run, state: 'failed', reason: 'sequence_start_failed' }).catch(() => {});
+      this.active = null;
+      throw error;
+    }
     run.done = this.execute(run);
     return this.snapshot(run);
   }

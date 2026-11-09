@@ -1,0 +1,18 @@
+✔ dashboard defaults to live SSE and leaves simulated values out of waiting state (24.754653ms)
+✔ mock switch changes frames immediately and isolates closed live stream events (6.385047ms)
+✔ run explorer route exposes graph, packet table, events, and recording controls (15.198588ms)
+✔ editor blocks match bridge shape and validate branches and units (22.903623ms)
+✔ drag move prevents a block entering its own branch and cloning resets IDs (2.553625ms)
+✔ route exposes palette, canvas, persistence and execution controls (16.116369ms)
+✔ editor validates register and fault comparisons with explicit formats (0.897156ms)
+✔ every register read option is also a valid comparison operand (6.95327ms)
+✔ editor adds user registers with hex range checks and validates references (1.432755ms)
+✔ remoteChange flags a newer saved revision of the loaded definition (0.576204ms)
+ℹ tests 10
+ℹ suites 0
+ℹ pass 10
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 465.772352

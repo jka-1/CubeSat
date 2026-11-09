@@ -623,7 +623,7 @@ test('bridge decodes v4 peripheral sensors and preserves missing values', async 
 
   const jsonResponse = await fetch(`${baseUrl}/input`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', 'X-Command-Token': commandToken },
     body: JSON.stringify({
       type: 'telemetry',
       device_id: 'legacy-json-test',

@@ -17,7 +17,7 @@ function update(next) {
   const changed = JSON.stringify(state.user) !== JSON.stringify(next.user) ||
     state.enabled !== next.enabled || state.control_active !== next.control_active;
   state = next;
-  $('accountButton').hidden = state.enabled === false;
+  $('accountButton').hidden = false;
   $('accountButton').textContent = state.user?.username || 'Sign in';
   $('accountButton').setAttribute('aria-label', state.user
     ? `Open account for ${state.user.username}`
@@ -28,7 +28,8 @@ function update(next) {
   $('accountTitle').textContent = state.user ? 'Your account' : 'Sign in';
   $('accountHelp').textContent = state.user
     ? `Signed in as ${state.user.username} (${state.user.role}). ${state.user.role === 'viewer' ? 'You can view telemetry and saved runs.' : `Controls ${state.control_active ? 'active' : 'inactive'}; hardware commands also require the command token.`}`
-    : 'Sign in to view telemetry and saved runs.';
+    : state.enabled === false ? 'Website sign-in is not configured on this bridge. Public telemetry remains available.'
+    : 'Live telemetry is public. Sign in to view saved runs or use your assigned operator permissions.';
   if (changed) window.dispatchEvent(new Event('cubesat-auth-change'));
 }
 async function jsonRequest(path, options = {}) {
@@ -47,22 +48,32 @@ export async function refreshSession() {
   }
 }
 // Saving Branch Definitions only needs an operator account; the exclusive control lease is for hardware.
-export function canEditSequences() { return state.enabled === false || state.user?.role === 'operator'; }
-export function controlActive() { return state.enabled === false || Boolean(state.control_active); }
-export function canOperate() { return state.enabled === false || (state.user?.role === 'operator' && state.control_active); }
+export function isOperator() { return state.enabled === true && state.user?.role === 'operator'; }
+export function isSignedIn() { return state.enabled === true && Boolean(state.user); }
+export function canEditSequences() { return isOperator(); }
+export function controlActive() { return isOperator() && Boolean(state.control_active); }
+export function canOperate() { return controlActive(); }
 export function allowRoute(route) {
-  if (['home', 'partners'].includes(route) || state.enabled === false || state.user) return true;
-  return false;
+  return ['home', 'dashboard', 'communication', 'link-health', 'runs', 'twin'].includes(route) || isOperator();
+}
+export function telemetryUrl(url) {
+  const target = new URL(url, location.href);
+  if (!isOperator() && target.origin === location.origin && /^\/telemetry\/(events|health|latest)$/.test(target.pathname)) {
+    target.pathname = target.pathname.replace('/telemetry/', '/telemetry/public/');
+    return target.href;
+  }
+  return url;
 }
 export async function apiFetch(url, options = {}) {
   const target = new URL(url, location.href);
   const headers = new Headers(options.headers);
   if (state.enabled !== false && !['GET', 'HEAD'].includes(options.method || 'GET')) {
     if (target.origin !== location.origin) throw new Error('Signed-in commands must use the same site as login.');
-    if (!state.user) throw new Error('Sign in before sending commands.');
+    if (!isOperator()) throw new Error('An operator account is required.');
     headers.set('X-CSRF-Token', state.csrf);
   }
-  const response = await fetch(url, { ...options, headers, credentials: 'same-origin' });
+  if (!['GET', 'HEAD'].includes(options.method || 'GET') && !isOperator()) throw new Error('An operator account is required.');
+  const response = await fetch(['GET', 'HEAD'].includes(options.method || 'GET') ? telemetryUrl(url) : url, { ...options, headers, credentials: 'same-origin' });
   if (response.status === 401 && state.enabled !== false) await refreshSession();
   return response;
 }
@@ -93,13 +104,21 @@ export async function initAuth() {
     try {
       await jsonRequest('logout', { method: 'POST', headers: { 'X-CSRF-Token': state.csrf } });
       update({ enabled: true, user: null }); notice('You are signed out.');
+      location.hash = 'communication';
+      window.dispatchEvent(new Event('cubesat-session-ended'));
     } catch (error) {
-      if (error.status === 401) { update({ enabled: true, user: null }); notice('You are signed out.'); }
+      if (error.status === 401) { update({ enabled: true, user: null }); location.hash = 'communication'; notice('You are signed out.'); }
       else notice(error.message);
     } finally { $('accountLogout').disabled = false; }
   });
   await refreshSession();
   window.addEventListener('focus', refreshSession);
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) { update({ enabled: null, user: null }); refreshSession(); }
+  });
+  const channel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('cubesat-session') : null;
+  channel?.addEventListener('message', () => refreshSession());
+  window.addEventListener('cubesat-session-ended', () => channel?.postMessage('refresh'));
   // Only an operator keeps the control lease alive. Viewer polling would defeat inactivity expiry.
   setInterval(async () => {
     if (state.user?.role !== 'operator' || document.hidden) return;

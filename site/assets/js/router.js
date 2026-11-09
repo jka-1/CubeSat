@@ -1,11 +1,11 @@
-import { allowRoute, showAccount } from './auth.js?v=20261104d';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261104d';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261104d';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261104d';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261104d';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261104d';
-import { initTwinPage, destroyTwinPage } from './twin.js?v=20261109a';
-import { isStreamingMode } from './streaming-telemetry.mjs?v=20261019b';
+import { allowRoute, isOperator } from './auth.js?v=20261109b';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261109b';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109b';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261109b';
+import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261109b';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261109b';
+import { initTwinPage, destroyTwinPage } from './twin.js?v=20261109b';
+import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
 
 function updateStreamingBadge() {
   const badge = document.getElementById('streamingNavBadge');
@@ -17,12 +17,13 @@ const assetVersion = '20261104b';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261104d`,
+  communication: `./modules/communication.html?v=20261109b`,
   'link-health': `./modules/link-health.html?v=20261104a`,
-  'debug-mode': `./modules/debug-mode.html?v=20261104a`,
-  runs: `./modules/runs.html?v=20261104a`,
-  sequences: `./modules/sequences.html?v=20261104d`,
+  'debug-mode': '/telemetry/operator-pages/debug-mode',
+  runs: `./modules/runs.html?v=20261109b`,
+  sequences: '/telemetry/operator-pages/sequences',
   twin: `./modules/twin.html?v=20261109a`,
+  manual: '/telemetry/operator-pages/manual',
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };
 
@@ -51,15 +52,49 @@ const pageDestroyers = {
 let currentRoute = null;
 let navigationId = 0;
 
+function updateSectionScroll() {
+  const navigation = document.getElementById('dashboardNavigation');
+  const tabs = document.getElementById('dashboardTabs');
+  const previous = document.getElementById('dashboardPrevious');
+  const next = document.getElementById('dashboardNext');
+  if (navigation.hidden) return;
+  // Compare with the full available strip so the arrows do not sustain overflow themselves.
+  const overflowing = tabs.scrollWidth > navigation.clientWidth - 16 + 1;
+  previous.hidden = next.hidden = !overflowing;
+  previous.disabled = tabs.scrollLeft <= 1;
+  next.disabled = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 1;
+}
+
+function revealCurrentSection() {
+  const tabs = document.getElementById('dashboardTabs');
+  if (tabs.hidden) return;
+  updateSectionScroll();
+  const active = tabs.querySelector('[aria-current="page"]');
+  if (active) {
+    const strip = tabs.getBoundingClientRect();
+    const item = active.getBoundingClientRect();
+    if (item.left < strip.left + 8) tabs.scrollLeft -= strip.left + 8 - item.left;
+    else if (item.right > strip.right - 8) tabs.scrollLeft += item.right - strip.right + 8;
+  }
+  updateSectionScroll();
+}
+
 function resolveRoute(route) {
   if (route === 'dashboard') return 'communication';
   return routes[route] ? route : 'home';
 }
 
 function updateNav(route) {
+  const dashboard = !['home', 'partners', 'account'].includes(route);
+  document.getElementById('dashboardTabs').hidden = !dashboard;
+  document.getElementById('dashboardNavigation').hidden = !dashboard;
+  document.querySelectorAll('#dashboardTabs [data-operator-only]').forEach((node) => { node.hidden = !isOperator(); });
   document.querySelectorAll('[data-route]').forEach((link) => {
-    link.classList.toggle('active', link.dataset.route === route);
+    const active = link.dataset.route === route || link.dataset.route === 'dashboard' && dashboard;
+    link.classList.toggle('active', active);
+    if (active) link.setAttribute('aria-current', 'page'); else link.removeAttribute('aria-current');
   });
+  revealCurrentSection();
 }
 
 async function loadRoute(route) {
@@ -67,14 +102,15 @@ async function loadRoute(route) {
   if (route === 'account') {
     if (currentRoute && pageDestroyers[currentRoute]) pageDestroyers[currentRoute]();
     currentRoute = null;
+    document.getElementById('page-root').replaceChildren();
     document.getElementById('page-root').hidden = true;
     document.getElementById('accountPanel').hidden = false;
     updateNav('account');
     return;
   }
-  const safeRoute = resolveRoute(route);
+  const requestedRoute = resolveRoute(route);
+  const safeRoute = allowRoute(requestedRoute) ? requestedRoute : 'communication';
   document.getElementById('accountPanel').hidden = true;
-  if (!allowRoute(safeRoute)) { showAccount(currentRoute || 'home'); return; }
   history.replaceState(null, '', `#${safeRoute}`);
 
   if (currentRoute && pageDestroyers[currentRoute]) {
@@ -82,10 +118,13 @@ async function loadRoute(route) {
   }
 
   const root = document.getElementById('page-root');
+  currentRoute = null;
+  root.replaceChildren();
+  updateNav(safeRoute);
   root.hidden = false;
   const response = await fetch(routes[safeRoute]);
   const html = await response.text();
-  if (id !== navigationId) return;
+  if (id !== navigationId || !allowRoute(safeRoute)) return;
 
   if (!response.ok) {
     root.innerHTML = '<section class="page"><p>Failed to load page module.</p></section>';
@@ -93,6 +132,9 @@ async function loadRoute(route) {
   }
 
   root.innerHTML = html;
+  // Remove operational controls before mounting an otherwise public page.
+  if (!isOperator()) root.querySelectorAll('[data-operator-only]').forEach((node) => node.remove());
+  root.querySelectorAll('[data-operator-controls]').forEach((node) => { node.hidden = !isOperator(); });
   updateNav(safeRoute);
   updateStreamingBadge();
   currentRoute = safeRoute;
@@ -107,6 +149,11 @@ async function loadRoute(route) {
 }
 
 export function initRouter() {
+  const tabs = document.getElementById('dashboardTabs');
+  document.getElementById('dashboardPrevious').addEventListener('click', () => { tabs.scrollLeft -= Math.max(160, tabs.clientWidth * 0.75); updateSectionScroll(); });
+  document.getElementById('dashboardNext').addEventListener('click', () => { tabs.scrollLeft += Math.max(160, tabs.clientWidth * 0.75); updateSectionScroll(); });
+  tabs.addEventListener('scroll', updateSectionScroll, { passive: true });
+  new ResizeObserver(revealCurrentSection).observe(document.getElementById('dashboardNavigation'));
   window.addEventListener('cubesat-auth-change', () => loadRoute(location.hash.slice(1) || 'home'));
   document.querySelectorAll('[data-route]').forEach((link) => {
     link.addEventListener('click', (event) => {

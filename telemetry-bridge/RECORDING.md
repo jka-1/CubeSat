@@ -27,11 +27,13 @@ Source and mode changes are detected from telemetry, not from an issued command.
 
 An end marker contains `reason`, `from_source`, `to_source`, source register evidence, timestamp and `next_run_id`. `source_switch` and `mode_changed` events provide additional context. Existing command status updates are recorded with request IDs and timestamps. The Windows tool records each executable sequence line with its profile name, original line index, command text, phase and result; sequence execution remains client-side.
 
+Branch execution can join an active run without changing its ID, start timestamp, or recording ownership. Sequence events use the existing `sequence_step` timeline format and are linked to the execution ID. Ending, canceling, or failing a shared branch leaves acquisition running. Independent live branches retain their automatic recording lifecycle. Existing hardware-observed mode/source/reboot boundaries continue to create linked segments normally; events follow the same recording session. SQLite transactions and the existing worker queue serialize attachment and events with telemetry writes.
+
 ## Local setup
 
 From `telemetry-bridge`, install using `npm ci`. Set `RECORDING_DB_PATH` to a private path outside `site/` or `/var/www/`, for example an absolute path under `telemetry-bridge/data/`, which is ignored by Git. Configure JWT login as described in `AUTHENTICATION.md` and keep the existing `COMMAND_TOKEN` in the private service environment, then run `node server.js`. Never put real tokens, account files or passwords in shared examples or commits.
 
-Without `RECORDING_DB_PATH`, recording is disabled and no database worker opens. Health/SSE status adds a `recording` object with enabled/ready status, active run ID, queue count and error/drop counters. With JWT disabled, history retains its command-token compatibility behavior and fails closed if no token is configured or the legacy unauthenticated-command bypass is enabled. With JWT enabled, history reads require a viewer or operator session and recording actions require an operator session. Do not enable JWT remotely before HTTPS is established.
+Without `RECORDING_DB_PATH`, recording is disabled and no database worker opens. Health/SSE status adds a `recording` object with enabled/ready status, active run ID, queue count and error/drop counters. With JWT disabled, history retains its command-token compatibility behavior and fails closed if no token is configured. The legacy unauthenticated-command bypass is no longer honored. With JWT enabled, history reads require a viewer or operator session and recording actions require an operator session. Do not enable JWT remotely before HTTPS is established.
 
 Both user-supplied firmware headers remain local and excluded from Git. This backend does not read them.
 

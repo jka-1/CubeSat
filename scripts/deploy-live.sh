@@ -49,7 +49,7 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 # Prepare native dependencies for this server before replacing any live application files.
 npm ci --prefix "$bridge_source_dir" --omit=dev
-(cd "$bridge_source_dir" && node --input-type=module -e "import { jwtVerify } from 'jose'; import Database from 'better-sqlite3'; await import('./telemetry-auth.mjs'); const db = new Database(':memory:'); db.close();")
+(cd "$bridge_source_dir" && node --input-type=module -e "import { jwtVerify } from 'jose'; import Database from 'better-sqlite3'; await import('./telemetry-auth.mjs'); await import('./aps.mjs'); const db = new Database(':memory:'); db.close();")
 
 backup_dir="$("$script_dir/backup-live.sh")"
 echo "Backup created at: $backup_dir"
@@ -59,6 +59,7 @@ cp "$bridge_source" "$bridge_file"
 cp "$bridge_package_source" "$bridge_package_file"
 cp "$bridge_source_dir/package-lock.json" "$bridge_dir/package-lock.json"
 cp "$bridge_source_dir/telemetry-auth.mjs" "$bridge_dir/telemetry-auth.mjs"
+cp "$bridge_source_dir/aps.mjs" "$bridge_dir/aps.mjs"
 cp -a "$bridge_source_dir/recording" "$bridge_dir/"
 cp -a "$bridge_source_dir/auth" "$bridge_dir/"
 cp -a "$bridge_source_dir/sequence" "$bridge_dir/"

@@ -1,4 +1,4 @@
-import { apiFetch } from './auth.js?v=20261104d';
+import { apiFetch, telemetryUrl } from './auth.js?v=20261109b';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 
 const MAX_AGE_MS = 3_600_000;
@@ -143,7 +143,7 @@ async function pollHealth() {
 function connect() {
   disconnect(false);
   const url = $('lhStreamUrl').value.trim();
-  state.es = new EventSource(url);
+  state.es = new EventSource(telemetryUrl(url));
   state.es.addEventListener('open', () => { state.sseOpen = true; state.expectReplay = true; $('lhConnect').textContent = 'Disconnect'; });
   state.es.addEventListener('error', () => { state.sseOpen = false; });
   state.es.addEventListener('message', (m) => { try { onEvent(JSON.parse(m.data)); } catch { /* ignore */ } });
