@@ -33,6 +33,7 @@ files=(
   knight-eps-phase12/docs/model-upgrades.json
   knight-eps-phase12/docs/component_manifest.json
   knight-eps-phase12/viewer/telemetry.mjs
+  knight-eps-phase12/viewer/dashboard-integration.mjs
   knight-eps-phase12/viewer/display.mjs
   knight-eps-phase12/viewer/render-optimizations.mjs
   knight-eps-phase12/viewer/rendering/model-loader.mjs

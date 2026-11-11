@@ -1,0 +1,25 @@
+{
+  "synthetic": true,
+  "checks": [
+    {
+      "name": "legacy parent upgrades once and preserves the twin route",
+      "passed": true
+    },
+    {
+      "name": "persistently old adapter is blocked with a visible update message and no false live readings",
+      "passed": true
+    },
+    {
+      "name": "replacement uses one shared dashboard stream and none inside the iframe",
+      "passed": true
+    },
+    {
+      "name": "the updated bridge does not reload repeatedly",
+      "passed": true
+    }
+  ],
+  "readings": null,
+  "complete": true,
+  "errors": [],
+  "adapterLoads": 2
+}

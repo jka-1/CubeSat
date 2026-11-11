@@ -9,6 +9,7 @@ import {createInspection,orbitTransition,satelliteOrbitPose} from './inspection.
 import {deduplicateMaterials,instanceFixtures} from './render-optimizations.mjs';
 
 import {telemetryFields,formatReading} from './telemetry.mjs?v=20261111-telemetry';
+import {recoverLegacyDashboard} from './dashboard-integration.mjs?v=20261111-sync';
 
 const qs=s=>document.querySelector(s), panel=qs('#canvas');
 const errorBox=qs('#render-error');
@@ -73,7 +74,15 @@ function start(){
  }const pressed=(id,value)=>{qs(id).setAttribute('aria-pressed',String(value));qs(id).classList.toggle('active',value)};
  function requestFrame(kind=null){cancelCamera();pendingFit=kind||true;invalidate({geometry:true})}
  function stopMock({reset=false}={}){if(mockTimer)clearInterval(mockTimer);mockTimer=null;if(reset)display.reset()}
- function receiveTelemetry(input,options={}){normalizeTelemetry(input,{allowEmpty:options.snapshot===true});if(options.source!=='mock')stopMock();return display.update(input,options)}
+ function receiveTelemetry(input,options={}){
+  normalizeTelemetry(input,{allowEmpty:options.snapshot===true});
+  const recovery=recoverLegacyDashboard(window,options);
+  if(recovery){
+   stopMock();display.reset();display.setScreenState('offline',{title:'KNIGHT EPS',message:recovery==='refreshing'?'Updating dashboard…':'Dashboard update required',lines:recovery==='refreshing'?['Reconnecting live telemetry']:['Reload the dashboard to resume live data']});
+   return display.state();
+  }
+  if(options.source!=='mock')stopMock();return display.update(input,options)
+ }
  function startMock(){stopMock();display.disconnect();mockCounter=0;const tick=()=>{const t=mockCounter++;receiveTelemetry({battery_voltage_v:15.2+.12*Math.sin(t/5),solar_panel_current_a:.4+.08*Math.sin(t/3),pv_current_a:.4+.08*Math.sin(t/3),temperature_c:27+.5*Math.sin(t/7),esp32_temperature_c:36+.3*Math.sin(t/8),mppt_switch_temperature_c:32+.4*Math.sin(t/6),light_level:.7+.08*Math.sin(t/4),status:'MOCK SOLAR INPUT'},{source:'mock'})};tick();mockTimer=setInterval(tick,1000);return ()=>stopMock()}
  qs('#data-source').onchange=()=>{if(qs('#data-source').value==='mock')startMock();else{stopMock();display.disconnect();display.reset();display.useTelemetryMode();qs('#source-note').textContent='Waiting for dashboard / live data.'}};
  const display=createDisplay({onInvalidate:()=>invalidate(),onStatus:s=>{

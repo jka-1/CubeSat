@@ -1,0 +1,16 @@
+{
+  "checkedAt": "2026-11-11T20:37:24Z",
+  "note": "Public static assets only, compared against c5113f5c before the compatibility edits. No authenticated telemetry inspected.",
+  "assets": [
+    {
+      "url": "https://orbitaladdress.com/assets/js/twin.js?v=20261111-telemetry",
+      "sha256": "1a659192ac9c262ba0b9de8845c8bb3117b193e36ea9a34517dee40c3a88e7f6",
+      "matchesLocal": true
+    },
+    {
+      "url": "https://orbitaladdress.com/assets/js/router.js?v=20261111-telemetry",
+      "sha256": "6270325786b29ab2b6665f858c9d7624c27c85b428bbfe5bf82a085d51cfcb4f",
+      "matchesLocal": true
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "mock": {
+    "source": "mock",
+    "six": true,
+    "lightInRange": true,
+    "label": "Payload LCD: Mock demonstration. MOCK. Battery pack: 15.200 V; PV current · INA226: 0.400 A; Ambient temperature: 27.0 °C; Relative light: 0.70; MCU temperature: 36.0 °C; MPPT die temperature: 32.0 °C"
+  },
+  "publicApi": true,
+  "normal": {
+    "url": "http://127.0.0.1:8770/site/knight-eps-phase12/viewer/",
+    "loaded": true,
+    "parts": 95,
+    "source": "none",
+    "quality": "studio",
+    "instrumented": false,
+    "testTransport": false
+  }
+}

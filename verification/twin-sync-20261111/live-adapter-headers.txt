@@ -1,0 +1,10 @@
+HTTP/1.1 200 OK
+Date: Wed, 11 Nov 2026 20:37:24 GMT
+Server: Apache/2.4.64 (Ubuntu)
+Last-Modified: Wed, 11 Nov 2026 20:17:29 GMT
+ETag: "10f5-66005e264caae"
+Accept-Ranges: bytes
+Content-Length: 4341
+Vary: Accept-Encoding
+Content-Type: text/javascript
+

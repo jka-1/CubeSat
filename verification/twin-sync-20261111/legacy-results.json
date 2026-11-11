@@ -1,0 +1,17 @@
+{
+  "synthetic": true,
+  "checks": [
+    {
+      "name": "old adapter with the new LCD reproduces exactly the three populated screenshot fields",
+      "passed": true
+    }
+  ],
+  "readings": {
+    "battery_voltage_v": 14.98,
+    "temperature_c": 25,
+    "light_level": 0.5
+  },
+  "complete": true,
+  "errors": [],
+  "adapterLoads": 1
+}
