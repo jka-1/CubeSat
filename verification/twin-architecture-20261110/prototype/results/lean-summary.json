@@ -1,0 +1,228 @@
+{
+  "targetHz": 60,
+  "frameBudgetMs": 16.666666666666668,
+  "gpuHeadroomTargetMs": 14,
+  "observedDisplayHz": 30,
+  "passesCompleteAcceptance": false,
+  "candidate": "legacy-packed-lean-acrylic-bounded",
+  "phases": [
+    {
+      "name": "orbit",
+      "gpuSamples": 225,
+      "gpuMedianMs": 12.083167,
+      "gpuP95Ms": 13.139584,
+      "frameStartMedianMs": 33.400000005960464,
+      "frameStartP95Ms": 35.19999998807907
+    },
+    {
+      "name": "lid",
+      "gpuSamples": 113,
+      "gpuMedianMs": 14.138582,
+      "gpuP95Ms": 16.785167,
+      "frameStartMedianMs": 33.39999997615814,
+      "frameStartP95Ms": 35.099999994039536
+    },
+    {
+      "name": "explosion",
+      "gpuSamples": 113,
+      "gpuMedianMs": 12.720333,
+      "gpuP95Ms": 19.807749,
+      "frameStartMedianMs": 33.30000001192093,
+      "frameStartP95Ms": 34.80000001192093
+    }
+  ],
+  "sourceGeometry": {
+    "components": 95,
+    "triangles": 874229
+  },
+  "materialMiBEstimate": 166.87677764892578,
+  "viewportCopies": [
+    {
+      "width": 1910,
+      "height": 1440,
+      "type": 1009,
+      "format": 1023,
+      "generateMipmapsRequested": false,
+      "actualGPUFormat": null
+    }
+  ],
+  "diagnostics": [
+    {
+      "file": "legacy-original-opaque-pbr-screen.json",
+      "phases": [
+        {
+          "name": "orbit",
+          "gpuSamples": 75,
+          "gpuMedianMs": 22.5415,
+          "gpuP95Ms": 25.497667,
+          "frameStartMedianMs": 33.400000005960464,
+          "frameStartP95Ms": 34.19999998807907
+        }
+      ],
+      "qualifiesStudio": false
+    },
+    {
+      "file": "legacy-original-opaque-pbr-reverse-screen.json",
+      "phases": [
+        {
+          "name": "orbit",
+          "gpuSamples": 75,
+          "gpuMedianMs": 10.478417,
+          "gpuP95Ms": 11.57,
+          "frameStartMedianMs": 33.30000001192093,
+          "frameStartP95Ms": 34.19999998807907
+        }
+      ],
+      "qualifiesStudio": false
+    },
+    {
+      "file": "legacy-original-reverse-screen.json",
+      "phases": [
+        {
+          "name": "orbit",
+          "gpuSamples": 60,
+          "gpuMedianMs": 34.874624,
+          "gpuP95Ms": 39.751999,
+          "frameStartMedianMs": 40.19999998807907,
+          "frameStartP95Ms": 45.30000001192093
+        }
+      ],
+      "qualifiesStudio": false
+    },
+    {
+      "file": "legacy-packed-lean-acrylic-reverse-screen.json",
+      "phases": [
+        {
+          "name": "orbit",
+          "gpuSamples": 75,
+          "gpuMedianMs": 12.261916,
+          "gpuP95Ms": 12.603834,
+          "frameStartMedianMs": 33.30000001192093,
+          "frameStartP95Ms": 34.30000001192093
+        }
+      ],
+      "qualifiesStudio": false
+    }
+  ],
+  "shadowExperiment": {
+    "rawMarkedFailure": true,
+    "allConsoleErrorsPredateRun": true,
+    "consoleErrorTimestampsMs": [
+      1794351020764.389
+    ],
+    "runStartTimestampMs": 1794351085801.0,
+    "phasesExploratoryOnly": [
+      {
+        "name": "lid",
+        "gpuSamples": 113,
+        "gpuMedianMs": 14.032332,
+        "gpuP95Ms": 15.568999,
+        "frameStartMedianMs": 33.30000001192093,
+        "frameStartP95Ms": 35.30000001192093
+      },
+      {
+        "name": "explosion",
+        "gpuSamples": 113,
+        "gpuMedianMs": 12.836916,
+        "gpuP95Ms": 19.997917,
+        "frameStartMedianMs": 33.30000001192093,
+        "frameStartP95Ms": 35.30000001192093
+      }
+    ],
+    "adopted": false
+  },
+  "visual": {
+    "excludedDiagnosticOverlay": [
+      16,
+      615,
+      517,
+      645
+    ],
+    "comparisons": [
+      {
+        "view": "assembled",
+        "maxChannelDifference": 123,
+        "fractionPixelsAbove8": 0.017912677556923863,
+        "meanRGBDifferenceOverWholeCrop": 0.25163030831879
+      },
+      {
+        "view": "Regulator_01-top",
+        "maxChannelDifference": 38,
+        "fractionPixelsAbove8": 0.0019150702787639985,
+        "meanRGBDifferenceOverWholeCrop": 0.044093465192941626
+      },
+      {
+        "view": "Regulator_01-bottom",
+        "maxChannelDifference": 44,
+        "fractionPixelsAbove8": 0.0003541466405173517,
+        "meanRGBDifferenceOverWholeCrop": 0.005970040721349622
+      },
+      {
+        "view": "Regulator_01-oblique",
+        "maxChannelDifference": 57,
+        "fractionPixelsAbove8": 0.0037899642579735074,
+        "meanRGBDifferenceOverWholeCrop": 0.06405274384331976
+      },
+      {
+        "view": "MCU_Final-top",
+        "maxChannelDifference": 85,
+        "fractionPixelsAbove8": 0.005493736961302784,
+        "meanRGBDifferenceOverWholeCrop": 0.1264843901493116
+      },
+      {
+        "view": "MCU_Final-bottom",
+        "maxChannelDifference": 91,
+        "fractionPixelsAbove8": 0.0026099714599472053,
+        "meanRGBDifferenceOverWholeCrop": 0.047754508435136706
+      },
+      {
+        "view": "acrylic",
+        "maxChannelDifference": 42,
+        "fractionPixelsAbove8": 0.05267559274921954,
+        "meanRGBDifferenceOverWholeCrop": 0.9453218925732014
+      }
+    ],
+    "appearanceEquivalent": false
+  },
+  "depthFallback": {
+    "fallback": {
+      "near": 0.002,
+      "far": 2.1367500000000006,
+      "minDepth": -0.13378522653132677,
+      "maxDepth": 0.20560000012815,
+      "worstStep": 1.2586056154170977e-06,
+      "certified": false,
+      "active": "logarithmic-fallback"
+    },
+    "boundedMaterials": 0,
+    "restored": {
+      "near": 0.5218668580583131,
+      "far": 3.4497985111601,
+      "minDepth": 0.5798520645092368,
+      "maxDepth": 1.2223218633522728,
+      "worstStep": 1.4483008212663996e-07,
+      "certified": true,
+      "active": "bounded"
+    }
+  },
+  "cleanup": {
+    "renderCountStable": true,
+    "ownership": {
+      "geometries": 0,
+      "materials": 0,
+      "textures": 0,
+      "images": 0
+    },
+    "parts": 0,
+    "modelChildren": 0
+  },
+  "limitations": [
+    "30 Hz display prevents 60 Hz presentation qualification, but never changes the 60 fps design target.",
+    "GPU measurements were taken at a 30 renders/s work rate, not sustained 60 renders/s.",
+    "Acrylic compositing and blur differ from physical HDR transmission.",
+    "Animation GPU tails miss the budget; no thermal acceptance run is warranted.",
+    "Shader variants can compile on first depth-mode transitions; fallback frame time is unqualified.",
+    "Main-view CPU times in the complete run exclude depth-guard preparation; GPU timings remain valid.",
+    "Seven image crops and a conservative depth-spacing guard are not exhaustive browser/zoom qualification."
+  ]
+}

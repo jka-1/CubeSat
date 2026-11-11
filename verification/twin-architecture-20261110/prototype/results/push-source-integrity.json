@@ -1,0 +1,18 @@
+{
+  "site/knight-eps-phase12/viewer/main.mjs": {
+    "matches": true,
+    "sha256": "7d7d11b0e7e326c2f4a1a414305bedfb242652bc266ad0a2065db93e9a9d3092"
+  },
+  "site/knight-eps-phase12/viewer/display.mjs": {
+    "matches": true,
+    "sha256": "07abca6dc06f376c8219187fe74d4d2859dec2fe51c9940997d89c69e2a43108"
+  },
+  "site/knight-eps-phase12/viewer/render-optimizations.mjs": {
+    "matches": true,
+    "sha256": "0555339e7c3c557e2a06f2f917f960b5ed45dedad6c763fdaf41098a65a2952c"
+  },
+  "site/knight-eps-phase12/models/KnightEPS_Detailed.glb": {
+    "matches": true,
+    "sha256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47"
+  }
+}

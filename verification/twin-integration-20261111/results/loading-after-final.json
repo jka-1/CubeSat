@@ -1,0 +1,550 @@
+{
+  "label": "after-final",
+  "mbps": 20,
+  "mobile": false,
+  "timing": {
+    "boot": 1245.0999999940395,
+    "downloaded": 5374.300000011921,
+    "warmStart": 5608.5,
+    "warmEnd": 6500.300000011921,
+    "ready": 6772
+  },
+  "performance": {
+    "loading": {
+      "artworkUnpackMs": 331.2000000178814,
+      "modelDownloadMs": 3924.9000000059605,
+      "modelResponseBytes": 8075595,
+      "modelUnpackMs": 125.7000000178814,
+      "assetsReadyMs": 4050.600000023842,
+      "verifyMs": 117.59999999403954,
+      "parseMs": 88,
+      "totalMs": 4256.700000017881,
+      "readyMs": 5511.5999999940395
+    },
+    "fitCount": 1,
+    "fitMs": 8.099999994039536,
+    "resizeCount": 1,
+    "renderCount": 5,
+    "shadowRefreshCount": 2,
+    "cpuFrameMs": 5.300000011920929,
+    "firstFrameCpuMs": 271.5,
+    "materials": {
+      "references": 246,
+      "unique": 97
+    },
+    "consolidation": {
+      "Chassis_Body_A": {
+        "offline": true
+      },
+      "Chassis_Body_B": {
+        "offline": true
+      },
+      "INA226": {
+        "offline": true
+      },
+      "LightSensor": {
+        "offline": true
+      },
+      "MCU_Final": {
+        "offline": true
+      },
+      "Regulator_01": {
+        "offline": true
+      },
+      "Regulator_02": {
+        "offline": true
+      },
+      "RemovableTop_Front_A": {
+        "offline": true
+      },
+      "SolarPanel_01": {
+        "offline": true
+      },
+      "SolarPanel_02": {
+        "offline": true
+      },
+      "TemperatureSensor": {
+        "offline": true
+      },
+      "WingArm_01": {
+        "offline": true
+      },
+      "WingArm_02": {
+        "offline": true
+      },
+      "WingArm_03": {
+        "offline": true
+      },
+      "WingArm_04": {
+        "offline": true
+      },
+      "BMS_BQ76942": {
+        "offline": true
+      },
+      "Charger_BMS034A_EVM": {
+        "offline": true
+      },
+      "BatteryHolder_4x18650_CAD": {
+        "offline": true
+      },
+      "BatteryCell_01": {
+        "offline": true
+      },
+      "BatteryCell_02": {
+        "offline": true
+      },
+      "BatteryCell_03": {
+        "offline": true
+      },
+      "BatteryCell_04": {
+        "offline": true
+      },
+      "Mount_MCU_Final_01_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_01_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_02_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_02_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_03_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_03_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_04_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_04_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_01_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_01_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_02_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_02_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_03_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_03_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_04_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_04_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_01_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_01_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_02_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_02_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_03_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_03_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_04_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_04_Base": {
+        "offline": true
+      },
+      "Mount_INA226_01_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_01_Base": {
+        "offline": true
+      },
+      "Mount_INA226_02_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_02_Base": {
+        "offline": true
+      },
+      "Mount_INA226_03_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_03_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_01_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_01_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_02_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_02_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_03_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_03_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_01_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_01_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_02_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_02_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_03_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_03_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_01_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_01_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_02_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_02_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_03_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_03_Base": {
+        "offline": true
+      },
+      "Mount_LightSensor_01_Clip": {
+        "offline": true
+      },
+      "Mount_LightSensor_01_Base": {
+        "offline": true
+      },
+      "Mount_LightSensor_02_Clip": {
+        "offline": true
+      },
+      "Mount_LightSensor_02_Base": {
+        "offline": true
+      },
+      "RemovableTop_Front_B": {
+        "offline": true
+      },
+      "NerdMiner_Case_Front": {
+        "offline": true
+      },
+      "NerdMiner_Case_Rear": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_1": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_1": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_1": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_1": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_2": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_2": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_2": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_2": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_3": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_3": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_3": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_3": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_4": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_4": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_4": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_4": {
+        "offline": true
+      },
+      "NerdMiner_Screen": {
+        "offline": true
+      },
+      "NerdMiner_Board_LCD": {
+        "offline": true
+      }
+    },
+    "instancing": [
+      {
+        "instances": 26
+      },
+      {
+        "instances": 26
+      }
+    ],
+    "rendering": {
+      "depth": {
+        "near": 0.5218668580583131,
+        "far": 3.4497985111601,
+        "minDepth": 0.5798520645092368,
+        "maxDepth": 1.2223218633522728,
+        "worstStep": 1.4483008212663996e-7,
+        "certified": true,
+        "active": "bounded"
+      },
+      "closedSolids": {
+        "eligibleMeshes": 85,
+        "eligibleTriangles": 230404,
+        "frontMeshes": 85,
+        "shadowFrontMeshes": 85,
+        "doubleSidedFallbacks": 0
+      },
+      "antialiasing": "fxaa",
+      "acrylic": "display-space",
+      "warmMs": 891.8000000119209,
+      "captureTextures": 2,
+      "warmMaterials": 1936
+    },
+    "drawCalls": 479,
+    "triangles": 1768336
+  },
+  "parts": 95,
+  "resources": [
+    {
+      "name": "/site/knight-eps-phase12/viewer/styles.css",
+      "duration": 70.5,
+      "encoded": 6586,
+      "decoded": 6586,
+      "transfer": 6886
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/main.mjs",
+      "duration": 23.19999998807907,
+      "encoded": 39044,
+      "decoded": 39044,
+      "transfer": 39344
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/addons/controls/OrbitControls.js",
+      "duration": 87.09999999403954,
+      "encoded": 38703,
+      "decoded": 38703,
+      "transfer": 39003
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js",
+      "duration": 390.19999998807907,
+      "encoded": 595384,
+      "decoded": 595384,
+      "transfer": 595684
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/model-loader.mjs",
+      "duration": 8,
+      "encoded": 5834,
+      "decoded": 5834,
+      "transfer": 6134
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/pipeline.mjs",
+      "duration": 59.400000005960464,
+      "encoded": 5401,
+      "decoded": 5401,
+      "transfer": 5701
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/addons/environments/RoomEnvironment.js",
+      "duration": 61.5,
+      "encoded": 4807,
+      "decoded": 4807,
+      "transfer": 5107
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/display.mjs",
+      "duration": 62.5,
+      "encoded": 6822,
+      "decoded": 6822,
+      "transfer": 7122
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/framing.mjs",
+      "duration": 89.09999999403954,
+      "encoded": 1746,
+      "decoded": 1746,
+      "transfer": 2046
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/render-optimizations.mjs",
+      "duration": 109.2000000178814,
+      "encoded": 6278,
+      "decoded": 6278,
+      "transfer": 6578
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/addons/loaders/GLTFLoader.js",
+      "duration": 199.59999999403954,
+      "encoded": 114450,
+      "decoded": 114450,
+      "transfer": 114750
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/legacy-coverage.mjs",
+      "duration": 97,
+      "encoded": 1047,
+      "decoded": 1047,
+      "transfer": 1347
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/decode-coverage.mjs",
+      "duration": 123.09999999403954,
+      "encoded": 546,
+      "decoded": 546,
+      "transfer": 846
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/lean-acrylic.mjs",
+      "duration": 126.7999999821186,
+      "encoded": 5587,
+      "decoded": 5587,
+      "transfer": 5887
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/depth-guard.mjs",
+      "duration": 91.09999999403954,
+      "encoded": 2660,
+      "decoded": 2660,
+      "transfer": 2960
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/certified-culling.mjs",
+      "duration": 93.7999999821186,
+      "encoded": 2277,
+      "decoded": 2277,
+      "transfer": 2577
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/orthographic-shadow.mjs",
+      "duration": 116.19999998807907,
+      "encoded": 2183,
+      "decoded": 2183,
+      "transfer": 2483
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/cheap-occlusion.mjs",
+      "duration": 119.5,
+      "encoded": 2312,
+      "decoded": 2312,
+      "transfer": 2612
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/rendering/fxaa-pass.mjs",
+      "duration": 134.90000000596046,
+      "encoded": 1810,
+      "decoded": 1810,
+      "transfer": 2110
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/telemetry.mjs",
+      "duration": 133.69999998807907,
+      "encoded": 1670,
+      "decoded": 1670,
+      "transfer": 1970
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/addons/utils/BufferGeometryUtils.js",
+      "duration": 139,
+      "encoded": 35538,
+      "decoded": 35538,
+      "transfer": 35838
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/addons/shaders/FXAAShader.js",
+      "duration": 51.099999994039536,
+      "encoded": 6815,
+      "decoded": 6815,
+      "transfer": 7115
+    },
+    {
+      "name": "/site/knight-eps-phase12/viewer/vendor/three/build/three.core.js",
+      "duration": 623.7000000178814,
+      "encoded": 1385513,
+      "decoded": 1385513,
+      "transfer": 1385813
+    },
+    {
+      "name": "/site/knight-eps-phase12/models/display/display-compact.glb.gz",
+      "duration": 3899.4000000059605,
+      "encoded": 8075595,
+      "decoded": 8075595,
+      "transfer": 8075895
+    },
+    {
+      "name": "/site/knight-eps-phase12/models/display/artwork-masks.json",
+      "duration": 71,
+      "encoded": 7435,
+      "decoded": 7435,
+      "transfer": 7735
+    },
+    {
+      "name": "/site/knight-eps-phase12/models/display/artwork-masks.bin.gz",
+      "duration": 574.3000000119209,
+      "encoded": 366169,
+      "decoded": 366169,
+      "transfer": 366469
+    },
+    {
+      "name": "/site/knight-eps-phase12/models/display/closed-primitives-compact.json",
+      "duration": 150,
+      "encoded": 61191,
+      "decoded": 61191,
+      "transfer": 61491
+    }
+  ],
+  "navigationMs": 6781.0999999940395,
+  "errors": []
+}

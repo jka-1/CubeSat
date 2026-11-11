@@ -1,0 +1,81 @@
+{
+  "research_date_client": "2026-11-09",
+  "policy": "Primary vendor documentation and upstream source. Findings establish mechanisms and compatibility questions, not a measured speedup for the Knight EPS model.",
+  "sources": [
+    {
+      "title": "Intel Core i5-8259U specifications",
+      "url": "https://www.intel.com/content/www/us/en/products/sku/135935/intel-core-i58259u-processor-6m-cache-up-to-3-80-ghz/specifications.html",
+      "supports": "Q2 2018 mobile CPU, Iris Plus 655, nominal TDP, eDRAM and maximum system-memory bandwidth. Does not predict this scene's frame time."
+    },
+    {
+      "title": "MDN WebGL best practices",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/WebGL_best_practices",
+      "supports": "Portable VRAM-query limitations, allocation estimation, texture compression, resource lifecycle and upload costs."
+    },
+    {
+      "title": "Three.js r176 ViewportTextureNode",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/src/nodes/display/ViewportTextureNode.js",
+      "supports": "Viewport textures are produced from framebuffer copies, rather than requiring an additional scene render."
+    },
+    {
+      "title": "Three.js r176 PhysicalLightingModel",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/src/nodes/functions/PhysicalLightingModel.js",
+      "supports": "Refraction samples mipmapped viewport textures; separate front/back texture handling remains relevant."
+    },
+    {
+      "title": "Three.js r176 common Renderer",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/src/renderers/common/Renderer.js",
+      "supports": "Opaque then transparent rendering, double-sided handling, initialization and full-size half-float intermediate render-target/sample behavior."
+    },
+    {
+      "title": "Three.js r176 WebGPURenderer",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/src/renderers/webgpu/WebGPURenderer.js",
+      "supports": "Same-release availability, forceWebGL selection, WebGPU-to-WebGL2 fallback, logarithmic depth and buffer options."
+    },
+    {
+      "title": "Three.js r176 StandardNodeLibrary",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/src/renderers/webgpu/nodes/StandardNodeLibrary.js",
+      "supports": "Mappings for standard, physical, basic and shadow materials and existing lighting/tone-mapping families. Mapping alone is not visual equivalence."
+    },
+    {
+      "title": "Three.js r176 ShadowNode",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/src/nodes/lighting/ShadowNode.js",
+      "supports": "Shadow invalidation checks per-light shadow.autoUpdate and shadow.needsUpdate; the current global-only flag policy needs adapter work."
+    },
+    {
+      "title": "Three.js WebGPURenderer migration guidance",
+      "url": "https://threejs.org/manual/pages/webgpurenderer",
+      "supports": "Initialization/material migration, fallback and explicit caution that some scenes perform better in legacy WebGLRenderer."
+    },
+    {
+      "title": "Three.js r187 release",
+      "url": "https://github.com/mrdoob/three.js/releases/tag/r187",
+      "supports": "Latest official release was verified through GitHub's latest-release API; release published 2026-10-30. No version change is proposed without a specific need."
+    },
+    {
+      "title": "Three.js r187 ViewportTextureNode",
+      "url": "https://raw.githubusercontent.com/mrdoob/three.js/r187/src/nodes/display/ViewportTextureNode.js",
+      "supports": "Newer viewport/opaque-texture facilities were considered; their presence does not justify an immediate upgrade."
+    },
+    {
+      "title": "Chrome WebGPU overview",
+      "url": "https://developer.chrome.com/docs/web-platform/webgpu/overview",
+      "supports": "API capabilities and browser/platform support context. JavaScript efficiency is not proof of sufficient GPU rendering throughput."
+    },
+    {
+      "title": "Chrome WebGPU troubleshooting",
+      "url": "https://developer.chrome.com/docs/web-platform/webgpu/troubleshooting-tips",
+      "supports": "Adapter availability and hardware/browser constraints must be checked; navigator.gpu alone is insufficient evidence of an active hardware backend."
+    },
+    {
+      "title": "Babylon.js glTF transmission helper",
+      "url": "https://raw.githubusercontent.com/BabylonJS/Babylon.js/master/packages/dev/loaders/src/glTF/2.0/Extensions/transmissionHelper.ts",
+      "supports": "The alternative engine also sets up an opaque render target/list with samples and mipmaps, so engine replacement alone is not a demonstrated fix. This source is unpinned master, observed at research time."
+    },
+    {
+      "title": "Babylon.js scene optimization guidance",
+      "url": "https://doc.babylonjs.com/features/featuresDeepDive/scene/optimize_your_scene",
+      "supports": "Differentiates CPU scene evaluation, draws, depth pre-pass and instrumentation; generic advice does not replace model-specific comparison."
+    }
+  ]
+}

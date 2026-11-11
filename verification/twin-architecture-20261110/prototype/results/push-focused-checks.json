@@ -1,0 +1,10 @@
+{
+  "finishedUTC": "2026-11-11T02:40:13.132127+00:00",
+  "command": "node --test tests/twin/render-optimizations.test.mjs tests/twin/models.test.mjs tests/twin/telemetry-integration.test.mjs verification/twin-architecture-20261110/prototype/architecture.test.mjs verification/twin-architecture-20261110/prototype/lean-renderer.test.mjs",
+  "exitCode": 0,
+  "tests": 29,
+  "passed": 29,
+  "failed": 0,
+  "durationMs": 3677.453691,
+  "note": "Recorded from the single final focused test invocation; no repeat after passing."
+}

@@ -1,0 +1,1169 @@
+{
+  "loading": [
+    {
+      "variant": "original",
+      "cache": "cold",
+      "fetchMs": {
+        "min": 303.70000000298023,
+        "median": 369.29999999701977,
+        "max": 374.3999999910593,
+        "samples": 3
+      },
+      "parseIncludingDecodeMs": {
+        "min": 504.29999999701977,
+        "median": 569.2000000029802,
+        "max": 727.2000000029802,
+        "samples": 3
+      },
+      "firstUsableRAFms": {
+        "min": 4171.9000000059605,
+        "median": 4221.0999999940395,
+        "max": 5242.29999999702,
+        "samples": 3
+      },
+      "firstModelRenderCPUms": {
+        "min": 2974.2000000029802,
+        "median": 3036.2999999970198,
+        "max": 3544.5,
+        "samples": 3
+      },
+      "uploadSubmissionCPUms": {
+        "min": 2525.500000014901,
+        "median": 2639.0999999940395,
+        "max": 3056.2999999970198,
+        "samples": 3
+      },
+      "meshDecodeCPUms": {
+        "min": 0,
+        "median": 0,
+        "max": 0,
+        "samples": 3
+      }
+    },
+    {
+      "variant": "original",
+      "cache": "warm",
+      "fetchMs": {
+        "min": 105.20000000298023,
+        "median": 106.5,
+        "max": 109.40000000596046,
+        "samples": 3
+      },
+      "parseIncludingDecodeMs": {
+        "min": 507.59999999403954,
+        "median": 593.2999999970198,
+        "max": 725.7999999970198,
+        "samples": 3
+      },
+      "firstUsableRAFms": {
+        "min": 4014.5999999940395,
+        "median": 4388.399999991059,
+        "max": 10178,
+        "samples": 3
+      },
+      "firstModelRenderCPUms": {
+        "min": 2802.2000000029802,
+        "median": 3359.5,
+        "max": 8777.5,
+        "samples": 3
+      },
+      "uploadSubmissionCPUms": {
+        "min": 2408.1000000089407,
+        "median": 2903.7000000178814,
+        "max": 7113.9000000059605,
+        "samples": 3
+      },
+      "meshDecodeCPUms": {
+        "min": 0,
+        "median": 0,
+        "max": 0,
+        "samples": 3
+      }
+    },
+    {
+      "variant": "ktx2",
+      "cache": "cold",
+      "fetchMs": {
+        "min": 320.6000000089407,
+        "median": 361.5,
+        "max": 528.4000000059605,
+        "samples": 3
+      },
+      "parseIncludingDecodeMs": {
+        "min": 923.5,
+        "median": 1011.5999999940395,
+        "max": 1750.5,
+        "samples": 3
+      },
+      "firstUsableRAFms": {
+        "min": 4147.79999999702,
+        "median": 4205.9000000059605,
+        "max": 23960.79999999702,
+        "samples": 3
+      },
+      "firstModelRenderCPUms": {
+        "min": 2478.4000000059605,
+        "median": 2548.0999999940395,
+        "max": 20618.59999999404,
+        "samples": 3
+      },
+      "uploadSubmissionCPUms": {
+        "min": 2083.899999961257,
+        "median": 2201.5,
+        "max": 18738.299999967217,
+        "samples": 3
+      },
+      "meshDecodeCPUms": {
+        "min": 0,
+        "median": 0,
+        "max": 0,
+        "samples": 3
+      }
+    },
+    {
+      "variant": "ktx2",
+      "cache": "warm",
+      "fetchMs": {
+        "min": 100.59999999403954,
+        "median": 105,
+        "max": 183.30000001192093,
+        "samples": 3
+      },
+      "parseIncludingDecodeMs": {
+        "min": 928,
+        "median": 932.6999999880791,
+        "max": 1598.2999999970198,
+        "samples": 3
+      },
+      "firstUsableRAFms": {
+        "min": 3664.7000000029802,
+        "median": 3833.8999999910593,
+        "max": 6004.79999999702,
+        "samples": 3
+      },
+      "firstModelRenderCPUms": {
+        "min": 2334.2000000029802,
+        "median": 2442.7000000029802,
+        "max": 3590.2000000029802,
+        "samples": 3
+      },
+      "uploadSubmissionCPUms": {
+        "min": 2021.2000000178814,
+        "median": 2100.9999999701977,
+        "max": 3003.9999999552965,
+        "samples": 3
+      },
+      "meshDecodeCPUms": {
+        "min": 0,
+        "median": 0,
+        "max": 0,
+        "samples": 3
+      }
+    },
+    {
+      "variant": "meshopt",
+      "cache": "cold",
+      "fetchMs": {
+        "min": 129.40000000596046,
+        "median": 168.20000000298023,
+        "max": 193.20000000298023,
+        "samples": 3
+      },
+      "parseIncludingDecodeMs": {
+        "min": 549.2000000029802,
+        "median": 559.1999999880791,
+        "max": 697.9000000059605,
+        "samples": 3
+      },
+      "firstUsableRAFms": {
+        "min": 4046.7000000029802,
+        "median": 4167.5999999940395,
+        "max": 5792.100000008941,
+        "samples": 3
+      },
+      "firstModelRenderCPUms": {
+        "min": 3008.4000000059605,
+        "median": 3092.2000000029802,
+        "max": 4392.5999999940395,
+        "samples": 3
+      },
+      "uploadSubmissionCPUms": {
+        "min": 2602.6000000089407,
+        "median": 2705.5999999940395,
+        "max": 3733.2999999970198,
+        "samples": 3
+      },
+      "meshDecodeCPUms": {
+        "min": 42.30000002682209,
+        "median": 43.60000002384186,
+        "max": 68.90000002086163,
+        "samples": 3
+      }
+    },
+    {
+      "variant": "meshopt",
+      "cache": "warm",
+      "fetchMs": {
+        "min": 54,
+        "median": 70.29999999701977,
+        "max": 80.5,
+        "samples": 3
+      },
+      "parseIncludingDecodeMs": {
+        "min": 530,
+        "median": 540.2000000029802,
+        "max": 2019.9000000059605,
+        "samples": 3
+      },
+      "firstUsableRAFms": {
+        "min": 3763.7999999970198,
+        "median": 4188.20000000298,
+        "max": 9657.70000000298,
+        "samples": 3
+      },
+      "firstModelRenderCPUms": {
+        "min": 2763.3999999910593,
+        "median": 3264.2000000029802,
+        "max": 6782.79999999702,
+        "samples": 3
+      },
+      "uploadSubmissionCPUms": {
+        "min": 2368.5000000298023,
+        "median": 2863.499999985099,
+        "max": 5853.9000000059605,
+        "samples": 3
+      },
+      "meshDecodeCPUms": {
+        "min": 38.99999997019768,
+        "median": 39.499999955296516,
+        "max": 210.6999999731779,
+        "samples": 3
+      }
+    }
+  ],
+  "rendering": [
+    {
+      "variant": "original",
+      "recordMode": "full",
+      "recordComplete": false,
+      "laterFixtureError": "Error: Regulator 2 picking/isolation\n    at check (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs:101:97)\n    at run (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs:118:112)",
+      "interactions": [
+        {
+          "label": "Studio orbit",
+          "intervalMs": {
+            "median": 62.1000000089407,
+            "p95": 74.40000000596046,
+            "samples": 46
+          },
+          "cpuRenderMs": {
+            "median": 13,
+            "p95": 40.30000001192093,
+            "samples": 47
+          },
+          "drawCalls": {
+            "median": 395,
+            "p95": 395,
+            "samples": 47
+          },
+          "triangles": {
+            "median": 1751896,
+            "p95": 1751896,
+            "samples": 47
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 50.94,
+              "p95": 58.714583,
+              "samples": 12
+            }
+          },
+          "frames": 47,
+          "disjoint": 0,
+          "pendingQueries": 0
+        },
+        {
+          "label": "Studio lid",
+          "intervalMs": {
+            "median": 58.5,
+            "p95": 64.59999999403954,
+            "samples": 28
+          },
+          "cpuRenderMs": {
+            "median": 7.9000000059604645,
+            "p95": 11.699999988079071,
+            "samples": 29
+          },
+          "drawCalls": {
+            "median": 577,
+            "p95": 577,
+            "samples": 29
+          },
+          "triangles": {
+            "median": 2622665,
+            "p95": 2622665,
+            "samples": 29
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 50.773249,
+              "p95": 52.690165,
+              "samples": 8
+            }
+          },
+          "frames": 29,
+          "disjoint": 0,
+          "pendingQueries": 0
+        },
+        {
+          "label": "Studio explosion",
+          "intervalMs": {
+            "median": 63.79999999701977,
+            "p95": 73.20000000298023,
+            "samples": 28
+          },
+          "cpuRenderMs": {
+            "median": 8.800000011920929,
+            "p95": 12.400000005960464,
+            "samples": 29
+          },
+          "drawCalls": {
+            "median": 577,
+            "p95": 577,
+            "samples": 29
+          },
+          "triangles": {
+            "median": 2622665,
+            "p95": 2622665,
+            "samples": 29
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 52.645834,
+              "p95": 55.476249,
+              "samples": 7
+            }
+          },
+          "frames": 29,
+          "disjoint": 0,
+          "pendingQueries": 0
+        }
+      ]
+    },
+    {
+      "variant": "ktx2",
+      "recordMode": "full",
+      "recordComplete": true,
+      "laterFixtureError": null,
+      "interactions": [
+        {
+          "label": "Studio orbit",
+          "intervalMs": {
+            "median": 53.20000000298023,
+            "p95": 57.69999998807907,
+            "samples": 55
+          },
+          "cpuRenderMs": {
+            "median": 9.099999994039536,
+            "p95": 23.599999994039536,
+            "samples": 56
+          },
+          "drawCalls": {
+            "median": 395,
+            "p95": 395,
+            "samples": 56
+          },
+          "triangles": {
+            "median": 1751896,
+            "p95": 1751896,
+            "samples": 56
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 45.994415,
+              "p95": 48.241333,
+              "samples": 14
+            }
+          },
+          "frames": 56,
+          "disjoint": 0,
+          "pendingQueries": 0
+        },
+        {
+          "label": "Studio lid",
+          "intervalMs": {
+            "median": 53.20000000298023,
+            "p95": 58,
+            "samples": 30
+          },
+          "cpuRenderMs": {
+            "median": 7.600000008940697,
+            "p95": 9.899999991059303,
+            "samples": 31
+          },
+          "drawCalls": {
+            "median": 577,
+            "p95": 577,
+            "samples": 31
+          },
+          "triangles": {
+            "median": 2622665,
+            "p95": 2622665,
+            "samples": 31
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 45.667249,
+              "p95": 48.07975,
+              "samples": 8
+            }
+          },
+          "frames": 31,
+          "disjoint": 0,
+          "pendingQueries": 0
+        },
+        {
+          "label": "Studio explosion",
+          "intervalMs": {
+            "median": 53.29999999701977,
+            "p95": 57.5,
+            "samples": 34
+          },
+          "cpuRenderMs": {
+            "median": 7.4000000059604645,
+            "p95": 9.900000005960464,
+            "samples": 35
+          },
+          "drawCalls": {
+            "median": 577,
+            "p95": 577,
+            "samples": 35
+          },
+          "triangles": {
+            "median": 2622665,
+            "p95": 2622665,
+            "samples": 35
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 46.27425,
+              "p95": 48.973999,
+              "samples": 9
+            }
+          },
+          "frames": 35,
+          "disjoint": 0,
+          "pendingQueries": 0
+        }
+      ]
+    },
+    {
+      "variant": "meshopt",
+      "recordMode": "full",
+      "recordComplete": true,
+      "laterFixtureError": null,
+      "interactions": [
+        {
+          "label": "Studio orbit",
+          "intervalMs": {
+            "median": 57.69999998807907,
+            "p95": 61.5,
+            "samples": 50
+          },
+          "cpuRenderMs": {
+            "median": 8.199999988079071,
+            "p95": 14.799999997019768,
+            "samples": 51
+          },
+          "drawCalls": {
+            "median": 395,
+            "p95": 395,
+            "samples": 51
+          },
+          "triangles": {
+            "median": 1751896,
+            "p95": 1751896,
+            "samples": 51
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 49.928749,
+              "p95": 52.189415,
+              "samples": 12
+            }
+          },
+          "frames": 51,
+          "disjoint": 0,
+          "pendingQueries": 0
+        },
+        {
+          "label": "Studio lid",
+          "intervalMs": {
+            "median": 60.599999994039536,
+            "p95": 72.20000000298023,
+            "samples": 28
+          },
+          "cpuRenderMs": {
+            "median": 7.5,
+            "p95": 11.099999994039536,
+            "samples": 29
+          },
+          "drawCalls": {
+            "median": 577,
+            "p95": 577,
+            "samples": 29
+          },
+          "triangles": {
+            "median": 2622665,
+            "p95": 2622665,
+            "samples": 29
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 51.606082,
+              "p95": 53.512583,
+              "samples": 7
+            }
+          },
+          "frames": 29,
+          "disjoint": 0,
+          "pendingQueries": 0
+        },
+        {
+          "label": "Studio explosion",
+          "intervalMs": {
+            "median": 56.3999999910593,
+            "p95": 59.5,
+            "samples": 33
+          },
+          "cpuRenderMs": {
+            "median": 7.100000008940697,
+            "p95": 8.599999994039536,
+            "samples": 34
+          },
+          "drawCalls": {
+            "median": 577,
+            "p95": 577,
+            "samples": 34
+          },
+          "triangles": {
+            "median": 2622665,
+            "p95": 2622665,
+            "samples": 34
+          },
+          "gpuPassMs": {
+            "total": {
+              "median": 49.209332,
+              "p95": 51.213165,
+              "samples": 8
+            }
+          },
+          "frames": 34,
+          "disjoint": 0,
+          "pendingQueries": 0
+        }
+      ]
+    }
+  ],
+  "visual": [
+    {
+      "variant": "ktx2",
+      "name": "assembled",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 4.1812100058173354e-05,
+      "meanChannelDifference": 0.0012181258483614503,
+      "maxChannelDifference": 134
+    },
+    {
+      "variant": "ktx2",
+      "name": "lid",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0008616928446771379,
+      "meanChannelDifference": 0.02425138161721931,
+      "maxChannelDifference": 160
+    },
+    {
+      "variant": "ktx2",
+      "name": "exploded",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.00012252763234438626,
+      "meanChannelDifference": 0.004648172387046733,
+      "maxChannelDifference": 155
+    },
+    {
+      "variant": "ktx2",
+      "name": "artwork-front",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0004296344774093465,
+      "maxChannelDifference": 5
+    },
+    {
+      "variant": "ktx2",
+      "name": "artwork-back",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 6.799011052937754e-05,
+      "meanChannelDifference": 0.009425053325576886,
+      "maxChannelDifference": 93
+    },
+    {
+      "variant": "ktx2",
+      "name": "artwork-oblique",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.00012955691293387627,
+      "maxChannelDifference": 3
+    },
+    {
+      "variant": "ktx2",
+      "name": "acrylic",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0,
+      "maxChannelDifference": 0
+    },
+    {
+      "variant": "meshopt",
+      "name": "assembled",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0,
+      "maxChannelDifference": 0
+    },
+    {
+      "variant": "meshopt",
+      "name": "lid",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.00039121582315299595,
+      "meanChannelDifference": 0.010274869109947645,
+      "maxChannelDifference": 112
+    },
+    {
+      "variant": "meshopt",
+      "name": "exploded",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0,
+      "maxChannelDifference": 0
+    },
+    {
+      "variant": "meshopt",
+      "name": "artwork-front",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0,
+      "maxChannelDifference": 0
+    },
+    {
+      "variant": "meshopt",
+      "name": "artwork-back",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 9.69555943377933e-07,
+      "maxChannelDifference": 1
+    },
+    {
+      "variant": "meshopt",
+      "name": "artwork-oblique",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0,
+      "maxChannelDifference": 0
+    },
+    {
+      "variant": "meshopt",
+      "name": "acrylic",
+      "size": [
+        1910,
+        1440
+      ],
+      "fractionPixelsOver8": 0.0,
+      "meanChannelDifference": 0.0,
+      "maxChannelDifference": 0
+    }
+  ],
+  "excludedRuns": [
+    {
+      "index": 18,
+      "variant": "original",
+      "mode": "full",
+      "error": "Error: Unknown component null\n    at Object.select (http://127.0.0.1:8769/site/knight-eps-phase12/viewer/main.mjs?pilot=original&cache=warm&mode=full&round=1:199:62)\n    at run (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs:111:220)",
+      "reason": "Exclude from successful visual/functional validation. Retain whole-frame timing already completed before the later fixture error; reject the early per-pass-query timings."
+    },
+    {
+      "index": 19,
+      "variant": "original",
+      "mode": "full",
+      "error": "Error: Regulator 2 picking/isolation\n    at check (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs:101:97)\n    at run (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs:118:112)",
+      "reason": "Exclude from successful visual/functional validation. Retain whole-frame timing already completed before the later fixture error; reject the early per-pass-query timings."
+    },
+    {
+      "index": 20,
+      "variant": "original",
+      "mode": "visual",
+      "error": "Error: 95 components and full-resolution Studio\n    at check (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs?v=3:101:97)\n    at run (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs?v=3:107:71)",
+      "reason": "Exclude from successful visual/functional validation. Retain whole-frame timing already completed before the later fixture error; reject the early per-pass-query timings."
+    },
+    {
+      "index": 21,
+      "variant": "original",
+      "mode": "visual",
+      "error": "Error: Regulator 2 picking/isolation\n    at check (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs?v=3:101:97)\n    at run (http://127.0.0.1:8769/verification/twin-optimization-20261109/pilot-loader.mjs?v=3:120:145)",
+      "reason": "Exclude from successful visual/functional validation. Retain whole-frame timing already completed before the later fixture error; reject the early per-pass-query timings."
+    }
+  ],
+  "memory": [
+    {
+      "variant": "original",
+      "materialBytes": 692782684,
+      "trackedGLTextureBytes": 726311124,
+      "renderbufferBytes": 147215104,
+      "renderbuffers": [
+        {
+          "width": 1024,
+          "height": 1024,
+          "samples": 1,
+          "format": 33190,
+          "estimatedBytes": 4194304
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 4,
+          "format": 34842,
+          "estimatedBytes": 88012800
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 4,
+          "format": 33190,
+          "estimatedBytes": 44006400
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 1,
+          "format": 33190,
+          "estimatedBytes": 11001600
+        }
+      ],
+      "targets": {
+        "buffer": [
+          1910,
+          1440
+        ],
+        "viewport": [
+          955,
+          720
+        ],
+        "outputDPR": 2,
+        "refractionScale": 1,
+        "defaultFramebuffer": {
+          "attributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "default",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          },
+          "samples": 4,
+          "lowerBoundColorDepthBytes": 77011200,
+          "note": "Assume RGBA8 + 24-bit depth; compositor/resolve copies and driver padding unknown."
+        },
+        "transmission": {
+          "dimensions": [
+            1910,
+            1440
+          ],
+          "type": 1016,
+          "format": 1023,
+          "samplesRequested": 4,
+          "colorMipmaps": true,
+          "depth": true,
+          "stencil": false,
+          "note": "Tracked GL textures include resolved color/mips; multisample color/depth renderbuffers require separate estimates."
+        },
+        "shadowMaps": [
+          {
+            "name": "",
+            "dimensions": [
+              1024,
+              1024
+            ],
+            "type": 1009,
+            "depth": true
+          }
+        ],
+        "environment": {
+          "dimensions": [
+            768,
+            1024
+          ],
+          "type": 1016,
+          "format": 1023
+        },
+        "rendererTextureCount": 19
+      },
+      "logicalTriangles": 874229,
+      "checks": [
+        {
+          "name": "all logical triangles retained",
+          "pass": true
+        },
+        {
+          "name": "seven detailed board identities retained",
+          "pass": true
+        },
+        {
+          "name": "95 components and full-resolution Studio",
+          "pass": true
+        },
+        {
+          "name": "Regulator 2 picking/isolation",
+          "pass": true
+        },
+        {
+          "name": "visibility",
+          "pass": true
+        },
+        {
+          "name": "LCD telemetry",
+          "pass": true
+        },
+        {
+          "name": "LCD presentation",
+          "pass": true
+        },
+        {
+          "name": "X-ray",
+          "pass": true
+        },
+        {
+          "name": "Performance retained",
+          "pass": true
+        }
+      ],
+      "webGPUAPIAvailable": true
+    },
+    {
+      "variant": "ktx2",
+      "materialBytes": 611000248,
+      "trackedGLTextureBytes": 644528676,
+      "renderbufferBytes": 147215104,
+      "renderbuffers": [
+        {
+          "width": 1024,
+          "height": 1024,
+          "samples": 1,
+          "format": 33190,
+          "estimatedBytes": 4194304
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 4,
+          "format": 34842,
+          "estimatedBytes": 88012800
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 4,
+          "format": 33190,
+          "estimatedBytes": 44006400
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 1,
+          "format": 33190,
+          "estimatedBytes": 11001600
+        }
+      ],
+      "targets": {
+        "buffer": [
+          1910,
+          1440
+        ],
+        "viewport": [
+          955,
+          720
+        ],
+        "outputDPR": 2,
+        "refractionScale": 1,
+        "defaultFramebuffer": {
+          "attributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "default",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          },
+          "samples": 4,
+          "lowerBoundColorDepthBytes": 77011200,
+          "note": "Assume RGBA8 + 24-bit depth; compositor/resolve copies and driver padding unknown."
+        },
+        "transmission": {
+          "dimensions": [
+            1910,
+            1440
+          ],
+          "type": 1016,
+          "format": 1023,
+          "samplesRequested": 4,
+          "colorMipmaps": true,
+          "depth": true,
+          "stencil": false,
+          "note": "Tracked GL textures include resolved color/mips; multisample color/depth renderbuffers require separate estimates."
+        },
+        "shadowMaps": [
+          {
+            "name": "",
+            "dimensions": [
+              1024,
+              1024
+            ],
+            "type": 1009,
+            "depth": true
+          }
+        ],
+        "environment": {
+          "dimensions": [
+            768,
+            1024
+          ],
+          "type": 1016,
+          "format": 1023
+        },
+        "rendererTextureCount": 19
+      },
+      "logicalTriangles": 874229,
+      "checks": [
+        {
+          "name": "all logical triangles retained",
+          "pass": true
+        },
+        {
+          "name": "seven detailed board identities retained",
+          "pass": true
+        },
+        {
+          "name": "95 components and full-resolution Studio",
+          "pass": true
+        },
+        {
+          "name": "Regulator 2 picking/isolation",
+          "pass": true
+        },
+        {
+          "name": "visibility",
+          "pass": true
+        },
+        {
+          "name": "LCD telemetry",
+          "pass": true
+        },
+        {
+          "name": "LCD presentation",
+          "pass": true
+        },
+        {
+          "name": "X-ray",
+          "pass": true
+        },
+        {
+          "name": "Performance retained",
+          "pass": true
+        }
+      ],
+      "webGPUAPIAvailable": true
+    },
+    {
+      "variant": "meshopt",
+      "materialBytes": 692782684,
+      "trackedGLTextureBytes": 726311124,
+      "renderbufferBytes": 147215104,
+      "renderbuffers": [
+        {
+          "width": 1024,
+          "height": 1024,
+          "samples": 1,
+          "format": 33190,
+          "estimatedBytes": 4194304
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 4,
+          "format": 34842,
+          "estimatedBytes": 88012800
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 4,
+          "format": 33190,
+          "estimatedBytes": 44006400
+        },
+        {
+          "width": 1910,
+          "height": 1440,
+          "samples": 1,
+          "format": 33190,
+          "estimatedBytes": 11001600
+        }
+      ],
+      "targets": {
+        "buffer": [
+          1910,
+          1440
+        ],
+        "viewport": [
+          955,
+          720
+        ],
+        "outputDPR": 2,
+        "refractionScale": 1,
+        "defaultFramebuffer": {
+          "attributes": {
+            "alpha": true,
+            "antialias": true,
+            "depth": true,
+            "desynchronized": false,
+            "failIfMajorPerformanceCaveat": false,
+            "powerPreference": "default",
+            "premultipliedAlpha": true,
+            "preserveDrawingBuffer": false,
+            "stencil": false,
+            "xrCompatible": false
+          },
+          "samples": 4,
+          "lowerBoundColorDepthBytes": 77011200,
+          "note": "Assume RGBA8 + 24-bit depth; compositor/resolve copies and driver padding unknown."
+        },
+        "transmission": {
+          "dimensions": [
+            1910,
+            1440
+          ],
+          "type": 1016,
+          "format": 1023,
+          "samplesRequested": 4,
+          "colorMipmaps": true,
+          "depth": true,
+          "stencil": false,
+          "note": "Tracked GL textures include resolved color/mips; multisample color/depth renderbuffers require separate estimates."
+        },
+        "shadowMaps": [
+          {
+            "name": "",
+            "dimensions": [
+              1024,
+              1024
+            ],
+            "type": 1009,
+            "depth": true
+          }
+        ],
+        "environment": {
+          "dimensions": [
+            768,
+            1024
+          ],
+          "type": 1016,
+          "format": 1023
+        },
+        "rendererTextureCount": 19
+      },
+      "logicalTriangles": 874229,
+      "checks": [
+        {
+          "name": "all logical triangles retained",
+          "pass": true
+        },
+        {
+          "name": "seven detailed board identities retained",
+          "pass": true
+        },
+        {
+          "name": "95 components and full-resolution Studio",
+          "pass": true
+        },
+        {
+          "name": "Regulator 2 picking/isolation",
+          "pass": true
+        },
+        {
+          "name": "visibility",
+          "pass": true
+        },
+        {
+          "name": "LCD telemetry",
+          "pass": true
+        },
+        {
+          "name": "LCD presentation",
+          "pass": true
+        },
+        {
+          "name": "X-ray",
+          "pass": true
+        },
+        {
+          "name": "Performance retained",
+          "pass": true
+        }
+      ],
+      "webGPUAPIAvailable": true
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+{
+  "finishedUTC": "2026-11-11T09:05:32.792095+00:00",
+  "files": {
+    "site/knight-eps-phase12/viewer/main.mjs": "e80d05961d33ebf7f2517c4324d4428edc00e6c55adb124f5cd61501d657c98a",
+    "site/knight-eps-phase12/viewer/index.html": "2afbdc72d19fb56318207e9ec02ba177394533cfcae1f55fd56eb15091031838",
+    "site/knight-eps-phase12/viewer/display.mjs": "07abca6dc06f376c8219187fe74d4d2859dec2fe51c9940997d89c69e2a43108",
+    "site/knight-eps-phase12/viewer/render-optimizations.mjs": "0555339e7c3c557e2a06f2f917f960b5ed45dedad6c763fdaf41098a65a2952c",
+    "site/knight-eps-phase12/viewer/vendor/three/addons/shaders/FXAAShader.js": "b8303d179f9d5d40a052483e8cfb49c29afb6e60396080e472a6950b51700dac",
+    "scripts/build-display-twin.py": "a1840079b4de78808bbc6bb5e970cb55b125afadd92957cc79f0d3272d91bb54",
+    "scripts/deploy-detailed-twin.sh": "a4442ee2ecd9d9528f56aa5d97460da807755a2c623c42820f0bb6c8d44102d5",
+    "site/knight-eps-phase12/docs/rendering.md": "7fda430f26bfecf5e26ceb379cae75712a5a3e0d688a9f47c48d6ed2c39e9e75",
+    "tests/twin/render-pipeline.test.mjs": "2aa817aa103d418d8ab5b7e37cc6bf05d591d2aa64384729e8eee0bc9dad83a9",
+    "tests/twin/display-assets.test.mjs": "35a3df7a51167dc3531e697557190bf374f397ca01f092c92ddc1fac1dc7c8a6",
+    "site/knight-eps-phase12/viewer/rendering/certified-culling.mjs": "6fe8a3c093198a7d1887cac5e6125159f5fe541d2ddff233bdfa1fa7c49b8357",
+    "site/knight-eps-phase12/viewer/rendering/cheap-occlusion.mjs": "8e864b434332b0ba3f86945be2a05cc7dfd3528702671d02d2bacdd41e751845",
+    "site/knight-eps-phase12/viewer/rendering/decode-coverage.mjs": "603f2069ac0d8edd55f76eee44b7c06fd7802f5edeed087f60b91703216bc713",
+    "site/knight-eps-phase12/viewer/rendering/depth-guard.mjs": "069794b1dfe14d270665a0e7b0ea907c611ab16511185b6207708c33b52bd55b",
+    "site/knight-eps-phase12/viewer/rendering/fxaa-pass.mjs": "aaedca66a2ce06e9767c40e360fff35b42dfb92673786c36ac3708aaa01625e1",
+    "site/knight-eps-phase12/viewer/rendering/lean-acrylic.mjs": "de826832abaf6f18366068863c8596b4ca44e5c023f7aac42f7bbe62f7efa276",
+    "site/knight-eps-phase12/viewer/rendering/legacy-coverage.mjs": "af11361a4690512fbaf9149c03f23a3701dbb04db2843220064bf36fc1674b69",
+    "site/knight-eps-phase12/viewer/rendering/model-loader.mjs": "251766b2d197a12a0e284d0f0b960eb4c1cfccb908e57949d10316a363b3572e",
+    "site/knight-eps-phase12/viewer/rendering/orthographic-shadow.mjs": "7e8bed437b983961dac837fe239e0600b33aa4a02318c53027ccc68bcd15fd32",
+    "site/knight-eps-phase12/viewer/rendering/pipeline.mjs": "58500b50caa383a22f9267a3cbfcff9201e675f3c349c2ff5b3a76e75faab302",
+    "scripts/twin-display/audit-closed.py": "8878c3f351fd035865ffc292621b13491092968505ff8c93597e9087bdd68066",
+    "scripts/twin-display/build-artwork.py": "16bbd706e08c1f5c4aa16bae92725883f777917784fd3048bcfecb122a808938",
+    "scripts/twin-display/compact-vertices.py": "b2597a06d29f9189f480ccf53ca47a035e62904a333414e68ddc76c05e948997",
+    "scripts/twin-display/compile-display.mjs": "9fcc0b4f9eb1c77a3c44418b2b18044617ddd8dc5e0f97c74eb3bf3737a9565c",
+    "scripts/twin-display/package.json": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428"
+  },
+  "canonicalSourceUnchanged": {
+    "site/knight-eps-phase12/models/KnightEPS_Detailed.glb": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47"
+  },
+  "preparedAssets": {
+    "canonicalSHA256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47",
+    "files": {
+      "display-compact.glb": "302cd6162e57fb90b720c2111a0af715fbbe9dfa58f7843c16519af28cdc686b",
+      "closed-primitives-compact.json": "b273e18969af7ac59f3203d039422a89681876ab87c5b2041dc1a0855f6a7fb4",
+      "artwork-masks.json": "6cc5be2f4a2f0a11a2ff08cd1485151964bfc57eddd76c8ac61243cb334d05a6",
+      "artwork-masks.bin.gz": "f6c00c619883a7a24df42006b37bc8dd6127e7be922ffbbf8630142ec4f56f10",
+      "compact-report.json": "7a0b35fcb82429db47d2692de4f6e5fb35cfb5f436311f7d37e0307b6483ebd3",
+      "build-report.json": "29a0c843e73c4ef00a814c785f388d0f76b60c5bf2522d84aa2d1b3122240cf0"
+    },
+    "policy": "All source triangles, component identities, artwork dimensions and source texels retained. No quantization or decimation."
+  },
+  "tests": {
+    "passed": 26,
+    "failed": 0,
+    "output": "results/focused-tests.txt"
+  },
+  "sustainedGPUHeadroom": true,
+  "native60HzPresentationQualified": false,
+  "deploymentExecuted": false,
+  "upstreamFXAA": {
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/shaders/FXAAShader.js",
+    "sha256": "b8303d179f9d5d40a052483e8cfb49c29afb6e60396080e472a6950b51700dac",
+    "unmodified": true,
+    "license": "site/knight-eps-phase12/viewer/vendor/three/LICENSE"
+  },
+  "restoredImageMaxCadDifference": 1
+}

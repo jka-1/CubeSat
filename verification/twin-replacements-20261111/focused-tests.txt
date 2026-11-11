@@ -1,0 +1,75 @@
+✖ compressed model delivery reconstructs the complete certified GLB exactly (62.047667ms)
+✔ coverage delivery accepts gzip or HTTP-decoded bytes and rejects truncation (103.285574ms)
+✔ shipped display package preserves canonical CAD, every expanded attribute and original images (1497.908268ms)
+✔ shipped full-resolution artwork matches every audited coverage byte (759.017089ms)
+(node:54540) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payload leaves share one logical selection without changing CAD ownership (7.488781ms)
+✔ head-on PCB focus follows its current parent transform (1.866451ms)
+✔ battery and payload focus approach their outside faces (2.199672ms)
+✔ opposite-side focus transition keeps its distance from the orbit anchor (1.365823ms)
+✔ battery pack owns holder and four cells logically, with complete inspection bounds (2.078642ms)
+✔ all eight PCB assemblies use supplied detailed geometry with no legacy mesh (3.620813ms)
+✔ all existing component identities and board anchor transforms survive (30.8315ms)
+✔ substrate support planes remain seated, without scaling electronics (1.003519ms)
+✔ compiler packs only referenced geometry and valid binary ranges (1.090231ms)
+✔ new power boards preserve every supplied position, UV, triangle, material and embedded image (381.732479ms)
+(node:54542) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Maximum consolidated attribute error: 2.9546199598051714e-8
+✔ runtime consolidation preserves actual CAD triangles, normals, artwork UVs, component IDs and anchors (2632.905242ms)
+✔ fixture instances follow world transforms and visibility; selection keeps the precise original owner (5.191935ms)
+✔ material equivalence shares equal appearances and keeps different texture references distinct (1.199953ms)
+(node:54543) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ depth fit covers the assembly and exposes unsafe camera intersections (2.553833ms)
+✔ coverage material clones retain shader behavior through viewer overrides (1.902906ms)
+✔ acrylic clones retain physical surface parameters and explicit alternative transmission (4.875982ms)
+✔ bounded depth wraps existing shader hooks and retains the log fallback (0.614334ms)
+✔ orthographic shadow optimization preserves the packed depth formula and resets for perspective lights (1.026194ms)
+✔ closed solids retain both sides for clipped/interior views and transparent overrides (7.268348ms)
+✔ regional capture retains original pixels and all blur taps, including screen edges and resize (2.702786ms)
+✔ occlusion prepass rejects surfaces that cannot safely write ordinary opaque depth (0.598388ms)
+✔ fully offscreen acrylic avoids a framebuffer copy; uncertain projection retains full capture (0.368208ms)
+✔ R8 artwork shadow alpha is corrected independently of orthographic depth optimization (1.077436ms)
+✔ opening the SSE connection alone does not create live measurements (16.089733ms)
+✔ real v6 decoding reaches the Twin with confirmed measurements and ignores replay (17.339329ms)
+✔ absent BMS and unavailable or malformed packets cannot fabricate readings (4.041385ms)
+✔ stale packets are rejected and bridge clock skew is honored (4.628725ms)
+✔ leaving the page closes SSE, clears timers and stops late packet forwarding (3.89308ms)
+✔ leaving while the model loads cannot start a late SSE subscription (2.26998ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 32
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3347.007047
+
+✖ failing tests:
+
+test at tests/twin/display-assets.test.mjs:12:1
+✖ compressed model delivery reconstructs the complete certified GLB exactly (62.047667ms)
+  AssertionError [ERR_ASSERTION]: The expression evaluated to a falsy value:
+  
+    assert.ok(zipped.length<raw.length*.25)
+  
+      at TestContext.<anonymous> (file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/tests/twin/display-assets.test.mjs:15:9)
+      at Test.runInAsyncScope (node:async_hooks:226:14)
+      at Test.run (node:internal/test_runner/test:1201:25)
+      at Test.start (node:internal/test_runner/test:1096:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

@@ -1,0 +1,56 @@
+✔ compressed model delivery reconstructs the complete certified GLB exactly (1048.052879ms)
+✔ coverage delivery accepts gzip or HTTP-decoded bytes and rejects truncation (6.691243ms)
+✔ shipped display package preserves canonical CAD, every expanded attribute and original images (1457.799966ms)
+✔ shipped full-resolution artwork matches every audited coverage byte (620.398046ms)
+(node:55613) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payload leaves share one logical selection without changing CAD ownership (14.317847ms)
+✔ head-on PCB focus follows its current parent transform (4.046028ms)
+✔ battery and payload focus approach their outside faces (5.639438ms)
+✔ opposite-side focus transition keeps its distance from the orbit anchor (3.91007ms)
+✔ battery pack owns holder and four cells logically, with complete inspection bounds (4.872748ms)
+✔ floor-board focus returns to upright orbit without a polar singularity (5.140096ms)
+✔ ordinary inspection returns upright while preserving angle and distance (1.285843ms)
+✔ all eight PCB assemblies use supplied detailed geometry with no legacy mesh (9.634004ms)
+✔ all existing component identities and board anchor transforms survive (61.637532ms)
+✔ substrate support planes remain seated, without scaling electronics (0.919468ms)
+✔ compiler packs only referenced geometry and valid binary ranges (1.907926ms)
+✔ new power boards preserve every supplied position, UV, triangle, material and embedded image (644.724032ms)
+(node:55615) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+Maximum consolidated attribute error: 2.9546199598051714e-8
+✔ runtime consolidation preserves actual CAD triangles, normals, artwork UVs, component IDs and anchors (2592.704899ms)
+✔ fixture instances follow world transforms and visibility; selection keeps the precise original owner (4.232199ms)
+✔ material equivalence shares equal appearances and keeps different texture references distinct (1.103993ms)
+(node:55616) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ depth fit covers the assembly and exposes unsafe camera intersections (3.390034ms)
+✔ coverage material clones retain shader behavior through viewer overrides (2.487217ms)
+✔ acrylic clones retain physical surface parameters and explicit alternative transmission (19.014643ms)
+✔ bounded depth wraps existing shader hooks and retains the log fallback (0.712247ms)
+✔ orthographic shadow optimization preserves the packed depth formula and resets for perspective lights (1.488508ms)
+✔ closed solids retain both sides for clipped/interior views and transparent overrides (22.717105ms)
+✔ regional capture retains original pixels and all blur taps, including screen edges and resize (5.259818ms)
+✔ occlusion prepass rejects surfaces that cannot safely write ordinary opaque depth (5.051884ms)
+✔ fully offscreen acrylic avoids a framebuffer copy; uncertain projection retains full capture (5.247548ms)
+✔ R8 artwork shadow alpha is corrected independently of orthographic depth optimization (2.775244ms)
+✔ opening the SSE connection alone does not create live measurements (13.651443ms)
+✔ real v6 decoding reaches the Twin with confirmed measurements and ignores replay (15.005482ms)
+✔ absent BMS and unavailable or malformed packets cannot fabricate readings (3.799858ms)
+✔ stale packets are rejected and bridge clock skew is honored (5.091238ms)
+✔ leaving the page closes SSE, clears timers and stops late packet forwarding (2.786546ms)
+✔ leaving while the model loads cannot start a late SSE subscription (4.805832ms)
+ℹ tests 35
+ℹ suites 0
+ℹ pass 35
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3619.723682

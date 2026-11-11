@@ -1,0 +1,93 @@
+{
+  "current" : {
+    "logical" : [
+      1920,
+      1080
+    ],
+    "modeID" : -2147471344,
+    "pixels" : [
+      3840,
+      2160
+    ],
+    "refreshHz" : 30.000015258789062
+  },
+  "sameResolutionModes" : [
+    {
+      "logical" : [
+        1920,
+        1080
+      ],
+      "modeID" : -2147471360,
+      "pixels" : [
+        3840,
+        2160
+      ],
+      "refreshHz" : 60.000015258789062
+    },
+    {
+      "logical" : [
+        1920,
+        1080
+      ],
+      "modeID" : -2147471360,
+      "pixels" : [
+        3840,
+        2160
+      ],
+      "refreshHz" : 60.000015258789062
+    },
+    {
+      "logical" : [
+        1920,
+        1080
+      ],
+      "modeID" : -2147471346,
+      "pixels" : [
+        3840,
+        2160
+      ],
+      "refreshHz" : 50.000015258789062
+    },
+    {
+      "logical" : [
+        1920,
+        1080
+      ],
+      "modeID" : -2147471346,
+      "pixels" : [
+        3840,
+        2160
+      ],
+      "refreshHz" : 50.000015258789062
+    },
+    {
+      "logical" : [
+        1920,
+        1080
+      ],
+      "modeID" : -2147471344,
+      "pixels" : [
+        3840,
+        2160
+      ],
+      "refreshHz" : 30.000015258789062
+    },
+    {
+      "logical" : [
+        1920,
+        1080
+      ],
+      "modeID" : -2147471344,
+      "pixels" : [
+        3840,
+        2160
+      ],
+      "refreshHz" : 30.000015258789062
+    }
+  ],
+  "temporarySwitchAttempt" : {
+    "CGError" : 1000,
+    "changed" : false,
+    "requestedHz" : 60
+  }
+}

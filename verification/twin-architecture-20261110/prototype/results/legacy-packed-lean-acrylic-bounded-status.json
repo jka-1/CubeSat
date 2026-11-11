@@ -1,0 +1,477 @@
+{
+  "mode": "status",
+  "variant": "legacy",
+  "asset": "packed",
+  "appearance": "lean-acrylic",
+  "depth": "bounded",
+  "started": "2026-11-10T22:47:24.022Z",
+  "browser": "Chrome/157.0.8103.50",
+  "hardware": {
+    "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+    "webGPUAdapter": null,
+    "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+    "viewport": [
+      955,
+      720
+    ],
+    "buffer": [
+      1910,
+      1440
+    ],
+    "samples": 4,
+    "logarithmicDepthBuffer": true
+  },
+  "depthSupport": {
+    "clipControl": true,
+    "depthBits": 24,
+    "requested": "bounded",
+    "reverse": false
+  },
+  "backend": "legacy-webgl",
+  "geometry": {
+    "triangles": 0,
+    "parts": 0,
+    "boards": []
+  },
+  "state": {
+    "loaded": true,
+    "quality": "studio",
+    "coverProgress": 0,
+    "coverLiftProgress": 0,
+    "orbitMode": "focus",
+    "camera": {
+      "target": [
+        -0.16130000009387732,
+        0.04848609654405993,
+        -0.0049999893970183165
+      ],
+      "position": [
+        -0.2807675561281077,
+        0.0699902566302214,
+        0.030840277413250794
+      ],
+      "up": [
+        0,
+        1,
+        0
+      ],
+      "chassisCenter": [
+        0,
+        0.04848609400579205,
+        3.94881785686918e-7
+      ],
+      "aspect": 1.3263888888888888,
+      "zoom": 1,
+      "near": 0.03690102230401762,
+      "far": 2.877484892175154,
+      "view": {
+        "enabled": true,
+        "fullWidth": 955,
+        "fullHeight": 720,
+        "offsetX": 21.562425566302437,
+        "offsetY": 24.353969521184965,
+        "width": 955,
+        "height": 720
+      },
+      "viewport": [
+        955,
+        720
+      ],
+      "canvas": [
+        955,
+        720
+      ],
+      "pixelRatio": 2
+    },
+    "materials": [],
+    "ui": "finished",
+    "upAxis": "Y",
+    "springFlex": "omitted_by_user",
+    "selected": null,
+    "topRemoved": false,
+    "exploded": false,
+    "xray": false,
+    "extracted": false,
+    "display": {
+      "source": "mock",
+      "presentation": {
+        "state": "standby",
+        "title": "ARCHITECTURE TEST",
+        "message": "READY",
+        "lines": [
+          "Waiting for workload"
+        ]
+      },
+      "display": "awaiting_asset",
+      "bindingBasis": null,
+      "screen": null,
+      "health": "disconnected",
+      "label": "Disconnected",
+      "ageMs": 41549,
+      "telemetry": "stale",
+      "readings": {
+        "battery_voltage_v": 15.42,
+        "temperature_c": 26.5,
+        "status": "SYNTHETIC CHECK"
+      },
+      "receivedAt": 1794350802504,
+      "transport": "disconnected",
+      "error": null
+    },
+    "parts": []
+  },
+  "memory": {
+    "materialBytesEstimate": 0,
+    "textures": [],
+    "renderer": {
+      "geometries": 0,
+      "textures": 0
+    },
+    "framebufferTarget": null,
+    "viewportCopies": []
+  },
+  "artwork": {
+    "asset": "packed",
+    "coverageMaterials": 15,
+    "surfaceMaterials": 0,
+    "hiddenCarriers": 0
+  },
+  "costDiagnostic": {
+    "eligibleStudio": false,
+    "changes": [
+      "Display-space blurred acrylic replaces HDR physical transmission",
+      "One opaque-buffer capture; no opaque replay"
+    ],
+    "retained": [
+      "Opaque PBR materials",
+      "Original acrylic surface PBR reflections",
+      "Full drawing buffer",
+      "All source triangles",
+      "Four-sample antialiasing",
+      "Original artwork layers",
+      "Cached shadows"
+    ]
+  },
+  "diagnosticOverlay": {
+    "x": 16,
+    "y": 615,
+    "width": 500.0546875,
+    "height": 30,
+    "top": 615,
+    "right": 516.0546875,
+    "bottom": 645,
+    "left": 16
+  },
+  "performance": {
+    "fitCount": 13,
+    "fitMs": 0.19999998807907104,
+    "resizeCount": 4,
+    "renderCount": 72,
+    "shadowRefreshCount": 9,
+    "cpuFrameMs": 4.5,
+    "materials": {
+      "references": 246,
+      "unique": 97
+    },
+    "consolidation": {
+      "Chassis_Body_A": {
+        "offline": true
+      },
+      "Chassis_Body_B": {
+        "offline": true
+      },
+      "INA226": {
+        "offline": true
+      },
+      "LightSensor": {
+        "offline": true
+      },
+      "MCU_Final": {
+        "offline": true
+      },
+      "Regulator_01": {
+        "offline": true
+      },
+      "Regulator_02": {
+        "offline": true
+      },
+      "RemovableTop_Front_A": {
+        "offline": true
+      },
+      "SolarPanel_01": {
+        "offline": true
+      },
+      "SolarPanel_02": {
+        "offline": true
+      },
+      "TemperatureSensor": {
+        "offline": true
+      },
+      "WingArm_01": {
+        "offline": true
+      },
+      "WingArm_02": {
+        "offline": true
+      },
+      "WingArm_03": {
+        "offline": true
+      },
+      "WingArm_04": {
+        "offline": true
+      },
+      "BMS_BQ76942": {
+        "offline": true
+      },
+      "Charger_BMS034A_EVM": {
+        "offline": true
+      },
+      "BatteryHolder_4x18650_CAD": {
+        "offline": true
+      },
+      "BatteryCell_01": {
+        "offline": true
+      },
+      "BatteryCell_02": {
+        "offline": true
+      },
+      "BatteryCell_03": {
+        "offline": true
+      },
+      "BatteryCell_04": {
+        "offline": true
+      },
+      "Mount_MCU_Final_01_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_01_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_02_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_02_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_03_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_03_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_04_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_04_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_01_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_01_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_02_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_02_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_03_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_03_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_04_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_04_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_01_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_01_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_02_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_02_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_03_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_03_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_04_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_04_Base": {
+        "offline": true
+      },
+      "Mount_INA226_01_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_01_Base": {
+        "offline": true
+      },
+      "Mount_INA226_02_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_02_Base": {
+        "offline": true
+      },
+      "Mount_INA226_03_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_03_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_01_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_01_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_02_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_02_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_03_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_03_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_01_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_01_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_02_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_02_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_03_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_03_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_01_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_01_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_02_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_02_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_03_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_03_Base": {
+        "offline": true
+      },
+      "Mount_LightSensor_01_Clip": {
+        "offline": true
+      },
+      "Mount_LightSensor_01_Base": {
+        "offline": true
+      },
+      "Mount_LightSensor_02_Clip": {
+        "offline": true
+      },
+      "Mount_LightSensor_02_Base": {
+        "offline": true
+      },
+      "RemovableTop_Front_B": {
+        "offline": true
+      },
+      "NerdMiner_Case_Front": {
+        "offline": true
+      },
+      "NerdMiner_Case_Rear": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_1": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_1": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_1": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_1": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_2": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_2": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_2": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_2": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_3": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_3": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_3": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_3": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_4": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_4": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_4": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_4": {
+        "offline": true
+      },
+      "NerdMiner_Screen": {
+        "offline": true
+      },
+      "NerdMiner_Board_LCD": {
+        "offline": true
+      }
+    },
+    "instancing": [
+      {
+        "instances": 26
+      },
+      {
+        "instances": 26
+      }
+    ],
+    "drawCalls": 391,
+    "triangles": 1747796
+  },
+  "complete": true,
+  "logs": [],
+  "finished": "2026-11-10T22:47:24.061Z"
+}

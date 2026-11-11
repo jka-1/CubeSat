@@ -1,0 +1,44 @@
+[
+  {
+    "view": "assembled",
+    "max": 1,
+    "fractionAbove8": 0.0,
+    "mean": 0.00011537715726197401
+  },
+  {
+    "view": "Regulator_01-top",
+    "max": 2,
+    "fractionAbove8": 0.0,
+    "mean": 0.008168508822959086
+  },
+  {
+    "view": "Regulator_01-bottom",
+    "max": 1,
+    "fractionAbove8": 0.0,
+    "mean": 2.569323249951522e-05
+  },
+  {
+    "view": "Regulator_01-oblique",
+    "max": 2,
+    "fractionAbove8": 0.0,
+    "mean": 0.006818402171805313
+  },
+  {
+    "view": "MCU_Final-top",
+    "max": 2,
+    "fractionAbove8": 0.0,
+    "mean": 0.019387240643785147
+  },
+  {
+    "view": "MCU_Final-bottom",
+    "max": 1,
+    "fractionAbove8": 0.0,
+    "mean": 0.00040721349621873187
+  },
+  {
+    "view": "acrylic",
+    "max": 1,
+    "fractionAbove8": 0.0,
+    "mean": 0.00021718053131665696
+  }
+]

@@ -6,6 +6,7 @@
     {
       "id": "INA226",
       "source": "INA226_v12_high_detail.glb",
+      "source_path": "Final Models_V1/INA226_v12_high_detail.glb",
       "sha256": "1c62b2c930960530af2f940acd04b923c625373a0cf31719b02218667b08f1c5",
       "axes": [
         0,
@@ -89,6 +90,7 @@
     {
       "id": "Regulator_01",
       "source": "Regulator_PCB_high_detail.glb",
+      "source_path": "Final Models_V1/Regulator_PCB_high_detail.glb",
       "sha256": "bee1995dea979c42722bf822c8c6f627730eae8a896fe3522371e68b42fe08a7",
       "axes": [
         1,
@@ -172,6 +174,7 @@
     {
       "id": "Regulator_02",
       "source": "Regulator_PCB_high_detail.glb",
+      "source_path": "Final Models_V1/Regulator_PCB_high_detail.glb",
       "sha256": "bee1995dea979c42722bf822c8c6f627730eae8a896fe3522371e68b42fe08a7",
       "axes": [
         1,
@@ -255,6 +258,7 @@
     {
       "id": "MCU_Final",
       "source": "Final_MCU_v12_high_detail.glb",
+      "source_path": "Final Models_V1/Final_MCU_v12_high_detail.glb",
       "sha256": "590dd8021ce7bcea51e6e5339b1793129d6fa7256fad17b310f9ca5e9a686b27",
       "axes": [
         1,
@@ -338,6 +342,7 @@
     {
       "id": "LightSensor",
       "source": "lightsens_high_detail.glb",
+      "source_path": "Final Models_V1/lightsens_high_detail.glb",
       "sha256": "90782c23bb330ddf9055d7a9cb4960ddd75a3c8dd200ea24bd3148267b4ec6dc",
       "axes": [
         1,
@@ -421,6 +426,7 @@
     {
       "id": "TemperatureSensor",
       "source": "tempsens_high_detail.glb",
+      "source_path": "Final Models_V1/tempsens_high_detail.glb",
       "sha256": "77bee8f169cf2d18c4f9e1f91f0868479d711aa292890dfe8039cfe4118a4dfe",
       "axes": [
         2,
@@ -502,9 +508,94 @@
       ]
     },
     {
+      "id": "BMS_BQ76942",
+      "source": "Knight_EPS_BMS_Final_green.glb",
+      "source_path": "model-sources/power-boards/Knight_EPS_BMS_Final_green.glb",
+      "sha256": "19157890e571f6dc2b74fff6eea2dc763ac4936c0612e53cda3ce80f8ff53145",
+      "axes": [
+        0,
+        1,
+        2
+      ],
+      "signs": [
+        1,
+        1,
+        1
+      ],
+      "offset_m": [
+        -0.03330040314793587,
+        -0.02667,
+        -0.0024687983095645905
+      ],
+      "original_local_bounds": [
+        [
+          -0.038380518555641174,
+          -0.03175000101327896,
+          -0.006268798373639584
+        ],
+        [
+          0.038380518555641174,
+          0.03175000101327896,
+          0.006268798373639584
+        ]
+      ],
+      "local_bounds": [
+        [
+          -0.038380518555641174,
+          -0.03175000101327896,
+          -0.006268798373639584
+        ],
+        [
+          0.038380518555641174,
+          0.03174999728798866,
+          0.006268799304962158
+        ]
+      ],
+      "substrate_local_bounds": [
+        [
+          -0.03838040307164192,
+          -0.03175000101327896,
+          -0.004053758457303047
+        ],
+        [
+          0.031469594687223434,
+          0.03174999728798866,
+          -0.0024687983095645905
+        ]
+      ],
+      "triangles": 32036,
+      "source_draws": 178,
+      "draws": 23,
+      "world_bounds_m": [
+        [
+          0.05063685367802549,
+          0.006150473867182114,
+          -0.0016711963475468383
+        ],
+        [
+          0.11413686011930549,
+          0.018688094371111397,
+          0.07508984783890145
+        ]
+      ],
+      "cad_bounds_m": [
+        [
+          0.05063685367802549,
+          0.12491016966104788,
+          -0.04433561934137594
+        ],
+        [
+          0.11413686011930549,
+          0.20167121047842457,
+          -0.0317980194645013
+        ]
+      ]
+    },
+    {
       "id": "Charger_BMS034A_EVM",
-      "source": "BMS034A_PCB_1_high_detail.glb",
-      "sha256": "2c23294f940ed7ceec1bd960a267f696e944112c2b3b3710014ab75aa846ff5a",
+      "source": "Knight_EPS_MPPT_High_Fidelity_Gerber_v4.glb",
+      "source_path": "model-sources/power-boards/Knight_EPS_MPPT_High_Fidelity_Gerber_v4.glb",
+      "sha256": "ca9d409e9b038669eaef278d4e0ecd4fb3e41a0667d531ff192458be4e378613",
       "axes": [
         0,
         1,
@@ -556,9 +647,9 @@
           -0.0032205707393586636
         ]
       ],
-      "triangles": 121190,
-      "source_draws": 487,
-      "draws": 35,
+      "triangles": 117816,
+      "source_draws": 475,
+      "draws": 34,
       "world_bounds_m": [
         [
           -0.05465309880673886,
@@ -586,9 +677,8 @@
     }
   ],
   "limitations": [
-    "The supplied regulator substrate is 32.69 × 43.16 mm; the previous substrate was 33.96 × 40.62 mm. Substrate center, underside and connector orientation are retained at true scale. Retaining fixtures follow the measured outline delta: bottom pairs move down 1.27 mm and side pairs move inward 0.635 mm; support depth is unchanged.",
-    "Existing mounts are illustrative and require clip spring deflection (up to approximately 0.482 mm); no physical fit certification is implied.",
-    "BQ76942 has no replacement in this archive and is preserved."
+    "The supplied regulator substrate is 32.69 \u00d7 43.16 mm; the previous substrate was 33.96 \u00d7 40.62 mm. Substrate center, underside and connector orientation are retained at true scale. Retaining fixtures follow the measured outline delta: bottom pairs move down 1.27 mm and side pairs move inward 0.635 mm; support depth is unchanged.",
+    "Existing mounts are illustrative and require clip spring deflection (up to approximately 0.482 mm); no physical fit certification is implied."
   ],
   "fixture_adjustments": [
     {
@@ -688,6 +778,8 @@
       ]
     }
   ],
-  "output_sha256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47",
-  "output_bytes": 37548864
+  "output_sha256": "f1ed146e43c7dd3291beed9599d9a4f42f3e54b726dde8600ad978be8ad649c4",
+  "output_bytes": 39022712,
+  "logical_triangles": 871131,
+  "power_board_policy": "New exports retain all triangles, original materials, embedded RGBA images and indexed topology; absent normals generated. Units mm to m; translation anchors substrate underside and XY datums. No additional fixture movement for the replacement pair."
 }

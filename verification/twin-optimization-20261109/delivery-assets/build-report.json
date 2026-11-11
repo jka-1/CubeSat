@@ -1,0 +1,137 @@
+{
+  "source": {
+    "bytes": 37548864,
+    "sha256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47"
+  },
+  "geometry": {
+    "decodedBytes": 36337910,
+    "quantization": false,
+    "filters": "NONE",
+    "indexMode": "INDICES",
+    "encoderVersion": "0.18",
+    "roundtrip": "byte-exact for every attribute/index view",
+    "decodedBufferBytesIncludingAlignment": 36337912,
+    "fallbackAlignmentCorrection": {
+      "previousAssetSHA256": "56fe29014328d396d22f1b1b9822e5ea47356d1709aacfd07950935fc0caf525",
+      "note": "Align virtual fallback buffer offsets to four bytes; compressed stream, decoded attributes/indices and GLB byte count unchanged. Loading runs predate this metadata correction."
+    }
+  },
+  "textures": [
+    {
+      "texture": 6,
+      "label": "regulator-top-copper",
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "pngBytes": 49884,
+      "ktx2Bytes": 61542,
+      "inputSHA256": "537d1fa13ae799057e67976f669a4e9fc37edaf778537a309b34e8460a0f90e5",
+      "outputSHA256": "2b4e39c6702271aa3477c4568ca12480f91475ea243816f3fabf22688e341f6e",
+      "args": [
+        "-ktx2",
+        "-uastc",
+        "-uastc_level",
+        "4",
+        "-ktx2_zstandard_level",
+        "18",
+        "-mipmap",
+        "-mip_srgb",
+        "-mip_filter",
+        "box",
+        "-force_alpha",
+        "-max_threads",
+        "2",
+        "-file",
+        "regulator-top-copper.png",
+        "-output_file",
+        "regulator-top-copper.ktx2"
+      ]
+    },
+    {
+      "texture": 7,
+      "label": "regulator-bottom-copper",
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "pngBytes": 32536,
+      "ktx2Bytes": 14550,
+      "inputSHA256": "8f4845e6dc4c65870d3aeea310019dbe6c70f7fa078fbfdbfaf8c06c43a7d071",
+      "outputSHA256": "4fad3006c913a89fb3ce88836d1e01c84c569a8dc663320ba484980c31b03793",
+      "args": [
+        "-ktx2",
+        "-uastc",
+        "-uastc_level",
+        "4",
+        "-ktx2_zstandard_level",
+        "18",
+        "-mipmap",
+        "-mip_srgb",
+        "-mip_filter",
+        "box",
+        "-force_alpha",
+        "-max_threads",
+        "2",
+        "-file",
+        "regulator-bottom-copper.png",
+        "-output_file",
+        "regulator-bottom-copper.ktx2"
+      ]
+    },
+    {
+      "texture": 8,
+      "label": "regulator-silkscreen",
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "pngBytes": 40460,
+      "ktx2Bytes": 44726,
+      "inputSHA256": "b34c7149721d17a977e8a3c4483ccfb111266402a6d8a6738f0e22c7493f469e",
+      "outputSHA256": "f61320b1d246f402219ca1978923a63ca26109c6456695b516874c7502d971d8",
+      "args": [
+        "-ktx2",
+        "-uastc",
+        "-uastc_level",
+        "4",
+        "-ktx2_zstandard_level",
+        "18",
+        "-mipmap",
+        "-mip_srgb",
+        "-mip_filter",
+        "box",
+        "-force_alpha",
+        "-max_threads",
+        "2",
+        "-file",
+        "regulator-silkscreen.png",
+        "-output_file",
+        "regulator-silkscreen.ktx2"
+      ]
+    }
+  ],
+  "candidates": [
+    {
+      "name": "meshopt",
+      "file": "KnightEPS_Detailed-meshopt-lossless.glb",
+      "bytes": 15863472,
+      "sha256": "8912f115b873013e8c22c6c3d4ddfd4b464c07f82e7c5bad06f8b5d9eec9496e"
+    },
+    {
+      "name": "ktx2",
+      "file": "KnightEPS_Detailed-regulator-uastc.glb",
+      "bytes": 37670240,
+      "sha256": "8894267c5113937b40e3f18eaf28cb12255be4ee4524c15666cbc0c39b00a5e2"
+    }
+  ],
+  "basis": {
+    "version": "1.16.4",
+    "binarySHA256": "3f1f38f664e553c63882240ceacb42e60de4df82763ddf13a32745512edc6c28",
+    "uastcLevel": 4,
+    "rdo": false,
+    "zstandardLevel": 18,
+    "mipFilter": "box, sRGB-aware; compare with driver-generated baseline mips",
+    "pngFallbacksRetained": true
+  }
+}

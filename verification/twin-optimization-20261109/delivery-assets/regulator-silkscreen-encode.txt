@@ -1,0 +1,21 @@
+Basis Universal GPU Texture Compressor v1.16.4
+Copyright (C) 2019-2022 Binomial LLC, All rights reserved
+Multithreading: 1, Zstandard support: 1, OpenCL: 0
+Processing 1 total file(s)
+Processing source file "/Users/itzjaclechtman/Documents/Senior Design/CubeSat-telemetry-baseline/verification/twin-optimization-20261109/delivery-assets/regulator-silkscreen.png"
+Read source image "/Users/itzjaclechtman/Documents/Senior Design/CubeSat-telemetry-baseline/verification/twin-optimization-20261109/delivery-assets/regulator-silkscreen.png", 3000x2272
+Total basis file slices: 12
+Slice: 0, alpha: 1, orig width/height: 3000x2272, width/height: 3000x2272, first_block: 0, image_index: 0, mip_level: 0, iframe: 0
+Slice: 1, alpha: 1, orig width/height: 1500x1136, width/height: 1500x1136, first_block: 426000, image_index: 0, mip_level: 1, iframe: 0
+Slice: 2, alpha: 1, orig width/height: 750x568, width/height: 752x568, first_block: 532500, image_index: 0, mip_level: 2, iframe: 0
+Slice: 3, alpha: 1, orig width/height: 375x284, width/height: 376x284, first_block: 559196, image_index: 0, mip_level: 3, iframe: 0
+Slice: 4, alpha: 1, orig width/height: 187x142, width/height: 188x144, first_block: 565870, image_index: 0, mip_level: 4, iframe: 0
+Slice: 5, alpha: 1, orig width/height: 93x71, width/height: 96x72, first_block: 567562, image_index: 0, mip_level: 5, iframe: 0
+Slice: 6, alpha: 1, orig width/height: 46x35, width/height: 48x36, first_block: 567994, image_index: 0, mip_level: 6, iframe: 0
+Slice: 7, alpha: 1, orig width/height: 23x17, width/height: 24x20, first_block: 568102, image_index: 0, mip_level: 7, iframe: 0
+Slice: 8, alpha: 1, orig width/height: 11x8, width/height: 12x8, first_block: 568132, image_index: 0, mip_level: 8, iframe: 0
+Slice: 9, alpha: 1, orig width/height: 5x4, width/height: 8x4, first_block: 568138, image_index: 0, mip_level: 9, iframe: 0
+Slice: 10, alpha: 1, orig width/height: 2x2, width/height: 4x4, first_block: 568140, image_index: 0, mip_level: 10, iframe: 0
+Slice: 11, alpha: 1, orig width/height: 1x1, width/height: 4x4, first_block: 568141, image_index: 0, mip_level: 11, iframe: 0
+Wrote output .basis/.ktx2 file "/Users/itzjaclechtman/Documents/Senior Design/CubeSat-telemetry-baseline/verification/twin-optimization-20261109/delivery-assets/regulator-silkscreen.ktx2"
+Compression succeeded to file "/Users/itzjaclechtman/Documents/Senior Design/CubeSat-telemetry-baseline/verification/twin-optimization-20261109/delivery-assets/regulator-silkscreen.ktx2" size 44726 bytes in 4.248 secs

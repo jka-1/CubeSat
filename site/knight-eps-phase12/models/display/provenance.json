@@ -1,0 +1,13 @@
+{
+  "canonicalSHA256": "f1ed146e43c7dd3291beed9599d9a4f42f3e54b726dde8600ad978be8ad649c4",
+  "files": {
+    "display-compact.glb": "9af20a55ed5be10a94719141355664715143873f3866e4b19a8085ec4925d4ec",
+    "display-compact.glb.gz": "ddd25076ad9d85ff0800b06cc1babece5e4ebd52dabb8218a42f2fa82f564909",
+    "closed-primitives-compact.json": "e915d1b3d0d4b378c77daa82c99e022ec3c77fab17cf3649ebe4025f259e395e",
+    "artwork-masks.json": "52e36cd23ad34af05bd069963308fc1b4aa69f98d7864ceacc441363d6a26ba4",
+    "artwork-masks.bin.gz": "f6c00c619883a7a24df42006b37bc8dd6127e7be922ffbbf8630142ec4f56f10",
+    "compact-report.json": "70beb6eea1455a20559ca8ff21c59e89a28fe610197b2cb3b16dd98f8903bd85",
+    "build-report.json": "eabc7dcdb36e6ab6845ae98679a20c1ee665600e676596011a47c0d26fc91d26"
+  },
+  "policy": "All source triangles, component identities, artwork dimensions and source texels retained. No quantization or decimation."
+}

@@ -1,0 +1,122 @@
+{
+  "reference": "whole-primitive culling with original prepared geometry and full-size capture",
+  "uiRectanglesExcluded": [
+    [
+      20,
+      18,
+      282,
+      48
+    ],
+    [
+      16,
+      68,
+      939,
+      108
+    ],
+    [
+      16,
+      658,
+      939,
+      702
+    ],
+    [
+      16,
+      633,
+      939,
+      650
+    ],
+    [
+      855,
+      16,
+      939,
+      60
+    ],
+    [
+      16,
+      615,
+      517,
+      645
+    ]
+  ],
+  "comparisons": [
+    {
+      "view": "assembled",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 4.847779716889665e-07
+    },
+    {
+      "view": "Regulator_01-top",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 0.000983129726585224
+    },
+    {
+      "view": "Regulator_01-bottom",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 1.4543339150668994e-06
+    },
+    {
+      "view": "Regulator_01-oblique",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 1.4543339150668994e-06
+    },
+    {
+      "view": "MCU_Final-top",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 6.253635834787667e-05
+    },
+    {
+      "view": "MCU_Final-bottom",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 1.4543339150668994e-06
+    },
+    {
+      "view": "acrylic",
+      "max": 1,
+      "pixelsAbove8": 0,
+      "mean": 2.4238898584448325e-06
+    }
+  ],
+  "comparisonsAgainstOriginalLeanPilot": [
+    {
+      "view": "assembled",
+      "max": 1,
+      "pixelsAbove8": 0
+    },
+    {
+      "view": "Regulator_01-top",
+      "max": 0,
+      "pixelsAbove8": 0
+    },
+    {
+      "view": "Regulator_01-bottom",
+      "max": 0,
+      "pixelsAbove8": 0
+    },
+    {
+      "view": "Regulator_01-oblique",
+      "max": 1,
+      "pixelsAbove8": 0
+    },
+    {
+      "view": "MCU_Final-top",
+      "max": 17,
+      "pixelsAbove8": 6
+    },
+    {
+      "view": "MCU_Final-bottom",
+      "max": 0,
+      "pixelsAbove8": 0
+    },
+    {
+      "view": "acrylic",
+      "max": 1,
+      "pixelsAbove8": 0
+    }
+  ]
+}

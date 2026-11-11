@@ -1,0 +1,6 @@
+{
+  "inside": "logarithmic-fallback",
+  "restored": "bounded",
+  "maxCadChannelDifference": 1,
+  "uiOverlaysExcluded": true
+}

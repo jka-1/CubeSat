@@ -1,0 +1,80 @@
+[
+  {
+    "file": "three-r176/loaders/KTX2Loader.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/loaders/KTX2Loader.js",
+    "bytes": 30130,
+    "sha256": "1fc4bca5e408c950d69c199de31d03f46fae44bd93394ecdca1267517f24df0d"
+  },
+  {
+    "file": "three-r176/utils/WorkerPool.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/utils/WorkerPool.js",
+    "bytes": 3110,
+    "sha256": "5ac7095fd566bc9ae48376055fd66edf27cb9ebbf9e1269dc206bfd4933ae9eb"
+  },
+  {
+    "file": "three-r176/libs/ktx-parse.module.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/libs/ktx-parse.module.js",
+    "bytes": 19440,
+    "sha256": "34a3a68f08db30a353802c5a762c5dcd89a168a1b56567019ef4a7563ceaf4d4"
+  },
+  {
+    "file": "three-r176/libs/zstddec.module.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/libs/zstddec.module.js",
+    "bytes": 39754,
+    "sha256": "5cbf818e842628a4464e748594a6deae18ceddda3c2f541e7b3a0ff5fc7611e2"
+  },
+  {
+    "file": "three-r176/math/ColorSpaces.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/math/ColorSpaces.js",
+    "bytes": 3809,
+    "sha256": "0d38cd31d6650232d3b1161e1d6ccba9cdec5d6e044c6a5c67bd50bbe79dd96e"
+  },
+  {
+    "file": "three-r176/libs/basis/basis_transcoder.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/libs/basis/basis_transcoder.js",
+    "bytes": 57529,
+    "sha256": "8478b5b6d6b74e7d3082b89f6417321d8d1dc0307f2b30d4484bb11b441696a1"
+  },
+  {
+    "file": "three-r176/libs/basis/basis_transcoder.wasm",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/libs/basis/basis_transcoder.wasm",
+    "bytes": 527333,
+    "sha256": "6cf17dc889352c42e9acf8897107978d127005fe3386c36a0e3845e27967630a"
+  },
+  {
+    "file": "three-r176/libs/meshopt_decoder.module.js",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/libs/meshopt_decoder.module.js",
+    "bytes": 24850,
+    "sha256": "01f48524f4bac6141eaba07e94cc36e7ee56f311796fa6117c159842941b0468"
+  },
+  {
+    "file": "meshoptimizer-v0.18/meshopt_encoder.module.js",
+    "url": "https://raw.githubusercontent.com/zeux/meshoptimizer/v0.18/js/meshopt_encoder.module.js",
+    "bytes": 16867,
+    "sha256": "f41b1351ee80b56855db67585867b0daa2ad7f40638a2b9b7ca9d41ac87f8006"
+  },
+  {
+    "file": "three-r176/LICENSE",
+    "url": "https://raw.githubusercontent.com/mrdoob/three.js/r176/LICENSE",
+    "bytes": 1081,
+    "sha256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+  },
+  {
+    "file": "meshoptimizer-v0.18/LICENSE.md",
+    "url": "https://raw.githubusercontent.com/zeux/meshoptimizer/v0.18/LICENSE.md",
+    "bytes": 1079,
+    "sha256": "063805e3b8e24ceab4c5dea358b03245ee41c31be87cf65c61d836636cb494bb"
+  },
+  {
+    "file": "basis-universal-1.16.4/LICENSE",
+    "url": "https://raw.githubusercontent.com/BinomialLLC/basis_universal/1.16.4/LICENSE",
+    "bytes": 11357,
+    "sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+  },
+  {
+    "file": "basis-universal-1.16.4 (build source retained in temporary directory)",
+    "url": "https://codeload.github.com/BinomialLLC/basis_universal/tar.gz/refs/tags/1.16.4",
+    "bytes": 29156236,
+    "sha256": "e5740fd623a2f8472c9700b9447a8725a6f27d65b0b47c3e3926a60db41b8a64"
+  }
+]

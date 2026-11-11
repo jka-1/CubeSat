@@ -1,0 +1,328 @@
+{
+  "selectedCandidate": "legacy-compact-lean-acrylic-bounded-ortho-shadow-certified-cull-region-capture-cheap-prepass-fxaa",
+  "targetHz": 60,
+  "frameBudgetMs": 16.666666666666668,
+  "gpuHeadroomTargetMs": 14,
+  "observedDisplayHz": 30,
+  "presentation60HzQualified": false,
+  "newAppearanceReductions": true,
+  "aa": {
+    "mode": "FXAA replacing MSAA",
+    "defaultChanged": false,
+    "drawingBuffer": [
+      1910,
+      1440
+    ]
+  },
+  "sourceAppearanceCaveat": "Existing display-space acrylic alternative; physical HDR transmission remains unqualified. FXAA changes edge filtering and is an explicit quality alternative.",
+  "compaction": {
+    "sourceSHA256": "3f8e298472678037c112adff3c713a30265679f5563d857eb2692477b81c613a",
+    "outputSHA256": "302cd6162e57fb90b720c2111a0af715fbbe9dfa58f7843c16519af28cdc686b",
+    "verticesBefore": 1115514,
+    "verticesAfter": 918771,
+    "bytesBefore": 39454508,
+    "bytesAfter": 34590388,
+    "triangleAndAttributeBytesExact": true,
+    "noQuantization": true
+  },
+  "thermal60": {
+    "phases": [
+      {
+        "name": "orbit",
+        "gpuSamples": 450,
+        "gpuMedianMs": 5.997332500000001,
+        "gpuP95Ms": 10.361249,
+        "renderStartP95Ms": 18.400000005960464,
+        "renderRatePerSecond": 59.99926626802947,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 5.4000000059604645,
+        "captureMedianPixels": 172032,
+        "captureMaxPixels": 172032,
+        "depthModes": {
+          "bounded": 1799
+        }
+      },
+      {
+        "name": "lid",
+        "gpuSamples": 225,
+        "gpuMedianMs": 6.979083,
+        "gpuP95Ms": 7.94875,
+        "renderStartP95Ms": 18.299999982118607,
+        "renderRatePerSecond": 59.99252595899388,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 6.399999976158142,
+        "captureMedianPixels": 172032,
+        "captureMaxPixels": 172032,
+        "depthModes": {
+          "bounded": 899
+        }
+      },
+      {
+        "name": "explosion",
+        "gpuSamples": 225,
+        "gpuMedianMs": 6.687583,
+        "gpuP95Ms": 11.744416,
+        "renderStartP95Ms": 18.30000001192093,
+        "renderRatePerSecond": 60.00013348201483,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 6.199999988079071,
+        "captureMedianPixels": 172032,
+        "captureMaxPixels": 172032,
+        "depthModes": {
+          "bounded": 899
+        }
+      }
+    ],
+    "gpuP95HeadroomGatePassed": true,
+    "allGpuP95BelowFrameBudget": true,
+    "gpuDisjointCounts": [
+      0,
+      0,
+      0
+    ],
+    "renderClock": {
+      "mode": "timer60-workload",
+      "targetHz": 60,
+      "presentationQualification": false
+    },
+    "visibilityNote": "Timer-driven workload tests capacity; render-start jitter is not 60 Hz presentation."
+  },
+  "sustainedWarmup": {
+    "durationMs": 300012.09999999404,
+    "frames": 17998,
+    "gpuSamples": 4500,
+    "gpuMedianMs": 6.4108325,
+    "gpuP95Ms": 8.573416,
+    "last900GpuP95Ms": 10.670332,
+    "gpuDisjointCount": 0
+  },
+  "visual": {
+    "note": "FXAA changes antialiasing; this is not pixel equivalence. Board controls predate corrected artwork shadows; boards do not receive shadows. Assembled/acrylic use corrected shadow reference. CSS-pixel screenshots; drawing buffer remains DPR 2.",
+    "uiRectanglesExcluded": [
+      [
+        20,
+        18,
+        282,
+        48
+      ],
+      [
+        16,
+        68,
+        939,
+        108
+      ],
+      [
+        16,
+        658,
+        939,
+        702
+      ],
+      [
+        16,
+        633,
+        939,
+        650
+      ],
+      [
+        855,
+        16,
+        939,
+        60
+      ],
+      [
+        16,
+        615,
+        517,
+        645
+      ],
+      [
+        16,
+        615,
+        661,
+        645
+      ]
+    ],
+    "comparisons": [
+      {
+        "view": "assembled",
+        "reference": "legacy-compact-lean-acrylic-bounded-ortho-shadow-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 111,
+        "pixelsAbove8": 5929,
+        "fractionPixelsAbove8": 0.010379702071563747,
+        "meanChannelDifference": 0.2206277540173421
+      },
+      {
+        "view": "Regulator_01-top",
+        "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 89,
+        "pixelsAbove8": 9906,
+        "fractionPixelsAbove8": 0.017342103005719426,
+        "meanChannelDifference": 0.34650884991127046
+      },
+      {
+        "view": "Regulator_01-bottom",
+        "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 83,
+        "pixelsAbove8": 2119,
+        "fractionPixelsAbove8": 0.0037096624539793527,
+        "meanChannelDifference": 0.03271704034644524
+      },
+      {
+        "view": "Regulator_01-oblique",
+        "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 95,
+        "pixelsAbove8": 8868,
+        "fractionPixelsAbove8": 0.015524911109905096,
+        "meanChannelDifference": 0.3262431337398381
+      },
+      {
+        "view": "MCU_Final-top",
+        "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 89,
+        "pixelsAbove8": 15401,
+        "fractionPixelsAbove8": 0.026962015787511093,
+        "meanChannelDifference": 0.6327130721688948
+      },
+      {
+        "view": "MCU_Final-bottom",
+        "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 91,
+        "pixelsAbove8": 3765,
+        "fractionPixelsAbove8": 0.006591259622101115,
+        "meanChannelDifference": 0.09423429637501146
+      },
+      {
+        "view": "acrylic",
+        "reference": "legacy-compact-lean-acrylic-bounded-ortho-shadow-certified-cull-region-capture-cheap-prepass",
+        "pixelsCompared": 571211,
+        "maxChannelDifference": 85,
+        "pixelsAbove8": 25635,
+        "fractionPixelsAbove8": 0.04487833742697532,
+        "meanChannelDifference": 0.7556157006780332
+      }
+    ],
+    "browserChecks": [
+      {
+        "name": "component count and logical triangles",
+        "passed": true
+      },
+      {
+        "name": "picking/selection ownership",
+        "passed": true
+      },
+      {
+        "name": "visibility",
+        "passed": true
+      },
+      {
+        "name": "LCD synthetic packet",
+        "passed": true
+      },
+      {
+        "name": "LCD presentation",
+        "passed": true
+      },
+      {
+        "name": "X-ray and Performance switching",
+        "passed": true
+      }
+    ],
+    "dispose": {
+      "renderCountStable": true,
+      "ownership": {
+        "geometries": 0,
+        "materials": 0,
+        "textures": 0,
+        "images": 0
+      },
+      "parts": 0,
+      "modelChildren": 0,
+      "transport": "disconnected"
+    }
+  },
+  "qualification": {
+    "complete": true,
+    "error": null,
+    "depthFallback": {
+      "fallback": {
+        "near": 0.002,
+        "far": 2.1367500000000006,
+        "minDepth": -0.13378522653132677,
+        "maxDepth": 0.20560000012815,
+        "worstStep": 1.2586056154170977e-06,
+        "certified": false,
+        "active": "logarithmic-fallback"
+      },
+      "boundedMaterials": 0,
+      "restored": {
+        "near": 0.5218668580583131,
+        "far": 3.4497985111601,
+        "minDepth": 0.5798520645092368,
+        "maxDepth": 1.2223218633522728,
+        "worstStep": 1.4483008212663996e-07,
+        "certified": true,
+        "active": "bounded"
+      }
+    },
+    "cullingFallback": {
+      "insideSide": 2,
+      "insideDepth": "logarithmic-fallback",
+      "insideCallbackCpuMs": 6.799999982118607,
+      "restoredSide": 0,
+      "expectedInside": 2,
+      "expectedOutside": 0
+    },
+    "aaResize": {
+      "smaller": {
+        "buffer": [
+          955,
+          720
+        ],
+        "filter": [
+          955,
+          720
+        ],
+        "copies": 2
+      },
+      "restored": {
+        "buffer": [
+          1910,
+          1440
+        ],
+        "filter": [
+          1910,
+          1440
+        ],
+        "copies": 2
+      }
+    },
+    "dispose": {
+      "renderCountStable": true,
+      "ownership": {
+        "geometries": 0,
+        "materials": 0,
+        "textures": 0,
+        "images": 0
+      },
+      "parts": 0,
+      "modelChildren": 0
+    },
+    "reloadIntegrity": {
+      "parts": 95,
+      "triangles": 874229
+    }
+  },
+  "notSelected": [
+    "Front-to-back opaque sorting: no consistent tail improvement",
+    "Partial closed-face partition: extra calls did not improve tails consistently",
+    "Fixed material constants: no consistent animation gain",
+    "Matte environment approximation: insufficient gain to justify appearance change",
+    "Orthographic shadow path is selected only in the ortho report"
+  ]
+}

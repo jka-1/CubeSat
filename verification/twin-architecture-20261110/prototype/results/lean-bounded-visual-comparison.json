@@ -1,0 +1,52 @@
+{
+  "diagnosticOverlayExcluded": [
+    16,
+    615,
+    517,
+    645
+  ],
+  "comparisons": [
+    {
+      "view": "assembled",
+      "maxChannelDifference": 123,
+      "fractionPixelsAbove8": 0.017912677556923863,
+      "meanRGBDifference": 0.25163030831879
+    },
+    {
+      "view": "Regulator_01-top",
+      "maxChannelDifference": 38,
+      "fractionPixelsAbove8": 0.0019150702787639985,
+      "meanRGBDifference": 0.044093465192941626
+    },
+    {
+      "view": "Regulator_01-bottom",
+      "maxChannelDifference": 44,
+      "fractionPixelsAbove8": 0.0003541466405173517,
+      "meanRGBDifference": 0.005970040721349622
+    },
+    {
+      "view": "Regulator_01-oblique",
+      "maxChannelDifference": 57,
+      "fractionPixelsAbove8": 0.0037899642579735074,
+      "meanRGBDifference": 0.06405274384331976
+    },
+    {
+      "view": "MCU_Final-top",
+      "maxChannelDifference": 85,
+      "fractionPixelsAbove8": 0.005493736961302784,
+      "meanRGBDifference": 0.1264843901493116
+    },
+    {
+      "view": "MCU_Final-bottom",
+      "maxChannelDifference": 91,
+      "fractionPixelsAbove8": 0.0026099714599472053,
+      "meanRGBDifference": 0.047754508435136706
+    },
+    {
+      "view": "acrylic",
+      "maxChannelDifference": 42,
+      "fractionPixelsAbove8": 0.05267559274921954,
+      "meanRGBDifference": 0.9453218925732014
+    }
+  ]
+}

@@ -1,0 +1,179 @@
+{
+  "bytes": 37548864,
+  "nodes": 344,
+  "mesh_instances": 332,
+  "unique_meshes": 259,
+  "materials": 155,
+  "unique_material_definitions_excluding_names_extras": 97,
+  "duplicate_material_groups": [
+    [
+      0,
+      1,
+      2,
+      3
+    ],
+    [
+      8,
+      71,
+      107
+    ],
+    [
+      11,
+      81,
+      104
+    ],
+    [
+      23,
+      48,
+      76,
+      118,
+      136
+    ],
+    [
+      26,
+      103
+    ],
+    [
+      38,
+      56,
+      100,
+      119
+    ],
+    [
+      41,
+      42,
+      126,
+      127,
+      128,
+      129,
+      130
+    ],
+    [
+      43,
+      61,
+      88,
+      113,
+      131
+    ],
+    [
+      44,
+      62,
+      89,
+      114,
+      132
+    ],
+    [
+      45,
+      63,
+      90,
+      115,
+      133
+    ],
+    [
+      46,
+      64,
+      91,
+      116,
+      134
+    ],
+    [
+      47,
+      75,
+      117,
+      135
+    ],
+    [
+      51,
+      65,
+      92,
+      137
+    ],
+    [
+      52,
+      69,
+      96,
+      138
+    ],
+    [
+      53,
+      66,
+      93
+    ],
+    [
+      55,
+      102,
+      121
+    ],
+    [
+      67,
+      94
+    ],
+    [
+      68,
+      95
+    ],
+    [
+      70,
+      106
+    ],
+    [
+      73,
+      97
+    ],
+    [
+      83,
+      143
+    ],
+    [
+      99,
+      140
+    ],
+    [
+      101,
+      120
+    ],
+    [
+      111,
+      112
+    ]
+  ],
+  "triangles_all_instances": 874229,
+  "images": 17,
+  "image_encoded_bytes": 904066,
+  "extensionsUsed": [
+    "KHR_materials_ior",
+    "KHR_materials_transmission"
+  ],
+  "transmissive_materials": [
+    {
+      "id": 152,
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "extensions": {
+        "KHR_materials_transmission": {
+          "transmissionFactor": 0.8500000238418579
+        },
+        "KHR_materials_ior": {
+          "ior": 1.4600000381469727
+        }
+      },
+      "name": "glass",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6299999952316284,
+          0.8500000238418579,
+          0.9399999976158142,
+          0.25
+        ],
+        "metallicFactor": 0,
+        "roughnessFactor": 0.19
+      }
+    }
+  ],
+  "doubleSided": 139,
+  "alphaModes": {
+    "OPAQUE": 139,
+    "BLEND": 11,
+    "MASK": 5
+  }
+}

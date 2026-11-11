@@ -1,0 +1,64 @@
+{
+  "date": "2026-11-11T15:27:14.053788+00:00",
+  "modelBytes": 34590388,
+  "compressedModelBytes": 8075595,
+  "httpCacheDisabled": true,
+  "gpuDriverShaderCacheCleared": false,
+  "network": {
+    "mbps": 20,
+    "latencyMs": 40
+  },
+  "beforeReadyMs": 18421.09999999404,
+  "firstNewFloorReadyMs": 8299.699999988079,
+  "finalReadyMs": 6772,
+  "gpu": [
+    {
+      "phase": "orbit",
+      "samples": 450,
+      "medianMs": 7.8847495,
+      "p95Ms": 8.354833,
+      "disjoint": 0,
+      "newPrograms": 0,
+      "unresolvedQueries": 0
+    },
+    {
+      "phase": "lid",
+      "samples": 225,
+      "medianMs": 8.566917,
+      "p95Ms": 9.768499,
+      "disjoint": 0,
+      "newPrograms": 0,
+      "unresolvedQueries": 1
+    },
+    {
+      "phase": "explosion",
+      "samples": 225,
+      "medianMs": 9.136083,
+      "p95Ms": 10.885333,
+      "disjoint": 0,
+      "newPrograms": 0,
+      "unresolvedQueries": 0
+    }
+  ],
+  "sessions": {
+    "sessions": 9,
+    "concurrentStreams": 9,
+    "allReceivedFanout": true,
+    "remainingAfterThreeClose": 6,
+    "elapsedMs": 1518.4476399999999,
+    "hardwareTraffic": false,
+    "productionTest": false,
+    "streamsAfterCleanup": 0
+  },
+  "downloads": {
+    "localOnly": true,
+    "simultaneousDownloads": 9,
+    "allHashesMatch": true,
+    "totalBytes": 72680355,
+    "elapsedMs": 564.589798
+  },
+  "focusedTestsPassed": 27,
+  "deployed": false,
+  "productionLoadTested": false,
+  "native60HzQualified": false
+}

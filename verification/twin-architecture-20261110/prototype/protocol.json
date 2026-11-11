@@ -1,0 +1,63 @@
+{
+  "sourceSHA256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47",
+  "target": "MacBookPro15,2 / Iris Plus 655 / 8 GiB",
+  "cssPage": [
+    1290,
+    720
+  ],
+  "cssViewport": [
+    955,
+    720
+  ],
+  "drawingBuffer": [
+    1910,
+    1440
+  ],
+  "quality": "studio",
+  "logarithmicDepth": true,
+  "sourceTriangles": 874229,
+  "componentCount": 95,
+  "warmupMs": 5000,
+  "interactionsMs": {
+    "orbit": 30000,
+    "lid": 15000,
+    "explosion": 15000
+  },
+  "syntheticSSEIntervalMs": 1000,
+  "thermalFinalistWarmupMs": 300000,
+  "acceptance60Hz": {
+    "p95MaxMs": 17.667,
+    "fractionAbove25msMax": 0.01,
+    "gpuP95TargetMs": 14
+  },
+  "noQualitySubstitutions": [
+    "output or refraction resolution",
+    "geometry LOD",
+    "disabled shadows",
+    "simplified acrylic"
+  ],
+  "stopRule": "No production rebuild unless a complete candidate passes performance and fidelity; report a smaller miss as failure.",
+  "observedDisplayAtTest": {
+    "recordedClientDate": "2026-11-10",
+    "physicalPixels": [
+      3840,
+      2160
+    ],
+    "scaledResolution": [
+      1920,
+      1080
+    ],
+    "refreshHz": 30.0,
+    "mainDisplay": true,
+    "source": "Filtered system_profiler SPDisplaysDataType -json; _spdisplays_resolution = 1920 x 1080 @ 30.00Hz",
+    "powerSnapshot": "AC Power; charging; lowpowermode 0",
+    "browserCalibration": "120 empty-page RAF intervals, median 33.3 ms; document visible and focused",
+    "limitations": [
+      "No display mode, cable, adapter or OS settings changed.",
+      "These end-of-session observations do not establish exact thermal/power conditions for every earlier sample.",
+      "Cause of the 30 Hz mode and availability of a 60 Hz connection were not determined."
+    ]
+  },
+  "qualificationNote": "60 Hz presentation cannot be qualified on the observed 30 Hz display. The 60 fps goal is unchanged; retain GPU budget and raw cadence evidence separately.",
+  "interactionDetail": "Camera auto-orbits throughout; lid and explosion alternate every two seconds during their phases. Orbit uses elapsed time in controls.update(dt)."
+}

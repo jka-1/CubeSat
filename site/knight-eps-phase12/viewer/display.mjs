@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import {normalizeTelemetry,telemetryHealth} from './telemetry.mjs';
 export {normalizeTelemetry} from './telemetry.mjs';
-export function createDisplay({onStatus,onTelemetry,staleMs=15000}){
+export function createDisplay({onStatus,onTelemetry,onInvalidate,staleMs=15000}){
  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=582;
  canvas.setAttribute('aria-label','Payload LCD: same snapshot as telemetry panel');
  const ctx=canvas.getContext('2d'),texture=new THREE.CanvasTexture(canvas);
@@ -10,8 +10,11 @@ export function createDisplay({onStatus,onTelemetry,staleMs=15000}){
  const savedStates={};let presentation={state:'telemetry',title:'KNIGHT EPS',message:null,lines:[]};
  let bindingBasis=null,source='none',screen=null,originalMaterial=null,last=null,receivedAt=0,stream=null,transport='waiting',error=null,disposed=false;
  function state(){return {source,presentation:{...presentation,lines:[...presentation.lines]},display:screen?'bound':'awaiting_asset',bindingBasis,screen:screen?.name||null,...telemetryHealth({last,receivedAt,source,transport,error,staleMs}),readings:last?{...last}:null,receivedAt:receivedAt||null,transport,error}}
+ let lastDrawing=null;
  function draw(){
-  const s=state();ctx.fillStyle='#081b22';ctx.fillRect(0,0,768,582);
+  const s=state();onStatus?.(s);
+  if(document.hidden)return;
+  const drawing=JSON.stringify([presentation,source,s.label,s.ageMs===null?null:Math.floor(s.ageMs/1000),last]);if(drawing===lastDrawing)return;lastDrawing=drawing;ctx.fillStyle='#081b22';ctx.fillRect(0,0,768,582);
   ctx.fillStyle='#edcf8c';ctx.font='bold 48px monospace';ctx.fillText(presentation.title,32,70,704);
   ctx.fillStyle='#e1f0ec';ctx.font='30px monospace';
   ctx.fillText(presentation.state==='telemetry'?s.label.toUpperCase():presentation.message||'PRESENTATION',32,145,704);
@@ -23,7 +26,7 @@ export function createDisplay({onStatus,onTelemetry,staleMs=15000}){
   ctx.fillStyle='#a7c7c3';ctx.font='24px monospace';
   const provenance=source==='mock'?'MOCK / SYNTHETIC':source==='live'?'DASHBOARD':'NO DATA';
   ctx.fillText(`${provenance}${s.ageMs===null?'':` · ${Math.floor(s.ageMs/1000)}s ago`}`,32,535,704);
-  texture.needsUpdate=true;onStatus?.(s);
+  texture.needsUpdate=true;onInvalidate?.();
  }
  function useTelemetryMode(){presentation={state:'telemetry',title:'KNIGHT EPS',message:null,lines:[]};draw()}
  function setScreenState(name,overrides={}){
@@ -52,14 +55,14 @@ export function createDisplay({onStatus,onTelemetry,staleMs=15000}){
   stream.onopen=()=>{transport='connected';error=null;draw()};
   stream.onerror=()=>{transport='connecting';error='Connection interrupted · retrying';draw()};return disconnect;
  }
- function unbind(){if(screen){screen.material.dispose();screen.material=originalMaterial;screen=null;originalMaterial=null;bindingBasis=null}draw()}
+ function unbind(){if(screen){screen.material.dispose();screen.material=originalMaterial;screen=null;originalMaterial=null;bindingBasis=null}draw();onInvalidate?.()}
  function bind(mesh,{authentic=false,supplied=false}={}){
   if(!authentic&&!(supplied&&mesh?.userData.display_surface===true))throw Error('Confirm a dedicated supplied screen surface');
   if(!mesh?.isMesh||!mesh.geometry.getAttribute('uv'))throw Error('Screen must be a dedicated UV-mapped mesh');
   if(mesh.userData.component_id==='NerdMiner_Proxy'||/proxy|placeholder/i.test(mesh.name))throw Error('Proxy cannot be an authentic display');
   unbind();screen=mesh;originalMaterial=mesh.material;bindingBasis=supplied?'user_supplied_surface':'caller_confirmed_authentic';
-  screen.material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false});draw();return state();
+  screen.material=new THREE.MeshBasicMaterial({map:texture,side:THREE.DoubleSide,toneMapped:false});draw();onInvalidate?.();return state();
  }
  const timer=setInterval(draw,1000);draw();
- return {canvas,texture,useTelemetryMode,setScreenState,getScreenStates:()=>structuredClone(savedStates),update,reset,setTransport,bind,unbind,connectSSE,disconnect,state,dispose:()=>{disconnect();unbind();clearInterval(timer);texture.dispose();disposed=true}};
+ return {canvas,texture,refresh:draw,useTelemetryMode,setScreenState,getScreenStates:()=>structuredClone(savedStates),update,reset,setTransport,bind,unbind,connectSSE,disconnect,state,dispose:()=>{disconnect();unbind();clearInterval(timer);texture.dispose();disposed=true}};
 }

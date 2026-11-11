@@ -1360,7 +1360,7 @@
     },
     "BMS_BQ76942": {
       "source": "sources/CAD/BMS_BQ76942_UserConfirmed.stp",
-      "description": "Populated BMS CAD, blue solder mask; H1-H8 screw and mounting-hardware objects removed; physical XY placement still estimated",
+      "description": "Monitors the battery cells and supports protection against electrical and temperature faults.",
       "group": "floor_electronics",
       "placement": "Provisional placement on user-confirmed support ledge; spring deflection and attachment unverified",
       "provisional": true,
@@ -1381,10 +1381,10 @@
           -0.03179802838712931
         ]
       ],
-      "triangles": 31760,
+      "triangles": 32036,
       "category": "electronics",
       "label": "BQ76942 battery-management board",
-      "geometry_status": "native_cad",
+      "geometry_status": "user_supplied_high_detail",
       "placement_status": "illustrative_mount_spring_flex_omitted",
       "physically_verified": false,
       "default_visible": true,
@@ -1417,39 +1417,39 @@
       "spring_flex_policy": "Ignored for visualization at user direction",
       "cad_bbox_m": [
         [
-          0.05063685244265439,
-          0.1249101733059592,
-          -0.044335625134408474
+          0.05063685367802549,
+          0.12491016966104788,
+          -0.04433561934137594
         ],
         [
-          0.11413686624504132,
-          0.20167121323488696,
-          -0.03179802838712931
+          0.11413686011930549,
+          0.20167121047842457,
+          -0.0317980194645013
         ]
       ],
       "cad_center_m": [
-        0.08238685934384786,
-        0.1632906932704231,
-        -0.03806682676076889
+        0.08238685689866548,
+        0.16329069006973623,
+        -0.03806681940293862
       ],
       "world_bbox_m": [
         [
-          0.05063685244265439,
-          0.006150480882627817,
-          -0.0016711987452405763
+          0.05063685367802549,
+          0.006150473867182114,
+          -0.0016711963475468383
         ],
         [
-          0.11413686624504132,
-          0.018688072685259804,
-          0.07508984237325637
+          0.11413686011930549,
+          0.018688094371111397,
+          0.07508984783890145
         ]
       ],
       "world_center_m": [
-        0.08238685934384786,
-        0.01241927678394381,
-        0.0367093218140079
+        0.08238685689866548,
+        0.012419284119146756,
+        0.036709325745677306
       ],
-      "active_source": "sources/UserRevision/Revised_Phase7.glb",
+      "active_source": "model-sources/power-boards/Knight_EPS_BMS_Final_green.glb",
       "display_info": {
         "name": "BQ76942 battery-management board",
         "model": "BQ76942 battery-management board",
@@ -1463,6 +1463,10 @@
         "fields": [
           "battery_voltage_v"
         ]
+      },
+      "model_upgrade": {
+        "source_sha256": "19157890e571f6dc2b74fff6eea2dc763ac4936c0612e53cda3ce80f8ff53145",
+        "report": "model-upgrades.json"
       }
     },
     "Charger_BMS034A_EVM": {
@@ -1488,7 +1492,7 @@
           -0.027560641989111893
         ]
       ],
-      "triangles": 121190,
+      "triangles": 117816,
       "category": "electronics",
       "label": "Solar power-path controller",
       "geometry_status": "user_supplied_high_detail",
@@ -1556,7 +1560,7 @@
         0.013146046475073402,
         -0.027343894819088752
       ],
-      "active_source": "Final Models_V1/BMS034A_PCB_1_high_detail.glb",
+      "active_source": "model-sources/power-boards/Knight_EPS_MPPT_High_Fidelity_Gerber_v4.glb",
       "display_info": {
         "name": "Solar power-path controller",
         "model": "BQ25798 · BMS034A evaluation board",
@@ -1568,7 +1572,7 @@
         ]
       },
       "model_upgrade": {
-        "source_sha256": "2c23294f940ed7ceec1bd960a267f696e944112c2b3b3710014ab75aa846ff5a",
+        "source_sha256": "ca9d409e9b038669eaef278d4e0ecd4fb3e41a0667d531ff192458be4e378613",
         "report": "model-upgrades.json"
       }
     },

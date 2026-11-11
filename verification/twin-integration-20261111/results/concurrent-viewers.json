@@ -1,0 +1,10 @@
+{
+  "sessions": 9,
+  "concurrentStreams": 9,
+  "allReceivedFanout": true,
+  "remainingAfterThreeClose": 6,
+  "elapsedMs": 1518.4476399999999,
+  "hardwareTraffic": false,
+  "productionTest": false,
+  "streamsAfterCleanup": 0
+}

@@ -1,0 +1,597 @@
+{
+  "name": "visual",
+  "checks": [
+    {
+      "name": "baseline seven-board geometry audit",
+      "pass": true
+    },
+    {
+      "name": "baseline select/highlight/isolate/raycast/visibility MCU_Final",
+      "pass": true
+    },
+    {
+      "name": "baseline select/highlight/isolate/raycast/visibility NerdMiner_Board_LCD",
+      "pass": true
+    },
+    {
+      "name": "baseline select/highlight/isolate/raycast/visibility Mount_Regulator_01_01_Clip",
+      "pass": true
+    },
+    {
+      "name": "baseline select/highlight/isolate/raycast/visibility Mount_Regulator_01_01_Base",
+      "pass": true
+    },
+    {
+      "name": "baseline quality/xray/telemetry/display/camera/resize checks",
+      "pass": true
+    },
+    {
+      "name": "optimized seven-board geometry audit",
+      "pass": true
+    },
+    {
+      "name": "optimized select/highlight/isolate/raycast/visibility MCU_Final",
+      "pass": true
+    },
+    {
+      "name": "optimized select/highlight/isolate/raycast/visibility NerdMiner_Board_LCD",
+      "pass": true
+    },
+    {
+      "name": "optimized select/highlight/isolate/raycast/visibility Mount_Regulator_01_01_Clip",
+      "pass": true
+    },
+    {
+      "name": "optimized select/highlight/isolate/raycast/visibility Mount_Regulator_01_01_Base",
+      "pass": true
+    },
+    {
+      "name": "hidden/resume and LCD age invalidation",
+      "pass": true
+    },
+    {
+      "name": "camera damping continues then sleeps",
+      "pass": true
+    },
+    {
+      "name": "optimized quality/xray/telemetry/display/camera/resize checks",
+      "pass": true
+    }
+  ],
+  "comparisons": [
+    {
+      "name": "assembled",
+      "changedPixelsOver8": 3.781268179173938e-05,
+      "meanChannelDifference": 0.001196310839635447,
+      "maxChannelDifference": 75,
+      "cameraBefore": {
+        "target": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "position": [
+          -0.4733302796399666,
+          0.545482887627757,
+          0.591663244431744
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0037394778667507343,
+        "far": 14.957911467002937,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "position": [
+          -0.4733302796399666,
+          0.545482887627757,
+          0.591663244431744
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0037394778667507343,
+        "far": 14.957911467002937,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    },
+    {
+      "name": "lid-top",
+      "changedPixelsOver8": 3.054101221640489e-05,
+      "meanChannelDifference": 0.0009825237541206129,
+      "maxChannelDifference": 53,
+      "cameraBefore": {
+        "target": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "position": [
+          0,
+          1.319520248747654,
+          0.00012749829735027727
+        ],
+        "up": [
+          0,
+          0,
+          -1
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0037394778667507343,
+        "far": 14.957911467002937,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "position": [
+          0,
+          1.319520248747654,
+          0.00012749829735027727
+        ],
+        "up": [
+          0,
+          0,
+          -1
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0037394778667507343,
+        "far": 14.957911467002937,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    },
+    {
+      "name": "exploded",
+      "changedPixelsOver8": 4.0357766143106456e-05,
+      "meanChannelDifference": 0.0012361838278068644,
+      "maxChannelDifference": 75,
+      "cameraBefore": {
+        "target": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "position": [
+          -0.5794235109527274,
+          0.6568807805061557,
+          0.7242797835726948
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.004534146162520677,
+        "far": 18.136584650082707,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "position": [
+          -0.5794235109527274,
+          0.6568807805061557,
+          0.7242797835726948
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.004534146162520677,
+        "far": 18.136584650082707,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    },
+    {
+      "name": "pcb",
+      "changedPixelsOver8": 4.3993600930773706e-05,
+      "meanChannelDifference": 0.0017665309288345938,
+      "maxChannelDifference": 130,
+      "cameraBefore": {
+        "target": [
+          -0.09899999760091303,
+          0.015607120077016005,
+          0.044000015739070045
+        ],
+        "position": [
+          -0.17704695548862764,
+          0.09755642585911639,
+          0.1415587130987134
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.000572078989318082,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          -0.09899999760091306,
+          0.015607116312967064,
+          0.04400001380505516
+        ],
+        "position": [
+          -0.17704697295639737,
+          0.09755644043622556,
+          0.14155873299941052
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0005720790227347003,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    },
+    {
+      "name": "payload-body",
+      "changedPixelsOver8": 1.8179173938336243e-06,
+      "meanChannelDifference": 5.768857863098701e-05,
+      "maxChannelDifference": 62,
+      "cameraBefore": {
+        "target": [
+          -0.1619500001538545,
+          0.048461093963230666,
+          -0.004880823792201824
+        ],
+        "position": [
+          -0.23938091713127374,
+          0.12976355678952084,
+          0.09190782242957225
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0005020911990895073,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          -0.1619500001538545,
+          0.04846109615782429,
+          -0.004880821082165997
+        ],
+        "position": [
+          -0.23938092485822102,
+          0.12976356709740913,
+          0.09190783479829215
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0005020912491939407,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    },
+    {
+      "name": "fixture",
+      "changedPixelsOver8": 0,
+      "meanChannelDifference": 0,
+      "maxChannelDifference": 0,
+      "cameraBefore": {
+        "target": [
+          -0.06120999902486801,
+          0.0285691636397058,
+          -0.09147378817042431
+        ],
+        "position": [
+          -0.07949230844281296,
+          0.04776558852854802,
+          -0.06862090139799312
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0001,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          -0.06120999902486801,
+          0.0285691636397058,
+          -0.09147378817042431
+        ],
+        "position": [
+          -0.07949230844281299,
+          0.04776558852854801,
+          -0.06862090139799312
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0001,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    },
+    {
+      "name": "payload-acrylic",
+      "changedPixelsOver8": 0,
+      "meanChannelDifference": 4.847779716889665e-07,
+      "maxChannelDifference": 1,
+      "cameraBefore": {
+        "target": [
+          -0.16130000009387732,
+          0.04848609654405993,
+          -0.0049999893970183165
+        ],
+        "position": [
+          -0.2807675561281077,
+          0.0699902566302214,
+          0.030840277413250794
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0005448845099164836,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      },
+      "cameraAfter": {
+        "target": [
+          -0.16130000009387732,
+          0.04848609654405993,
+          -0.0049999893970183165
+        ],
+        "position": [
+          -0.2807675561281077,
+          0.0699902566302214,
+          0.030840277413250794
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "chassisCenter": [
+          0,
+          0.04848609400579205,
+          3.94881785686918e-07
+        ],
+        "aspect": 1.3263888888888888,
+        "zoom": 1,
+        "near": 0.0005448845099164836,
+        "far": 10,
+        "viewport": [
+          955,
+          720
+        ],
+        "canvas": [
+          955,
+          720
+        ],
+        "pixelRatio": 2
+      }
+    }
+  ],
+  "complete": true,
+  "captureMetadataNote": "Projection-offset objects were live references in the capture API and are omitted from this record. Pixel arrays were captured and compared immediately. The fixture now snapshots camera metadata for future runs."
+}

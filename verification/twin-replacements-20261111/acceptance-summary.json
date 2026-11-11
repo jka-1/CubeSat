@@ -1,0 +1,166 @@
+{
+  "browserAssertions": 35,
+  "checks": [
+    {
+      "name": "shadow-only front-sided receiver",
+      "passed": true
+    },
+    {
+      "name": "all payload leaves select the same complete assembly",
+      "passed": true
+    },
+    {
+      "name": "native payload picking selects the entire assembly",
+      "passed": true
+    },
+    {
+      "name": "payload aliases share visibility",
+      "passed": true
+    },
+    {
+      "name": "MCU_Final is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "INA226 is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "Regulator_01 is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "Regulator_02 is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "BMS_BQ76942 is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "Charger_BMS034A_EVM is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "TemperatureSensor is head-on and pickable",
+      "passed": true
+    },
+    {
+      "name": "single click selects without focusing",
+      "passed": true
+    },
+    {
+      "name": "native double click enters focus",
+      "passed": true
+    },
+    {
+      "name": "empty double click does not focus",
+      "passed": true
+    },
+    {
+      "name": "cover PCB focus follows the opened lid",
+      "passed": true
+    },
+    {
+      "name": "battery focus approaches outside and exposes the cell",
+      "passed": true
+    },
+    {
+      "name": "leaving focus restores context",
+      "passed": true
+    },
+    {
+      "name": "reset returns to the isometric direction",
+      "passed": true
+    },
+    {
+      "name": "mobile has no horizontal overflow",
+      "passed": true
+    },
+    {
+      "name": "Charger_BMS034A_EVM deselect returns chassis pivot smoothly and preserves angle/distance",
+      "passed": true
+    },
+    {
+      "name": "Charger_BMS034A_EVM isolated deselect preserves local pivot, geometry and exit control",
+      "passed": true
+    },
+    {
+      "name": "BatteryPack_4x18650 deselect returns chassis pivot smoothly and preserves angle/distance",
+      "passed": true
+    },
+    {
+      "name": "BatteryPack_4x18650 isolated deselect preserves local pivot, geometry and exit control",
+      "passed": true
+    },
+    {
+      "name": "NerdMiner_Heltec_V2 deselect returns chassis pivot smoothly and preserves angle/distance",
+      "passed": true
+    },
+    {
+      "name": "NerdMiner_Heltec_V2 isolated deselect preserves local pivot, geometry and exit control",
+      "passed": true
+    },
+    {
+      "name": "list battery pack isolation and highlighting retain holder and all four cells",
+      "passed": true
+    },
+    {
+      "name": "canvas battery pack selection retains all five members",
+      "passed": true
+    },
+    {
+      "name": "leaving battery isolation restores exact previous visibility",
+      "passed": true
+    },
+    {
+      "name": "battery physical aliases share pack selection and visibility",
+      "passed": true
+    },
+    {
+      "name": "lid opens before reset",
+      "passed": true
+    },
+    {
+      "name": "Reset View closes lid and returns chassis orbit",
+      "passed": true
+    },
+    {
+      "name": "Reset View preserves LCD readings/presentation and the same SSE subscription",
+      "passed": true
+    },
+    {
+      "name": "Reset View restores every component, control and assembled default orbit",
+      "passed": true
+    },
+    {
+      "name": "Charger_BMS034A_EVM telemetry fields preserved",
+      "passed": true
+    },
+    {
+      "name": "BMS_BQ76942 telemetry fields preserved",
+      "passed": true
+    }
+  ],
+  "testTimingNotes": [
+    "The first empty-canvas coordinate struck the chassis; the corrected probe confirms no ray intersection before clicking.",
+    "The initial fixed lid delay was too short on the first Performance transition; the remainder uses animation settlement with a six-second ceiling."
+  ],
+  "geometryAudit": "staged-audit.json",
+  "focusedTests": "32/33 initially passed; the obsolete compression percentage was replaced by exact size and old-package-plus-new-PNG budget assertions. All nine affected asset/model tests then passed. The other 24 tests passed unchanged.",
+  "unrelatedDirtyWorkPreserved": true,
+  "deployed": false,
+  "rgbaFallback": {
+    "complete": true,
+    "boards": [
+      {
+        "id": "BMS_BQ76942",
+        "pickable": true
+      },
+      {
+        "id": "Charger_BMS034A_EVM",
+        "pickable": true
+      }
+    ]
+  }
+}

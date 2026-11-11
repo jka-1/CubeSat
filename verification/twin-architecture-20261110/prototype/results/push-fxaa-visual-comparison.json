@@ -1,0 +1,150 @@
+{
+  "note": "FXAA changes antialiasing; this is not pixel equivalence. Board controls predate corrected artwork shadows; boards do not receive shadows. Assembled/acrylic use corrected shadow reference. CSS-pixel screenshots; drawing buffer remains DPR 2.",
+  "uiRectanglesExcluded": [
+    [
+      20,
+      18,
+      282,
+      48
+    ],
+    [
+      16,
+      68,
+      939,
+      108
+    ],
+    [
+      16,
+      658,
+      939,
+      702
+    ],
+    [
+      16,
+      633,
+      939,
+      650
+    ],
+    [
+      855,
+      16,
+      939,
+      60
+    ],
+    [
+      16,
+      615,
+      517,
+      645
+    ],
+    [
+      16,
+      615,
+      661,
+      645
+    ]
+  ],
+  "comparisons": [
+    {
+      "view": "assembled",
+      "reference": "legacy-compact-lean-acrylic-bounded-ortho-shadow-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 111,
+      "pixelsAbove8": 5929,
+      "fractionPixelsAbove8": 0.010379702071563747,
+      "meanChannelDifference": 0.2206277540173421
+    },
+    {
+      "view": "Regulator_01-top",
+      "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 89,
+      "pixelsAbove8": 9906,
+      "fractionPixelsAbove8": 0.017342103005719426,
+      "meanChannelDifference": 0.34650884991127046
+    },
+    {
+      "view": "Regulator_01-bottom",
+      "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 83,
+      "pixelsAbove8": 2119,
+      "fractionPixelsAbove8": 0.0037096624539793527,
+      "meanChannelDifference": 0.03271704034644524
+    },
+    {
+      "view": "Regulator_01-oblique",
+      "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 95,
+      "pixelsAbove8": 8868,
+      "fractionPixelsAbove8": 0.015524911109905096,
+      "meanChannelDifference": 0.3262431337398381
+    },
+    {
+      "view": "MCU_Final-top",
+      "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 89,
+      "pixelsAbove8": 15401,
+      "fractionPixelsAbove8": 0.026962015787511093,
+      "meanChannelDifference": 0.6327130721688948
+    },
+    {
+      "view": "MCU_Final-bottom",
+      "reference": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 91,
+      "pixelsAbove8": 3765,
+      "fractionPixelsAbove8": 0.006591259622101115,
+      "meanChannelDifference": 0.09423429637501146
+    },
+    {
+      "view": "acrylic",
+      "reference": "legacy-compact-lean-acrylic-bounded-ortho-shadow-certified-cull-region-capture-cheap-prepass",
+      "pixelsCompared": 571211,
+      "maxChannelDifference": 85,
+      "pixelsAbove8": 25635,
+      "fractionPixelsAbove8": 0.04487833742697532,
+      "meanChannelDifference": 0.7556157006780332
+    }
+  ],
+  "browserChecks": [
+    {
+      "name": "component count and logical triangles",
+      "passed": true
+    },
+    {
+      "name": "picking/selection ownership",
+      "passed": true
+    },
+    {
+      "name": "visibility",
+      "passed": true
+    },
+    {
+      "name": "LCD synthetic packet",
+      "passed": true
+    },
+    {
+      "name": "LCD presentation",
+      "passed": true
+    },
+    {
+      "name": "X-ray and Performance switching",
+      "passed": true
+    }
+  ],
+  "dispose": {
+    "renderCountStable": true,
+    "ownership": {
+      "geometries": 0,
+      "materials": 0,
+      "textures": 0,
+      "images": 0
+    },
+    "parts": 0,
+    "modelChildren": 0,
+    "transport": "disconnected"
+  }
+}

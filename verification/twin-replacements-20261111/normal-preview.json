@@ -1,0 +1,10 @@
+{
+  "url": "http://127.0.0.1:8770/site/knight-eps-phase12/viewer/",
+  "quality": "studio",
+  "parts": 95,
+  "selected": null,
+  "modelResponseBytes": 10222122,
+  "hasInstrumentation": false,
+  "hasTestClock": false,
+  "normalDecompression": true
+}

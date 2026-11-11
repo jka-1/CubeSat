@@ -1,0 +1,17 @@
+✔ compressed model delivery reconstructs the complete certified GLB exactly (1050.565485ms)
+✔ coverage delivery accepts gzip or HTTP-decoded bytes and rejects truncation (6.656827ms)
+✔ shipped display package preserves canonical CAD, every expanded attribute and original images (2356.311902ms)
+✔ shipped full-resolution artwork matches every audited coverage byte (804.725247ms)
+✔ all eight PCB assemblies use supplied detailed geometry with no legacy mesh (4.405395ms)
+✔ all existing component identities and board anchor transforms survive (50.335247ms)
+✔ substrate support planes remain seated, without scaling electronics (2.158618ms)
+✔ compiler packs only referenced geometry and valid binary ranges (1.827975ms)
+✔ new power boards preserve every supplied position, UV, triangle, material and embedded image (650.479147ms)
+ℹ tests 9
+ℹ suites 0
+ℹ pass 9
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 4993.622536

@@ -1,0 +1,12 @@
+{
+  "sourceSHA256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47",
+  "outputSHA256": "3f8e298472678037c112adff3c713a30265679f5563d857eb2692477b81c613a",
+  "bytes": 39454508,
+  "sourceTriangles": 874229,
+  "outputTriangles": 874229,
+  "components": 95,
+  "meshes": 55,
+  "geometryBytes": 39176248,
+  "physicalGeometryPolicy": "All triangles retained; rigid local baking matches existing consolidation. No quantization or decimation.",
+  "images": "Original image payloads and material definitions retained. No image decoding."
+}

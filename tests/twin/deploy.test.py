@@ -1,5 +1,6 @@
 """Exercise deployment and rollback entirely in temporary files, without a server."""
 import os
+import re
 from pathlib import Path
 import shutil
 import subprocess
@@ -7,8 +8,9 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-BASE = '80c6fa3b6d706fa93dc1a58ff545757918b763ea'
-FILES = subprocess.check_output(['git', 'diff', '--name-only', BASE, 'HEAD', '--', 'site'], cwd=ROOT, text=True).splitlines()
+BASE = '13b5de039c86ce263fe4dd9e31b19be193752de6'
+MANIFEST = re.search(r'files=\(\n(.*?)\n\)', (ROOT / 'scripts/deploy-detailed-twin.sh').read_text(), re.S).group(1).split()
+FILES = ['site/' + name for name in MANIFEST]
 
 
 class DeploymentTests(unittest.TestCase):
@@ -30,7 +32,7 @@ class DeploymentTests(unittest.TestCase):
                 self.original[relative] = result.stdout
         (self.root / 'health.json').write_text('{"ok":true}')
         (self.root / 'server.js').write_text('// unchanged backend fixture\n')
-        self.environment = dict(os.environ, SITE_ROOT=str(self.site), BACKUP_ROOT=str(self.root / 'backups'),
+        self.environment = dict(os.environ, BASE_REVISION=BASE, SITE_ROOT=str(self.site), BACKUP_ROOT=str(self.root / 'backups'),
                                 BRIDGE_FILE=str(self.root / 'server.js'), HEALTH_URL=(self.root / 'health.json').as_uri(),
                                 SITE_CHECK_URL=(self.site / 'knight-eps-phase12/viewer/index.html').as_uri())
         if shutil.which('sha256sum') is None:

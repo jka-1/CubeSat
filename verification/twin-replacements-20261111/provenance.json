@@ -1,0 +1,28 @@
+{
+  "finishedUTC": "2026-11-11T19:31:01.932044+00:00",
+  "files": {
+    "scripts/build-detailed-twin.mjs": "d8e3778b3b4eb06942a483f3425dd602be5d051bdce89afae9e08b2c193a7561",
+    "scripts/twin-display/compile-display.mjs": "6731a01f689ecff85fd80cc9843e5ed7349a4284dbe7cd74a39e63ee3cf9ec45",
+    "scripts/twin-display/build-artwork.py": "628b3238bc9c35f5ffb68866e984c970133ef76aa0aa84159190aebc6258162e",
+    "site/knight-eps-phase12/viewer/main.mjs": "d2e9302d2e3fc86bc4d1f5cefb6ba782e4345247dba37d38d2338f4a1ded659a",
+    "site/knight-eps-phase12/viewer/inspection.mjs": "497844a4d91968ad894739ac55f077e64349c372a54c6432273b868a854232bd",
+    "site/knight-eps-phase12/viewer/index.html": "21c4cf051e891b05d1f2078382b909c56e8aa7d2141e588131f650b37c271b25",
+    "site/knight-eps-phase12/viewer/rendering/model-loader.mjs": "774afe7cce75e6db4a86448c2af1b0a06d9a31fe1d7a12b6008cdca211ee1abf",
+    "site/knight-eps-phase12/docs/rendering.md": "06762e929286cf61d5ae63110985daca537572a1172a65c698bb960478dc5c21",
+    "site/knight-eps-phase12/docs/component_manifest.json": "f7b4907684564ee74a0aba594123c5f23f62a5248b7bfc31ca9741a9b4500f2e",
+    "site/knight-eps-phase12/docs/model-upgrades.json": "6e2ae91237f144c3d1b2f3c9af5af5a507cefdf97a6405aa7a2e8475389a3e0a",
+    "site/knight-eps-phase12/models/KnightEPS_Detailed.glb": "f1ed146e43c7dd3291beed9599d9a4f42f3e54b726dde8600ad978be8ad649c4",
+    "site/knight-eps-phase12/models/display/provenance.json": "e238a6ed3dbcc5c10ba4a6ee6ef0e07d8f3ea003e3914475d970db9a27af7b29",
+    "tests/twin/models.test.mjs": "6a2cfcd92fa1aa926032fdff80cc4cef518f84cbcc576bf2d76f67a2ce0c3f8c",
+    "tests/twin/inspection.test.mjs": "29fbd26fc1c6e7d3587702dfa9c73a88b7668003ca7e834c251b65d30794b1fd",
+    "tests/twin/display-assets.test.mjs": "d2803bd226548663dc269fb77802efe9bf7c023258dab8ed26199535d64ca7f5",
+    "tests/twin/verify.mjs": "6ea313a945702f05aa1e76228ef6a521761df09340830911f18658382074f825",
+    "verification/twin-integration-20261111/test-browser.mjs": "72f66b767c9929ecdcaf0897620eb75f9ba813d9e1a192d41a6a6d94ada3d794",
+    "verification/twin-integration-20261111/loading-check.mjs": "5e4c33b2dd3e04d3a71d3e7172d6d1ec274e38eb3e0b834eb302acb4f5136e56"
+  },
+  "sourceProvenance": "source-provenance.json",
+  "geometryAudit": "staged-audit.json",
+  "acceptance": "acceptance-summary.json",
+  "deployed": false,
+  "unrelatedDirtyWorkPreserved": true
+}

@@ -1,0 +1,154 @@
+{
+  "depth": "standard",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "dpr": 2,
+  "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+  "timerSupported": true,
+  "results": [
+    {
+      "label": "performance orbit",
+      "viewport": [
+        947,
+        720
+      ],
+      "buffer": [
+        947,
+        720
+      ],
+      "intervalMs": {
+        "median": 33,
+        "p95": 50.20000000000073,
+        "samples": 119
+      },
+      "cpuFrameMs": {
+        "median": 5.5,
+        "p95": 6.700000002980232,
+        "samples": 120
+      },
+      "cpuAssemblyMs": {
+        "median": 0.3999999910593033,
+        "p95": 0.5,
+        "samples": 120
+      },
+      "cpuRenderMs": {
+        "median": 5.100000008940697,
+        "p95": 6.200000002980232,
+        "samples": 120
+      },
+      "gpuRenderMs": {
+        "median": 23.469082,
+        "p95": 24.520666,
+        "samples": 29
+      },
+      "drawCalls": {
+        "median": 347,
+        "p95": 347,
+        "samples": 120
+      },
+      "triangles": {
+        "median": 877691,
+        "p95": 877691,
+        "samples": 120
+      }
+    },
+    {
+      "label": "studio orbit DPR 1 cached shadows half transmission",
+      "viewport": [
+        947,
+        720
+      ],
+      "buffer": [
+        947,
+        720
+      ],
+      "intervalMs": {
+        "median": 33.29999999999927,
+        "p95": 50,
+        "samples": 119
+      },
+      "cpuFrameMs": {
+        "median": 19,
+        "p95": 21.5,
+        "samples": 120
+      },
+      "cpuAssemblyMs": {
+        "median": 0.20000000298023224,
+        "p95": 0.5,
+        "samples": 120
+      },
+      "cpuRenderMs": {
+        "median": 18.799999997019768,
+        "p95": 21.099999994039536,
+        "samples": 120
+      },
+      "gpuRenderMs": {
+        "median": 21.869249,
+        "p95": 23.234583,
+        "samples": 29
+      },
+      "drawCalls": {
+        "median": 667,
+        "p95": 667,
+        "samples": 120
+      },
+      "triangles": {
+        "median": 1751896,
+        "p95": 1751896,
+        "samples": 120
+      }
+    },
+    {
+      "label": "performance orbit repeat",
+      "viewport": [
+        947,
+        720
+      ],
+      "buffer": [
+        947,
+        720
+      ],
+      "intervalMs": {
+        "median": 17.299999999999272,
+        "p95": 34.70000000000073,
+        "samples": 119
+      },
+      "cpuFrameMs": {
+        "median": 4.299999997019768,
+        "p95": 5.899999991059303,
+        "samples": 120
+      },
+      "cpuAssemblyMs": {
+        "median": 0.29999999701976776,
+        "p95": 0.699999988079071,
+        "samples": 120
+      },
+      "cpuRenderMs": {
+        "median": 4.0999999940395355,
+        "p95": 5.4000000059604645,
+        "samples": 120
+      },
+      "gpuRenderMs": {
+        "median": 4.889584,
+        "p95": 17.628499,
+        "samples": 29
+      },
+      "drawCalls": {
+        "median": 347,
+        "p95": 347,
+        "samples": 120
+      },
+      "triangles": {
+        "median": 877691,
+        "p95": 877691,
+        "samples": 120
+      }
+    }
+  ],
+  "scene": {
+    "meshCount": 333,
+    "materials": 333,
+    "geometries": 260,
+    "parts": 95
+  },
+  "complete": true
+}

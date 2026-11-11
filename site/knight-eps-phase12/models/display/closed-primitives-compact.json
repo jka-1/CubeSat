@@ -1,0 +1,3053 @@
+{
+  "displaySHA256": "9af20a55ed5be10a94719141355664715143873f3866e4b19a8085ec4925d4ec",
+  "policy": "exact coordinate equality; two opposed incidents per edge; positive signed volume for every edge-connected component; opaque double-sided only",
+  "primitives": [
+    {
+      "mesh": 0,
+      "primitive": 0,
+      "material": 0,
+      "triangles": 1276,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 1,
+      "primitive": 0,
+      "material": 4,
+      "triangles": 12320,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 2,
+      "primitive": 0,
+      "material": 5,
+      "triangles": 394,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 388,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 5.986762210721494e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 2,
+      "primitive": 1,
+      "material": 6,
+      "triangles": 394,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 388,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": -3.586948402068559e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 3,
+      "primitive": 0,
+      "material": 7,
+      "triangles": 7140,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 3,
+      "primitive": 1,
+      "material": 8,
+      "triangles": 6872,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          20616
+        ]
+      ],
+      "closedTriangles": 6872,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 53,
+      "minimumSignedVolume": 5.079165822124239e-12,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 2,
+      "material": 9,
+      "triangles": 48,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          144
+        ]
+      ],
+      "closedTriangles": 48,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 8.883773047275121e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 3,
+      "material": 10,
+      "triangles": 3972,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          2388
+        ],
+        [
+          3066,
+          1728
+        ],
+        [
+          9942,
+          1296
+        ]
+      ],
+      "closedTriangles": 1804,
+      "badEdges": 146,
+      "degenerate": false,
+      "connectedComponents": 146,
+      "minimumSignedVolume": -2.1334433398762228e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 3,
+      "primitive": 4,
+      "material": 11,
+      "triangles": 712,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2136
+        ]
+      ],
+      "closedTriangles": 712,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 58,
+      "minimumSignedVolume": 1.0429143088733933e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 5,
+      "material": 12,
+      "triangles": 768,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2304
+        ]
+      ],
+      "closedTriangles": 768,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 6.320036237709448e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 6,
+      "material": 13,
+      "triangles": 2800,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          8400
+        ]
+      ],
+      "closedTriangles": 2800,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 4.256980066298813e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 7,
+      "material": 14,
+      "triangles": 24,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          72
+        ]
+      ],
+      "closedTriangles": 24,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 4.233378954302543e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 8,
+      "material": 15,
+      "triangles": 2244,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          6732
+        ]
+      ],
+      "closedTriangles": 2244,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.0241110576265897e-06,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 9,
+      "material": 16,
+      "triangles": 420,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          540
+        ]
+      ],
+      "closedTriangles": 180,
+      "badEdges": 64,
+      "degenerate": false,
+      "connectedComponents": 13,
+      "minimumSignedVolume": -4.838194460847517e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 3,
+      "primitive": 10,
+      "material": 17,
+      "triangles": 336,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 128,
+      "degenerate": false,
+      "connectedComponents": 8,
+      "minimumSignedVolume": 6.350069128522118e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 3,
+      "primitive": 11,
+      "material": 18,
+      "triangles": 1580,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          4740
+        ]
+      ],
+      "closedTriangles": 1580,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 2.260085475395448e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 12,
+      "material": 19,
+      "triangles": 32,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 64,
+      "degenerate": false,
+      "connectedComponents": 16,
+      "minimumSignedVolume": -6.126431995262551e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 3,
+      "primitive": 13,
+      "material": 20,
+      "triangles": 1880,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          5640
+        ]
+      ],
+      "closedTriangles": 1880,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 5.9496835602824e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 14,
+      "material": 21,
+      "triangles": 720,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2160
+        ]
+      ],
+      "closedTriangles": 720,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 2.1129589713017938e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 15,
+      "material": 22,
+      "triangles": 156,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          468
+        ]
+      ],
+      "closedTriangles": 156,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 4.850432009833674e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 16,
+      "material": 23,
+      "triangles": 648,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1944
+        ]
+      ],
+      "closedTriangles": 648,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 5.207180754151404e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 17,
+      "material": 24,
+      "triangles": 468,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1404
+        ]
+      ],
+      "closedTriangles": 468,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.576982374709783e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 18,
+      "material": 25,
+      "triangles": 348,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1044
+        ]
+      ],
+      "closedTriangles": 348,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 3.656253626692686e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 3,
+      "primitive": 19,
+      "material": 26,
+      "triangles": 44,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 18,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.5790513906894763e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 3,
+      "primitive": 20,
+      "material": 27,
+      "triangles": 36,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          108
+        ]
+      ],
+      "closedTriangles": 36,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 7.834198391968755e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 0,
+      "material": 11,
+      "triangles": 1320,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          3960
+        ]
+      ],
+      "closedTriangles": 1320,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 110,
+      "minimumSignedVolume": 2.5120808395710713e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 1,
+      "material": 10,
+      "triangles": 12741,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          72
+        ],
+        [
+          1350,
+          1008
+        ],
+        [
+          4275,
+          8724
+        ],
+        [
+          35559,
+          2664
+        ]
+      ],
+      "closedTriangles": 4156,
+      "badEdges": 1105,
+      "degenerate": true,
+      "connectedComponents": 216,
+      "minimumSignedVolume": -4.452655232208561e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 2,
+      "material": 30,
+      "triangles": 2464,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 374,
+      "degenerate": false,
+      "connectedComponents": 11,
+      "minimumSignedVolume": 1.040817871628984e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 3,
+      "material": 31,
+      "triangles": 9581,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 1153,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 2.2927338221286205e-07,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 4,
+      "material": 32,
+      "triangles": 2684,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 704,
+      "degenerate": false,
+      "connectedComponents": 11,
+      "minimumSignedVolume": 2.1749936933481814e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 5,
+      "material": 33,
+      "triangles": 446,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1338
+        ]
+      ],
+      "closedTriangles": 446,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 1.463449092484308e-13,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 6,
+      "material": 8,
+      "triangles": 9040,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          26910
+        ]
+      ],
+      "closedTriangles": 8970,
+      "badEdges": 28,
+      "degenerate": false,
+      "connectedComponents": 66,
+      "minimumSignedVolume": -4.703352230698753e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 7,
+      "material": 35,
+      "triangles": 1424,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          4272
+        ]
+      ],
+      "closedTriangles": 1424,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 29,
+      "minimumSignedVolume": 7.557505291842537e-12,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 8,
+      "material": 36,
+      "triangles": 2076,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          6228
+        ]
+      ],
+      "closedTriangles": 2076,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 3.3487582877626116e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 9,
+      "material": 14,
+      "triangles": 780,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2340
+        ]
+      ],
+      "closedTriangles": 780,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 65,
+      "minimumSignedVolume": 4.233340084066775e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 10,
+      "material": 20,
+      "triangles": 13244,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          39732
+        ]
+      ],
+      "closedTriangles": 13244,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 43,
+      "minimumSignedVolume": 2.048490982727005e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 11,
+      "material": 24,
+      "triangles": 15444,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          46332
+        ]
+      ],
+      "closedTriangles": 15444,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 33,
+      "minimumSignedVolume": 4.57696983052669e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 12,
+      "material": 23,
+      "triangles": 21384,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          64152
+        ]
+      ],
+      "closedTriangles": 21384,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 33,
+      "minimumSignedVolume": 5.2071505341356916e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 13,
+      "material": 41,
+      "triangles": 1104,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          3312
+        ]
+      ],
+      "closedTriangles": 1104,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.536205733235559e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 14,
+      "material": 42,
+      "triangles": 144,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          432
+        ]
+      ],
+      "closedTriangles": 144,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.3637278816132328e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 15,
+      "material": 43,
+      "triangles": 288,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          864
+        ]
+      ],
+      "closedTriangles": 288,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.3637272072399791e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 16,
+      "material": 22,
+      "triangles": 576,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1728
+        ]
+      ],
+      "closedTriangles": 576,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 1.3637278295459124e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 17,
+      "material": 45,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.1057694558268084e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 18,
+      "material": 9,
+      "triangles": 188,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          564
+        ]
+      ],
+      "closedTriangles": 188,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 2.4151868951060732e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 19,
+      "material": 47,
+      "triangles": 48,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          144
+        ]
+      ],
+      "closedTriangles": 48,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 2.466105400824969e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 20,
+      "material": 18,
+      "triangles": 1504,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          4512
+        ]
+      ],
+      "closedTriangles": 1504,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 6.447453510097358e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 21,
+      "material": 49,
+      "triangles": 141,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 45,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": -4.843655260361484e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 22,
+      "material": 50,
+      "triangles": 35,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 45,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 1.6424923953635209e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 23,
+      "material": 51,
+      "triangles": 944,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2832
+        ]
+      ],
+      "closedTriangles": 944,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 20,
+      "minimumSignedVolume": 2.3999970823158204e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 24,
+      "material": 52,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.6600851949924526e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 25,
+      "material": 53,
+      "triangles": 72,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          216
+        ]
+      ],
+      "closedTriangles": 72,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 4.185750733508611e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 4,
+      "primitive": 26,
+      "material": 54,
+      "triangles": 352,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 16,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": -4.386439144520219e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 27,
+      "material": 55,
+      "triangles": 4,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 8,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.1275037407692517e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 28,
+      "material": 56,
+      "triangles": 68,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 9.399351647281883e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 29,
+      "material": 57,
+      "triangles": 900,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 96,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 3.2251568669653436e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 30,
+      "material": 17,
+      "triangles": 168,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 64,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 3.3898468820402133e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 4,
+      "primitive": 31,
+      "material": 59,
+      "triangles": 18624,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          55872
+        ]
+      ],
+      "closedTriangles": 18624,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.2140822268295781e-05,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 5,
+      "primitive": 0,
+      "material": 60,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 5,
+      "primitive": 1,
+      "material": 61,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 6,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 1596,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 7,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 1596,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 8,
+      "primitive": 0,
+      "material": 79,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 9,
+      "primitive": 0,
+      "material": 80,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 10,
+      "primitive": 0,
+      "material": 64,
+      "triangles": 7304,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 2790,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.512812669060782e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 1,
+      "material": 65,
+      "triangles": 3584,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          10752
+        ]
+      ],
+      "closedTriangles": 3584,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 14,
+      "minimumSignedVolume": 5.1620695809434195e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 10,
+      "primitive": 2,
+      "material": 66,
+      "triangles": 15416,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          1608
+        ],
+        [
+          3972,
+          2052
+        ]
+      ],
+      "closedTriangles": 1220,
+      "badEdges": 1530,
+      "degenerate": false,
+      "connectedComponents": 23,
+      "minimumSignedVolume": 5.672259885279876e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 3,
+      "material": 67,
+      "triangles": 3720,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          11160
+        ]
+      ],
+      "closedTriangles": 3720,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.208978427976452e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 10,
+      "primitive": 4,
+      "material": 68,
+      "triangles": 144,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 32,
+      "degenerate": false,
+      "connectedComponents": 8,
+      "minimumSignedVolume": 1.7599604594397042e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 5,
+      "material": 69,
+      "triangles": 148,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 32,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 5.5967535325288415e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 6,
+      "material": 70,
+      "triangles": 456,
+      "eligible": false,
+      "closedRanges": [
+        [
+          552,
+          132
+        ],
+        [
+          1236,
+          132
+        ]
+      ],
+      "closedTriangles": 88,
+      "badEdges": 268,
+      "degenerate": false,
+      "connectedComponents": 18,
+      "minimumSignedVolume": -1.2970003938903308e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 7,
+      "material": 71,
+      "triangles": 1612,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 268,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 5.833288863278588e-07,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 8,
+      "material": 72,
+      "triangles": 3576,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 48,
+      "degenerate": false,
+      "connectedComponents": 12,
+      "minimumSignedVolume": -2.0160027112215145e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 9,
+      "material": 73,
+      "triangles": 96,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 32,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 5.603193176927847e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 10,
+      "material": 74,
+      "triangles": 48,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 16,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 7.904414497554453e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 10,
+      "primitive": 11,
+      "material": 75,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 5.898984630890177e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 10,
+      "primitive": 12,
+      "material": 76,
+      "triangles": 1264,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          3792
+        ]
+      ],
+      "closedTriangles": 1264,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 12,
+      "minimumSignedVolume": 2.45904710503383e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 10,
+      "primitive": 13,
+      "material": 77,
+      "triangles": 88,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          264
+        ]
+      ],
+      "closedTriangles": 88,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 5.586336743238156e-14,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 10,
+      "primitive": 14,
+      "material": 78,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.0480581781652084e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 11,
+      "primitive": 0,
+      "material": 81,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 12,
+      "primitive": 0,
+      "material": 105,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 13,
+      "primitive": 0,
+      "material": 106,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 14,
+      "primitive": 0,
+      "material": 64,
+      "triangles": 50984,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 19422,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.8368973328572567e-05,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 1,
+      "material": 65,
+      "triangles": 25088,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          75264
+        ]
+      ],
+      "closedTriangles": 25088,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 98,
+      "minimumSignedVolume": 5.1619040974662786e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 14,
+      "primitive": 2,
+      "material": 66,
+      "triangles": 175128,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 121596,
+      "degenerate": false,
+      "connectedComponents": 180,
+      "minimumSignedVolume": 4.361725137383052e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 3,
+      "material": 67,
+      "triangles": 25896,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          77688
+        ]
+      ],
+      "closedTriangles": 25896,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 4.91976742524287e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 14,
+      "primitive": 4,
+      "material": 72,
+      "triangles": 10728,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 144,
+      "degenerate": false,
+      "connectedComponents": 36,
+      "minimumSignedVolume": -1.0258268484084226e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 5,
+      "material": 74,
+      "triangles": 168,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 56,
+      "degenerate": false,
+      "connectedComponents": 7,
+      "minimumSignedVolume": 7.904334560247179e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 6,
+      "material": 88,
+      "triangles": 1480,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          4440
+        ]
+      ],
+      "closedTriangles": 1480,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 2.3689929507300962e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 14,
+      "primitive": 7,
+      "material": 89,
+      "triangles": 7178,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          2988
+        ],
+        [
+          2994,
+          18540
+        ]
+      ],
+      "closedTriangles": 7176,
+      "badEdges": 4,
+      "degenerate": false,
+      "connectedComponents": 79,
+      "minimumSignedVolume": 1.6199774948815135e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 8,
+      "material": 73,
+      "triangles": 264,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 88,
+      "degenerate": false,
+      "connectedComponents": 11,
+      "minimumSignedVolume": 5.603179076258543e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 9,
+      "material": 91,
+      "triangles": 2624,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          7872
+        ]
+      ],
+      "closedTriangles": 2624,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 10,
+      "minimumSignedVolume": 4.2048652568755614e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 14,
+      "primitive": 10,
+      "material": 92,
+      "triangles": 4048,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          11688
+        ]
+      ],
+      "closedTriangles": 3896,
+      "badEdges": 32,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 2.7983766956320764e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 11,
+      "material": 93,
+      "triangles": 3024,
+      "eligible": false,
+      "closedRanges": [
+        [
+          36,
+          594
+        ],
+        [
+          1188,
+          432
+        ],
+        [
+          3210,
+          24
+        ],
+        [
+          3711,
+          126
+        ],
+        [
+          4314,
+          150
+        ],
+        [
+          4572,
+          594
+        ],
+        [
+          5724,
+          432
+        ],
+        [
+          7746,
+          24
+        ],
+        [
+          8247,
+          126
+        ],
+        [
+          8850,
+          150
+        ]
+      ],
+      "closedTriangles": 884,
+      "badEdges": 224,
+      "degenerate": false,
+      "connectedComponents": 30,
+      "minimumSignedVolume": 2.2825113662295208e-14,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 12,
+      "material": 94,
+      "triangles": 6484,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 390,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 2.59904979725834e-07,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 13,
+      "material": 95,
+      "triangles": 520,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1560
+        ]
+      ],
+      "closedTriangles": 520,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.4771342349153533e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 14,
+      "primitive": 14,
+      "material": 68,
+      "triangles": 432,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 96,
+      "degenerate": false,
+      "connectedComponents": 24,
+      "minimumSignedVolume": 1.7968560580675131e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 15,
+      "material": 69,
+      "triangles": 296,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 64,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 5.596755698471138e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 16,
+      "material": 98,
+      "triangles": 592,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1776
+        ]
+      ],
+      "closedTriangles": 592,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.931535599244153e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 14,
+      "primitive": 17,
+      "material": 99,
+      "triangles": 14862,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          33168
+        ],
+        [
+          40248,
+          4338
+        ]
+      ],
+      "closedTriangles": 12502,
+      "badEdges": 3,
+      "degenerate": false,
+      "connectedComponents": 79,
+      "minimumSignedVolume": 5.3227034255093416e-14,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 18,
+      "material": 100,
+      "triangles": 26,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 28,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": -5.745117248376865e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 19,
+      "material": 101,
+      "triangles": 4160,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 32,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": -1.496480151878191e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 20,
+      "material": 102,
+      "triangles": 780,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": -6.51816919017302e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 21,
+      "material": 103,
+      "triangles": 76,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 2.8706539222566028e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 14,
+      "primitive": 22,
+      "material": 104,
+      "triangles": 2240,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          6720
+        ]
+      ],
+      "closedTriangles": 2240,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 28,
+      "minimumSignedVolume": 1.2504597836416205e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 15,
+      "primitive": 0,
+      "material": 107,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 16,
+      "primitive": 0,
+      "material": 108,
+      "triangles": 240,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 17,
+      "primitive": 0,
+      "material": 108,
+      "triangles": 994,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 18,
+      "primitive": 0,
+      "material": 129,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 19,
+      "primitive": 0,
+      "material": 130,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 20,
+      "primitive": 0,
+      "material": 64,
+      "triangles": 5224,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 1998,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.0034391497843406e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 1,
+      "material": 65,
+      "triangles": 2560,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          7680
+        ]
+      ],
+      "closedTriangles": 2560,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 10,
+      "minimumSignedVolume": 3.6719161409404556e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 2,
+      "material": 66,
+      "triangles": 20312,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 14565,
+      "degenerate": false,
+      "connectedComponents": 24,
+      "minimumSignedVolume": 1.1983362596521168e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 3,
+      "material": 67,
+      "triangles": 2664,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          7992
+        ]
+      ],
+      "closedTriangles": 2664,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.1313142599070813e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 4,
+      "material": 72,
+      "triangles": 6364,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 88,
+      "degenerate": false,
+      "connectedComponents": 22,
+      "minimumSignedVolume": -1.175818389465804e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 5,
+      "material": 74,
+      "triangles": 144,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 48,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 7.904356524865864e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 6,
+      "material": 88,
+      "triangles": 8608,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          540
+        ]
+      ],
+      "closedTriangles": 180,
+      "badEdges": 288,
+      "degenerate": false,
+      "connectedComponents": 9,
+      "minimumSignedVolume": 3.1891347014203367e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 7,
+      "material": 89,
+      "triangles": 112,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          336
+        ]
+      ],
+      "closedTriangles": 112,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 4,
+      "minimumSignedVolume": 4.645706805440514e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 8,
+      "material": 73,
+      "triangles": 120,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 40,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 5.603196373222233e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 9,
+      "material": 94,
+      "triangles": 400,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1200
+        ]
+      ],
+      "closedTriangles": 400,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.863426745549566e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 10,
+      "material": 119,
+      "triangles": 24,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          72
+        ]
+      ],
+      "closedTriangles": 24,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.2499994505108489e-12,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 11,
+      "material": 120,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 8.75000721309176e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 12,
+      "material": 77,
+      "triangles": 176,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          528
+        ]
+      ],
+      "closedTriangles": 176,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 6.660294346771618e-13,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 13,
+      "material": 122,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.969212793709679e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 14,
+      "material": 76,
+      "triangles": 280,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          840
+        ]
+      ],
+      "closedTriangles": 280,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.9620678982895532e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 15,
+      "material": 124,
+      "triangles": 168,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          504
+        ]
+      ],
+      "closedTriangles": 168,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.202258202994637e-07,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 16,
+      "material": 102,
+      "triangles": 1016,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          3048
+        ]
+      ],
+      "closedTriangles": 1016,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 8,
+      "minimumSignedVolume": 1.8891286456275142e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 20,
+      "primitive": 17,
+      "material": 126,
+      "triangles": 24,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 28,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 4.8889150513385836e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 18,
+      "material": 91,
+      "triangles": 5492,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 188,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 3.1891347014203367e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 20,
+      "primitive": 19,
+      "material": 92,
+      "triangles": 2912,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 128,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 1.4956905313187242e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 21,
+      "primitive": 0,
+      "material": 131,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 22,
+      "primitive": 0,
+      "material": 132,
+      "triangles": 92,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 23,
+      "primitive": 0,
+      "material": 132,
+      "triangles": 92,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 24,
+      "primitive": 0,
+      "material": 144,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 25,
+      "primitive": 0,
+      "material": 145,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 26,
+      "primitive": 0,
+      "material": 64,
+      "triangles": 1584,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 612,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 2.8318167126606342e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 26,
+      "primitive": 1,
+      "material": 65,
+      "triangles": 768,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2304
+        ]
+      ],
+      "closedTriangles": 768,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 1.6076071252988608e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 26,
+      "primitive": 2,
+      "material": 66,
+      "triangles": 9480,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 6456,
+      "degenerate": false,
+      "connectedComponents": 7,
+      "minimumSignedVolume": 4.4460238236172385e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 26,
+      "primitive": 3,
+      "material": 67,
+      "triangles": 816,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2448
+        ]
+      ],
+      "closedTriangles": 816,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 7.587968057028069e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 26,
+      "primitive": 4,
+      "material": 68,
+      "triangles": 108,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 1.634726767910969e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 26,
+      "primitive": 5,
+      "material": 69,
+      "triangles": 112,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.197563267833763e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 26,
+      "primitive": 6,
+      "material": 77,
+      "triangles": 84,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          252
+        ]
+      ],
+      "closedTriangles": 84,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.6034494599386825e-14,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 26,
+      "primitive": 7,
+      "material": 122,
+      "triangles": 52,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          156
+        ]
+      ],
+      "closedTriangles": 52,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 5.525680987138908e-10,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 26,
+      "primitive": 8,
+      "material": 76,
+      "triangles": 468,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1404
+        ]
+      ],
+      "closedTriangles": 468,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 7,
+      "minimumSignedVolume": 6.59669078562971e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 26,
+      "primitive": 9,
+      "material": 143,
+      "triangles": 32,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          96
+        ]
+      ],
+      "closedTriangles": 32,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 2.565316724402311e-12,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 27,
+      "primitive": 0,
+      "material": 146,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 28,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 332,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 29,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 332,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 30,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 332,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 31,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 332,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 32,
+      "primitive": 0,
+      "material": 62,
+      "triangles": 868,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 33,
+      "primitive": 0,
+      "material": 165,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 34,
+      "primitive": 0,
+      "material": 166,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 35,
+      "primitive": 0,
+      "material": 64,
+      "triangles": 2624,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 1008,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.6150412433882954e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 1,
+      "material": 65,
+      "triangles": 1280,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          3840
+        ]
+      ],
+      "closedTriangles": 1280,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 5,
+      "minimumSignedVolume": 5.161869154717472e-11,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 35,
+      "primitive": 2,
+      "material": 66,
+      "triangles": 9016,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 6069,
+      "degenerate": false,
+      "connectedComponents": 9,
+      "minimumSignedVolume": 9.805751601304365e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 3,
+      "material": 67,
+      "triangles": 1344,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          4032
+        ]
+      ],
+      "closedTriangles": 1344,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": 4.326737322717462e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 35,
+      "primitive": 4,
+      "material": 68,
+      "triangles": 108,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 6,
+      "minimumSignedVolume": 1.634727679768058e-09,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 5,
+      "material": 69,
+      "triangles": 112,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 24,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.1975674756678745e-08,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 6,
+      "material": 72,
+      "triangles": 404,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 8,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": -1.188206270042024e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 7,
+      "material": 73,
+      "triangles": 24,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 8,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 8.761562354439198e-11,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 8,
+      "material": 160,
+      "triangles": 12,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          36
+        ]
+      ],
+      "closedTriangles": 12,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.015130663987794e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 35,
+      "primitive": 9,
+      "material": 120,
+      "triangles": 20,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          60
+        ]
+      ],
+      "closedTriangles": 20,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 6.147672300557225e-09,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 35,
+      "primitive": 10,
+      "material": 162,
+      "triangles": 6,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 12,
+      "degenerate": false,
+      "connectedComponents": 3,
+      "minimumSignedVolume": 3.569994775233564e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 11,
+      "material": 163,
+      "triangles": 20,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 8,
+      "degenerate": false,
+      "connectedComponents": 2,
+      "minimumSignedVolume": -3.5249955982787134e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 35,
+      "primitive": 12,
+      "material": 104,
+      "triangles": 10,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 4,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": -4.347494088458442e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 36,
+      "primitive": 0,
+      "material": 167,
+      "triangles": 2,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 37,
+      "primitive": 0,
+      "material": 168,
+      "triangles": 53364,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          160092
+        ]
+      ],
+      "closedTriangles": 53364,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 9,
+      "minimumSignedVolume": 4.3932408179271563e-13,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 37,
+      "primitive": 1,
+      "material": 169,
+      "triangles": 37151,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          15588
+        ],
+        [
+          57753,
+          15744
+        ],
+        [
+          106389,
+          5064
+        ]
+      ],
+      "closedTriangles": 12132,
+      "badEdges": 1195,
+      "degenerate": true,
+      "connectedComponents": 22,
+      "minimumSignedVolume": 2.753386441998711e-12,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 37,
+      "primitive": 2,
+      "material": 170,
+      "triangles": 43568,
+      "eligible": false,
+      "closedRanges": [
+        [
+          0,
+          27144
+        ],
+        [
+          103992,
+          26712
+        ]
+      ],
+      "closedTriangles": 17952,
+      "badEdges": 18,
+      "degenerate": false,
+      "connectedComponents": 29,
+      "minimumSignedVolume": 2.715219368650203e-10,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 37,
+      "primitive": 3,
+      "material": 171,
+      "triangles": 3066,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 12,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.5525985030975016e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 37,
+      "primitive": 4,
+      "material": 172,
+      "triangles": 2,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 4,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.7081193016057536e-06,
+      "reason": "uncertified topology or winding"
+    },
+    {
+      "mesh": 38,
+      "primitive": 0,
+      "material": 173,
+      "triangles": 1728,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 39,
+      "primitive": 0,
+      "material": 173,
+      "triangles": 1708,
+      "eligible": false,
+      "reason": "already one-sided or nonopaque"
+    },
+    {
+      "mesh": 40,
+      "primitive": 0,
+      "material": 174,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 7.633232733986834e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 41,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.0948275731417095e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 42,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.911737250014867e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 43,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.911737250014871e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 44,
+      "primitive": 0,
+      "material": 174,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 7.633232733986813e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 45,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.0948275731416995e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 46,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.9117372500148627e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 47,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.911737250014873e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 48,
+      "primitive": 0,
+      "material": 174,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 7.633232733986834e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 49,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.094827573141721e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 50,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.9117372500148664e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 51,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.9117372500148684e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 52,
+      "primitive": 0,
+      "material": 174,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 7.633232733986843e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 53,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 672,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          2016
+        ]
+      ],
+      "closedTriangles": 672,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 4.0948275731416936e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 54,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.9117372500148763e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 55,
+      "primitive": 0,
+      "material": 170,
+      "triangles": 380,
+      "eligible": true,
+      "closedRanges": [
+        [
+          0,
+          1140
+        ]
+      ],
+      "closedTriangles": 380,
+      "badEdges": 0,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 1.911737250014857e-08,
+      "reason": "closed outward manifold"
+    },
+    {
+      "mesh": 56,
+      "primitive": 0,
+      "material": 175,
+      "triangles": 2,
+      "eligible": false,
+      "closedRanges": [],
+      "closedTriangles": 0,
+      "badEdges": 4,
+      "degenerate": false,
+      "connectedComponents": 1,
+      "minimumSignedVolume": 3.7340766366764946e-06,
+      "reason": "uncertified topology or winding"
+    }
+  ],
+  "eligibleTriangles": 240138,
+  "partialEligibleTriangles": 311278,
+  "uniqueTriangles": 778955,
+  "seconds": 26.100353956222534,
+  "equivalentSourceSHA256": "1598b99a4078a62331b951fd23ce077b94c58615b1032ed772f64ea9ae0ba8ef",
+  "equivalenceProof": "compact-report.json: every expanded indexed attribute byte matches in original triangle order"
+}

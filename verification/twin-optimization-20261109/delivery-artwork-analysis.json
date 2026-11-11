@@ -1,0 +1,47 @@
+{
+  "method": "Native Basis Universal 1.16.4 unpack to BC7 RGBA, mip zero. Independent check; browser uses r176 transcoder. Pixel cutoff uses ceil(255*0.1)=26. Does not establish equality under filtering/mipmaps.",
+  "textures": [
+    {
+      "texture": "regulator-top-copper",
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "pixelsCrossingAlphaCutoff0_1": 0,
+      "fractionCrossingAlphaCutoff": 0.0,
+      "alphaMeanAbsoluteError": 0.0,
+      "alphaMaxAbsoluteError": 0,
+      "sourceNonzeroAlphaPixels": 4817576,
+      "sourceVisibleAtCutoffPixels": 4817576,
+      "bc7VisibleAtCutoffPixels": 4817576
+    },
+    {
+      "texture": "regulator-bottom-copper",
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "pixelsCrossingAlphaCutoff0_1": 0,
+      "fractionCrossingAlphaCutoff": 0.0,
+      "alphaMeanAbsoluteError": 0.0010836267605633804,
+      "alphaMaxAbsoluteError": 1,
+      "sourceNonzeroAlphaPixels": 53258,
+      "sourceVisibleAtCutoffPixels": 53258,
+      "bc7VisibleAtCutoffPixels": 53258
+    },
+    {
+      "texture": "regulator-silkscreen",
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "pixelsCrossingAlphaCutoff0_1": 0,
+      "fractionCrossingAlphaCutoff": 0.0,
+      "alphaMeanAbsoluteError": 0.0,
+      "alphaMaxAbsoluteError": 0,
+      "sourceNonzeroAlphaPixels": 177805,
+      "sourceVisibleAtCutoffPixels": 177805,
+      "bc7VisibleAtCutoffPixels": 177805
+    }
+  ]
+}

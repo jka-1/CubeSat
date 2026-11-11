@@ -1,0 +1,23 @@
+{
+  "mode": "early-dispose",
+  "variant": "legacy",
+  "asset": "compact",
+  "appearance": "display-space-acrylic",
+  "depth": "bounded",
+  "shadow": "ortho",
+  "cull": "certified",
+  "prepass": "cheap",
+  "aa": "fxaa",
+  "clock": "raf",
+  "started": "2026-11-11T08:21:08.391Z",
+  "browser": "Chrome/157.0.8103.50",
+  "earlyDispose": {
+    "parts": 0,
+    "loaded": false,
+    "transport": "disconnected",
+    "renderCount": 2
+  },
+  "complete": true,
+  "logs": [],
+  "finished": "2026-11-11T08:21:10.952Z"
+}

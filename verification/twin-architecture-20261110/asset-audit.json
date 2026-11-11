@@ -1,0 +1,902 @@
+{
+  "source": "site/knight-eps-phase12/models/KnightEPS_Detailed.glb",
+  "sha256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47",
+  "logicalTriangles": 874229,
+  "uniqueMeshTriangles": 786749,
+  "indexComponentTypesByPrimitive": {
+    "5123": 128,
+    "5125": 131
+  },
+  "uniqueMeshIndexBytes": 8205810,
+  "possibleLosslessUint16IndexSavingsBytes": 2434548,
+  "images": [
+    {
+      "image": 0,
+      "dimensions": [
+        1024,
+        768
+      ],
+      "encodedBytes": 44967,
+      "alphaZero": 0,
+      "alpha255": 786432,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 1.0,
+      "alphaValues": [
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 4194300
+    },
+    {
+      "image": 1,
+      "dimensions": [
+        512,
+        388
+      ],
+      "encodedBytes": 11323,
+      "alphaZero": 0,
+      "alpha255": 198656,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 1.0,
+      "alphaValues": [
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 1059324
+    },
+    {
+      "image": 2,
+      "dimensions": [
+        3000,
+        3862
+      ],
+      "encodedBytes": 89468,
+      "alphaZero": 3261112,
+      "alpha255": 0,
+      "alphaIntermediate": 8324888,
+      "nonzeroAlphaFraction": 0.7185299499395823,
+      "alphaValues": [
+        0,
+        205
+      ],
+      "rgba8BytesWithMipsEstimate": 61787536
+    },
+    {
+      "image": 3,
+      "dimensions": [
+        3000,
+        3862
+      ],
+      "encodedBytes": 66132,
+      "alphaZero": 11213061,
+      "alpha255": 0,
+      "alphaIntermediate": 372939,
+      "nonzeroAlphaFraction": 0.032188762299326774,
+      "alphaValues": [
+        0,
+        190
+      ],
+      "rgba8BytesWithMipsEstimate": 61787536
+    },
+    {
+      "image": 4,
+      "dimensions": [
+        3000,
+        3862
+      ],
+      "encodedBytes": 61288,
+      "alphaZero": 11352201,
+      "alpha255": 233799,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 0.02017944070429829,
+      "alphaValues": [
+        0,
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 61787536
+    },
+    {
+      "image": 5,
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "encodedBytes": 49884,
+      "alphaZero": 1998424,
+      "alpha255": 0,
+      "alphaIntermediate": 4817576,
+      "nonzeroAlphaFraction": 0.7068039906103286,
+      "alphaValues": [
+        0,
+        205
+      ],
+      "rgba8BytesWithMipsEstimate": 36351084
+    },
+    {
+      "image": 6,
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "encodedBytes": 32536,
+      "alphaZero": 6762742,
+      "alpha255": 0,
+      "alphaIntermediate": 53258,
+      "nonzeroAlphaFraction": 0.007813673708920188,
+      "alphaValues": [
+        0,
+        190
+      ],
+      "rgba8BytesWithMipsEstimate": 36351084
+    },
+    {
+      "image": 7,
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "encodedBytes": 40460,
+      "alphaZero": 6638195,
+      "alpha255": 177805,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 0.026086414319248828,
+      "alphaValues": [
+        0,
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 36351084
+    },
+    {
+      "image": 8,
+      "dimensions": [
+        3000,
+        2347
+      ],
+      "encodedBytes": 109000,
+      "alphaZero": 1303470,
+      "alpha255": 0,
+      "alphaIntermediate": 5737530,
+      "nonzeroAlphaFraction": 0.8148743076267576,
+      "alphaValues": [
+        0,
+        205
+      ],
+      "rgba8BytesWithMipsEstimate": 37544640
+    },
+    {
+      "image": 9,
+      "dimensions": [
+        3000,
+        2347
+      ],
+      "encodedBytes": 62772,
+      "alphaZero": 6638793,
+      "alpha255": 0,
+      "alphaIntermediate": 402207,
+      "nonzeroAlphaFraction": 0.05712356199403494,
+      "alphaValues": [
+        0,
+        190
+      ],
+      "rgba8BytesWithMipsEstimate": 37544640
+    },
+    {
+      "image": 10,
+      "dimensions": [
+        3000,
+        2347
+      ],
+      "encodedBytes": 62036,
+      "alphaZero": 6835573,
+      "alpha255": 205427,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 0.029175827297258913,
+      "alphaValues": [
+        0,
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 37544640
+    },
+    {
+      "image": 11,
+      "dimensions": [
+        3000,
+        3487
+      ],
+      "encodedBytes": 52548,
+      "alphaZero": 10101440,
+      "alpha255": 0,
+      "alphaIntermediate": 359560,
+      "nonzeroAlphaFraction": 0.03437147500238983,
+      "alphaValues": [
+        0,
+        205
+      ],
+      "rgba8BytesWithMipsEstimate": 55783132
+    },
+    {
+      "image": 12,
+      "dimensions": [
+        3000,
+        3487
+      ],
+      "encodedBytes": 48664,
+      "alphaZero": 10231586,
+      "alpha255": 0,
+      "alphaIntermediate": 229414,
+      "nonzeroAlphaFraction": 0.021930408182774114,
+      "alphaValues": [
+        0,
+        190
+      ],
+      "rgba8BytesWithMipsEstimate": 55783132
+    },
+    {
+      "image": 13,
+      "dimensions": [
+        3000,
+        3487
+      ],
+      "encodedBytes": 59048,
+      "alphaZero": 10159010,
+      "alpha255": 301990,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 0.028868177038524043,
+      "alphaValues": [
+        0,
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 55783132
+    },
+    {
+      "image": 14,
+      "dimensions": [
+        3000,
+        2417
+      ],
+      "encodedBytes": 42848,
+      "alphaZero": 1329234,
+      "alpha255": 0,
+      "alphaIntermediate": 5921766,
+      "nonzeroAlphaFraction": 0.8166826644600744,
+      "alphaValues": [
+        0,
+        205
+      ],
+      "rgba8BytesWithMipsEstimate": 38666808
+    },
+    {
+      "image": 15,
+      "dimensions": [
+        3000,
+        2417
+      ],
+      "encodedBytes": 31136,
+      "alphaZero": 7170952,
+      "alpha255": 0,
+      "alphaIntermediate": 80048,
+      "nonzeroAlphaFraction": 0.011039580747483105,
+      "alphaValues": [
+        0,
+        190
+      ],
+      "rgba8BytesWithMipsEstimate": 38666808
+    },
+    {
+      "image": 16,
+      "dimensions": [
+        3000,
+        2417
+      ],
+      "encodedBytes": 39956,
+      "alphaZero": 7131425,
+      "alpha255": 119575,
+      "alphaIntermediate": 0,
+      "nonzeroAlphaFraction": 0.016490828851192938,
+      "alphaValues": [
+        0,
+        255
+      ],
+      "rgba8BytesWithMipsEstimate": 38666808
+    }
+  ],
+  "artworkPrimitives": [
+    {
+      "image": 1,
+      "material": 154,
+      "name": "KnightEPS_Default_Screen",
+      "alphaMode": "OPAQUE",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.026599999517202377,
+          0.0043299999088048935,
+          -0.02215000055730343
+        ],
+        [
+          0.03180000185966492,
+          0.0043299999088048935,
+          0.02215000055730343
+        ]
+      ],
+      "spanLocalMeters": [
+        0.058400001376867294,
+        0.0,
+        0.04430000111460686
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [],
+      "nodes": [
+        "NerdMiner_Screen"
+      ]
+    },
+    {
+      "image": 2,
+      "material": 58,
+      "name": "INA226_v12 / Top copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.017134999856352806,
+          0.0032722014002501965,
+          -0.022059999406337738
+        ],
+        [
+          0.017134999856352806,
+          0.0032722014002501965,
+          0.022059999406337738
+        ]
+      ],
+      "spanLocalMeters": [
+        0.03426999971270561,
+        0.0,
+        0.044119998812675476
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [
+        "Top_copper_traces_recovered"
+      ],
+      "nodes": [
+        "INA226_Detailed_INA226_v12_16"
+      ]
+    },
+    {
+      "image": 3,
+      "material": 59,
+      "name": "INA226_v12 / Bottom copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.017134999856352806,
+          0.004972998518496752,
+          -0.022059999406337738
+        ],
+        [
+          0.017134999856352806,
+          0.004972998518496752,
+          0.022059999406337738
+        ]
+      ],
+      "spanLocalMeters": [
+        0.03426999971270561,
+        0.0,
+        0.044119998812675476
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [
+        "Bottom_copper_traces_recovered"
+      ],
+      "nodes": [
+        "INA226_Detailed_INA226_v12_17"
+      ]
+    },
+    {
+      "image": 4,
+      "material": 60,
+      "name": "INA226_v12 / Original Fusion top silkscreen",
+      "alphaMode": "MASK",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.017134999856352806,
+          0.0032072013709694147,
+          -0.022059999406337738
+        ],
+        [
+          0.017134999856352806,
+          0.0032072013709694147,
+          0.022059999406337738
+        ]
+      ],
+      "spanLocalMeters": [
+        0.03426999971270561,
+        0.0,
+        0.044119998812675476
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [
+        "Top_silkscreen_original_F3D"
+      ],
+      "nodes": [
+        "INA226_Detailed_INA226_v12_18"
+      ]
+    },
+    {
+      "image": 5,
+      "material": 108,
+      "name": "Regulator_PCB / Top copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 2,
+      "boundsLocalMeters": [
+        [
+          -0.01634499989449978,
+          0.0027550107333809137,
+          -0.02157999947667122
+        ],
+        [
+          0.01634499989449978,
+          0.0027550107333809137,
+          0.021580001339316368
+        ]
+      ],
+      "spanLocalMeters": [
+        0.03268999978899956,
+        0.0,
+        0.04316000081598759
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [
+        "Top_copper_traces_recovered"
+      ],
+      "nodes": [
+        "Regulator_01_Detailed_Regulator_PCB_21",
+        "Regulator_02_Detailed_Regulator_PCB_21"
+      ]
+    },
+    {
+      "image": 6,
+      "material": 109,
+      "name": "Regulator_PCB / Bottom copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 2,
+      "boundsLocalMeters": [
+        [
+          -0.01634499989449978,
+          0.004022811073809862,
+          -0.02157999947667122
+        ],
+        [
+          0.01634499989449978,
+          0.004022811073809862,
+          0.021580001339316368
+        ]
+      ],
+      "spanLocalMeters": [
+        0.03268999978899956,
+        0.0,
+        0.04316000081598759
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [
+        "Bottom_copper_traces_recovered"
+      ],
+      "nodes": [
+        "Regulator_01_Detailed_Regulator_PCB_22",
+        "Regulator_02_Detailed_Regulator_PCB_22"
+      ]
+    },
+    {
+      "image": 7,
+      "material": 110,
+      "name": "Regulator_PCB / Original Fusion top silkscreen",
+      "alphaMode": "MASK",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 2,
+      "boundsLocalMeters": [
+        [
+          -0.01634499989449978,
+          0.0026900109369307756,
+          -0.02157999947667122
+        ],
+        [
+          0.01634499989449978,
+          0.0026900109369307756,
+          0.021580001339316368
+        ]
+      ],
+      "spanLocalMeters": [
+        0.03268999978899956,
+        0.0,
+        0.04316000081598759
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        1,
+        2
+      ],
+      "sourceNodes": [
+        "Top_silkscreen_original_F3D"
+      ],
+      "nodes": [
+        "Regulator_01_Detailed_Regulator_PCB_23",
+        "Regulator_02_Detailed_Regulator_PCB_23"
+      ]
+    },
+    {
+      "image": 8,
+      "material": 84,
+      "name": "Final_MCU_v12 / Top copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.0347599983215332,
+          -0.044439997524023056,
+          -0.005567491054534912
+        ],
+        [
+          0.0347600020468235,
+          0.044440001249313354,
+          -0.005567491054534912
+        ]
+      ],
+      "spanLocalMeters": [
+        0.0695200003683567,
+        0.08887999877333641,
+        0.0
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        2,
+        1
+      ],
+      "sourceNodes": [
+        "Top_copper_traces_recovered"
+      ],
+      "nodes": [
+        "MCU_Final_Detailed_Final_MCU_v12_24"
+      ]
+    },
+    {
+      "image": 9,
+      "material": 85,
+      "name": "Final_MCU_v12 / Bottom copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.0347599983215332,
+          -0.044439997524023056,
+          -0.007268291432410479
+        ],
+        [
+          0.0347600020468235,
+          0.044440001249313354,
+          -0.007268291432410479
+        ]
+      ],
+      "spanLocalMeters": [
+        0.0695200003683567,
+        0.08887999877333641,
+        0.0
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        2,
+        1
+      ],
+      "sourceNodes": [
+        "Bottom_copper_traces_recovered"
+      ],
+      "nodes": [
+        "MCU_Final_Detailed_Final_MCU_v12_25"
+      ]
+    },
+    {
+      "image": 10,
+      "material": 86,
+      "name": "Final_MCU_v12 / Original Fusion top silkscreen",
+      "alphaMode": "MASK",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.0347599983215332,
+          -0.044439997524023056,
+          -0.005502491258084774
+        ],
+        [
+          0.0347600020468235,
+          0.044440001249313354,
+          -0.005502491258084774
+        ]
+      ],
+      "spanLocalMeters": [
+        0.0695200003683567,
+        0.08887999877333641,
+        0.0
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        2,
+        1
+      ],
+      "sourceNodes": [
+        "Top_silkscreen_original_F3D"
+      ],
+      "nodes": [
+        "MCU_Final_Detailed_Final_MCU_v12_26"
+      ]
+    },
+    {
+      "image": 11,
+      "material": 144,
+      "name": "lightsens / Top copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.01253500021994114,
+          -0.010784998536109924,
+          -0.002355002798140049
+        ],
+        [
+          0.012534999288618565,
+          0.010784996673464775,
+          -0.002355002798140049
+        ]
+      ],
+      "spanLocalMeters": [
+        0.025069999508559704,
+        0.0215699952095747,
+        0.0
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        2,
+        1
+      ],
+      "sourceNodes": [
+        "Top_copper_traces_recovered"
+      ],
+      "nodes": [
+        "LightSensor_Detailed_lightsens_14"
+      ]
+    },
+    {
+      "image": 12,
+      "material": 145,
+      "name": "lightsens / Bottom copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.01253500021994114,
+          -0.010784998536109924,
+          -0.004055802710354328
+        ],
+        [
+          0.012534999288618565,
+          0.010784996673464775,
+          -0.004055802710354328
+        ]
+      ],
+      "spanLocalMeters": [
+        0.025069999508559704,
+        0.0215699952095747,
+        0.0
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        2,
+        1
+      ],
+      "sourceNodes": [
+        "Bottom_copper_traces_recovered"
+      ],
+      "nodes": [
+        "LightSensor_Detailed_lightsens_15"
+      ]
+    },
+    {
+      "image": 13,
+      "material": 146,
+      "name": "lightsens / Original Fusion top silkscreen",
+      "alphaMode": "MASK",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          -0.01253500021994114,
+          -0.010784998536109924,
+          -0.0022900027688592672
+        ],
+        [
+          0.012534999288618565,
+          0.010784996673464775,
+          -0.0022900027688592672
+        ]
+      ],
+      "spanLocalMeters": [
+        0.025069999508559704,
+        0.0215699952095747,
+        0.0
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        2,
+        2,
+        1
+      ],
+      "sourceNodes": [
+        "Top_silkscreen_original_F3D"
+      ],
+      "nodes": [
+        "LightSensor_Detailed_lightsens_16"
+      ]
+    },
+    {
+      "image": 14,
+      "material": 123,
+      "name": "tempsens / Top copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          0.0023549983743578196,
+          -0.017134999856352806,
+          -0.013805000111460686
+        ],
+        [
+          0.0023549983743578196,
+          0.017134999856352806,
+          0.01380500104278326
+        ]
+      ],
+      "spanLocalMeters": [
+        0.0,
+        0.03426999971270561,
+        0.027610001154243946
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        1,
+        2,
+        2
+      ],
+      "sourceNodes": [
+        "Top_copper_traces_recovered"
+      ],
+      "nodes": [
+        "TemperatureSensor_Detailed_tempsens_11"
+      ]
+    },
+    {
+      "image": 15,
+      "material": 124,
+      "name": "tempsens / Bottom copper traces recovered",
+      "alphaMode": "BLEND",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          0.004055798519402742,
+          -0.017134999856352806,
+          -0.013805000111460686
+        ],
+        [
+          0.004055798519402742,
+          0.017134999856352806,
+          0.01380500104278326
+        ]
+      ],
+      "spanLocalMeters": [
+        0.0,
+        0.03426999971270561,
+        0.027610001154243946
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        1,
+        2,
+        2
+      ],
+      "sourceNodes": [
+        "Bottom_copper_traces_recovered"
+      ],
+      "nodes": [
+        "TemperatureSensor_Detailed_tempsens_12"
+      ]
+    },
+    {
+      "image": 16,
+      "material": 125,
+      "name": "tempsens / Original Fusion top silkscreen",
+      "alphaMode": "MASK",
+      "doubleSided": true,
+      "trianglesPerMesh": 2,
+      "instances": 1,
+      "boundsLocalMeters": [
+        [
+          0.002289998345077038,
+          -0.017134999856352806,
+          -0.013805000111460686
+        ],
+        [
+          0.002289998345077038,
+          0.017134999856352806,
+          0.01380500104278326
+        ]
+      ],
+      "spanLocalMeters": [
+        0.0,
+        0.03426999971270561,
+        0.027610001154243946
+      ],
+      "distinctPositionCoordinatesPerAxis": [
+        1,
+        2,
+        2
+      ],
+      "sourceNodes": [
+        "Top_silkscreen_original_F3D"
+      ],
+      "nodes": [
+        "TemperatureSensor_Detailed_tempsens_13"
+      ]
+    }
+  ],
+  "limits": [
+    "Static source audit; no runtime allocation, overdraw or performance measurement.",
+    "Alpha histograms describe original mip zero, not filtering or generated mipmaps.",
+    "Local bounds do not establish screen coverage, layer separation or world transforms.",
+    "Uint16 opportunity assumes independent primitive buffers; excludes splitting meshes or quantization."
+  ]
+}

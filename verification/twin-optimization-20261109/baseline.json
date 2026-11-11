@@ -1,0 +1,207 @@
+{
+  "name": "baseline",
+  "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/155.0.0.0 Safari/537.36",
+  "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+  "dpr": 2,
+  "results": [
+    {
+      "label": "Studio full-resolution orbit",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "outputDPR": 2,
+      "refractionScale": 1,
+      "intervalMs": {
+        "median": 66.79999999999927,
+        "p95": 83.59999999999854,
+        "samples": 42
+      },
+      "cpuFrameMs": {
+        "median": 22.5,
+        "p95": 49.19999998807907,
+        "samples": 43
+      },
+      "cpuRenderMs": {
+        "median": 22,
+        "p95": 48.599999994039536,
+        "samples": 43
+      },
+      "gpuMs": {
+        "median": 51.903083,
+        "p95": 76.356667,
+        "samples": 11
+      },
+      "drawCalls": {
+        "median": 985,
+        "p95": 985,
+        "samples": 43
+      },
+      "triangles": {
+        "median": 2622665,
+        "p95": 2622665,
+        "samples": 43
+      },
+      "frames": 47,
+      "shadowRefreshCount": null
+    },
+    {
+      "label": "Studio full-resolution lid open",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "outputDPR": 2,
+      "refractionScale": 1,
+      "intervalMs": {
+        "median": 66.30000000000109,
+        "p95": 67.59999999999854,
+        "samples": 28
+      },
+      "cpuFrameMs": {
+        "median": 21.299999997019768,
+        "p95": 23.299999997019768,
+        "samples": 29
+      },
+      "cpuRenderMs": {
+        "median": 20.399999991059303,
+        "p95": 22.5,
+        "samples": 29
+      },
+      "gpuMs": {
+        "median": 46.578,
+        "p95": 51.192915,
+        "samples": 7
+      },
+      "drawCalls": {
+        "median": 985,
+        "p95": 985,
+        "samples": 29
+      },
+      "triangles": {
+        "median": 2622665,
+        "p95": 2622665,
+        "samples": 29
+      },
+      "frames": 29,
+      "shadowRefreshCount": null
+    },
+    {
+      "label": "Studio full-resolution explosion",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "outputDPR": 2,
+      "refractionScale": 1,
+      "intervalMs": {
+        "median": 66.59999999999854,
+        "p95": 67.70000000000073,
+        "samples": 27
+      },
+      "cpuFrameMs": {
+        "median": 22,
+        "p95": 25.400000005960464,
+        "samples": 28
+      },
+      "cpuRenderMs": {
+        "median": 21.100000008940697,
+        "p95": 24.200000002980232,
+        "samples": 28
+      },
+      "gpuMs": {
+        "median": 51.303166,
+        "p95": 56.202584,
+        "samples": 6
+      },
+      "drawCalls": {
+        "median": 985,
+        "p95": 985,
+        "samples": 28
+      },
+      "triangles": {
+        "median": 2622665,
+        "p95": 2622665,
+        "samples": 28
+      },
+      "frames": 28,
+      "shadowRefreshCount": null
+    },
+    {
+      "label": "Performance orbit",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        955,
+        720
+      ],
+      "outputDPR": 1,
+      "refractionScale": 1,
+      "intervalMs": {
+        "median": 16.700000000000728,
+        "p95": 17.400000000001455,
+        "samples": 119
+      },
+      "cpuFrameMs": {
+        "median": 4.100000008940697,
+        "p95": 8.399999991059303,
+        "samples": 120
+      },
+      "cpuRenderMs": {
+        "median": 3.7999999970197678,
+        "p95": 7.699999988079071,
+        "samples": 120
+      },
+      "gpuMs": {
+        "median": 9.916084,
+        "p95": 10.48625,
+        "samples": 37
+      },
+      "drawCalls": {
+        "median": 347,
+        "p95": 347,
+        "samples": 120
+      },
+      "triangles": {
+        "median": 877691,
+        "p95": 877691,
+        "samples": 120
+      },
+      "frames": 150,
+      "shadowRefreshCount": null
+    }
+  ],
+  "timerSupported": true,
+  "scene": {
+    "meshCount": 333,
+    "materials": 333,
+    "parts": 95
+  },
+  "sourceTriangles": 874229,
+  "idle": {
+    "durationMs": 2200,
+    "renders": 33
+  },
+  "metrics": {
+    "fitCount": 5,
+    "fitMs": 2.2000000029802322,
+    "resizeCount": 4,
+    "drawCalls": 985,
+    "triangles": 2622665
+  },
+  "complete": true
+}

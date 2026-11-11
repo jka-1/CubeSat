@@ -11,8 +11,8 @@ site_root="${SITE_ROOT:-/var/www/html}"
 backup_root="${BACKUP_ROOT:-/root/cubesat-live-backups}"
 bridge_file="${BRIDGE_FILE:-/opt/cubesat-telemetry/server.js}"
 health_url="${HEALTH_URL:-http://127.0.0.1:8080/healthz}"
-site_check_url="${SITE_CHECK_URL:-http://127.0.0.1/knight-eps-phase12/viewer/?v=20261109a}"
-base_revision=80c6fa3b6d706fa93dc1a58ff545757918b763ea
+site_check_url="${SITE_CHECK_URL:-http://127.0.0.1/knight-eps-phase12/viewer/?v=20261111-orbit-return}"
+base_revision="${BASE_REVISION:-13b5de039c86ce263fe4dd9e31b19be193752de6}"
 revision="$(git -C "$repo_root" rev-parse HEAD)"
 if [[ -n "${EXPECTED_REVISION:-}" && "$revision" != "$EXPECTED_REVISION" ]]; then
   echo "Release revision differs from EXPECTED_REVISION; nothing changed." >&2
@@ -22,10 +22,31 @@ fi
 # New geometry first, entry-point HTML last. No backend, auth, data or config files.
 files=(
   knight-eps-phase12/models/KnightEPS_Detailed.glb
+  knight-eps-phase12/models/display/display-compact.glb
+  knight-eps-phase12/models/display/display-compact.glb.gz
+  knight-eps-phase12/models/display/closed-primitives-compact.json
+  knight-eps-phase12/models/display/artwork-masks.json
+  knight-eps-phase12/models/display/artwork-masks.bin.gz
+  knight-eps-phase12/models/display/provenance.json
+  knight-eps-phase12/models/display/build-report.json
+  knight-eps-phase12/models/display/compact-report.json
   knight-eps-phase12/docs/model-upgrades.json
   knight-eps-phase12/docs/component_manifest.json
   knight-eps-phase12/viewer/display.mjs
+  knight-eps-phase12/viewer/render-optimizations.mjs
+  knight-eps-phase12/viewer/rendering/model-loader.mjs
+  knight-eps-phase12/viewer/rendering/decode-coverage.mjs
+  knight-eps-phase12/viewer/rendering/pipeline.mjs
+  knight-eps-phase12/viewer/rendering/depth-guard.mjs
+  knight-eps-phase12/viewer/rendering/certified-culling.mjs
+  knight-eps-phase12/viewer/rendering/cheap-occlusion.mjs
+  knight-eps-phase12/viewer/rendering/orthographic-shadow.mjs
+  knight-eps-phase12/viewer/rendering/legacy-coverage.mjs
+  knight-eps-phase12/viewer/rendering/lean-acrylic.mjs
+  knight-eps-phase12/viewer/rendering/fxaa-pass.mjs
+  knight-eps-phase12/viewer/vendor/three/addons/shaders/FXAAShader.js
   knight-eps-phase12/viewer/styles.css
+  knight-eps-phase12/viewer/inspection.mjs
   knight-eps-phase12/viewer/main.mjs
   knight-eps-phase12/viewer/index.html
   assets/js/twin.js
@@ -87,6 +108,7 @@ rollback() {
 trap 'rollback' ERR
 for rel in "${files[@]}"; do
   # Install beside the destination and rename atomically on the same filesystem.
+  mkdir -p -- "$(dirname "$site_root/$rel")"
   temporary="$(mktemp "$(dirname "$site_root/$rel")/.knight-eps-XXXXXX")"
   install -m 644 "$repo_root/site/$rel" "$temporary"
   mv -f -- "$temporary" "$site_root/$rel"

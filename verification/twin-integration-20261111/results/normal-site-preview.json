@@ -1,0 +1,31 @@
+{
+  "url": "http://127.0.0.1:8770/site/knight-eps-phase12/viewer/",
+  "version": "12.2.0",
+  "quality": "studio",
+  "parts": 95,
+  "rendering": {
+    "depth": {
+      "near": 0.5218668580583131,
+      "far": 3.4497985111601,
+      "minDepth": 0.5798520645092368,
+      "maxDepth": 1.2223218633522728,
+      "worstStep": 1.4483008212663996e-7,
+      "certified": true,
+      "active": "bounded"
+    },
+    "closedSolids": {
+      "eligibleMeshes": 85,
+      "eligibleTriangles": 230404,
+      "frontMeshes": 85,
+      "shadowFrontMeshes": 85,
+      "doubleSidedFallbacks": 0
+    },
+    "antialiasing": "fxaa",
+    "acrylic": "display-space",
+    "warmMs": 835.8000000119209,
+    "captureTextures": 2,
+    "warmMaterials": 1932
+  },
+  "hasTestInstrumentation": false,
+  "hasTestClock": false
+}

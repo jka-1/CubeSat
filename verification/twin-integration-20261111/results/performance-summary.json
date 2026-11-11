@@ -1,0 +1,55 @@
+{
+  "configuration": "Final Studio with receiving-shadow shader invalidation fixed, FXAA and display-space acrylic",
+  "warmup": {
+    "gpuSamples": 4490,
+    "gpuMedianMs": 8.270083,
+    "gpuP95Ms": 13.123582,
+    "gpuDisjointCount": 0,
+    "submittedRendersPerSecond": 59.862135082815584,
+    "renderStartP95Ms": 18.5,
+    "callbackCpuP95Ms": 7
+  },
+  "hotPhases": {
+    "orbit": {
+      "gpuSamples": 447,
+      "gpuMedianMs": 7.952582,
+      "gpuP95Ms": 8.657667,
+      "gpuDisjointCount": 0,
+      "submittedRendersPerSecond": 59.64705215534091,
+      "renderStartP95Ms": 18.600000023841858,
+      "callbackCpuP95Ms": 6.399999976158142
+    },
+    "lid": {
+      "gpuSamples": 225,
+      "gpuMedianMs": 8.663332,
+      "gpuP95Ms": 10.351917,
+      "gpuDisjointCount": 0,
+      "submittedRendersPerSecond": 60.001334846158976,
+      "renderStartP95Ms": 18.599999994039536,
+      "callbackCpuP95Ms": 7
+    },
+    "explosion": {
+      "gpuSamples": 225,
+      "gpuMedianMs": 7.945499,
+      "gpuP95Ms": 9.886749,
+      "gpuDisjointCount": 0,
+      "submittedRendersPerSecond": 59.99612928193408,
+      "renderStartP95Ms": 18.900000005960464,
+      "callbackCpuP95Ms": 7.199999988079071
+    }
+  },
+  "drawingBuffer": [
+    1910,
+    1440
+  ],
+  "logicalTriangles": 874229,
+  "parts": 95,
+  "gpuHeadroomTargetMs": 14,
+  "sustainedGpuHeadroomPass": true,
+  "native60HzPresentationQualified": false,
+  "renderClock": {
+    "mode": "timer60-workload",
+    "targetHz": 60,
+    "presentationQualification": false
+  }
+}

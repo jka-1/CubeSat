@@ -1,0 +1,263 @@
+{
+  "selectedCandidate": "legacy-compact-lean-acrylic-bounded-certified-cull-region-capture-cheap-prepass",
+  "targetHz": 60,
+  "frameBudgetMs": 16.666666666666668,
+  "gpuHeadroomTargetMs": 14,
+  "observedDisplayHz": 30,
+  "presentation60HzQualified": false,
+  "newAppearanceReductions": false,
+  "sourceAppearanceCaveat": "Existing display-space acrylic alternative; physical HDR transmission remains unqualified.",
+  "compaction": {
+    "sourceSHA256": "3f8e298472678037c112adff3c713a30265679f5563d857eb2692477b81c613a",
+    "outputSHA256": "302cd6162e57fb90b720c2111a0af715fbbe9dfa58f7843c16519af28cdc686b",
+    "verticesBefore": 1115514,
+    "verticesAfter": 918771,
+    "bytesBefore": 39454508,
+    "bytesAfter": 34590388,
+    "triangleAndAttributeBytesExact": true,
+    "noQuantization": true
+  },
+  "load60": {
+    "phases": [
+      {
+        "name": "orbit",
+        "gpuSamples": 450,
+        "gpuMedianMs": 10.029375,
+        "gpuP95Ms": 12.591333,
+        "renderStartP95Ms": 18.200000017881393,
+        "renderRatePerSecond": 60.00166763945635,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 5.699999988079071,
+        "captureMedianPixels": 81920,
+        "captureMaxPixels": 81920,
+        "depthModes": {
+          "bounded": 1799
+        }
+      },
+      {
+        "name": "lid",
+        "gpuSamples": 225,
+        "gpuMedianMs": 10.313334,
+        "gpuP95Ms": 12.455749,
+        "renderStartP95Ms": 18.599999994039536,
+        "renderRatePerSecond": 60.00053393138417,
+        "fractionIntervalsAbove25ms": 0.0011123470522803114,
+        "callbackCpuP95Ms": 6.800000011920929,
+        "captureMedianPixels": 81920,
+        "captureMaxPixels": 81920,
+        "depthModes": {
+          "bounded": 899
+        }
+      },
+      {
+        "name": "explosion",
+        "gpuSamples": 225,
+        "gpuMedianMs": 10.856334,
+        "gpuP95Ms": 13.495999,
+        "renderStartP95Ms": 18.600000023841858,
+        "renderRatePerSecond": 59.99773089780648,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 7.199999988079071,
+        "captureMedianPixels": 81920,
+        "captureMaxPixels": 102400,
+        "depthModes": {
+          "bounded": 899
+        }
+      }
+    ],
+    "gpuP95HeadroomGatePassed": true,
+    "allGpuP95BelowFrameBudget": true,
+    "renderClock": {
+      "mode": "timer60-workload",
+      "targetHz": 60,
+      "presentationQualification": false
+    },
+    "visibilityNote": "Timer-driven workload tests capacity; render-start jitter is not 60 Hz presentation."
+  },
+  "thermal60": {
+    "phases": [
+      {
+        "name": "orbit",
+        "gpuSamples": 450,
+        "gpuMedianMs": 9.057915999999999,
+        "gpuP95Ms": 9.963583,
+        "renderStartP95Ms": 18.80000001192093,
+        "renderRatePerSecond": 60.0014675177793,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 5.800000011920929,
+        "captureMedianPixels": 122880,
+        "captureMaxPixels": 122880,
+        "depthModes": {
+          "bounded": 1799
+        }
+      },
+      {
+        "name": "lid",
+        "gpuSamples": 225,
+        "gpuMedianMs": 11.187333,
+        "gpuP95Ms": 12.671749,
+        "renderStartP95Ms": 18.100000023841858,
+        "renderRatePerSecond": 59.9981313152253,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 6,
+        "captureMedianPixels": 122880,
+        "captureMaxPixels": 122880,
+        "depthModes": {
+          "bounded": 899
+        }
+      },
+      {
+        "name": "explosion",
+        "gpuSamples": 225,
+        "gpuMedianMs": 10.849834,
+        "gpuP95Ms": 17.966832,
+        "renderStartP95Ms": 18.799999982118607,
+        "renderRatePerSecond": 60.00774293454833,
+        "fractionIntervalsAbove25ms": 0.0,
+        "callbackCpuP95Ms": 7,
+        "captureMedianPixels": 122880,
+        "captureMaxPixels": 122880,
+        "depthModes": {
+          "bounded": 899
+        }
+      }
+    ],
+    "gpuP95HeadroomGatePassed": false,
+    "allGpuP95BelowFrameBudget": false,
+    "renderClock": {
+      "mode": "timer60-workload",
+      "targetHz": 60,
+      "presentationQualification": false
+    },
+    "visibilityNote": "Timer-driven workload tests capacity; render-start jitter is not 60 Hz presentation."
+  },
+  "visual": {
+    "reference": "whole-primitive culling with original prepared geometry and full-size capture",
+    "uiRectanglesExcluded": [
+      [
+        20,
+        18,
+        282,
+        48
+      ],
+      [
+        16,
+        68,
+        939,
+        108
+      ],
+      [
+        16,
+        658,
+        939,
+        702
+      ],
+      [
+        16,
+        633,
+        939,
+        650
+      ],
+      [
+        855,
+        16,
+        939,
+        60
+      ],
+      [
+        16,
+        615,
+        517,
+        645
+      ]
+    ],
+    "comparisons": [
+      {
+        "view": "assembled",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 4.847779716889665e-07
+      },
+      {
+        "view": "Regulator_01-top",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 0.000983129726585224
+      },
+      {
+        "view": "Regulator_01-bottom",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 1.4543339150668994e-06
+      },
+      {
+        "view": "Regulator_01-oblique",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 1.4543339150668994e-06
+      },
+      {
+        "view": "MCU_Final-top",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 6.253635834787667e-05
+      },
+      {
+        "view": "MCU_Final-bottom",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 1.4543339150668994e-06
+      },
+      {
+        "view": "acrylic",
+        "max": 1,
+        "pixelsAbove8": 0,
+        "mean": 2.4238898584448325e-06
+      }
+    ],
+    "comparisonsAgainstOriginalLeanPilot": [
+      {
+        "view": "assembled",
+        "max": 1,
+        "pixelsAbove8": 0
+      },
+      {
+        "view": "Regulator_01-top",
+        "max": 0,
+        "pixelsAbove8": 0
+      },
+      {
+        "view": "Regulator_01-bottom",
+        "max": 0,
+        "pixelsAbove8": 0
+      },
+      {
+        "view": "Regulator_01-oblique",
+        "max": 1,
+        "pixelsAbove8": 0
+      },
+      {
+        "view": "MCU_Final-top",
+        "max": 17,
+        "pixelsAbove8": 6
+      },
+      {
+        "view": "MCU_Final-bottom",
+        "max": 0,
+        "pixelsAbove8": 0
+      },
+      {
+        "view": "acrylic",
+        "max": 1,
+        "pixelsAbove8": 0
+      }
+    ]
+  },
+  "notSelected": [
+    "Front-to-back opaque sorting: no consistent tail improvement",
+    "Partial closed-face partition: extra calls did not improve tails consistently",
+    "Fixed material constants: no consistent animation gain",
+    "Matte environment approximation: insufficient gain to justify appearance change",
+    "Orthographic shadow shader experiment: not selected"
+  ]
+}

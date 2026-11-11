@@ -1,0 +1,360 @@
+{
+  "sourceSHA256": "f1ed146e43c7dd3291beed9599d9a4f42f3e54b726dde8600ad978be8ad649c4",
+  "decodedMaskBytes": 129465000,
+  "records": [
+    {
+      "image": 2,
+      "textures": [
+        3
+      ],
+      "dimensions": [
+        3000,
+        3862
+      ],
+      "offset": 0,
+      "length": 11586000,
+      "foregroundRGBA": [
+        17,
+        88,
+        23,
+        205
+      ],
+      "maskSHA256": "1ed5380a8d93bfc5c2b987085858d927516d1564b317478e89b81c1fc4b9a3ee",
+      "sourceRGBA8SHA256": "8551b15dcf30e109587b3da559db6916d7b816059eafc18a4275ca5822ec18b5",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 3,
+      "textures": [
+        4
+      ],
+      "dimensions": [
+        3000,
+        3862
+      ],
+      "offset": 11586000,
+      "length": 11586000,
+      "foregroundRGBA": [
+        13,
+        79,
+        20,
+        190
+      ],
+      "maskSHA256": "e332224070ef838f54f121a09c9901d0e890e1fb45f81dd42b1e4a1943029c1f",
+      "sourceRGBA8SHA256": "4fd70511c3182ec2bac1f2995bbb64a1f1129bccf2c8e3b2331c901daac3f5a1",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 4,
+      "textures": [
+        5
+      ],
+      "dimensions": [
+        3000,
+        3862
+      ],
+      "offset": 23172000,
+      "length": 11586000,
+      "foregroundRGBA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "maskSHA256": "8551784cf002e6e10cf496c0870b5ec7965d8d0b5e6d6e734f0b966e34442de8",
+      "sourceRGBA8SHA256": "012b404f4e930ebef4811191c0d73d7fbe91951229fe3b7247e28c492e062360",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 5,
+      "textures": [
+        6
+      ],
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "offset": 34758000,
+      "length": 6816000,
+      "foregroundRGBA": [
+        17,
+        88,
+        23,
+        205
+      ],
+      "maskSHA256": "119178e184444928fda38e3f4337dc5612fb94d8e741c71ef0cdcfe9ad9d80c4",
+      "sourceRGBA8SHA256": "8184341dc40af8f6285e2b2230681458b1b83772922ad09e8c72a7a61df37012",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 6,
+      "textures": [
+        7
+      ],
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "offset": 41574000,
+      "length": 6816000,
+      "foregroundRGBA": [
+        13,
+        79,
+        20,
+        190
+      ],
+      "maskSHA256": "4e0a8265714f9a19432546c4e962bae8afde6279ce914ff8641d0e316ede1650",
+      "sourceRGBA8SHA256": "b002fae335855a1b57ed8e9b2f9aac268c81e2dd569abc1e303345341a5ce74e",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 7,
+      "textures": [
+        8
+      ],
+      "dimensions": [
+        3000,
+        2272
+      ],
+      "offset": 48390000,
+      "length": 6816000,
+      "foregroundRGBA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "maskSHA256": "a5c93e1ca307b1ebd17eee2783aeb8a99c877e89aea31b3fa00b021e82ae0180",
+      "sourceRGBA8SHA256": "5c0203dccac2a4f17dd6a8e7f063ab9f5129ab4017bee734347bb5d153d57d9d",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 8,
+      "textures": [
+        9
+      ],
+      "dimensions": [
+        3000,
+        2347
+      ],
+      "offset": 55206000,
+      "length": 7041000,
+      "foregroundRGBA": [
+        17,
+        88,
+        23,
+        205
+      ],
+      "maskSHA256": "221675a1bbbe516d8bf980e74f271fc891618cc013518e7d01b93747e825b5cd",
+      "sourceRGBA8SHA256": "f3828c0306d43c334bc25d40cba8a82821d8edad1533888bf29c78439eaaa17d",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 9,
+      "textures": [
+        10
+      ],
+      "dimensions": [
+        3000,
+        2347
+      ],
+      "offset": 62247000,
+      "length": 7041000,
+      "foregroundRGBA": [
+        13,
+        79,
+        20,
+        190
+      ],
+      "maskSHA256": "8e3dc26a250e3c09c32a1e2b0f097a4ab43ee51d8c6975d7209ca9a179df718a",
+      "sourceRGBA8SHA256": "dc7b043c76dc26bc8dd653c1f8341798973183d9e55ea94b14b5a914c32bb8e6",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 10,
+      "textures": [
+        11
+      ],
+      "dimensions": [
+        3000,
+        2347
+      ],
+      "offset": 69288000,
+      "length": 7041000,
+      "foregroundRGBA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "maskSHA256": "a2cbcc0372944172de417799028c22d2530529972c1e55ae3d9d77fa90fc0ff9",
+      "sourceRGBA8SHA256": "d748940bffc3427f0e8a6594953780d98582a34cc6c939516d4d558c8413f705",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 11,
+      "textures": [
+        12
+      ],
+      "dimensions": [
+        3000,
+        3487
+      ],
+      "offset": 76329000,
+      "length": 10461000,
+      "foregroundRGBA": [
+        17,
+        88,
+        23,
+        205
+      ],
+      "maskSHA256": "fd2d9f0797ee57606cafce8f62bbad9a6ccf4904f9360b3da9e089b864e368db",
+      "sourceRGBA8SHA256": "5b49c5eacf23c4f81e399a8a316a42c99fc09547eb90d227d7fae2da8fec9e0b",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 12,
+      "textures": [
+        13
+      ],
+      "dimensions": [
+        3000,
+        3487
+      ],
+      "offset": 86790000,
+      "length": 10461000,
+      "foregroundRGBA": [
+        13,
+        79,
+        20,
+        190
+      ],
+      "maskSHA256": "7c2177a0153cf05419958f87b2211dfdd8dc9e4250a68c7aaf0131dba968e697",
+      "sourceRGBA8SHA256": "6a58cba43630e7db6616677b9f1d746c0994c782a92c8c551eb10d36b0df0322",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 13,
+      "textures": [
+        14
+      ],
+      "dimensions": [
+        3000,
+        3487
+      ],
+      "offset": 97251000,
+      "length": 10461000,
+      "foregroundRGBA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "maskSHA256": "582c60decd69a67d444638100336c02a89c36fff67e067bd56ccc2676cf1ba64",
+      "sourceRGBA8SHA256": "cb4ac874388a40190b0813ab7a56f16d991c720ec7f83bb2ba4c6ecd28299d35",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 14,
+      "textures": [
+        15
+      ],
+      "dimensions": [
+        3000,
+        2417
+      ],
+      "offset": 107712000,
+      "length": 7251000,
+      "foregroundRGBA": [
+        17,
+        88,
+        23,
+        205
+      ],
+      "maskSHA256": "c0abf04461775946fe799e67b7ae0efde7921651830b805d2b6180038d66a2d7",
+      "sourceRGBA8SHA256": "140cce044aa6fa6826b1c145e650fee823232e2a3613f3c84d6e283ce9210931",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 15,
+      "textures": [
+        16
+      ],
+      "dimensions": [
+        3000,
+        2417
+      ],
+      "offset": 114963000,
+      "length": 7251000,
+      "foregroundRGBA": [
+        13,
+        79,
+        20,
+        190
+      ],
+      "maskSHA256": "a46643ad6a589adffc5be2d393afa077343cd3128d3d6ac9ce4be659ea8594bf",
+      "sourceRGBA8SHA256": "a774e7cc5c8298955ccb7c71d8194ce821adb577ce1b944a6e1e207b194267b7",
+      "sourceTexelsExact": true
+    },
+    {
+      "image": 16,
+      "textures": [
+        17
+      ],
+      "dimensions": [
+        3000,
+        2417
+      ],
+      "offset": 122214000,
+      "length": 7251000,
+      "foregroundRGBA": [
+        255,
+        255,
+        255,
+        255
+      ],
+      "maskSHA256": "248cf415581206bd97d2c381cbd8a0f0ad4bb6b25e46b1530ee880d0bd42d636",
+      "sourceRGBA8SHA256": "3a5d192ef619cc417ffaf8202dd4df8897e6361ab513a271cb10f4db5f31668a",
+      "sourceTexelsExact": true
+    }
+  ],
+  "rgbaImages": [
+    {
+      "image": 17,
+      "dimensions": [
+        1817,
+        1652
+      ],
+      "sourceRGBA8SHA256": "e311fe8a8817880c2e24cafca50b2853ccb776ad4f6d9e6662562e5eb18d4f8f",
+      "policy": "Original embedded RGBA retained; not representable as constant-color coverage."
+    },
+    {
+      "image": 18,
+      "dimensions": [
+        1817,
+        1652
+      ],
+      "sourceRGBA8SHA256": "dc31e476f2c15c56f4192f8efcc0aada5fc10afae95c868746062734b17fac4e",
+      "policy": "Original embedded RGBA retained; not representable as constant-color coverage."
+    },
+    {
+      "image": 19,
+      "dimensions": [
+        2846,
+        2846
+      ],
+      "sourceRGBA8SHA256": "c3a3d6cbcfe98c1ba79d194c6f9bca3f849ebecd6e3dca0080974e31e42289f5",
+      "policy": "Original embedded RGBA retained; not representable as constant-color coverage."
+    },
+    {
+      "image": 20,
+      "dimensions": [
+        2846,
+        2846
+      ],
+      "sourceRGBA8SHA256": "0b8a3a74584502c3ea37e7d23488905c2e3573538077dc98628c406398ecb5da",
+      "policy": "Original embedded RGBA retained; not representable as constant-color coverage."
+    }
+  ],
+  "mipCaveat": "Exact source texels; generated R8 versus sRGB RGBA8 mips can differ in channel rounding."
+}

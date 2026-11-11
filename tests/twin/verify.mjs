@@ -17,9 +17,9 @@ document.querySelector('#run').onclick=async()=>{
  try{
   const {page,frame,win,doc,api}=context();await api.ready;
   const report=await fetch('/site/knight-eps-phase12/docs/model-upgrades.json').then(r=>r.json());
-  const audit=api.geometryAudit();check(audit.length===7,'Expected seven replacement PCB assemblies');
+  const audit=api.geometryAudit();check(audit.length===8,'Expected eight replacement PCB assemblies');
   for(const board of report.boards){const a=audit.find(a=>a.id===board.id);check(a&&a.sha256===board.sha256&&a.triangles===board.triangles&&!a.hasObsoleteMesh,`Source geometry mismatch: ${board.id}`)}
-  log('Seven detailed sources loaded',{pass:true,boards:audit});
+  log('Eight detailed sources loaded',{pass:true,boards:audit});
   check(!/NerdMiner|\bMiner\b|Phase\s*\d|6U XL CubeSat electrical power system/i.test(doc.body.innerText),'Unwanted user-facing label');log('Labels',{pass:true});
   const l=layout();check(Math.abs(l.headerBottom-l.frame.y)<1&&Math.abs(l.frame.height+l.headerBottom-l.siteViewport[1])<1,'Frame does not fill available viewport');check(l.documentSize[0]===l.siteViewport[0]&&l.documentSize[1]===l.siteViewport[1],'Unexpected page scroll');log('Integrated viewport',{pass:true,...l});
   api.reset();await settled();let before=camera();doc.querySelector('#sidebar-toggle').click();await pause(150);check(same(before,camera()),'Sidebar moved camera or orbit pivot');doc.querySelector('#sidebar-toggle').click();await pause(150);check(same(before,camera()),'Sidebar restoration moved camera');log('Sidebar and stable orbit target',{pass:true});
@@ -34,7 +34,7 @@ document.querySelector('#run').onclick=async()=>{
   for(const view of ['top','bottom','front','rear','side','iso']){api.view(view);await pause(500);const b=api.projectedBounds();check(b.min.every(x=>x>-.999)&&b.max.every(x=>x<.999),`Clipped assembled ${view} view`)}
   before=camera();api.setQuality('studio');await pause(200);check(same(before,camera()),'Quality moved camera');check(api.state().camera.pixelRatio<=2,'Studio pixel ratio not capped');api.setQuality('performance');check(api.state().camera.pixelRatio<=1,'Performance pixel ratio not capped');log('Assembled presets and rendering quality',{pass:true,performance:api.performance()});
   const packet={battery_voltage_v:15.42,temperature_c:26.5,light_level:73};api.updateTelemetry(packet,{source:'live'});check(api.state().display.readings.battery_voltage_v===15.42&&api.state().display.display==='bound','Display telemetry binding lost');api.startMockTelemetry();check(api.state().display.source==='mock','Mock provenance lost');api.stopMockTelemetry();api.resetTelemetry();log('Telemetry/display API with explicit synthetic fixtures',{pass:true,note:'No hardware telemetry was connected.'});
-  api.view('miner');await settled();check(api.state().selected==='NerdMiner_Board_LCD','Payload view reference broke');api.reset();await settled();
+  api.view('miner');await settled();check(api.state().selected==='NerdMiner_Heltec_V2','Payload view reference broke');api.reset();await settled();
   const frames=[];let last=performance.now();for(let i=0;i<60;i++){await new Promise(r=>win.requestAnimationFrame(r));const now=performance.now();frames.push(now-last);last=now}frames.sort((a,b)=>a-b);log('Frame timing in this browser',{medianMs:frames[30],p95Ms:frames[57],performance:api.performance()});
   status.textContent='All checks passed';log('PASS',{pass:true});
  }catch(error){status.textContent='Check failed';log('FAIL',{error:error.message,stack:error.stack})}

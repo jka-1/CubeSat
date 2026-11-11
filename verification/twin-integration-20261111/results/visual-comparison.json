@@ -1,0 +1,52 @@
+{
+  "reference": "Original RGBA fallback, with corrected Studio shadow shader invalidation",
+  "drawingBuffer": [
+    1910,
+    1440
+  ],
+  "uiOverlaysExcluded": true,
+  "comparisons": [
+    {
+      "view": "assembled",
+      "maxChannelDifference": 11,
+      "pixelsAbove8": 2,
+      "meanChannelDifference": 0.000237923250306126
+    },
+    {
+      "view": "Regulator_01-top",
+      "maxChannelDifference": 24,
+      "pixelsAbove8": 10,
+      "meanChannelDifference": 0.010157492609223072
+    },
+    {
+      "view": "Regulator_01-bottom",
+      "maxChannelDifference": 8,
+      "pixelsAbove8": 0,
+      "meanChannelDifference": 0.00015785292568387205
+    },
+    {
+      "view": "Regulator_01-oblique",
+      "maxChannelDifference": 20,
+      "pixelsAbove8": 11,
+      "meanChannelDifference": 0.00886435686657367
+    },
+    {
+      "view": "MCU_Final-top",
+      "maxChannelDifference": 22,
+      "pixelsAbove8": 27,
+      "meanChannelDifference": 0.025234734735593494
+    },
+    {
+      "view": "MCU_Final-bottom",
+      "maxChannelDifference": 18,
+      "pixelsAbove8": 2,
+      "meanChannelDifference": 0.0004083586555734951
+    },
+    {
+      "view": "acrylic",
+      "maxChannelDifference": 15,
+      "pixelsAbove8": 2,
+      "meanChannelDifference": 0.00035917259901982484
+    }
+  ]
+}

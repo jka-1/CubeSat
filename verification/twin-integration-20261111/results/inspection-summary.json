@@ -1,0 +1,148 @@
+{
+  "finishedUTC": "2026-11-11T16:58:49.973637+00:00",
+  "browserAssertionsPassed": 19,
+  "focusedTestsPassed": 31,
+  "targetedFixtureTestsPassed": 3,
+  "physicalComponents": 95,
+  "payloadMembers": 20,
+  "triangles": 874229,
+  "pcbs": [
+    {
+      "id": "MCU_Final",
+      "dot": 0.9999999999997569,
+      "upDot": 6.669235671192902e-17,
+      "focus": "focus",
+      "revealed": [
+        "RemovableTop_Front_A"
+      ],
+      "probe": {
+        "id": "MCU_Final",
+        "x": 420.20000000000005,
+        "y": 403.20000620470626
+      },
+      "cpuMs": 7.799999982118607
+    },
+    {
+      "id": "INA226",
+      "dot": 0.9999999999999998,
+      "upDot": 4.432994575058664e-17,
+      "focus": "focus",
+      "revealed": [],
+      "probe": {
+        "id": "INA226",
+        "x": 420.2,
+        "y": 403.19999667011865
+      },
+      "cpuMs": 4.699999988079071
+    },
+    {
+      "id": "Regulator_01",
+      "dot": 0.9999999999999998,
+      "upDot": 1.0587911840678754e-22,
+      "focus": "focus",
+      "revealed": [],
+      "probe": {
+        "id": "Regulator_01",
+        "x": 420.20000000000016,
+        "y": 403.200001338864
+      },
+      "cpuMs": 3.699999988079071
+    },
+    {
+      "id": "Regulator_02",
+      "dot": 0.9999999999999998,
+      "upDot": 1.0587911840678754e-22,
+      "focus": "focus",
+      "revealed": [],
+      "probe": {
+        "id": "Regulator_02",
+        "x": 420.20000000000016,
+        "y": 403.2000013388641
+      },
+      "cpuMs": 3.600000023841858
+    },
+    {
+      "id": "BMS_BQ76942",
+      "dot": 0.9999999999997569,
+      "upDot": 4.432999869014584e-17,
+      "focus": "focus",
+      "revealed": [
+        "RemovableTop_Front_B",
+        "Mount_BMS_BQ76942_04_Clip"
+      ],
+      "probe": {
+        "id": "BMS_BQ76942",
+        "x": 420.20000000000033,
+        "y": 403.20001064352823
+      },
+      "cpuMs": 4.699999988079071
+    },
+    {
+      "id": "Charger_BMS034A_EVM",
+      "dot": 0.999999999999757,
+      "upDot": 1.0587911840678754e-22,
+      "focus": "focus",
+      "revealed": [
+        "RemovableTop_Front_A",
+        "RemovableTop_Front_B"
+      ],
+      "probe": {
+        "id": "Charger_BMS034A_EVM",
+        "x": 420.2,
+        "y": 403.2000069456605
+      },
+      "cpuMs": 4.699999988079071
+    },
+    {
+      "id": "TemperatureSensor",
+      "dot": 1,
+      "upDot": 0,
+      "focus": "focus",
+      "revealed": [],
+      "probe": {
+        "id": "TemperatureSensor",
+        "x": 420.1999999999999,
+        "y": 403.2000000000001
+      },
+      "cpuMs": 15.599999994039536
+    }
+  ],
+  "coverPCB": {
+    "cover": 1,
+    "normal": [
+      -0.9659258285038168,
+      -0.2588190368369549,
+      7.840826422929068e-08
+    ],
+    "direction": [
+      -0.9659258285038168,
+      -0.25881903683695506,
+      7.840826419556269e-08
+    ],
+    "dot": 1.0000000000000002
+  },
+  "fixtureFocus": {
+    "ghosts": [
+      {
+        "id": "Mount_BMS_BQ76942_04_Clip",
+        "ownDraw": true,
+        "transparent": true,
+        "instancedCount": 25
+      }
+    ],
+    "restored": [
+      26,
+      26
+    ]
+  },
+  "shortOrbit": {
+    "durationSeconds": 10,
+    "gpuSamples": 150,
+    "gpuMedianMs": 8.009457999999999,
+    "gpuP95Ms": 8.5205,
+    "disjoint": 0,
+    "newPrograms": 0
+  },
+  "deployed": false,
+  "native60HzPresentationQualified": false
+}

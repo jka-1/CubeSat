@@ -1,0 +1,54 @@
+{
+  "warmup": {
+    "gpuSamples": 4500,
+    "gpuMedianMs": 6.280666,
+    "gpuP95Ms": 8.447832,
+    "gpuDisjointCount": 0,
+    "submittedRendersPerSecond": 59.99321963612523,
+    "renderStartP95Ms": 18.5,
+    "callbackCpuP95Ms": 6.699999988079071
+  },
+  "hotPhases": {
+    "orbit": {
+      "gpuSamples": 450,
+      "gpuMedianMs": 6.0309574999999995,
+      "gpuP95Ms": 10.448334,
+      "gpuDisjointCount": 0,
+      "submittedRendersPerSecond": 59.99926626796984,
+      "renderStartP95Ms": 18.400000005960464,
+      "callbackCpuP95Ms": 5.800000011920929
+    },
+    "lid": {
+      "gpuSamples": 225,
+      "gpuMedianMs": 6.949665,
+      "gpuP95Ms": 8.084,
+      "gpuDisjointCount": 0,
+      "submittedRendersPerSecond": 59.99492812623344,
+      "renderStartP95Ms": 18.900000005960464,
+      "callbackCpuP95Ms": 6.9000000059604645
+    },
+    "explosion": {
+      "gpuSamples": 225,
+      "gpuMedianMs": 6.802249,
+      "gpuP95Ms": 8.511583,
+      "gpuDisjointCount": 0,
+      "submittedRendersPerSecond": 59.993727018508125,
+      "renderStartP95Ms": 18.5,
+      "callbackCpuP95Ms": 6.800000011920929
+    }
+  },
+  "drawingBuffer": [
+    1910,
+    1440
+  ],
+  "logicalTriangles": 874229,
+  "parts": 95,
+  "gpuHeadroomTargetMs": 14,
+  "sustainedGpuHeadroomPass": true,
+  "native60HzPresentationQualified": false,
+  "renderClock": {
+    "mode": "timer60-workload",
+    "targetHz": 60,
+    "presentationQualification": false
+  }
+}

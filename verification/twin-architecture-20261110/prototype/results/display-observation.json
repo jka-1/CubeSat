@@ -1,0 +1,21 @@
+{
+  "recordedClientDate": "2026-11-10",
+  "physicalPixels": [
+    3840,
+    2160
+  ],
+  "scaledResolution": [
+    1920,
+    1080
+  ],
+  "refreshHz": 30.0,
+  "mainDisplay": true,
+  "source": "Filtered system_profiler SPDisplaysDataType -json; _spdisplays_resolution = 1920 x 1080 @ 30.00Hz",
+  "powerSnapshot": "AC Power; charging; lowpowermode 0",
+  "browserCalibration": "120 empty-page RAF intervals, median 33.3 ms; document visible and focused",
+  "limitations": [
+    "No display mode, cable, adapter or OS settings changed.",
+    "These end-of-session observations do not establish exact thermal/power conditions for every earlier sample.",
+    "Cause of the 30 Hz mode and availability of a 60 Hz connection were not determined."
+  ]
+}

@@ -1,0 +1,77 @@
+{
+  "date": "2026-11-11T02:40:13.132127+00:00",
+  "note": "Final isolated optimization pilot. Production/canonical hashes match the starting snapshot. Full-MSAA sustained gate fails; full-resolution FXAA GPU headroom passes as an explicit appearance alternative. Actual 60 Hz presentation remains unqualified.",
+  "files": {
+    "analyze-lean.py": "7c6407ca01573251aaebc7dec3290181e68d78228984b14562a6388cb9d46aec",
+    "analyze-push.py": "6b2035b0bb35f656e6c13518afe3d2aa68e6b20e96d363066e85d99ab8527192",
+    "architecture.test.mjs": "609ec1d0005fae8252ebc84563ebb7ddb6820ece83586865a5cf5a37900712c9",
+    "audit-closed.py": "0559bc29adce603fe7d4694578afa0b53664b7fed97cb516bc8c381f5efa24d6",
+    "boot.mjs": "b0e4840a134935af4febd0416cc359bff9278897a2f3694dcabee4a47b353725",
+    "build-artwork.py": "7fe5d3fac9ab5d2270b0f7140506f84b14918e0adb7c2a451b2659f4a8c85614",
+    "build-prototype.py": "609f6ac3058ee70cefe7d63e082725bc26f45e2c5e6fd39595121e94dee68e4f",
+    "certified-culling.mjs": "6fe8a3c093198a7d1887cac5e6125159f5fe541d2ddff233bdfa1fa7c49b8357",
+    "cheap-occlusion.mjs": "142ff6472939745417bea4bbbf2e5958cc3ae0c79b765961601027dd18e175d3",
+    "compact-vertices.py": "23846b7e8315b71c6a34c80e57e3a5fa628d1b0c3ff748deec2931717e62290b",
+    "compare-fxaa.py": "c8267540753eb6aab2c33761f7e28b67100dfebb5f6d1178e9c566902eb13dc2",
+    "compare-visuals.py": "3910f489d914433a9b148ae53958fa1451579d4383086c15cdadcb879750b8a4",
+    "compile-display.mjs": "89c57a3300dd6e0dd39bcc758ecbd3038e931dfc0b4028e9ee4edca9a7cfc211",
+    "depth-guard.mjs": "7490e028526aaca9bcc18f1f1cb6cda30e778c122a00e52623ca6f4f358e449d",
+    "depth-order.mjs": "d817d26485a0d5989c7f4d56de9d5aef8c08c923aaae6ab26c1a2f2a721a03f3",
+    "fxaa-pass.mjs": "276ffca63d512bbabe8c73b1d2dae1d75a4f5e1a9b44085a25be0cd47742cfe9",
+    "index.html": "f592cfcee77704d1a93010ab8a960d2965fe40f83ea69a51756054157a5fd94c",
+    "lean-acrylic.mjs": "bc4846852f4e90b42d5e5b9989394286bfa4fda48d2d594ab6033c4991d3486d",
+    "lean-renderer.test.mjs": "3d6cdd8bf0e00428498afea47d6b9eb3858a1a47201225ca1568b5f6d16b102f",
+    "legacy-coverage.mjs": "af11361a4690512fbaf9149c03f23a3701dbb04db2843220064bf36fc1674b69",
+    "material-constants.mjs": "9b567d08e8cce974a1e7d6cba530cb33473f6e6de815eb3928b4f7a1463a4fac",
+    "matte-environment.mjs": "a573a8fc78028adc78503982aa65aebceafe75c79100f1b4e4fec5547cd38e84",
+    "model-loader.mjs": "f3c4484caca47a28507d5ab8b0f84a4a8e08a1295e69b335668ba0d0de977416",
+    "orthographic-shadow.mjs": "7e8bed437b983961dac837fe239e0600b33aa4a02318c53027ccc68bcd15fd32",
+    "package.json": "a90fc33418afa2b9cbf4768524b021135b965ecdf993457505bfae3ac44a8428",
+    "partition-closed.mjs": "b09a5942d477315f5de9661bf98add2992eba7fbaae780cd8ef3f4168037e08e",
+    "protocol.json": "bfdd98a349cef7f62020d1f565f737c589980f5e99a4dda032cde718062423ef",
+    "provenance.json": "e878454f8c76a18cd91548aa0bab644669dd6902efd089d889a53724397f70c8",
+    "render-clock.mjs": "02c1d5d67aa111a06a8d2410d026e2951fa3923eeb3460afec42191ffceccd55",
+    "renderer-adapter.mjs": "2aeb745b026d5423502a5927a9d9811356d2e4b8525481aa621c9654c9c2b9e4",
+    "server.py": "464c897c8ac6fdb11a5ac1390aa3efe1a4b4831af6f32c64673e8a8cfab5e268",
+    "summarize.py": "1c2d78fd98e098974f037b56c0d1fd6160553f468c6fb56387183bd95b7b5ae6",
+    "test-browser.mjs": "3b0f7cef96ddec525b15a058dd3277c180fa4000836f95f7a2bd9d9334e70a3c"
+  },
+  "assets": {
+    "assets/artwork-layout.json": "b85d1bba14fd6feb14498a60d2708e8fccfb789c6c01fc76fd38226c67d4b3cb",
+    "assets/artwork-masks.bin.gz": "f6c00c619883a7a24df42006b37bc8dd6127e7be922ffbbf8630142ec4f56f10",
+    "assets/artwork-masks.json": "6cc5be2f4a2f0a11a2ff08cd1485151964bfc57eddd76c8ac61243cb334d05a6",
+    "assets/build-report.json": "29a0c843e73c4ef00a814c785f388d0f76b60c5bf2522d84aa2d1b3122240cf0",
+    "assets/closed-primitives-compact.json": "9d068833b8bb04634dfde2631c6d9392250384ba49e872eb458e18775cbe4893",
+    "assets/closed-primitives.json": "6c1498c0d7175bba58bca73563f6f61913aa0cce9766acca4c74d57a5c56a3ae",
+    "assets/compact-report.json": "7a0b35fcb82429db47d2692de4f6e5fb35cfb5f436311f7d37e0307b6483ebd3",
+    "assets/display-compact.glb": "302cd6162e57fb90b720c2111a0af715fbbe9dfa58f7843c16519af28cdc686b",
+    "assets/display.glb": "3f8e298472678037c112adff3c713a30265679f5563d857eb2692477b81c613a"
+  },
+  "additionalVendor": {
+    "vendor/FXAAShader.mjs": {
+      "sha256": "b8303d179f9d5d40a052483e8cfb49c29afb6e60396080e472a6950b51700dac",
+      "source": "https://raw.githubusercontent.com/mrdoob/three.js/r176/examples/jsm/shaders/FXAAShader.js",
+      "unmodified": true,
+      "license": "vendor/three-r176/LICENSE",
+      "licenseSHA256": "bfe119ea4fd413f5f7ca3fcd63adb0c4a073ed39daa2fe7d3e6b769e21272601"
+    }
+  },
+  "productionSourceIntegrity": {
+    "site/knight-eps-phase12/viewer/main.mjs": {
+      "matches": true,
+      "sha256": "7d7d11b0e7e326c2f4a1a414305bedfb242652bc266ad0a2065db93e9a9d3092"
+    },
+    "site/knight-eps-phase12/viewer/display.mjs": {
+      "matches": true,
+      "sha256": "07abca6dc06f376c8219187fe74d4d2859dec2fe51c9940997d89c69e2a43108"
+    },
+    "site/knight-eps-phase12/viewer/render-optimizations.mjs": {
+      "matches": true,
+      "sha256": "0555339e7c3c557e2a06f2f917f960b5ed45dedad6c763fdaf41098a65a2952c"
+    },
+    "site/knight-eps-phase12/models/KnightEPS_Detailed.glb": {
+      "matches": true,
+      "sha256": "dee1eeb8d43504350bf0c34fc8eff95210aa505eec6ff0da168c6f740c803f47"
+    }
+  }
+}

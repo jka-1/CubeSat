@@ -1,0 +1,22 @@
+[
+  {
+    "originalPath": "/Users/itzjaclechtman/Downloads/Knight_EPS_BMS_Final_green.glb",
+    "retainedPath": "model-sources/power-boards/Knight_EPS_BMS_Final_green.glb",
+    "sha256": "19157890e571f6dc2b74fff6eea2dc763ac4936c0612e53cda3ce80f8ff53145",
+    "bytes": 1353444,
+    "nodes": 189,
+    "meshes": 178,
+    "hasAuthoredNormals": false,
+    "images": 2
+  },
+  {
+    "originalPath": "/Users/itzjaclechtman/Downloads/Knight_EPS_MPPT_High_Fidelity_Gerber_v4.glb",
+    "retainedPath": "model-sources/power-boards/Knight_EPS_MPPT_High_Fidelity_Gerber_v4.glb",
+    "sha256": "ca9d409e9b038669eaef278d4e0ecd4fb3e41a0667d531ff192458be4e378613",
+    "bytes": 4341836,
+    "nodes": 483,
+    "meshes": 475,
+    "hasAuthoredNormals": false,
+    "images": 2
+  }
+]

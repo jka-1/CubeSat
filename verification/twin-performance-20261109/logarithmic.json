@@ -1,0 +1,224 @@
+{
+  "depth": "logarithmic",
+  "renderer": "ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655",
+  "browser": "Chromium 155, macOS, in-app browser",
+  "viewport": [
+    947,
+    720
+  ],
+  "nativeDpr": 2,
+  "warmupFrames": 45,
+  "measuredFrames": 120,
+  "frameIntervalSamples": 119,
+  "gpuSamplesPerCase": 29,
+  "precision": "CPU and frame interval values rounded to 0.1 ms from visible browser output; GPU times retained at reported precision.",
+  "scene": {
+    "meshCount": 333,
+    "materials": 333,
+    "geometries": 260,
+    "parts": 95
+  },
+  "results": [
+    {
+      "label": "performance idle",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 33.5,
+        "p95": 66.7
+      },
+      "cpuFrameMs": {
+        "median": 4.7,
+        "p95": 6.2
+      },
+      "cpuAssemblyMedianMs": 0.3,
+      "cpuRenderMedianMs": 4.3,
+      "gpuRenderMs": {
+        "median": 28.273666,
+        "p95": 30.011166
+      },
+      "drawCalls": 347,
+      "triangles": 877691
+    },
+    {
+      "label": "performance orbit",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 17.6,
+        "p95": 50.2
+      },
+      "cpuFrameMs": {
+        "median": 4.7,
+        "p95": 6
+      },
+      "cpuAssemblyMedianMs": 0.3,
+      "cpuRenderMedianMs": 4.5,
+      "gpuRenderMs": {
+        "median": 7.058083,
+        "p95": 20.223749
+      },
+      "drawCalls": 347,
+      "triangles": 877691
+    },
+    {
+      "label": "studio orbit native DPR",
+      "dpr": 2,
+      "intervalMs": {
+        "median": 83,
+        "p95": 99.8
+      },
+      "cpuFrameMs": {
+        "median": 22.9,
+        "p95": 26.3
+      },
+      "cpuAssemblyMedianMs": 0.3,
+      "cpuRenderMedianMs": 22.5,
+      "gpuRenderMs": {
+        "median": 61.6005,
+        "p95": 75.698667
+      },
+      "drawCalls": 985,
+      "triangles": 2622665
+    },
+    {
+      "label": "studio orbit DPR 1",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 66.4,
+        "p95": 67.4
+      },
+      "cpuFrameMs": {
+        "median": 26.9,
+        "p95": 30
+      },
+      "cpuAssemblyMedianMs": 0.3,
+      "cpuRenderMedianMs": 26.7,
+      "gpuRenderMs": {
+        "median": 46.195832,
+        "p95": 49.937582
+      },
+      "drawCalls": 985,
+      "triangles": 2622665
+    },
+    {
+      "label": "studio orbit DPR 1 cached shadows",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 49.8,
+        "p95": 51
+      },
+      "cpuFrameMs": {
+        "median": 22.3,
+        "p95": 24.6
+      },
+      "cpuAssemblyMedianMs": 0.2,
+      "cpuRenderMedianMs": 22,
+      "gpuRenderMs": {
+        "median": 34.569583,
+        "p95": 37.832917
+      },
+      "drawCalls": 667,
+      "triangles": 1751896
+    },
+    {
+      "label": "studio orbit DPR 1 cached shadows half transmission",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 33.4,
+        "p95": 49.2
+      },
+      "cpuFrameMs": {
+        "median": 19.3,
+        "p95": 21.1
+      },
+      "cpuAssemblyMedianMs": 0.2,
+      "cpuRenderMedianMs": 19.1,
+      "gpuRenderMs": {
+        "median": 12.048083,
+        "p95": 26.885916
+      },
+      "drawCalls": 667,
+      "triangles": 1751896
+    },
+    {
+      "label": "studio orbit DPR 1 no shadows",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 33.6,
+        "p95": 50.4
+      },
+      "cpuFrameMs": {
+        "median": 19.6,
+        "p95": 20.6
+      },
+      "cpuAssemblyMedianMs": 0.3,
+      "cpuRenderMedianMs": 19.2,
+      "gpuRenderMs": {
+        "median": 27.857084,
+        "p95": 28.887583
+      },
+      "drawCalls": 667,
+      "triangles": 1751896
+    },
+    {
+      "label": "studio orbit DPR 1 no transmission",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 33.4,
+        "p95": 34.3
+      },
+      "cpuFrameMs": {
+        "median": 7.1,
+        "p95": 7.5
+      },
+      "cpuAssemblyMedianMs": 0.3,
+      "cpuRenderMedianMs": 6.7,
+      "gpuRenderMs": {
+        "median": 22.605082,
+        "p95": 22.907332
+      },
+      "drawCalls": 665,
+      "triangles": 1748460
+    },
+    {
+      "label": "performance orbit skip assembly updates",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 17.6,
+        "p95": 34.3
+      },
+      "cpuFrameMs": {
+        "median": 4.1,
+        "p95": 5.4
+      },
+      "cpuAssemblyMedianMs": 0,
+      "cpuRenderMedianMs": 4.1,
+      "gpuRenderMs": {
+        "median": 19.536082,
+        "p95": 19.953081
+      },
+      "drawCalls": 347,
+      "triangles": 877691
+    },
+    {
+      "label": "performance orbit repeat",
+      "dpr": 1,
+      "intervalMs": {
+        "median": 17.7,
+        "p95": 49.9
+      },
+      "cpuFrameMs": {
+        "median": 5.1,
+        "p95": 5.8
+      },
+      "cpuAssemblyMedianMs": 0.2,
+      "cpuRenderMedianMs": 4.8,
+      "gpuRenderMs": {
+        "median": 19.383083,
+        "p95": 20.460499
+      },
+      "drawCalls": 347,
+      "triangles": 877691
+    }
+  ],
+  "complete": true
+}

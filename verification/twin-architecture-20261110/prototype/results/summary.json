@@ -1,0 +1,609 @@
+[
+  {
+    "file": "legacy-original-measure.json",
+    "backend": "legacy-webgl",
+    "hardware": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "webGPUAdapter": null,
+      "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "samples": 4,
+      "logarithmicDepthBuffer": true
+    },
+    "presentationQualification": "Unavailable: active display measured at 30 Hz",
+    "materialMiBEstimate": 660.6889915466309,
+    "interactions": [
+      {
+        "name": "orbit",
+        "elapsedMs": 30000,
+        "renderedFrames": 575,
+        "fps": 19.166666666666664,
+        "frameMs": {
+          "samples": 574,
+          "median": 52.0,
+          "p95": 60.29999999701977,
+          "p99": 66.5,
+          "max": 71.20000000298023
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 574,
+          "median": 9.599999994039536,
+          "p95": 11.800000011920929,
+          "p99": 13.700000002980232,
+          "max": 17
+        },
+        "gpuMs": {
+          "samples": 143,
+          "median": 46.784334,
+          "p95": 52.942166,
+          "p99": 55.200666,
+          "max": 56.8135
+        },
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 574,
+          "median": 395.0,
+          "p95": 395,
+          "p99": 395,
+          "max": 395
+        },
+        "triangles": {
+          "samples": 574,
+          "median": 1751896.0,
+          "p95": 1751896,
+          "p99": 1751896,
+          "max": 1751896
+        },
+        "passesCadence": false,
+        "intervalSumMs": 29975.79999999702
+      },
+      {
+        "name": "lid",
+        "elapsedMs": 15000,
+        "renderedFrames": 281,
+        "fps": 18.733333333333334,
+        "frameMs": {
+          "samples": 280,
+          "median": 52.19999999552965,
+          "p95": 64.8999999910593,
+          "p99": 69.40000000596046,
+          "max": 71.5
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 280,
+          "median": 9.300000004470348,
+          "p95": 16.200000002980232,
+          "p99": 25.900000005960464,
+          "max": 31.900000005960464
+        },
+        "gpuMs": {
+          "samples": 70,
+          "median": 47.5505825,
+          "p95": 57.224916,
+          "p99": 62.203916,
+          "max": 62.203916
+        },
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 280,
+          "median": 577.0,
+          "p95": 577,
+          "p99": 577,
+          "max": 577
+        },
+        "triangles": {
+          "samples": 280,
+          "median": 2622665.0,
+          "p95": 2622665,
+          "p99": 2622665,
+          "max": 2622665
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14982.59999999404
+      },
+      {
+        "name": "explosion",
+        "elapsedMs": 15000,
+        "renderedFrames": 306,
+        "fps": 20.400000000000002,
+        "frameMs": {
+          "samples": 305,
+          "median": 48.29999999701977,
+          "p95": 60.30000001192093,
+          "p99": 65.70000000298023,
+          "max": 69.6000000089407
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 305,
+          "median": 8,
+          "p95": 10.200000002980232,
+          "p99": 10.900000005960464,
+          "max": 11.5
+        },
+        "gpuMs": {
+          "samples": 78,
+          "median": 43.006457499999996,
+          "p95": 54.105832,
+          "p99": 62.284334,
+          "max": 62.284334
+        },
+        "fractionAbove25ms": 0.9967213114754099,
+        "draws": {
+          "samples": 305,
+          "median": 577,
+          "p95": 577,
+          "p99": 577,
+          "max": 577
+        },
+        "triangles": {
+          "samples": 305,
+          "median": 2622665,
+          "p95": 2622665,
+          "p99": 2622665,
+          "max": 2622665
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14977.39999999106
+      }
+    ]
+  },
+  {
+    "file": "node-webgl-packed-measure.json",
+    "backend": "node-webgl",
+    "hardware": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "webGPUAdapter": null,
+      "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "samples": 4,
+      "logarithmicDepthBuffer": true
+    },
+    "presentationQualification": "Unavailable: active display measured at 30 Hz",
+    "materialMiBEstimate": 166.87677764892578,
+    "interactions": [
+      {
+        "name": "orbit",
+        "elapsedMs": 30005.5,
+        "renderedFrames": 569,
+        "fps": 18.963190081818336,
+        "frameMs": {
+          "samples": 568,
+          "median": 54.79999999701977,
+          "p95": 69,
+          "p99": 75.3999999910593,
+          "max": 78.29999999701977
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 568,
+          "median": 4.9000000059604645,
+          "p95": 6.9000000059604645,
+          "p99": 8,
+          "max": 8.599999994039536
+        },
+        "gpuMs": {
+          "samples": 141,
+          "median": 41.476,
+          "p95": 56.915332,
+          "p99": 66.484249,
+          "max": 68.151333
+        },
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 568,
+          "median": 212.0,
+          "p95": 212,
+          "p99": 212,
+          "max": 212
+        },
+        "triangles": {
+          "samples": 568,
+          "median": 877692.0,
+          "p95": 877692,
+          "p99": 877692,
+          "max": 877692
+        },
+        "passesCadence": false,
+        "intervalSumMs": 29935.40000000596
+      },
+      {
+        "name": "lid",
+        "elapsedMs": 15003.39999999106,
+        "renderedFrames": 285,
+        "fps": 18.995694309301214,
+        "frameMs": {
+          "samples": 284,
+          "median": 54.099999994039536,
+          "p95": 70,
+          "p99": 79.70000000298023,
+          "max": 84.90000000596046
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 284,
+          "median": 11.450000002980232,
+          "p95": 15,
+          "p99": 16,
+          "max": 17.700000002980232
+        },
+        "gpuMs": {
+          "samples": 72,
+          "median": 41.003249,
+          "p95": 57.965333,
+          "p99": 68.512916,
+          "max": 68.512916
+        },
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 284,
+          "median": 394.0,
+          "p95": 394,
+          "p99": 394,
+          "max": 394
+        },
+        "triangles": {
+          "samples": 284,
+          "median": 1748461.0,
+          "p95": 1748461,
+          "p99": 1748461,
+          "max": 1748461
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14951.40000000596
+      },
+      {
+        "name": "explosion",
+        "elapsedMs": 15006.59999999404,
+        "renderedFrames": 275,
+        "fps": 18.32527021444626,
+        "frameMs": {
+          "samples": 274,
+          "median": 55.5,
+          "p95": 72.69999998807907,
+          "p99": 88.80000001192093,
+          "max": 95.90000000596046
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 274,
+          "median": 13.149999998509884,
+          "p95": 17.200000002980232,
+          "p99": 19.200000002980232,
+          "max": 19.599999994039536
+        },
+        "gpuMs": {
+          "samples": 70,
+          "median": 42.929916500000004,
+          "p95": 58.076666,
+          "p99": 67.036333,
+          "max": 67.036333
+        },
+        "fractionAbove25ms": 0.9963503649635036,
+        "draws": {
+          "samples": 274,
+          "median": 394.0,
+          "p95": 394,
+          "p99": 394,
+          "max": 394
+        },
+        "triangles": {
+          "samples": 274,
+          "median": 1748461.0,
+          "p95": 1748461,
+          "p99": 1748461,
+          "max": 1748461
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14930.70000000298
+      }
+    ]
+  },
+  {
+    "file": "node-webgl-surface-measure.json",
+    "backend": "node-webgl",
+    "hardware": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "webGPUAdapter": null,
+      "renderer": "ANGLE (Intel, ANGLE Metal Renderer: Intel(R) Iris(TM) Plus Graphics 655, Unspecified Version)",
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "samples": 4,
+      "logarithmicDepthBuffer": true
+    },
+    "presentationQualification": "Unavailable: active display measured at 30 Hz",
+    "materialMiBEstimate": 166.87677764892578,
+    "interactions": [
+      {
+        "name": "orbit",
+        "elapsedMs": 30004.89999999106,
+        "renderedFrames": 538,
+        "fps": 17.930404700570918,
+        "frameMs": {
+          "samples": 537,
+          "median": 56,
+          "p95": 73.20000000298023,
+          "p99": 79,
+          "max": 97.19999998807907
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 537,
+          "median": 3.9000000059604645,
+          "p95": 6.199999988079071,
+          "p99": 7.700000002980232,
+          "max": 12.600000008940697
+        },
+        "gpuMs": {
+          "samples": 134,
+          "median": 43.515583,
+          "p95": 66.562749,
+          "p99": 75.555332,
+          "max": 76.068249
+        },
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 537,
+          "median": 182,
+          "p95": 182,
+          "p99": 182,
+          "max": 182
+        },
+        "triangles": {
+          "samples": 537,
+          "median": 877632,
+          "p95": 877632,
+          "p99": 877632,
+          "max": 877632
+        },
+        "passesCadence": false,
+        "intervalSumMs": 29925.0
+      },
+      {
+        "name": "lid",
+        "elapsedMs": 15017.29999999702,
+        "renderedFrames": 267,
+        "fps": 17.779494316558434,
+        "frameMs": {
+          "samples": 266,
+          "median": 56.79999999701977,
+          "p95": 74,
+          "p99": 90.5,
+          "max": 99.70000000298023
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 266,
+          "median": 4.699999988079071,
+          "p95": 7.299999997019768,
+          "p99": 8.799999997019768,
+          "max": 9.399999991059303
+        },
+        "gpuMs": {
+          "samples": 67,
+          "median": 43.979084,
+          "p95": 67.690249,
+          "p99": 69.441833,
+          "max": 69.441833
+        },
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 266,
+          "median": 358.0,
+          "p95": 358,
+          "p99": 358,
+          "max": 358
+        },
+        "triangles": {
+          "samples": 266,
+          "median": 1748389.0,
+          "p95": 1748389,
+          "p99": 1748389,
+          "max": 1748389
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14985.699999988079
+      },
+      {
+        "name": "explosion",
+        "elapsedMs": 15003.09999999404,
+        "renderedFrames": 288,
+        "fps": 19.196032819891517,
+        "frameMs": {
+          "samples": 287,
+          "median": 52.70000000298023,
+          "p95": 69,
+          "p99": 77.40000000596046,
+          "max": 86.3999999910593
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 287,
+          "median": 5.5,
+          "p95": 8.099999994039536,
+          "p99": 9.099999994039536,
+          "max": 10.200000002980232
+        },
+        "gpuMs": {
+          "samples": 72,
+          "median": 43.5428325,
+          "p95": 58.102,
+          "p99": 69.384749,
+          "max": 69.384749
+        },
+        "fractionAbove25ms": 0.9965156794425087,
+        "draws": {
+          "samples": 287,
+          "median": 358,
+          "p95": 358,
+          "p99": 358,
+          "max": 358
+        },
+        "triangles": {
+          "samples": 287,
+          "median": 1748389,
+          "p95": 1748389,
+          "p99": 1748389,
+          "max": 1748389
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14924.0
+      }
+    ]
+  },
+  {
+    "file": "node-webgpu-original-measure.json",
+    "backend": "webgpu",
+    "hardware": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+      "webGPUAdapter": {
+        "vendor": "intel",
+        "architecture": "gen-9",
+        "device": "",
+        "description": ""
+      },
+      "renderer": null,
+      "viewport": [
+        955,
+        720
+      ],
+      "buffer": [
+        1910,
+        1440
+      ],
+      "samples": 4,
+      "logarithmicDepthBuffer": true
+    },
+    "presentationQualification": "Unavailable: active display measured at 30 Hz",
+    "materialMiBEstimate": 660.6890525817871,
+    "interactions": [
+      {
+        "name": "orbit",
+        "elapsedMs": 30022.79999999702,
+        "renderedFrames": 572,
+        "fps": 19.052187004545104,
+        "frameMs": {
+          "samples": 571,
+          "median": 51.29999999701977,
+          "p95": 62.20000000298023,
+          "p99": 68.09999999403954,
+          "max": 87.79999999701977
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 571,
+          "median": 3.5999999940395355,
+          "p95": 5.100000008940697,
+          "p99": 6.200000002980232,
+          "max": 7.299999997019768
+        },
+        "gpuMs": null,
+        "fractionAbove25ms": 0.9982486865148862,
+        "draws": {
+          "samples": 571,
+          "median": 212,
+          "p95": 212,
+          "p99": 212,
+          "max": 212
+        },
+        "triangles": {
+          "samples": 571,
+          "median": 877692,
+          "p95": 877692,
+          "p99": 877692,
+          "max": 877692
+        },
+        "passesCadence": false,
+        "intervalSumMs": 29986.5
+      },
+      {
+        "name": "lid",
+        "elapsedMs": 15031.79999999702,
+        "renderedFrames": 241,
+        "fps": 16.032677390601776,
+        "frameMs": {
+          "samples": 240,
+          "median": 62.149999998509884,
+          "p95": 73.20000000298023,
+          "p99": 82.20000000298023,
+          "max": 83
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 240,
+          "median": 6.600000008940697,
+          "p95": 11.600000008940697,
+          "p99": 14.200000002980232,
+          "max": 15.599999994039536
+        },
+        "gpuMs": null,
+        "fractionAbove25ms": 1.0,
+        "draws": {
+          "samples": 240,
+          "median": 394.0,
+          "p95": 394,
+          "p99": 394,
+          "max": 394
+        },
+        "triangles": {
+          "samples": 240,
+          "median": 1748461.0,
+          "p95": 1748461,
+          "p99": 1748461,
+          "max": 1748461
+        },
+        "passesCadence": false,
+        "intervalSumMs": 15012.89999999106
+      },
+      {
+        "name": "explosion",
+        "elapsedMs": 15005.79999999702,
+        "renderedFrames": 266,
+        "fps": 17.726479094753554,
+        "frameMs": {
+          "samples": 265,
+          "median": 56.70000000298023,
+          "p95": 67.70000000298023,
+          "p99": 74.40000000596046,
+          "max": 76.90000000596046
+        },
+        "cpuRenderSubmitMs": {
+          "samples": 265,
+          "median": 6.700000002980232,
+          "p95": 10,
+          "p99": 11,
+          "max": 11.300000011920929
+        },
+        "gpuMs": null,
+        "fractionAbove25ms": 0.9962264150943396,
+        "draws": {
+          "samples": 265,
+          "median": 394,
+          "p95": 394,
+          "p99": 394,
+          "max": 394
+        },
+        "triangles": {
+          "samples": 265,
+          "median": 1748461,
+          "p95": 1748461,
+          "p99": 1748461,
+          "max": 1748461
+        },
+        "passesCadence": false,
+        "intervalSumMs": 14941.29999999702
+      }
+    ]
+  }
+]
