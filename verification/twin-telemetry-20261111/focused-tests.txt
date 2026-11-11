@@ -1,0 +1,56 @@
+(node:58006) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ LCD shows six real readings in two columns of three with accessible text (13.445437ms)
+✔ display preserves source age/expiry and rejects a late snapshot (1.827543ms)
+✔ new snapshots clear unavailable readings without preserving old numbers (2.75529ms)
+✔ Wi-Fi bars require fresh device RSSI and cannot imply measured signal from SSE alone (0.770068ms)
+✔ custom LCD presentation survives status refresh and validates timing (2.274215ms)
+(node:58007) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ payload leaves share one logical selection without changing CAD ownership (11.197532ms)
+✔ head-on PCB focus follows its current parent transform (2.959886ms)
+✔ battery and payload focus approach their outside faces (3.733985ms)
+✔ opposite-side focus transition keeps its distance from the orbit anchor (1.904201ms)
+✔ battery pack owns holder and four cells logically, with complete inspection bounds (3.216039ms)
+✔ floor-board focus returns to upright orbit without a polar singularity (1.6033ms)
+✔ ordinary inspection returns upright while preserving angle and distance (0.372753ms)
+✔ all eight PCB assemblies use supplied detailed geometry with no legacy mesh (7.297444ms)
+✔ all existing component identities and board anchor transforms survive (46.556383ms)
+✔ substrate support planes remain seated, without scaling electronics (1.339248ms)
+✔ compiler packs only referenced geometry and valid binary ranges (2.124072ms)
+✔ new power boards preserve every supplied position, UV, triangle, material and embedded image (523.63775ms)
+(node:58009) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/site/knight-eps-phase12/viewer/vendor/three/build/three.module.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /Users/itzjaclechtman/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ depth fit covers the assembly and exposes unsafe camera intersections (4.467787ms)
+✔ coverage material clones retain shader behavior through viewer overrides (2.964797ms)
+✔ acrylic clones retain physical surface parameters and explicit alternative transmission (5.935083ms)
+✔ bounded depth wraps existing shader hooks and retains the log fallback (1.129033ms)
+✔ orthographic shadow optimization preserves the packed depth formula and resets for perspective lights (1.299766ms)
+✔ closed solids retain both sides for clipped/interior views and transparent overrides (13.878993ms)
+✔ regional capture retains original pixels and all blur taps, including screen edges and resize (3.495517ms)
+✔ occlusion prepass rejects surfaces that cannot safely write ordinary opaque depth (0.977889ms)
+✔ fully offscreen acrylic avoids a framebuffer copy; uncertain projection retains full capture (0.368564ms)
+✔ R8 artwork shadow alpha is corrected independently of orthographic depth optimization (1.113105ms)
+✔ opening the SSE connection alone does not create live measurements (28.552778ms)
+✔ real v6 decoding reaches the Twin with confirmed measurements and ignores replay (21.512356ms)
+✔ absent BMS and unavailable or malformed packets cannot fabricate readings (5.160674ms)
+✔ stale packets are rejected and bridge clock skew is honored (14.4953ms)
+✔ leaving the page closes SSE, clears timers and stops late packet forwarding (21.893418ms)
+✔ leaving while the model loads cannot start a late SSE subscription (2.069115ms)
+✔ zero-valued MPPT channels and original sample age reach the Twin unchanged (13.084193ms)
+✔ an out-of-order envelope cannot replace newer Twin measurements (6.172296ms)
+✔ missing or paused devices do not forward cached values (3.593582ms)
+ℹ tests 36
+ℹ suites 0
+ℹ pass 36
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1835.72656

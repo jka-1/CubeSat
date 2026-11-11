@@ -279,7 +279,12 @@
             "url": "https://www.ti.com/product/INA226"
           }
         ],
-        "fields": []
+        "fields": [
+          "pv_bus_voltage_v",
+          "pv_current_a",
+          "pv_power_w",
+          "pv_shunt_voltage_mv"
+        ]
       },
       "model_upgrade": {
         "source_sha256": "1c62b2c930960530af2f940acd04b923c625373a0cf31719b02218667b08f1c5",
@@ -1461,7 +1466,12 @@
           }
         ],
         "fields": [
-          "battery_voltage_v"
+          "battery_voltage_v",
+          "bms_temperature_c",
+          "bms_cell_1_v",
+          "bms_cell_2_v",
+          "bms_cell_3_v",
+          "bms_cell_4_v"
         ]
       },
       "model_upgrade": {
@@ -1567,7 +1577,11 @@
         "purpose": "Routes solar and protected battery power to the system output. Supports MPPT; charging is disabled for the laboratory discharge demonstration.",
         "links": [],
         "fields": [
-          "battery_voltage_v",
+          "mppt_vbus_v",
+          "mppt_vac1_v",
+          "mppt_vbat_v",
+          "mppt_vsys_v",
+          "mppt_ibus_a",
           "mppt_switch_temperature_c"
         ]
       },
@@ -1650,7 +1664,11 @@
         "purpose": "Locates the four battery cells and provides their contact arrangement.",
         "links": [],
         "fields": [
-          "battery_voltage_v"
+          "battery_voltage_v",
+          "bms_cell_1_v",
+          "bms_cell_2_v",
+          "bms_cell_3_v",
+          "bms_cell_4_v"
         ]
       }
     },
@@ -8498,7 +8516,11 @@
         "links": [],
         "fields": [
           "battery_voltage_v",
-          "solar_panel_current_a"
+          "pv_current_a",
+          "temperature_c",
+          "light_level",
+          "esp32_temperature_c",
+          "mppt_switch_temperature_c"
         ]
       },
       "reconstruction_status": "Geometry from user-supplied asset",

@@ -1,0 +1,90 @@
+{
+  "checks": [
+    {
+      "name": "dashboard and embedded viewer share one stream",
+      "passed": true
+    },
+    {
+      "name": "all six screenshot MPPT values reach the live Twin snapshot",
+      "passed": true
+    },
+    {
+      "name": "selected MPPT shows all six actual fields with their correct units",
+      "passed": true
+    },
+    {
+      "name": "LCD exposes all six overview values and device RSSI",
+      "passed": true
+    },
+    {
+      "name": "new unavailable-device snapshot clears previous readings on both UI and LCD",
+      "passed": true
+    },
+    {
+      "name": "forwarding preserves four seconds of sample age",
+      "passed": true
+    },
+    {
+      "name": "the same sample becomes stale at the shared source threshold",
+      "passed": true
+    },
+    {
+      "name": "older arrival cannot overwrite the freshest MPPT value",
+      "passed": true
+    },
+    {
+      "name": "transport reconnect alone does not rewrite sample time",
+      "passed": true
+    },
+    {
+      "name": "parent and viewer fit mobile width",
+      "passed": true
+    }
+  ],
+  "synthetic": true,
+  "final": {
+    "source": "live",
+    "presentation": {
+      "state": "telemetry",
+      "title": "KNIGHT EPS",
+      "message": null,
+      "lines": []
+    },
+    "display": "bound",
+    "bindingBasis": "user_supplied_surface",
+    "screen": "NerdMiner_Screen",
+    "health": "fresh",
+    "label": "Live data",
+    "ageMs": 843,
+    "telemetry": "received",
+    "readings": {
+      "battery_voltage_v": 14.98,
+      "pv_current_a": 0.000001,
+      "pv_bus_voltage_v": 5.00375,
+      "pv_power_w": 0.000005,
+      "pv_shunt_voltage_mv": 0.1,
+      "esp32_temperature_c": 26,
+      "mppt_switch_temperature_c": 19,
+      "mppt_vbus_v": 5.024,
+      "mppt_vac1_v": 5.04,
+      "mppt_vbat_v": 14.553,
+      "mppt_vsys_v": 12.806,
+      "mppt_ibus_a": 0.25,
+      "bms_temperature_c": 24.75,
+      "bms_cell_1_v": 3.813,
+      "bms_cell_2_v": 3.807,
+      "bms_cell_3_v": 3.676,
+      "bms_cell_4_v": 3.677,
+      "temperature_c": 25,
+      "light_level": 0.5,
+      "light_voltage_mv": 1550,
+      "temperature_voltage_mv": 750,
+      "wifi_rssi_dbm": -55
+    },
+    "receivedAt": 1794427774952,
+    "transport": "connected",
+    "error": null
+  },
+  "complete": true,
+  "errors": []
+}

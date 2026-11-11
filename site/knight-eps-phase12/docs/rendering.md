@@ -193,3 +193,32 @@ The previous loading/concurrency numbers above describe the pre-replacement
 package. Current replacement measurements and limitations are recorded in
 `verification/twin-replacements-20261111/report.md`. The design target remains
 60 fps, including external monitors and the 2018 Intel MacBook Pro.
+
+## Telemetry snapshots and payload LCD
+
+The dashboard keeps its single shared SSE connection and forwards complete
+current snapshots to the embedded viewer. The adapter now includes all six
+BQ25798 power-path ADC values, MCU temperature, INA226 engineering values,
+BMS pack/cell/internal temperatures, peripheral inputs and device-reported
+Wi-Fi RSSI. Presence/paused/error flags still gate device readings. Missing
+channels clear on the next snapshot; zero is a valid value. MPPT VBAT and
+BMS PACK voltage remain separate channels, and INA226 current is labelled PV
+current rather than being inferred as independent solar-panel current.
+
+The adapter uses the shared model's stale threshold and bridge-clock-adjusted
+sample time. It rejects older arrivals and does not restart the freshness
+clock on forwarding, reconnects or periodic age updates. The viewer API
+accepts `receivedAt` in client-clock milliseconds, `staleMs`, and
+`snapshot: true` for a complete snapshot, including an empty one. Existing
+flat numeric fields remain accepted. The legacy
+`mppt_switch_temperature_c` field carries the decoded MPPT die temperature;
+the UI labels this as die temperature, not a separate switch sensor.
+
+The full-resolution 768 × 582 live canvas shows three readings per column:
+battery/PV current/ambient temperature and light/MCU temperature/MPPT die
+temperature. Relative light retains the decoded 0–1 scale. A drawn Wi-Fi
+indicator uses device RSSI only while telemetry is fresh and connected;
+transport alone does not establish signal strength. Stale/disconnected data
+and mock mode do not illuminate its bars. Custom presentation screens and
+reset behavior remain intact. All tests used explicit local synthetic data;
+no hardware or production endpoint was contacted for this change.

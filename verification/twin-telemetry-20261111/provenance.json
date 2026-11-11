@@ -1,0 +1,18 @@
+{
+  "files": {
+    "site/assets/js/twin.js": "1a659192ac9c262ba0b9de8845c8bb3117b193e36ea9a34517dee40c3a88e7f6",
+    "site/knight-eps-phase12/viewer/telemetry.mjs": "136e8c02b19c08c2d14f1e91a5cde78876c2097c588bee9201e3cb005a854b72",
+    "site/knight-eps-phase12/viewer/display.mjs": "00b3b4f99c5c211e4477c582e80df459e204b999ebe4748131233ac145d2ced3",
+    "site/knight-eps-phase12/viewer/main.mjs": "b073142e7a9105df11c9e60630764ec9f85ab297e75bb7fbfe69ab408541d508",
+    "site/knight-eps-phase12/viewer/index.html": "ff47f0741fe9a5f57b29e077af0579d4ca927c1d59107148e498ad64bf6990cb",
+    "site/knight-eps-phase12/docs/component_manifest.json": "c0444bb3286d855fe84de125fd73e94a50661e26e1fe90c912ff8b73ffb947e7",
+    "tests/twin/display.test.mjs": "f169389a71b89013272e0d0347e49931a80b814d0e1fdc3909a06c4060317f54",
+    "tests/twin/telemetry-integration.test.mjs": "f8b58936a1b23e4bd313e7506ab25133fea6727af0484cc5c58f73d2b15a9465"
+  },
+  "testData": "Local synthetic fixtures only",
+  "deployed": false,
+  "pushed": false,
+  "browserChecks": 10,
+  "focusedTests": 36,
+  "sharedAuthTests": 22
+}

@@ -10,17 +10,30 @@ export function twinPacketFromModel(model) {
   const visible = model.visibility || {};
   const decoded = model.decoded;
   if (!decoded) return null;
-  const packet = {};
-  if (visible.bms?.visible && Number.isFinite(decoded.bms?.packV)) {
-    packet.battery_voltage_v = decoded.bms.packV;
+  const packet = {}, telemetry = model.latest?.packet?.telemetry || {};
+  const put = (key, value) => { if (typeof value === 'number' && Number.isFinite(value)) packet[key] = value; };
+  if (visible.bms?.visible) {
+    put('battery_voltage_v', decoded.bms?.packV);
+    put('bms_temperature_c', decoded.bms?.intTempC);
+    for (let i = 0; i < 4; i++) put(`bms_cell_${i + 1}_v`, decoded.bms?.cells?.[i]?.v);
   }
-  if (Number.isFinite(decoded.peripheral?.temperatureC)) {
-    packet.temperature_c = decoded.peripheral.temperatureC;
+  if (visible.pv?.visible) {
+    put('pv_current_a', decoded.pv?.currentA);
+    put('pv_bus_voltage_v', decoded.pv?.busV);
+    put('pv_power_w', decoded.pv?.powerW);
+    put('pv_shunt_voltage_mv', decoded.pv?.shuntMv);
   }
-  if (Number.isFinite(decoded.peripheral?.relativeLightLevel)) {
-    packet.light_level = decoded.peripheral.relativeLightLevel;
+  if (visible.mppt?.visible) {
+    for (const [key, field] of Object.entries({mppt_vbus_v:'vbusV',mppt_vac1_v:'vac1V',mppt_vbat_v:'vbatV',mppt_vsys_v:'vsysV',mppt_switch_temperature_c:'dieTempC'})) put(key, decoded.mppt?.[field]);
+    put('mppt_ibus_a', telemetry.mppt?.ibusA);
   }
-  return Object.keys(packet).length ? packet : null;
+  put('esp32_temperature_c', telemetry.mcu?.temperatureC);
+  put('temperature_c', decoded.peripheral?.temperatureC);
+  put('light_level', decoded.peripheral?.relativeLightLevel);
+  put('light_voltage_mv', decoded.peripheral?.lightVoltageMv);
+  put('temperature_voltage_mv', decoded.adc?.temp?.mv);
+  put('wifi_rssi_dbm', model.latest?.packet?.link?.rssi_dbm);
+  return packet;
 }
 
 export function initTwinPage() {
@@ -44,6 +57,7 @@ export function initTwinPage() {
       await twin.ready;
       if (activeFrame !== frame) return;
       let seenPackets = -1;
+      let latestReceivedAt = -Infinity;
       let lastTransport = null;
       unsubscribe = subscribeStreaming((model, { transport }) => {
         if (activeFrame !== frame) return;
@@ -55,9 +69,11 @@ export function initTwinPage() {
         if (model.packets !== seenPackets) {
           seenPackets = model.packets;
           const ageMs = model.ageMs();
-          if (ageMs !== null && ageMs < 15000) {
+          const sampleAt = ageMs === null ? null : Date.now() - ageMs;
+          if (ageMs !== null && ageMs < model.staleMs && sampleAt >= latestReceivedAt) {
+            latestReceivedAt = sampleAt;
             const packet = twinPacketFromModel(model);
-            if (packet) twin.updateTelemetry(packet, { source: 'live' });
+            if (packet) twin.updateTelemetry(packet, { source: 'live', snapshot: true, receivedAt: sampleAt, staleMs: model.staleMs });
           }
         }
       }, streamUrl());

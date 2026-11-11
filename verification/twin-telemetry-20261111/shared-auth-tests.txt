@@ -1,0 +1,30 @@
+✔ dashboard requires login and resumes the requested viewer section after sign-in (116.781112ms)
+✔ restricted routes show an error and support switching a viewer to an operator (6.055614ms)
+✔ manual no longer links back to the CubeSat site (2.069967ms)
+✔ v4 all: only present devices are shown (13.569241ms)
+✔ v4 subset_pv_mppt: only present devices are shown (1.574517ms)
+✔ v4 single_bms: only present devices are shown (0.349773ms)
+✔ v4 none: only present devices are shown (0.352679ms)
+✔ v5 all: only present devices are shown (0.327826ms)
+✔ v5 subset_pv_mppt: only present devices are shown (0.456637ms)
+✔ v5 single_bms: only present devices are shown (0.308397ms)
+✔ v5 none: only present devices are shown (0.44539ms)
+✔ conversions: INA226 bus V from raw, BMS min/max/delta, MPPT ACDRV and fault bits (1.310399ms)
+✔ v5 probe timeout hides the device as error; legacy packets without a mask assume present (0.37552ms)
+✔ stale handling, replay dedupe, clock skew and windowed series (1.150827ms)
+✔ mode persists in storage (0.373257ms)
+✔ view formatting: auto-scaled SI units for small PV currents/powers (2.75284ms)
+✔ v6 all: present-only cards + new fields, absent -> null (0.435386ms)
+✔ v6 subset_pv_mppt: present-only cards + new fields, absent -> null (0.18134ms)
+✔ v6 single_bms: present-only cards + new fields, absent -> null (0.191165ms)
+✔ v6 none: present-only cards + new fields, absent -> null (0.261722ms)
+✔ v5 packets: v6-only fields stay null and are flagged as not carried (0.194722ms)
+✔ TEMT6000 light level bands and MCP9700 conversion (0.824935ms)
+ℹ tests 22
+ℹ suites 0
+ℹ pass 22
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 438.534964

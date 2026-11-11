@@ -1,0 +1,31 @@
+{
+  "checks": [
+    {
+      "name": "dashboard and embedded viewer share one stream",
+      "passed": true
+    },
+    {
+      "name": "all six screenshot MPPT values reach the live Twin snapshot",
+      "passed": true
+    },
+    {
+      "name": "selected MPPT shows all six actual fields with their correct units",
+      "passed": true
+    },
+    {
+      "name": "LCD exposes all six overview values and device RSSI",
+      "passed": true
+    },
+    {
+      "name": "new unavailable-device snapshot clears previous readings on both UI and LCD",
+      "passed": true
+    },
+    {
+      "name": "forwarding preserves four seconds of sample age",
+      "passed": false
+    }
+  ],
+  "synthetic": true,
+  "error": "Error: forwarding preserves four seconds of sample age\n    at check (file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/verification/twin-telemetry-20261111/test-browser.mjs:17:139)\n    at async file:///Users/itzjaclechtman/Documents/Senior%20Design/CubeSat-telemetry-baseline/verification/twin-telemetry-20261111/test-browser.mjs:45:2",
+  "errors": []
+}

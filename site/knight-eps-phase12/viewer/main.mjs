@@ -3,10 +3,12 @@ import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
 import {loadDisplayModel,prepareDisplayModel,disposeModel} from './rendering/model-loader.mjs';
 import {createRenderPipeline} from './rendering/pipeline.mjs';
 import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
-import {createDisplay,normalizeTelemetry} from './display.mjs';
+import {createDisplay,normalizeTelemetry} from './display.mjs?v=20261111-telemetry';
 import {frameCamera,projectedBounds} from './framing.mjs';
 import {createInspection,orbitTransition,satelliteOrbitPose} from './inspection.mjs';
 import {deduplicateMaterials,instanceFixtures} from './render-optimizations.mjs';
+
+import {telemetryFields,formatReading} from './telemetry.mjs?v=20261111-telemetry';
 
 const qs=s=>document.querySelector(s), panel=qs('#canvas');
 const errorBox=qs('#render-error');
@@ -71,18 +73,19 @@ function start(){
  }const pressed=(id,value)=>{qs(id).setAttribute('aria-pressed',String(value));qs(id).classList.toggle('active',value)};
  function requestFrame(kind=null){cancelCamera();pendingFit=kind||true;invalidate({geometry:true})}
  function stopMock({reset=false}={}){if(mockTimer)clearInterval(mockTimer);mockTimer=null;if(reset)display.reset()}
- function receiveTelemetry(input,options={}){normalizeTelemetry(input);if(options.source!=='mock')stopMock();return display.update(input,options)}
- function startMock(){stopMock();display.disconnect();mockCounter=0;const tick=()=>{const t=mockCounter++;receiveTelemetry({battery_voltage_v:15.2+.12*Math.sin(t/5),solar_panel_current_a:.4+.08*Math.sin(t/3),temperature_c:27+.5*Math.sin(t/7),esp32_temperature_c:36+.3*Math.sin(t/8),mppt_switch_temperature_c:32+.4*Math.sin(t/6),light_level:70+8*Math.sin(t/4),status:'MOCK SOLAR INPUT'},{source:'mock'})};tick();mockTimer=setInterval(tick,1000);return ()=>stopMock()}
+ function receiveTelemetry(input,options={}){normalizeTelemetry(input,{allowEmpty:options.snapshot===true});if(options.source!=='mock')stopMock();return display.update(input,options)}
+ function startMock(){stopMock();display.disconnect();mockCounter=0;const tick=()=>{const t=mockCounter++;receiveTelemetry({battery_voltage_v:15.2+.12*Math.sin(t/5),solar_panel_current_a:.4+.08*Math.sin(t/3),pv_current_a:.4+.08*Math.sin(t/3),temperature_c:27+.5*Math.sin(t/7),esp32_temperature_c:36+.3*Math.sin(t/8),mppt_switch_temperature_c:32+.4*Math.sin(t/6),light_level:.7+.08*Math.sin(t/4),status:'MOCK SOLAR INPUT'},{source:'mock'})};tick();mockTimer=setInterval(tick,1000);return ()=>stopMock()}
  qs('#data-source').onchange=()=>{if(qs('#data-source').value==='mock')startMock();else{stopMock();display.disconnect();display.reset();display.useTelemetryMode();qs('#source-note').textContent='Waiting for dashboard / live data.'}};
  const display=createDisplay({onInvalidate:()=>invalidate(),onStatus:s=>{
   qs('#display-status').textContent=s.display==='bound'?'Payload LCD connected':'Payload LCD loading';
   qs('#telemetry-status').textContent=s.label;qs('#telemetry-status').dataset.state=s.health;
   qs('#source-note').textContent=s.source==='mock'?'MOCK · synthetic demonstration data':s.source==='live'?'Dashboard telemetry':'Waiting for dashboard data';
   qs('#last-update').textContent=s.receivedAt?`Last update ${Math.floor((Date.now()-s.receivedAt)/1000)} s ago`:'No packet received';
-  for(const el of document.querySelectorAll('[data-reading]')){const value=s.readings?.[el.dataset.reading];el.textContent=typeof value==='number'?value.toFixed(Number(el.dataset.precision||1))+' '+(el.dataset.unit||''):'—'}
+  for(const el of document.querySelectorAll('[data-reading]')){const value=s.readings?.[el.dataset.reading];el.textContent=typeof value==='number'?formatReading(el.dataset.reading,value):'—'}
   if(['live','mock'].includes(s.source))qs('#data-source').value=s.source;
   updateBriefReadings(s);
  }});
+ for(const el of document.querySelectorAll('[data-reading-label]'))el.textContent=telemetryFields[el.dataset.readingLabel].label;
  qs('#screen-preview').append(display.canvas);qs('#include-fixtures').onchange=listParts;
  qs('#screen-state').onchange=()=>{const s=display.setScreenState(qs('#screen-state').value).presentation;qs('#screen-title').value=s.title;qs('#screen-message').value=s.message||'NO TELEMETRY'};
  qs('#apply-screen').onclick=()=>display.setScreenState(qs('#screen-state').value,{title:qs('#screen-title').value,message:qs('#screen-message').value});
@@ -146,7 +149,7 @@ function start(){
   })}
   if(changed){instancesDirty=true;invalidate({shadows:shadowChanged})}
  }
- function updateBriefReadings(state){const el=qs('#selected-readings');if(!el||!selected)return;const fields=info(selected.name).display_info?.fields||[];const labels={battery_voltage_v:['Battery','V'],solar_panel_current_a:['Solar input (shared)','A'],esp32_temperature_c:['MCU temperature','°C'],mppt_switch_temperature_c:['Charger temperature','°C'],temperature_c:['Temperature','°C'],light_level:['Relative light','']};el.replaceChildren();for(const key of fields){const [label,unit]=labels[key]||[key,''];const line=document.createElement('p');line.textContent=`${label}: ${typeof state.readings?.[key]==='number'?state.readings[key].toFixed(2)+' '+unit:'No data'}`;el.append(line)}}
+ function updateBriefReadings(state){const el=qs('#selected-readings');if(!el||!selected)return;const fields=info(selected.name).display_info?.fields||[];el.replaceChildren();for(const key of fields){const label=telemetryFields[key]?.label||key;const line=document.createElement('p');line.textContent=`${label}: ${typeof state.readings?.[key]==='number'?formatReading(key,state.readings[key]):'No data'}`;el.append(line)}}
  function briefDetail(){const el=qs('#detail');el.replaceChildren();qs('#focus-selected').disabled=!selected;qs('#isolate-selected').disabled=!selected&&!isolation;if(!selected){const p=document.createElement('p');p.textContent='Click a part in the model or search by name.';el.append(p);return}const p=info(selected.name),d=p.display_info||{};const title=document.createElement('strong');title.textContent=d.name||p.label;const model=document.createElement('p');model.className='part-model';model.textContent=d.model||'';model.hidden=!d.model||d.model===d.name;const purpose=document.createElement('p');purpose.textContent=d.purpose||p.description;el.append(title,model,purpose);if(d.fields?.length){const readings=document.createElement('div');readings.id='selected-readings';el.append(readings);updateBriefReadings(display.state())}if(d.links?.length){const links=document.createElement('div');links.className='part-links';for(const link of d.links){const a=document.createElement('a');a.href=link.url;a.textContent=link.label;a.target='_blank';a.rel='noopener noreferrer';links.append(a)}el.append(links)}}
  function detail(){briefDetail()}
  function select(part){part=canonical(part);if(part===selected)return part?.name||null;const previous=selected;clearFocus({restoreOrbit:true});extracted=false;selected=part;applyMaterials([...selectionMembers(previous),...selectionMembers(part)]);instancesDirty=true;invalidate({geometry:true});detail();if(part){qs('.sidebar').scrollTop=0;if(narrow.matches)showSidebar(true)}for(const b of qs('#parts').querySelectorAll('button')){const on=b.dataset.name===part?.name;b.classList.toggle('active',on);b.setAttribute('aria-pressed',String(on))}window.dispatchEvent(new CustomEvent('knighteps:selection',{detail:part?{id:part.name,...info(part.name)}:null}));return part?.name||null}

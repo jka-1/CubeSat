@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import {normalizeTelemetry,telemetryHealth} from './telemetry.mjs';
-export {normalizeTelemetry} from './telemetry.mjs';
+import {normalizeTelemetry,telemetryHealth,telemetryFields,overviewFields,formatReading,wifiIndicator} from './telemetry.mjs?v=20261111-telemetry';
+export {normalizeTelemetry} from './telemetry.mjs?v=20261111-telemetry';
 export function createDisplay({onStatus,onTelemetry,onInvalidate,staleMs=15000}){
  const canvas=document.createElement('canvas');canvas.width=768;canvas.height=582;
  canvas.setAttribute('aria-label','Payload LCD: same snapshot as telemetry panel');
@@ -8,24 +8,33 @@ export function createDisplay({onStatus,onTelemetry,onInvalidate,staleMs=15000})
  texture.colorSpace=THREE.SRGBColorSpace;texture.minFilter=THREE.LinearFilter;texture.flipY=false;
  const presets={standby:{message:'READY',lines:['Waiting for workload']},mining:{message:'MINING',lines:['Illustrative screen state']},low_power:{message:'LOW POWER',lines:['Illustrative screen state']},offline:{message:'OFFLINE',lines:['Presentation state']}};
  const savedStates={};let presentation={state:'telemetry',title:'KNIGHT EPS',message:null,lines:[]};
- let bindingBasis=null,source='none',screen=null,originalMaterial=null,last=null,receivedAt=0,stream=null,transport='waiting',error=null,disposed=false;
- function state(){return {source,presentation:{...presentation,lines:[...presentation.lines]},display:screen?'bound':'awaiting_asset',bindingBasis,screen:screen?.name||null,...telemetryHealth({last,receivedAt,source,transport,error,staleMs}),readings:last?{...last}:null,receivedAt:receivedAt||null,transport,error}}
+ let bindingBasis=null,source='none',screen=null,originalMaterial=null,last=null,receivedAt=null,sampleStaleMs=staleMs,stream=null,transport='waiting',error=null,disposed=false;
+ function state(){return {source,presentation:{...presentation,lines:[...presentation.lines]},display:screen?'bound':'awaiting_asset',bindingBasis,screen:screen?.name||null,...telemetryHealth({last,receivedAt,source,transport,error,staleMs:sampleStaleMs}),readings:last?{...last}:null,receivedAt,transport,error}}
  let lastDrawing=null;
  function draw(){
   const s=state();onStatus?.(s);
   if(document.hidden)return;
-  const drawing=JSON.stringify([presentation,source,s.label,s.ageMs===null?null:Math.floor(s.ageMs/1000),last]);if(drawing===lastDrawing)return;lastDrawing=drawing;ctx.fillStyle='#081b22';ctx.fillRect(0,0,768,582);
-  ctx.fillStyle='#edcf8c';ctx.font='bold 48px monospace';ctx.fillText(presentation.title,32,70,704);
+  const drawing=JSON.stringify([presentation,source,s.label,s.transport,s.ageMs===null?null:Math.floor(s.ageMs/1000),last]);if(drawing===lastDrawing)return;lastDrawing=drawing;ctx.fillStyle='#081b22';ctx.fillRect(0,0,768,582);
+  ctx.fillStyle='#edcf8c';ctx.font='bold 48px monospace';ctx.fillText(presentation.title,32,70,550);
+  const wifi=wifiIndicator(s);ctx.lineWidth=5;ctx.lineCap='round';
+  for(let level=3;level>=1;level--){ctx.strokeStyle=wifi.active&&level<=wifi.levels?'#83d3bc':'#45615f';ctx.beginPath();ctx.arc(698,80,level*13,Math.PI*1.2,Math.PI*1.8);ctx.stroke()}
+  ctx.fillStyle=wifi.active?'#83d3bc':'#a7c7c3';ctx.beginPath();ctx.arc(698,80,4,0,Math.PI*2);ctx.fill();
+  if(!wifi.active){ctx.strokeStyle='#a7c7c3';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(670,40);ctx.lineTo(724,90);ctx.stroke()}
+  ctx.font='18px monospace';ctx.textAlign='right';ctx.fillText(wifi.label,736,115,155);ctx.textAlign='left';
   ctx.fillStyle='#e1f0ec';ctx.font='30px monospace';
   ctx.fillText(presentation.state==='telemetry'?s.label.toUpperCase():presentation.message||'PRESENTATION',32,145,704);
   if(presentation.state==='telemetry'){
-   const f=k=>typeof last?.[k]==='number'?last[k].toFixed(2):'--';
-   ctx.font='40px monospace';ctx.fillText(`BAT ${f('battery_voltage_v')} V`,32,270);ctx.fillText(`SOL ${f('solar_panel_current_a')} A`,32,350);
-   if(last?.status){ctx.font='23px monospace';ctx.fillText(last.status,32,426,704)}
+   for(const [i,key] of overviewFields.entries()){
+    const x=32+Math.floor(i/3)*368,y=210+(i%3)*98,field=telemetryFields[key];
+    ctx.fillStyle='#a7c7c3';ctx.font='22px monospace';ctx.fillText(field.short,x,y,336);
+    ctx.fillStyle='#e1f0ec';ctx.font='bold 38px monospace';ctx.fillText(formatReading(key,last?.[key],{missing:'--'}),x,y+43,336);
+   }
+   if(last?.status){ctx.fillStyle='#a7c7c3';ctx.font='21px monospace';ctx.fillText(last.status,32,486,704)}
   }else{ctx.font='30px monospace';presentation.lines.slice(0,2).forEach((x,i)=>ctx.fillText(x,32,270+60*i,704))}
   ctx.fillStyle='#a7c7c3';ctx.font='24px monospace';
   const provenance=source==='mock'?'MOCK / SYNTHETIC':source==='live'?'DASHBOARD':'NO DATA';
   ctx.fillText(`${provenance}${s.ageMs===null?'':` · ${Math.floor(s.ageMs/1000)}s ago`}`,32,535,704);
+  canvas.setAttribute('aria-label',`Payload LCD: ${s.label}. ${wifi.label}. `+(presentation.state==='telemetry'?overviewFields.map(key=>`${telemetryFields[key].label}: ${formatReading(key,last?.[key])}`).join('; '):`${presentation.title}. ${presentation.message||''}`));
   texture.needsUpdate=true;onInvalidate?.();
  }
  function useTelemetryMode(){presentation={state:'telemetry',title:'KNIGHT EPS',message:null,lines:[]};draw()}
@@ -38,14 +47,18 @@ export function createDisplay({onStatus,onTelemetry,onInvalidate,staleMs=15000})
   if(overrides.lines!==undefined){if(!Array.isArray(overrides.lines)||overrides.lines.some(x=>typeof x!=='string'))throw new TypeError('lines must be text strings');next.lines=overrides.lines.slice(0,2).map(x=>x.slice(0,40))}
   presentation=next;savedStates[name]={...next,lines:[...next.lines]};draw();return state();
  }
- function update(input,{source:origin='live'}={}){
+ function update(input,{source:origin='live',snapshot=false,receivedAt:sampleAt=Date.now(),staleMs:threshold=staleMs}={}){
   if(disposed)throw Error('Display disposed');if(!['live','mock'].includes(origin))throw new TypeError('Source must be live or mock');
-  const packet=normalizeTelemetry(input);source=origin;last=packet;receivedAt=Date.now();error=null;
+  const packet=normalizeTelemetry(input,{allowEmpty:snapshot===true});
+  if(typeof sampleAt!=='number'||!Number.isFinite(sampleAt)||sampleAt<0)throw new TypeError('receivedAt must be a client-clock timestamp');
+  if(typeof threshold!=='number'||!Number.isFinite(threshold)||threshold<=0)throw new TypeError('staleMs must be positive');
+  const timestamp=Math.min(sampleAt,Date.now());if(source===origin&&receivedAt!==null&&timestamp<receivedAt)return state();
+  source=origin;last=packet;receivedAt=timestamp;sampleStaleMs=threshold;error=null;
   if(!stream)transport='dashboard';presentation={state:'telemetry',title:'KNIGHT EPS',message:null,lines:[]};draw();onTelemetry?.(state());return state();
  }
  function setTransport(value){if(!['connecting','connected','disconnected','waiting'].includes(value))throw new TypeError('Unknown transport state');transport=value;error=null;draw()}
  function disconnect(){if(stream){stream.close();stream=null}transport='disconnected';error=null;draw()}
- function reset(){source='none';last=null;receivedAt=0;error=null;if(!stream)transport='waiting';draw();onTelemetry?.(state())}
+ function reset(){source='none';last=null;receivedAt=null;sampleStaleMs=staleMs;error=null;if(!stream)transport='waiting';draw();onTelemetry?.(state())}
  function connectSSE(url='/telemetry/events',{eventName='message',map=x=>x,source:origin='live'}={}){
   if(disposed)throw Error('Display disposed');const u=new URL(url,location.href);
   if(u.origin!==location.origin)throw Error('Telemetry endpoint must be same-origin');
