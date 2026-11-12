@@ -22,6 +22,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('source/bridge/package-lock.json', '{}');
   write('source/bridge/telemetry-auth.mjs', 'new telemetry auth');
   write('source/bridge/aps.mjs', 'new APS');
+  write('source/bridge/register-registry.mjs', 'new register registry');
   write('source/bridge/recording/client.mjs', 'new module');
   write('source/bridge/sequence/engine.mjs', 'new sequence');
   write('source/bridge/auth/session.mjs', 'new auth');
@@ -33,6 +34,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('live/bridge/package-lock.json', '{}');
   write('live/bridge/telemetry-auth.mjs', 'old telemetry auth');
   write('live/bridge/aps.mjs', 'old APS');
+  write('live/bridge/register-registry.mjs', 'old register registry');
   write('live/bridge/recording/client.mjs', 'old module');
   write('live/bridge/sequence/engine.mjs', 'old sequence');
   write('live/bridge/auth/session.mjs', 'old auth');
@@ -51,6 +53,11 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
     BACKUP_ROOT: join(root, 'backups'), SERVICE_NAME: '', EXPECTED_BRANCH: '' };
   const deploy = fileURLToPath(new URL('../../scripts/deploy-live.sh', import.meta.url));
   const rollback = fileURLToPath(new URL('../../scripts/rollback-live.sh', import.meta.url));
+  rmSync(join(source, 'bridge/register-registry.mjs'));
+  assert.equal(spawnSync('bash', [deploy], { env }).status, 1);
+  assert.equal(readFileSync(join(live, 'bridge/server.js'), 'utf8'), 'old server');
+  assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'old register registry');
+  write('source/bridge/register-registry.mjs', 'new register registry');
   assert.equal(spawnSync('bash', [deploy], { env }).status, 23);
   assert.equal(readFileSync(join(live, 'bridge/server.js'), 'utf8'), 'old server');
   writeFileSync(npm, '#!/bin/sh\nexit 0\n');
@@ -60,12 +67,14 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'old telemetry auth');
   assert.equal(readFileSync(join(live, 'bridge/sequence/engine.mjs'), 'utf8'), 'old sequence');
   assert.equal(readFileSync(join(live, 'bridge/aps.mjs'), 'utf8'), 'old APS');
+  assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'old register registry');
   writeFileSync(join(root, 'bin/curl'), '#!/bin/sh\nprintf \'{"status":"ok"}\'\n');
   execFileSync('bash', [deploy], { env });
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'new module');
   assert.equal(readFileSync(join(live, 'bridge/sequence/engine.mjs'), 'utf8'), 'new sequence');
   assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'new auth');
   assert.equal(readFileSync(join(live, 'bridge/aps.mjs'), 'utf8'), 'new APS');
+  assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'new register registry');
   assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'new account tool');
   assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'new telemetry auth');
   const backup = join(root, 'backups', readdirSync(join(root, 'backups'))[0]);
@@ -75,6 +84,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'old module');
   assert.equal(readFileSync(join(live, 'bridge/sequence/engine.mjs'), 'utf8'), 'old sequence');
   assert.equal(readFileSync(join(live, 'bridge/aps.mjs'), 'utf8'), 'old APS');
+  assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'old register registry');
   assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'old auth');
   assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'old account tool');
   assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'old telemetry auth');
