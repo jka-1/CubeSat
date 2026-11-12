@@ -59,8 +59,10 @@
           <label>Add Register Address <input id="dmNewRegister" class="input" placeholder="0x14" inputmode="text" /></label>
           <div class="dm-buttons">
             <select id="dmNewRegisterWidth" class="input" aria-label="New register read width"><option value="1">1 byte</option><option value="2">2 bytes</option></select>
-          <button id="dmAddRegister" class="button secondary" type="button" data-tooltip="Adds a temporary address for reads. It does not grant write access.">Add Register</button>
+          <button id="dmAddRegister" class="button secondary" type="button" data-tooltip="Saves a shared address for reads. It does not grant write access.">Add Register</button>
           </div>
+          <label>Byte order <select id="dmNewRegisterEndian" class="input"><option value="big">Big endian</option><option value="little">Little endian</option></select></label>
+          <label>Name (optional) <input id="dmNewRegisterLabel" class="input" maxlength="60" /></label>
           <label>Write Value <input id="dmValue" class="input" placeholder="0x1234 or bytes 0x22 0x00" /></label>
           <div class="dm-buttons">
             <button id="dmRead" class="button" type="button" data-cmd data-tooltip="Reads the selected register and displays raw bytes plus any available conversion.">Read</button>

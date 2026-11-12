@@ -208,10 +208,39 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
   const editor = { ...editorBody, cookie: editorLogin.headers.get('set-cookie').split(';')[0] };
   assert.equal((await request('/auth/me', operator)).status, 200, 'editor login does not displace the controlling operator');
   assert.equal((await (await request('/auth/me', operator)).json()).control_active, true);
+  // Registry metadata is shared by authorized operators, including editing-only sessions.
+  const register = { addr: '0x6B', reg: '0x2A', len: 2, endian: 'little', label: 'Shared bench register' };
+  assert.equal((await request('/registers')).status, 401);
+  assert.equal((await request('/registers', viewer)).status, 403);
+  assert.equal((await request('/registers', viewer, register)).status, 403);
+  assert.equal((await request('/registers', operator, register, { 'X-CSRF-Token': 'wrong' })).status, 403);
+  assert.equal((await request('/registers', operator, register, { Origin: 'https://evil.test' })).status, 403);
+  const additions = await Promise.all([
+    request('/registers', operator, register), request('/registers', editor, { ...register, reg: '0x2B' }),
+    request('/registers', editor, register)
+  ]);
+  assert.deepEqual(additions.map((response) => response.status), [200, 200, 200]);
+  const catalog = (await (await request('/registers', editor)).json()).registers;
+  assert.equal(catalog.length, 2);
+  assert.equal((await request('/registers', operator, { ...register, endian: 'big' })).status, 409);
+  assert.equal((await request('/registers', editor, { ...register, reg: '0x2F', len: 1, endian: 'big' })).status, 200);
+  assert.equal((await request('/registers', editor, { ...register, access: 'RW' })).status, 400);
+  const customRead = { schemaVersion: 1, name: 'Shared register read', registers: catalog, steps: [
+    { id: 'read', type: 'registerRead', command: { type: 'i2c_read', addr: register.addr, reg: register.reg, len: 2 } }
+  ] };
+  const customSavedResponse = await request('/sequences', editor, customRead);
+  assert.equal(customSavedResponse.status, 201);
+  const customSaved = (await customSavedResponse.json()).sequence;
+  assert.deepEqual(customSaved.registers, catalog);
+  const unsafe = { ...customRead, steps: [{ id: 'write', type: 'registerWrite', command: { type: 'i2c_write', addr: '0x6B', reg: '0x2A', data: ['0x00', '0x00'] } }] };
+  assert.equal((await request('/sequences', editor, unsafe)).status, 400, 'registry does not expand write approval');
+  for (const [addr, reg, data] of [['0x6B', '0x2A', ['0x00', '0x00']], ['0x6B', '0x2F', ['0x00']], ['0x6B', '0x14', ['0x40']], ['0x6B', '0x30', ['0x00', '0x00']], ['0x48', '0x00', ['0x00']]]) {
+    assert.equal((await request('/command', operator, { type: 'i2c_write', addr, reg, data }, { 'X-Command-Token': 'test-command' })).status, 400);
+  }
   const put = (path, session, body) => fetch(origin + path, { method: 'PUT', headers: { Origin: origin, 'Content-Type': 'application/json', Cookie: session.cookie, 'X-CSRF-Token': session.csrf }, body: JSON.stringify(body) });
   const base = (await (await request(`/sequences/${saved.sequence.id}`, editor)).json()).sequence;
   const stream2 = await request('/events', editor), reader2 = stream2.body.getReader();
-  const editorSave = await put(`/sequences/${base.id}`, editor, { ...base, name: 'Edited in app' });
+  const editorSave = await put(`/sequences/${base.id}`, editor, { ...base, confirmed_revision: base.revision, name: 'Edited in app' });
   assert.equal(editorSave.status, 200, 'editor-only operator may save definitions');
   assert.equal((await editorSave.json()).sequence.revision, base.revision + 1);
   let sse = '';
@@ -224,7 +253,45 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
   assert.equal(conflict.code, 'revision_conflict');
   assert.equal(conflict.current.revision, base.revision + 1);
   assert.equal(conflict.current.name, 'Edited in app');
-  assert.equal((await put(`/sequences/${base.id}`, operator, { ...base, revision: conflict.current.revision, name: 'Overwrite' })).status, 200);
+  assert.equal((await put(`/sequences/${base.id}`, operator, { ...base, revision: conflict.current.revision, confirmed_revision: conflict.current.revision, name: 'Overwrite' })).status, 200);
+  const destroy = (target, actor, body, headers = {}) => fetch(origin + `/sequences/${target}`, { method: 'DELETE', headers: { Origin: origin, 'Content-Type': 'application/json', ...(actor ? { Cookie: actor.cookie, 'X-CSRF-Token': actor.csrf } : {}), ...headers }, body: JSON.stringify(body) });
+  const latestDefinition = (await (await request(`/sequences/${base.id}`, editor)).json()).sequence;
+  const confirmed = { revision: latestDefinition.revision, confirmed_revision: latestDefinition.revision };
+  assert.equal((await destroy(base.id, null, confirmed)).status, 401);
+  assert.equal((await destroy(base.id, viewer, confirmed)).status, 403);
+  assert.equal((await destroy(base.id, editor, confirmed, { 'X-CSRF-Token': 'bad' })).status, 403);
+  assert.equal((await destroy(base.id, editor, { revision: latestDefinition.revision })).status, 400);
+  assert.equal((await destroy(base.id, editor, { revision: base.revision, confirmed_revision: base.revision })).status, 409);
+  assert.equal((await put(`/sequences/${base.id}`, editor, latestDefinition)).status, 400, 'overwrite needs explicit confirmation');
+  const child = (await (await request('/sequences', editor, { schemaVersion: 1, name: 'Nested log', steps: [{ id: 'note', type: 'message', message: '<script>printf %s</script>' }] })).json()).sequence;
+  const parent = (await (await request('/sequences', editor, { schemaVersion: 1, name: 'Parent log', steps: [{ id: 'call', type: 'runSaved', sequenceId: child.id, revision: child.revision }] })).json()).sequence;
+  assert.equal((await destroy(child.id, editor, { revision: child.revision, confirmed_revision: child.revision })).status, 409, 'saved dependencies block deletion');
+  const nestedStart = await request(`/sequences/${parent.id}/execute`, operator, { mode: 'simulation' });
+  assert.equal(nestedStart.status, 202);
+  const nestedId = (await nestedStart.json()).execution.id;
+  let nestedResult;
+  for (let i = 0; i < 100; i++) {
+    nestedResult = (await (await request(`/sequence-executions/${nestedId}`, operator)).json()).execution;
+    if (nestedResult.state === 'completed') break;
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  }
+  assert.equal(nestedResult.state, 'completed');
+  assert.equal(nestedResult.definition.dependencies[0].revision, child.revision);
+  const nestedEvents = (await (await request(`/sequence-executions/${nestedId}/events`, operator)).json()).events;
+  assert.equal(nestedEvents.find((event) => event.type === 'message').details.message, '<script>printf %s</script>');
+  assert.equal((await destroy(parent.id, editor, { revision: parent.revision, confirmed_revision: parent.revision })).status, 200, 'editor deletion does not need hardware control');
+  assert.equal((await destroy(child.id, editor, { revision: child.revision, confirmed_revision: child.revision })).status, 200);
+  assert.equal((await request(`/sequences/${child.id}`, editor)).status, 404);
+  assert.equal((await request(`/sequence-executions/${nestedId}`, editor)).status, 200, 'deletion preserves historical snapshots');
+  const raceDefinition = (await (await request('/sequences', editor, { schemaVersion: 1, name: 'Revision race', steps: [{ id: 'note', type: 'message', message: 'race' }] })).json()).sequence;
+  const competing = await Promise.all(['first', 'second'].map((name) => put(`/sequences/${raceDefinition.id}`, editor, { ...raceDefinition, name, confirmed_revision: raceDefinition.revision })));
+  assert.deepEqual(competing.map((response) => response.status).sort(), [200, 409], 'exactly one concurrent overwrite commits');
+  const raceLatest = (await (await request(`/sequences/${raceDefinition.id}`, editor)).json()).sequence;
+  const [racedSave, racedDelete] = await Promise.all([
+    put(`/sequences/${raceLatest.id}`, editor, { ...raceLatest, name: 'last save', confirmed_revision: raceLatest.revision }),
+    destroy(raceLatest.id, editor, { revision: raceLatest.revision, confirmed_revision: raceLatest.revision })
+  ]);
+  assert.ok(racedSave.status === 200 && racedDelete.status === 409 || racedSave.status === 404 && racedDelete.status === 200, 'save/delete race cannot both mutate the same revision');
   assert.equal((await request(`/sequences/${base.id}/execute`, editor, { mode: 'simulation' })).status, 403, 'execution still needs the control lease');
   assert.equal((await request('/auth/heartbeat', editor, {})).status, 409, 'editor cannot take control while it is held');
   assert.equal((await request('/auth/heartbeat', operator, {})).status, 200);
@@ -317,11 +384,22 @@ test('live branches share a recording, preserve packets and markers, and retain 
     emitted.push(latest); return latest;
   };
   await send();
+  const nestedDefinition = (await json('/sequences', { schemaVersion: 1, name: 'Nested hardware check', steps: [
+    { id: 'led', type: 'command', command: { type: 'led_control', enabled: true } },
+    { id: 'hold', type: 'delay', durationMs: 200 },
+    { id: 'note', type: 'message', message: 'Nested live message <escaped> %s' }
+  ] })).sequence;
   let definition = (await json('/sequences', { schemaVersion: 1, name: 'Concurrent branch', steps: [
     { id: 'choice', type: 'if', condition: { op: '>', left: { metric: 'pv.busVoltageV' }, right: { constant: 1, unit: 'V' } },
-      then: [{ id: 'led', type: 'command', command: { type: 'led_control', enabled: true } }, { id: 'hold', type: 'delay', durationMs: 200 }],
+      then: [{ id: 'call', type: 'runSaved', sequenceId: nestedDefinition.id, revision: nestedDefinition.revision }],
       else: [{ id: 'fallback', type: 'delay', durationMs: 1 }] }
   ] })).sequence;
+  const stalePreflight = await json(`/sequences/${definition.id}/preflight`, {});
+  assert.equal(stalePreflight.dependencies[0].revision, 1);
+  definition = (await json(`/sequences/${definition.id}`, { ...definition, name: 'Preflight revision changed', confirmed_revision: definition.revision }, 'PUT')).sequence;
+  assert.equal((await request(`/sequences/${definition.id}/execute`, { mode: 'live', confirmation_token: stalePreflight.confirmation_token })).status, 403, 'stale preflight cannot execute a changed revision');
+  await json(`/sequences/${nestedDefinition.id}`, { ...nestedDefinition, confirmed_revision: nestedDefinition.revision, steps: [{ id: 'replacement', type: 'message', message: 'Current revision must not replace the pinned child' }] }, 'PUT');
+  assert.equal(commands, 0);
   const execute = async (during) => {
     const confirmation = await json(`/sequences/${definition.id}/preflight`, {});
     const started = await json(`/sequences/${definition.id}/execute`, { mode: 'live', confirmation_token: confirmation.confirmation_token });
@@ -337,7 +415,7 @@ test('live branches share a recording, preserve packets and markers, and retain 
   const first = await execute(async () => {
     assert.equal((await request('/command', { type: 'led_control', enabled: true })).status, 409, 'manual command cannot overlap branch control');
     assert.equal((await request('/runs/start', { name: 'duplicate' })).status, 409);
-    definition = (await json(`/sequences/${definition.id}`, { ...definition, name: 'Edited during recording' }, 'PUT')).sequence;
+    definition = (await json(`/sequences/${definition.id}`, { ...definition, confirmed_revision: definition.revision, name: 'Edited during recording' }, 'PUT')).sequence;
   });
   const second = await execute();
   assert.equal(first.state, 'completed'); assert.equal(second.state, 'completed');
@@ -358,6 +436,8 @@ test('live branches share a recording, preserve packets and markers, and retain 
   const events = (await json(`/runs/${run.id}/events?limit=500`)).items;
   for (const execution of [first, second]) {
     assert.ok(events.some((event) => event.type === 'sequence_step' && event.details.execution_id === execution.id && event.details.phase === 'branch'));
+    assert.ok(events.some((event) => event.type === 'sequence_step' && event.details.execution_id === execution.id && event.details.phase === 'message' && event.details.message === 'Nested live message <escaped> %s' && event.details.path.includes(`call:${nestedDefinition.id}@1`)));
+    assert.equal(execution.definition.dependencies[0].revision, 1);
   }
   const after = await execute();
   assert.notEqual(after.recording_run_id, run.id);

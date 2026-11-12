@@ -7,6 +7,7 @@ import { Sessions } from './auth/session.mjs';
 import { archivePayload } from './recording/raw.mjs';
 import { SignedTelemetryVerifier } from './telemetry-auth.mjs';
 import { SequenceEngine } from './sequence/engine.mjs';
+import { snapshotSequence } from './sequence/dependencies.mjs';
 import { validateSequence } from './sequence/model.mjs';
 import { ApsClient } from './aps.mjs';
 
@@ -1846,7 +1847,8 @@ const httpServer = http.createServer(async (request, response) => {
     if (publicRead) requestUrl.pathname = requestUrl.pathname.slice('/public'.length);
     if (publicRead && !sessions.enabled) throw createHttpError(401, 'Sign in to access dashboard telemetry');
     const sequenceRoute = requestUrl.pathname === '/sequences' || requestUrl.pathname.startsWith('/sequences/') || requestUrl.pathname === '/sequence-executions' || requestUrl.pathname.startsWith('/sequence-executions/');
-    const session = sessions.enabled ? sequenceRoute ? await sessions.authenticate(request) : await sessions.authorize(request) : null;
+    const registryRoute = requestUrl.pathname === '/registers';
+    const session = sessions.enabled ? (sequenceRoute || registryRoute) ? await sessions.authenticate(request) : await sessions.authorize(request) : null;
     if (!sessions.enabled && !['GET', 'HEAD'].includes(request.method)) assertCommandAuthorized(request);
     if (requestUrl.pathname.startsWith('/operator-pages/')) {
       if (!session) throw createHttpError(401, 'Sign in with an operator account');
@@ -1859,6 +1861,20 @@ const httpServer = http.createServer(async (request, response) => {
       response.end(html);
       return;
     }
+    if (registryRoute) {
+      if (!sessions.enabled) throw createHttpError(401, 'Sign in with an operator account');
+      assertCurrentOperator(session);
+      if (!recorder) throw createHttpError(503, 'Register registry requires recording storage');
+      if (request.method === 'GET') { sendJson(response, 200, { registers: await recorder.call('registerList') }); return; }
+      if (request.method === 'POST') {
+        sessions.csrfCheck(request, session);
+        const body = await readJsonBody(request);
+        assertCurrentOperator(session);
+        const entry = await recorder.call('registerAdd', body);
+        sendJson(response, 200, { register: entry }); return;
+      }
+      throw createHttpError(405, 'Unsupported register registry method');
+    }
     if (sequenceRoute) {
       if (sessions.enabled && session.role !== 'operator') throw createHttpError(403, 'An operator account is required');
       if (!sessions.enabled || !recorder) throw createHttpError(503, 'Sequences require authentication and recording');
@@ -1868,7 +1884,7 @@ const httpServer = http.createServer(async (request, response) => {
         // Saving a definition is not hardware control: any signed-in operator (web or desktop app) may save,
         // guarded by the revision check below. Preflight/execute/controls still need the operator lease.
         const parts0 = requestUrl.pathname.split('/').filter(Boolean);
-        const definitionSave = parts0[0] === 'sequences' && (request.method === 'POST' && parts0.length === 1 || request.method === 'PUT' && parts0.length === 2);
+        const definitionSave = parts0[0] === 'sequences' && (request.method === 'POST' && parts0.length === 1 || ['PUT', 'DELETE'].includes(request.method) && parts0.length === 2);
         if (!definitionSave && !sessions.ownsOperator(session.id)) throw createHttpError(403, 'Active operator ownership is required');
       }
       const parts = requestUrl.pathname.split('/').filter(Boolean);
@@ -1878,9 +1894,17 @@ const httpServer = http.createServer(async (request, response) => {
         if (request.method === 'POST' && parts.length === 1 || request.method === 'PUT' && parts.length === 2) {
           const body = await readJsonBody(request);
           assertCurrentOperator(session);
-          const definition = validateSequence({ ...body, id: parts[1] || body.id || crypto.randomUUID() }, (command) => buildCommandMessage(command));
+          const { confirmed_revision, ...content } = body;
+          const definition = validateSequence({ ...content, id: parts[1] || body.id || crypto.randomUUID() }, (command) => buildCommandMessage(command));
           let saved;
-          try { saved = await recorder.call('sequenceSave', { definition, expectedRevision: request.method === 'PUT' ? body.revision : null }); }
+          try {
+            if (request.method === 'PUT') {
+              const current = await recorder.call('sequenceGet', { id: definition.id });
+              if (current.revision !== body.revision) throw createHttpError(409, 'Sequence revision conflict');
+              if (confirmed_revision !== body.revision) throw createHttpError(400, 'Explicit confirmation of the revision being overwritten is required');
+            }
+            assertCurrentOperator(session);
+            saved = await recorder.call('sequenceSave', { definition, expectedRevision: request.method === 'PUT' ? body.revision : null }); }
           catch (error) {
             if (error.statusCode !== 409) throw error;
             let current = null;
@@ -1890,11 +1914,21 @@ const httpServer = http.createServer(async (request, response) => {
           broadcast({ type: 'sequence_saved', sequence: { id: saved.id, revision: saved.revision, name: saved.name }, by: session.username, at: new Date().toISOString() });
           sendJson(response, request.method === 'POST' ? 201 : 200, { sequence: saved }); return;
         }
+        if (request.method === 'DELETE' && parts.length === 2) {
+          const body = await readJsonBody(request);
+          if (!Number.isSafeInteger(body.revision) || body.confirmed_revision !== body.revision) throw createHttpError(400, 'Explicit confirmation of the revision being deleted is required');
+          assertCurrentOperator(session);
+          const deleted = await recorder.call('sequenceDelete', { id: parts[1], expectedRevision: body.revision });
+          broadcast({ type: 'sequence_deleted', sequence: deleted, by: session.username, at: new Date().toISOString() });
+          sendJson(response, 200, { deleted }); return;
+        }
         if (request.method === 'POST' && parts.length === 3 && parts[2] === 'preflight') {
           assertCommandAuthorized(request);
           if (sequenceEngine.active || liveStartReserved || pendingCommands.size || sequenceOutcomeUnknown) throw createHttpError(409, 'Live command control is busy or requires recovery');
           if (!isTelemetryConnected() || latestEnvelope?.source !== 'udp') throw createHttpError(409, 'Fresh UDP telemetry is required');
-          const definition = validateSequence(await recorder.call('sequenceGet', { id: parts[1] }), (command) => buildCommandMessage(command));
+          const stored = await recorder.call('sequenceSnapshot', { id: parts[1] });
+          const { dependencies, ...root } = stored;
+          const definition = snapshotSequence(root, (id, revision) => dependencies.find((item) => item.id === id && item.revision === revision), (value) => validateSequence(value, (command) => buildCommandMessage(command)));
           assertCurrentOperator(session, true);
           const target = resolveCommandTarget();
           if (target.address !== lastTelemetryEndpoint.address || target.port !== lastTelemetryEndpoint.port) throw createHttpError(409, 'Command target must match telemetry endpoint');
@@ -1902,11 +1936,13 @@ const httpServer = http.createServer(async (request, response) => {
           for (const [key, item] of sequenceConfirmations) if (item.expires < Date.now()) sequenceConfirmations.delete(key);
           if (sequenceConfirmations.size >= 100) sequenceConfirmations.delete(sequenceConfirmations.keys().next().value);
           sequenceConfirmations.set(token, { sessionId: session.id, id: definition.id, revision: definition.revision, target, deviceId: latestEnvelope.packet.device_id, expires: Date.now() + 30_000 });
-          sendJson(response, 200, { confirmation_token: token, expires_in_ms: 30_000, name: definition.name, revision: definition.revision, device_id: latestEnvelope.packet.device_id, target, hardware_actions: definition.steps.length }); return;
+          sendJson(response, 200, { confirmation_token: token, expires_in_ms: 30_000, name: definition.name, revision: definition.revision, device_id: latestEnvelope.packet.device_id, target, hardware_actions: definition.steps.length, dependencies: definition.dependencies.map(({ id, name, revision }) => ({ id, name, revision })) }); return;
         }
         if (request.method === 'POST' && parts.length === 3 && parts[2] === 'execute') {
           const body = await readJsonBody(request);
-          const definition = validateSequence(await recorder.call('sequenceGet', { id: parts[1] }), (command) => buildCommandMessage(command));
+          const stored = await recorder.call('sequenceSnapshot', { id: parts[1] });
+          const { dependencies, ...root } = stored;
+          const definition = snapshotSequence(root, (id, revision) => dependencies.find((item) => item.id === id && item.revision === revision), (value) => validateSequence(value, (command) => buildCommandMessage(command)));
           if (!['simulation', 'live'].includes(body.mode)) throw createHttpError(400, 'mode must be live or simulation');
           if (body.execution_id !== undefined && (typeof body.execution_id !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(body.execution_id))) throw createHttpError(400, 'Invalid execution ID');
           if (body.mode === 'live') assertCommandAuthorized(request);

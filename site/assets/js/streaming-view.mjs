@@ -31,6 +31,11 @@ export function fmtSI(v, unit) {
   if (a >= 1e-3) return `${(v * 1e3).toFixed(2)} m${unit}`;
   return `${(v * 1e6).toFixed(1)} µ${unit}`;
 }
+// INA226 engineering power stays in W; presentation uses mW below the 1 W threshold.
+export function fmtPower(powerW) {
+  if (powerW === null || powerW === undefined || !Number.isFinite(powerW)) return '--';
+  return Math.abs(powerW) >= 1 ? fmtSI(powerW, 'W') : fmt(powerW * 1000, 2, ' mW');
+}
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function css(name, fallback) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback; }
@@ -112,6 +117,8 @@ function template() {
         <small data-v="mppt.reg13">REG13 --</small></div>
       <div class="st-faults" data-v="mppt.faults"></div>
       <div class="st-metric"><span class="st-label" data-tooltip="Count of active fault bits reported by BQ25798 register 0x20.">Active Faults · 0x20</span><strong class="st-value" data-v="mppt.activeFaults">--</strong><canvas class="st-spark" data-s="mppt.faults"></canvas></div>
+      <div class="st-metric"><span class="st-label" data-tooltip="Hardware R/W; project write approval remains disabled. Value is not sampled in periodic telemetry.">ADC Function Disable 0 · 0x2F</span><small>1 B · read-only · not sampled</small></div>
+      <div class="st-metric"><span class="st-label" data-tooltip="Read on demand in Debug Mode or a Branch Definition. Value is not sampled in periodic telemetry.">ADC Function Disable 1 · 0x30</span><small>1 B · R/W · not sampled</small></div>
       <h5 class="st-sub">Power path</h5>
       <div class="st-path">
         <div class="st-flow"><span>VAC1 <b data-v="mppt.vac1">--</b></span><i>→</i><span>VBUS <b data-v="mppt.vbus">--</b></span><i>→</i><span>VSYS <b data-v="mppt.vsys">--</b></span><i>→</i><span>VBAT <b data-v="mppt.vbat">--</b></span></div>
@@ -165,7 +172,7 @@ export function mountStreamingView(root, { url } = {}) {
       const x = d.data;
       if (d.key === 'pv') {
         set('pv.busV', fmt(x.busV, 3, ' V')); set('pv.currentMa', fmt(x.currentMa, 2, ' mA'));
-        set('pv.powerMw', fmt(x.powerMw, 2, ' mW')); set('pv.shuntMv', fmt(x.shuntMv, 3, ' mV'));
+        set('pv.powerMw', fmtPower(x.powerW)); set('pv.shuntMv', fmt(x.shuntMv, 3, ' mV'));
       }
       if (d.key === 'bms') {
         x.cells.forEach((c, i) => {

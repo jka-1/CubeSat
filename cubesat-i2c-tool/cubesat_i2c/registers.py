@@ -58,6 +58,8 @@ SW_REGS = [
       notes="ADC_EN = bit7. Sheet bench 0x30 has ADC_EN=0; set bit7 (e.g. 0xB0) and verify",
       bitfields=[dict(name="ADC_EN", bits=7), dict(name="ADC_RATE", bits=6),
                  dict(name="ADC_SAMPLE", bits=[5, 4])]),
+    R(0x2F, "REG2F ADC Function Disable 0", access="R",
+      notes="TI SLUSDV2C section 7.5.1.43: hardware R/W; project write approval not enabled. Bits 7:1 ADC disable; bit 0 reserved.", source="datasheet"),
     R(0x30, "REG30 ADC Function Disable 1", access="RW",
       notes="0x00 enables VAC1/VAC2/D+/D- ADC channels"),
     R(0x31, "REG31 IBUS ADC", width=2, signed=True, scale=0.001, unit="A", notes="1 mA/LSB signed"),

@@ -1,12 +1,13 @@
+import { operatorRegisters } from './operator-registers.mjs';
 import { apiFetch, canOperate } from './auth.js?v=20261109e';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
-import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261027b';
+import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261112-registers';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261027c';
 import { isStreamingMode, setStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261109b';
+import { mountStreamingView } from './streaming-view.mjs?v=20261112-registers';
 
-let streamView = null;
+let streamView = null, registryUnsubscribe = null, baseMap = null, mountGeneration = 0;
 function applyStreamingToggle(on) {
   $('dmStreamToggle').checked = on; $('dmStreamToggleText').textContent = on ? 'On' : 'Off';
   $('dmStreamOffNote').hidden = on;
@@ -84,30 +85,48 @@ function currentRegister() { const d = currentDevice(); return d?.registers[Numb
 
 function fillRegisters() {
   const d = currentDevice(); const sel = $('dmRegister'); if (!d || !sel) return;
-  sel.innerHTML = d.registers.map((r, i) => `<option value="${i}">${r.addr}  ${r.name} (${r.access}, ${r.width} B)</option>`).join('');
+  const selected = sel.selectedOptions?.[0]?.dataset.key;
+  sel.replaceChildren(...d.registers.map((r, i) => {
+    const node = new Option(`${r.addr}  ${r.name} (${r.access}, ${r.width} B)`, String(i));
+    node.dataset.key = `${r.addr}:${r.width}`;
+    node.selected = node.dataset.key === selected;
+    return node;
+  }));
   showRegInfo();
 }
 
-function addRegister() {
-  if (!canOperate()) { $('dmRegisterFeedback').textContent = 'An operator account is required to add registers.'; return; }
-  const device = currentDevice();
-  if (!device) { $('dmRegisterFeedback').textContent = 'Select a supported device first.'; return; }
+function refreshRegisterMap() {
+  if (!baseMap || !$('dmDevice')) return;
+  const selected = $('dmDevice').value;
+  state.map = structuredClone(baseMap);
+  for (const entry of operatorRegisters.list()) {
+    let device = state.map.devices.find((item) => item.addr === entry.addr);
+    if (!device) { device = { addr: entry.addr, name: 'Added device (firmware support required)', registers: [] }; state.map.devices.push(device); }
+    if (!device.registers.some((item) => item.addr === entry.reg)) device.registers.push({
+      addr: entry.reg, name: entry.label || 'Custom register', width: entry.len, endian: entry.endian,
+      access: 'R', scale: null, notes: 'Shared read-only entry. Writes require project approval.'
+    });
+  }
+  $('dmDevice').replaceChildren(...state.map.devices.map((d) => new Option(`${d.addr}  ${d.name}`, d.addr, false, d.addr === selected)));
+  fillRegisters();
+}
+async function addRegister() {
+  if (!canOperate()) { $('dmRegisterFeedback').textContent = 'An operator account with active control is required to add registers here.'; return; }
+  const device = currentDevice(), generation = mountGeneration;
+  if (!device) return;
   try {
     const address = parseRegisterAddress($('dmNewRegister').value);
-    let index = device.registers.findIndex((register) => register.addr === address);
-    if (index < 0) {
-      const width = Number($('dmNewRegisterWidth').value);
-      if (![1, 2].includes(width)) throw new Error('Read width must be 1 or 2 bytes.');
-      device.registers.push({ addr: address, name: 'Custom register', access: 'R', width,
-        endian: device.addr === '0x08' ? 'little' : 'big', scale: null,
-        notes: 'Temporary read-only entry. Writes require a verified register definition.' });
-      index = device.registers.length - 1;
-    }
-    fillRegisters();
-    $('dmRegister').value = String(index);
+    const entry = await operatorRegisters.add({ addr: device.addr, reg: address,
+      len: Number($('dmNewRegisterWidth').value),
+      endian: $('dmNewRegisterEndian').value,
+      label: $('dmNewRegisterLabel').value });
+    if (generation !== mountGeneration || !$('dmDevice')) return;
+    refreshRegisterMap();
+    $('dmDevice').value = entry.addr; fillRegisters();
+    $('dmRegister').value = String(currentDevice().registers.findIndex((item) => item.addr === entry.reg));
     showRegInfo();
-    $('dmRegisterFeedback').textContent = `${device.addr} ${address} available. ${device.registers[index].access.includes('W') ? 'Write permission follows the register definition.' : 'Read only.'}`;
-  } catch (error) { $('dmRegisterFeedback').textContent = error.message; }
+    $('dmRegisterFeedback').textContent = `${entry.addr} ${entry.reg} saved in the shared registry. Write permission follows project approval.`;
+  } catch (error) { if (generation === mountGeneration && $('dmRegisterFeedback')) $('dmRegisterFeedback').textContent = error.message; }
 }
 
 function showRegInfo() {
@@ -298,11 +317,15 @@ function disconnect(updateButton = true) {
 }
 
 export async function initDebugModePage() {
-  try { state.map = await (await apiFetch('./assets/data/register-map.json?v=20261027c')).json(); }
+  const generation = ++mountGeneration;
+  try { state.map = await (await apiFetch('./assets/data/register-map.json?v=20261112-registers')).json(); }
   catch { state.map = { devices: [] }; log('ERR', 'register map failed to load'); }
-  $('dmDevice').innerHTML = state.map.devices.map((d) => `<option value="${d.addr}">${d.addr}  ${d.name}</option>`).join('');
-  fillRegisters();
-  $('dmDevice').addEventListener('change', fillRegisters);
+  if (generation !== mountGeneration || !$('dmDevice')) return;
+  baseMap = structuredClone(state.map);
+  refreshRegisterMap();
+  $('dmNewRegisterEndian').value = currentDevice()?.addr === '0x08' ? 'little' : 'big';
+  registryUnsubscribe = operatorRegisters.subscribe(refreshRegisterMap);
+  $('dmDevice').addEventListener('change', () => { fillRegisters(); $('dmNewRegisterEndian').value = currentDevice()?.addr === '0x08' ? 'little' : 'big'; });
   $('dmRegister').addEventListener('change', showRegInfo);
   $('dmAddRegister').addEventListener('click', addRegister);
   $('dmToken').addEventListener('input', updateControls);
@@ -329,5 +352,5 @@ export async function initDebugModePage() {
   applyStreamingToggle(isStreamingMode());
 }
 
-export function destroyDebugModePage() { disconnect(); clearInterval(state.timer); if (streamView) { streamView.destroy(); streamView = null; } }
+export function destroyDebugModePage() { mountGeneration++; registryUnsubscribe?.(); registryUnsubscribe = null; disconnect(); clearInterval(state.timer); if (streamView) { streamView.destroy(); streamView = null; } }
 export { state as debugModeState };

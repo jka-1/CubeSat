@@ -49,6 +49,7 @@ async function dashboardHarness() {
     subscribeStreaming: () => {},
     streamingUrl: () => '',
     mountStreamingView: () => {},
+    mountRegisterSuggestions: () => () => {},
     normalizePeripheralTelemetry: (value) => value,
     lightLevelFromMv: () => 'Bright'
   });

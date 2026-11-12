@@ -1,4 +1,6 @@
+import { snapshotSequence, sequenceReferences } from '../sequence/dependencies.mjs';
 import Database from 'better-sqlite3';
+import { registryEntry, existingRegistryEntry } from '../register-registry.mjs';
 import { randomUUID } from 'node:crypto';
 import { confirmedMode, confirmedSource, deviceReboot, packetOrder, transition, SOURCE_LABELS } from './state.mjs';
 
@@ -63,10 +65,18 @@ export class RunStore {
       CREATE INDEX IF NOT EXISTS events_window ON events(run_id,at_ms,id);
     `);
     this.db.exec(`
+      CREATE TABLE IF NOT EXISTS register_registry (
+        target TEXT PRIMARY KEY, entry_json TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS sequences (
         id TEXT PRIMARY KEY, revision INTEGER NOT NULL, name TEXT NOT NULL,
         definition_json TEXT NOT NULL, updated_ms INTEGER NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS sequence_revisions (
+        id TEXT NOT NULL, revision INTEGER NOT NULL, definition_json TEXT NOT NULL,
+        PRIMARY KEY(id,revision)
+      );
+      INSERT OR IGNORE INTO sequence_revisions SELECT id,revision,definition_json FROM sequences;
       CREATE TABLE IF NOT EXISTS sequence_executions (
         id TEXT PRIMARY KEY, sequence_id TEXT, revision INTEGER, definition_json TEXT NOT NULL,
         mode TEXT NOT NULL, operator_name TEXT, recording_session_id TEXT, device_id TEXT,
@@ -108,20 +118,57 @@ export class RunStore {
   nextSequenceOrder(id) {
     return this.db.prepare('SELECT COALESCE(MAX(event_order),0)+1 AS next FROM sequence_events WHERE execution_id=?').get(id).next;
   }
-  sequenceSave({ definition, expectedRevision = null, now = Date.now() }) {
-    const existing = this.db.prepare('SELECT revision FROM sequences WHERE id=?').get(definition.id);
-    if (existing && existing.revision !== expectedRevision) fail('Sequence revision conflict', 409);
-    if (!existing && expectedRevision !== null) fail('Sequence does not exist', 404);
-    const revision = existing ? existing.revision + 1 : 1;
-    const saved = { ...definition, revision };
-    this.db.prepare('INSERT INTO sequences(id,revision,name,definition_json,updated_ms) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,name=excluded.name,definition_json=excluded.definition_json,updated_ms=excluded.updated_ms')
-      .run(saved.id, revision, saved.name, JSON.stringify(saved), now);
-    return saved;
+  registerList() {
+    return this.db.prepare('SELECT entry_json FROM register_registry ORDER BY target').all().map((row) => JSON.parse(row.entry_json));
   }
-  sequenceGet({ id }) {
-    const row = this.db.prepare('SELECT definition_json FROM sequences WHERE id=?').get(id);
-    if (!row) fail('Sequence not found', 404);
+  registerAdd(input) {
+    const entry = registryEntry(input);
+    return this.db.transaction(() => {
+      const list = this.registerList();
+      const existing = existingRegistryEntry(entry, list);
+      if (existing) return existing;
+      if (list.length >= 1024) fail('Register registry is full', 409);
+      this.db.prepare('INSERT INTO register_registry(target,entry_json) VALUES(?,?)')
+        .run(`${entry.addr}:${entry.reg}`, JSON.stringify(entry));
+      return entry;
+    })();
+  }
+  sequenceSave({ definition, expectedRevision = null, now = Date.now() }) {
+    return this.db.transaction(() => {
+      const existing = this.db.prepare('SELECT revision FROM sequences WHERE id=?').get(definition.id);
+      if (existing && existing.revision !== expectedRevision) fail('Sequence revision conflict', 409);
+      if (!existing && expectedRevision !== null) fail('Sequence does not exist', 404);
+      const previous = this.db.prepare('SELECT MAX(revision) AS revision FROM sequence_revisions WHERE id=?').get(definition.id).revision || 0;
+      const saved = { ...definition, revision: previous + 1 };
+      this.sequenceSnapshot({ definition: saved });
+      this.db.prepare('INSERT INTO sequences(id,revision,name,definition_json,updated_ms) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,name=excluded.name,definition_json=excluded.definition_json,updated_ms=excluded.updated_ms')
+        .run(saved.id, saved.revision, saved.name, JSON.stringify(saved), now);
+      this.db.prepare('INSERT INTO sequence_revisions(id,revision,definition_json) VALUES(?,?,?)').run(saved.id, saved.revision, JSON.stringify(saved));
+      return saved;
+    })();
+  }
+  sequenceGet({ id, revision }) {
+    const row = revision === undefined ? this.db.prepare('SELECT definition_json FROM sequences WHERE id=?').get(id)
+      : this.db.prepare('SELECT definition_json FROM sequence_revisions WHERE id=? AND revision=?').get(id, revision);
+    if (!row) fail('Sequence revision not found', 404);
     return JSON.parse(row.definition_json);
+  }
+  sequenceSnapshot({ id, definition }) {
+    try { return snapshotSequence(definition || this.sequenceGet({ id }), (id, revision) => this.sequenceGet({ id, revision })); }
+    catch (error) { if (error.statusCode) throw error; fail(error.message, 400); }
+  }
+  sequenceDelete({ id, expectedRevision }) {
+    return this.db.transaction(() => {
+      const target = this.sequenceGet({ id });
+      if (!Number.isSafeInteger(expectedRevision) || target.revision !== expectedRevision) fail('Sequence revision conflict', 409);
+      for (const row of this.db.prepare('SELECT definition_json FROM sequences WHERE id<>?').all(id)) {
+        const definition = JSON.parse(row.definition_json);
+        const graph = this.sequenceSnapshot({ definition });
+        if ([definition, ...graph.dependencies].some((item) => sequenceReferences(item.steps).some((ref) => ref.sequenceId === id))) fail(`Referenced by saved Branch Definition "${definition.name}" revision ${definition.revision}`, 409);
+      }
+      this.db.prepare('DELETE FROM sequences WHERE id=? AND revision=?').run(id, expectedRevision);
+      return { id, revision: target.revision };
+    })();
   }
   sequenceList() {
     return this.db.prepare('SELECT id,revision,name,updated_ms FROM sequences ORDER BY updated_ms DESC LIMIT 100').all();

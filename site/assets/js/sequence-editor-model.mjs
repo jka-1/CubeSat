@@ -1,33 +1,19 @@
+import { WRITABLE_REGISTER_WIDTHS } from './register-policy.mjs?v=20261112-registers';
 import { RUN_METRICS } from './runs-model.mjs';
-import { CONDITION_REGISTERS, CONDITION_FAULTS } from './sequence-condition-fields.mjs';
-import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
+import { CONDITION_REGISTERS, CONDITION_FAULTS } from './sequence-condition-fields.mjs?v=20261112-registers';
+import { READABLE_REGISTERS } from './sequence-register-catalog.mjs?v=20261112-registers';
 
 export const METRICS = RUN_METRICS.map(({ id, label, unit }) => ({ id, label, unit: unit === '°C' ? 'C' : unit }));
 export const OPERATORS = ['>', '>=', '<', '<=', '==', '!=', '&'];
 export const BLOCKS = [
   ['command', 'Command'], ['registerRead', 'Register read'], ['registerWrite', 'Register write'],
-  ['delay', 'Delay'], ['waitUntil', 'Wait for value'], ['if', 'IF / ELSE']
+  ['runSaved', 'Run Saved Sequence'], ['message', 'Message / log'], ['delay', 'Delay'], ['waitUntil', 'Wait for value'], ['if', 'IF / ELSE']
 ];
 const uid = () => crypto.randomUUID();
 // User-added condition registers (sequence JSON `registers`), read live when the condition is evaluated.
 export const USER_REGISTER_LIMIT = 32;
-export const hex2 = (value) => `0x${Number(value).toString(16).toUpperCase().padStart(2, '0')}`;
-export function parseUserRegister({ addr, reg, len = 1, endian = 'big', label = '' } = {}) {
-  const errors = [];
-  const a = String(addr ?? '').trim(), r = String(reg ?? '').trim(), name = String(label ?? '').trim();
-  const asHex = (text) => /^(0x)?[0-9a-f]{1,2}$/i.test(text) ? parseInt(text.replace(/^0x/i, ''), 16) : NaN;
-  const addrValue = asHex(a), regValue = asHex(r);
-  if (!(addrValue >= 0x08 && addrValue <= 0x77)) errors.push('Device address must be a 7-bit hex address 0x08–0x77.');
-  if (!(regValue >= 0 && regValue <= 0xff)) errors.push('Register must be hex 0x00–0xFF.');
-  if (![1, 2].includes(Number(len))) errors.push('Width must be 1 or 2 bytes.');
-  if (!['big', 'little'].includes(endian)) errors.push('Byte order must be big or little endian.');
-  if (name.length > 60) errors.push('Label must be 60 characters or fewer.');
-  if (errors.length) return { errors };
-  const entry = { id: `user-${hex2(addrValue).slice(2)}-${hex2(regValue).slice(2)}-${Number(len)}`, addr: hex2(addrValue), reg: hex2(regValue), len: Number(len), endian };
-  if (name) entry.label = name;
-  return { entry, errors: [] };
-}
-export const userRegisterLabel = (item) => `${item.label ? `${item.label} · ` : ''}${item.addr} ${item.reg} (${item.len} B${item.len === 2 ? `, ${item.endian}` : ''})`;
+export { hex2, parseUserRegister, userRegisterLabel } from './register-definition.mjs';
+import { parseUserRegister } from './register-definition.mjs';
 export function validateUserRegisters(list, errors = []) {
   if (list === undefined) return errors;
   if (!Array.isArray(list) || list.length > USER_REGISTER_LIMIT) { errors.push(`Added registers: at most ${USER_REGISTER_LIMIT}.`); return errors; }
@@ -46,6 +32,8 @@ export function makeBlock(type) {
   if (type === 'command') return { id, type, command: { type: 'led_control', enabled: true } };
   if (type === 'registerRead') return { id, type, command: { type: 'i2c_read', addr: '0x40', reg: '0x00', len: 2 } };
   if (type === 'registerWrite') return { id, type, command: { type: 'i2c_write', addr: '0x40', reg: '0x05', data: ['0x00', '0x00'] } };
+  if (type === 'runSaved') return { id, type, sequenceId: '', revision: 1 };
+  if (type === 'message') return { id, type, message: '' };
   if (type === 'delay') return { id, type, durationMs: 1000 };
   if (type === 'waitUntil') return { id, type, condition: comparison(), timeoutMs: 30000 };
   if (type === 'if') return { id, type, condition: comparison(), then: [], else: [] };
@@ -95,7 +83,7 @@ export function validateDraft(definition) {
   if (definition.name?.length > 120) errors.push('Name must be 120 characters or fewer.');
   if (!definition.steps.length) errors.push('Connect at least one block to the Branch Definition.');
   if (countBlocks(definition.steps) > 200) errors.push('Branch Definition exceeds 200 blocks.');
-  const writable = { '0x08': { '0x3E': 2 }, '0x6B': Object.fromEntries('0F 10 12 13 14 2E 30'.split(' ').map((reg) => [`0x${reg}`, 1])), '0x40': Object.fromEntries('00 05 06 07'.split(' ').map((reg) => [`0x${reg}`, 2])) };
+  const writable = WRITABLE_REGISTER_WIDTHS;
   validateUserRegisters(definition.registers, errors);
   const custom = Array.isArray(definition.registers) ? definition.registers : [];
   const seen = new Set();
@@ -116,6 +104,8 @@ export function validateDraft(definition) {
       if (step.type === 'waitUntil' || step.type === 'if') checkRefs(step.condition, reads, label);
       if (!step.id || seen.has(step.id)) errors.push(`${label}: missing or duplicate block ID`);
       seen.add(step.id);
+      if (step.type === 'message' && (typeof step.message !== 'string' || !step.message.trim() || step.message.length > 1000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(step.message))) errors.push(`${label}: message must be 1–1000 characters of plain text`);
+      if (step.type === 'runSaved' && (!/^[A-Za-z0-9_-]{1,80}$/.test(step.sequenceId) || !Number.isSafeInteger(step.revision) || step.revision < 1 || step.revision > 1000000)) errors.push(`${label}: choose a saved Branch Definition and revision`);
       if (step.type === 'delay' && (!Number.isSafeInteger(step.durationMs) || step.durationMs < 1 || step.durationMs > 600000)) errors.push(`${label}: delay must be 1–600000 ms`);
       if (step.type === 'waitUntil') {
         if (!Number.isSafeInteger(step.timeoutMs) || step.timeoutMs < 1 || step.timeoutMs > 600000) errors.push(`${label}: timeout must be 1–600000 ms`);
@@ -130,7 +120,7 @@ export function validateDraft(definition) {
       if (['command', 'registerRead', 'registerWrite'].includes(step.type) && !step.command?.type) errors.push(`${label}: choose a command`);
       if (step.type === 'registerRead' || step.command?.type === 'i2c_read') {
         reads.add(step.id);
-        if (!READABLE_REGISTERS.some((item) => item.addr === step.command?.addr && item.reg === step.command?.reg && item.len === step.command?.len)) errors.push(`${label}: select a supported register and width`);
+        if (![...custom, ...READABLE_REGISTERS].some((item) => item.addr === step.command?.addr && item.reg === step.command?.reg && item.len === step.command?.len)) errors.push(`${label}: select a supported register and width`);
       }
       if (step.type === 'registerWrite' || step.command?.type === 'i2c_write') {
         const width = writable[step.command?.addr]?.[step.command?.reg];

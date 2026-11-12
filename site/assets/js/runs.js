@@ -1,5 +1,5 @@
 import { apiFetch, canOperate, isOperator, isSignedIn } from './auth.js?v=20261109e';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261109e';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261112-sequences';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,
@@ -85,6 +85,8 @@ function reasonLabel(reason) {
 function eventDescription(event) {
   const details = event.details || {};
   if (event.type === 'sequence_step') {
+    if (details.phase === 'message') return `${details.sequence_name || 'Sequence'} · ${(details.path || []).join(' / ')} · ${details.block_id} · ${details.message}`;
+    if (details.phase?.startsWith('nested_')) return `${details.phase.replaceAll('_', ' ')} · ${details.sequence_name || details.sequence_id} r${details.sequence_revision}`;
     return `${details.sequence_name || 'Sequence'} · line ${details.step_number ?? '?'} ${details.phase || ''}`.trim();
   }
   if (event.type === 'command_status') return details.label || details.summary || 'Command status';
@@ -453,6 +455,7 @@ function renderSample(sample) {
 }
 
 function detailsLabel(details) {
+  if (details.phase === 'message' || details.phase?.startsWith('nested_')) return eventDescription({ type: 'sequence_step', details });
   if (details.label) return details.label;
   if (details.sequence_name) return `${details.sequence_name} · step ${details.step_number} ${details.phase}: ${details.step_text}`;
   if (details.reason) return reasonLabel(details.reason);

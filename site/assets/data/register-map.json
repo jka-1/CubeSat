@@ -335,6 +335,20 @@
      ]
     },
     {
+     "addr": "0x2F",
+     "name": "REG2F ADC Function Disable 0",
+     "access": "R",
+     "width": 1,
+     "endian": "big",
+     "signed": false,
+     "scale": null,
+     "offset": 0.0,
+     "unit": "",
+     "precision": 3,
+     "notes": "TI SLUSDV2C \u00a77.5.1.43: hardware R/W; project write approval not enabled. Bits 7:1 disable IBUS/IBAT/VBUS/VBAT/VSYS/TS/TDIE ADCs; bit 0 reserved. No periodic readback in telemetry.",
+     "source": "https://www.ti.com/lit/ds/symlink/bq25798.pdf"
+    },
+    {
      "addr": "0x30",
      "name": "REG30 ADC Function Disable 1",
      "access": "RW",

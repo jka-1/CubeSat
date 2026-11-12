@@ -18,3 +18,5 @@
 .seq-history-detail pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .75rem; }
 .seq-history-error { color: var(--danger); }
 @media (max-width: 720px) { .sequence-history-layout { grid-template-columns: 1fr; } .seq-history-list { max-height: 200px; } }
+
+.seq-history-detail strong, .seq-history-detail p { overflow-wrap: anywhere; }

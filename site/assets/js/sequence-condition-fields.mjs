@@ -1,5 +1,5 @@
 import { MPPT_FAULT_BITS } from './streaming-telemetry.mjs';
-import { READABLE_REGISTERS } from './sequence-register-catalog.mjs';
+import { READABLE_REGISTERS } from './sequence-register-catalog.mjs?v=20261112-registers';
 
 // Preserve existing telemetry-backed IDs in saved definitions.
 export const CONDITION_REGISTERS = Object.freeze([

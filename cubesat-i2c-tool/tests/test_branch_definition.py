@@ -69,11 +69,11 @@ def test_save_put_with_revision_and_conflict():
     s.csrf = "c"
     assert s.save_sequence({"version": 1, "name": "n", "steps": []})["id"] == "new"
     with pytest.raises(SequenceConflict) as ei:
-        s.save_sequence({"version": 1, "id": "a/b", "revision": 4, "name": "n", "steps": []})
+        s.save_sequence({"version": 1, "id": "a/b", "revision": 4, "confirmed_revision": 4, "name": "n", "steps": []})
     assert ei.value.current["revision"] == 5
     (m1, u1, b1, h1), (m2, u2, b2, h2) = calls
     assert m1 == "POST" and u1.endswith("/sequences") and h1.get("X-csrf-token") == "c"
-    assert m2 == "PUT" and u2.endswith("/sequences/a%2Fb") and b2["revision"] == 4
+    assert m2 == "PUT" and u2.endswith("/sequences/a%2Fb") and b2["revision"] == 4 and b2["confirmed_revision"] == 4
     assert "X-command-token" not in h1  # saving a definition never needs the command token
 
 
@@ -134,4 +134,65 @@ def test_branch_page_builds_and_edits(qtbot=None):
     assert len(steps[1]["then"]) == 1 and len(steps[1]["else"]) == 1
     page.name.setText("T"); page._name_edited("T")
     assert page.errors == [] and not page.save_btn.isEnabled()  # not connected
+    page.close()
+
+
+def test_composed_blocks_and_plain_text_validate():
+    d = M.fresh("Composed")
+    call, note = M.make_block("runSaved"), M.make_block("message")
+    call.update(sequenceId="child", revision=3)
+    note["message"] = "<script>plain text</script> %s"
+    d["steps"] = [call, note]
+    assert M.validate_draft(d) == []
+    assert "r3" in M.block_text(call)
+    for text in ("", " ", "x" * 1001, "🙂" * 501, "\x00bad"):
+        note["message"] = text
+        assert M.validate_draft(d)
+
+
+def test_desktop_cancel_preserves_edits_and_save_sends_only_confirmed_revision(monkeypatch):
+    import copy
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PySide6.QtWidgets import QApplication, QMessageBox
+    from cubesat_i2c.branch_page import BranchDefinitionPage
+    app = QApplication.instance() or QApplication([])
+    page = BranchDefinitionPage()
+    seq = {**M.fresh("Saved"), "id": "saved", "revision": 2, "steps": [M.make_block("message")]}
+    seq["steps"][0]["message"] = "edited <text> %s"
+    page.set_draft(seq)
+    page.name.setText("Unsaved name"); page._name_edited("Unsaved name")
+    before = copy.deepcopy(page.draft)
+    page.session = type("Session", (), {"auth_enabled": False})()
+    queued = []
+    page._run_async = lambda key, work, done: queued.append((key, work, done))
+    page._confirm = lambda title, text: False
+    page.save(); page.new_definition(); page._loaded({**seq, "name": "Other"}, None)
+    assert page.draft == before and not queued
+    monkeypatch.setattr(QMessageBox, "exec", lambda self: 0)
+    page._conflict(SequenceConflict("stale", {"id": "saved", "name": "Other", "revision": 3}))
+    assert page.draft == before and not queued
+    page._confirm = lambda title, text: True
+    bodies = []
+    page.session.save_sequence = lambda body: bodies.append(body)
+    page.save()
+    queued.pop()[1]()
+    assert bodies[-1]["confirmed_revision"] == 2
+    assert "confirmed_revision" not in page.draft and page.draft == before
+    monkeypatch.setattr(QMessageBox, "clickedButton", lambda self: next(b for b in self.buttons() if b.text() == "Overwrite with mine"))
+    page._confirm = lambda *args: pytest.fail("conflict overwrite must not ask a second time")
+    page._conflict(SequenceConflict("stale", {"id": "saved", "name": "Other", "revision": 3}))
+    queued.pop()[1]()
+    assert bodies[-1]["revision"] == bodies[-1]["confirmed_revision"] == 3
+    assert page.draft == before
+    from PySide6.QtWidgets import QComboBox, QPlainTextEdit
+    page.saved = [{"id": "child", "name": "Child", "revision": 3}]
+    call, note = M.make_block("runSaved"), M.make_block("message")
+    page.set_draft({**seq, "steps": [call, note]})
+    page.editor.load(page.draft["steps"][0])
+    select = page.editor.form_host.findChild(QComboBox)
+    select.setCurrentIndex(select.findData("child"))
+    assert page.draft["steps"][0]["sequenceId"] == "child" and page.draft["steps"][0]["revision"] == 3
+    page.editor.load(page.draft["steps"][1])
+    page.editor.form_host.findChild(QPlainTextEdit).setPlainText("<b>literal message</b> %s")
+    assert page.draft["steps"][1]["message"] == "<b>literal message</b> %s"
     page.close()

@@ -225,6 +225,23 @@ class BlockEditor(QWidget):
         self.title.setText("<b>%s</b> · %s" % (M.BLOCK_LABELS.get(step["type"], step["type"]), step["id"][:8]))
         t = step["type"]
         if t in ("command", "registerRead", "registerWrite"): self._command_rows(step)
+        if t == "message":
+            text = QPlainTextEdit(); text.setPlainText(step.get("message", "")); text.setMaximumHeight(120)
+            text.textChanged.connect(lambda: (step.__setitem__("message", text.toPlainText()), self.changed.emit()))
+            self.form.addRow("Message (plain text, max 1000)", text)
+        if t == "runSaved":
+            select = QComboBox(); select.addItem("Choose a saved definition", "")
+            for saved in self.page.saved:
+                if saved["id"] != self.page.draft.get("id"): select.addItem("%s · r%s" % (saved["name"], saved["revision"]), saved["id"])
+            if step.get("sequenceId") and select.findData(step["sequenceId"]) < 0: select.addItem(step["sequenceId"] + " (pinned)", step["sequenceId"])
+            select.setCurrentIndex(max(0, select.findData(step.get("sequenceId", ""))))
+            def picked(_):
+                step["sequenceId"] = select.currentData()
+                step["revision"] = next((s["revision"] for s in self.page.saved if s["id"] == step["sequenceId"]), 1)
+                revision_spin.setValue(step["revision"]); self.changed.emit()
+            self.form.addRow("Saved Branch Definition", select)
+            revision_spin = self._spin("Pinned revision", step, "revision", 1, 1000000)
+            select.currentIndexChanged.connect(picked)
         if t == "delay": self._spin("Delay (ms)", step, "durationMs", 1, 600000)
         if t == "waitUntil": self._spin("Timeout (ms)", step, "timeoutMs", 1, 600000)
         if t in ("waitUntil", "if"):
@@ -236,6 +253,7 @@ class BlockEditor(QWidget):
         sp = QSpinBox(); sp.setRange(lo, hi); sp.setValue(int(obj.get(key) or lo))
         sp.valueChanged.connect(lambda val: (obj.__setitem__(key, int(val)), self.changed.emit()))
         self.form.addRow(label, sp)
+        return sp
 
     def _combo(self, label, items, current, on_change):
         cb = QComboBox()
@@ -553,7 +571,18 @@ class BranchDefinitionPage(QWidget):
         self.name.setText(self.draft.get("name", ""))
         self.editor.load(None); self.render(); self._update_remote()
 
+    def _confirm(self, title, text):
+        box = QMessageBox(self); box.setIcon(QMessageBox.Warning); box.setWindowTitle(title)
+        box.setTextFormat(Qt.PlainText); box.setText(text)
+        box.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel); box.setDefaultButton(QMessageBox.Cancel)
+        return box.exec() == QMessageBox.Yes
+
+    def _confirm_discard(self):
+        changed = self.dirty() if self.draft.get("id") else bool(self.draft.get("name") or self.draft.get("steps") or self.draft.get("registers"))
+        return not changed or self._confirm("Unsaved changes", 'Discard unsaved changes to "%s"? Cancel keeps your edits.' % (self.draft.get("name") or "Untitled Branch Definition"))
+
     def new_definition(self):
+        if not self._confirm_discard(): return
         self.set_draft(M.fresh(), saved=False); self._fill_saved(); self.notice("New Branch Definition.")
 
     def duplicate(self):
@@ -593,36 +622,54 @@ class BranchDefinitionPage(QWidget):
 
     def _loaded(self, seq, err):
         if err: self.notice("Load failed: %s" % err, True); return
+        if not self._confirm_discard(): return
+        self._loaded_confirmed(seq, err)
+
+    def _loaded_confirmed(self, seq, err):
+        if err: self.notice("Load failed: %s" % err, True); return
         self.set_draft(seq); self.notice("Loaded revision %s." % seq.get("revision"))
 
     def save(self):
+        if "save" in self._busy: return
         if not self.can_edit():
             self.notice("An operator account is required to save.", True); return
         self.draft["name"] = self.name.text()
         if M.validate_draft(self.draft):
             self.notice("Fix validation issues before saving.", True); return
-        body = copy.deepcopy(self.draft)
+        if self.draft.get("id") and not self._confirm("Overwrite saved definition", 'Overwrite "%s" (%s) revision %s? Your edits replace the saved definition as a new revision. Historical runs and pinned references remain unchanged. Cancel keeps your edits.' % (self.draft["name"], self.draft["id"], self.draft["revision"])): return
+        self._submit_definition(copy.deepcopy(self.draft))
+
+    def _submit_definition(self, body):
+        if "save" in self._busy: return
+        self._saving_draft = json.dumps(self.draft, sort_keys=True)
+        if body.get("id"): body["confirmed_revision"] = body["revision"]
         self._run_async("save", lambda: self.session.save_sequence(body), self._saved)
 
     def _saved(self, seq, err):
         if isinstance(err, SequenceConflict):
             self._conflict(err); return
         if err: self.notice("Save failed: %s" % err, True); return
-        self.set_draft(seq); self.notice("Saved revision %s." % seq.get("revision")); self.refresh_list()
+        if json.dumps(self.draft, sort_keys=True) != getattr(self, "_saving_draft", None):
+            self.draft.update(id=seq["id"], revision=seq["revision"])
+            self.saved_snapshot = json.dumps(seq, sort_keys=True); self.render()
+        else:
+            self.set_draft(seq)
+        self.notice("Saved revision %s." % seq.get("revision")); self.refresh_list()
 
     def _conflict(self, err):
         cur = err.current or {}
         box = QMessageBox(self); box.setIcon(QMessageBox.Warning); box.setWindowTitle("Saved elsewhere")
-        box.setText("This Branch Definition was saved elsewhere (now revision %s; yours is based on r%s)." % (
-            cur.get("revision", "?"), self.draft.get("revision")))
+        box.setTextFormat(Qt.PlainText)
+        box.setText('"%s" (%s) was saved elsewhere as revision %s; yours is based on r%s. Overwrite replaces that saved revision with your edits. Historical runs and pinned references remain unchanged. Cancel keeps your edits.' % (
+            cur.get("name"), cur.get("id"), cur.get("revision", "?"), self.draft.get("revision")))
         overwrite = box.addButton("Overwrite with mine", QMessageBox.DestructiveRole)
         reload_btn = box.addButton("Discard mine and load latest", QMessageBox.AcceptRole)
         box.addButton(QMessageBox.Cancel)
         box.exec()
         if box.clickedButton() is overwrite and cur.get("revision"):
-            self.draft["revision"] = cur["revision"]; self.save()
+            body = copy.deepcopy(self.draft); body["revision"] = cur["revision"]; self._submit_definition(body)
         elif box.clickedButton() is reload_btn:
-            self._run_async("load", lambda: self.session.get_sequence(self.draft["id"]), self._loaded)
+            self._run_async("load", lambda: self.session.get_sequence(self.draft["id"]), lambda seq, err: self._loaded_confirmed(seq, err))
         else:
             self.notice("Save canceled: resolve the conflict before saving.", True)
 
@@ -705,6 +752,8 @@ class BranchDefinitionPage(QWidget):
             d = e.get("details") or {}
             extra = (" · " + ("TRUE" if d["selected"] == "then" else "FALSE")) if d.get("selected") else ""
             extra += (" · value 0x%X" % d["value"]) if isinstance(d.get("value"), int) and e.get("type") == "register_value" else ""
+            if e.get("type") == "message": extra += " · %s · %s · %s" % (d.get("block_id"), " / ".join(d.get("path") or []), d.get("message", ""))
+            if e.get("type", "").startswith("nested_"): extra += " · %s r%s" % (d.get("sequence_name"), d.get("sequence_revision"))
             extra += (" · " + str(d["error"])) if d.get("error") else ""
             self.event_list.addItem("%s%s" % (e.get("type", "").replace("_", " "), extra))
         self.event_list.scrollToBottom()

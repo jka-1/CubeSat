@@ -1,9 +1,9 @@
 import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v=20261109e';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261109e';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261112-registers';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109e';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261109e';
-import { initSequencesPage, destroySequencesPage } from './sequences.js?v=20261109e';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261109e';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261112-registers';
+import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261112-sequences';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261112-sequences';
 import { initTwinPage, destroyTwinPage } from './twin.js?v=20261111-sync';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
 
@@ -17,7 +17,7 @@ const assetVersion = '20261104b';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261109b`,
+  communication: `./modules/communication.html?v=20261112-registers`,
   'link-health': `./modules/link-health.html?v=20261104a`,
   'debug-mode': '/telemetry/operator-pages/debug-mode',
   runs: `./modules/runs.html?v=20261109b`,
@@ -107,6 +107,8 @@ function showOperatorDenied(route) {
 }
 
 async function loadRoute(route) {
+  if (currentRoute === 'sequences' && resolveRoute(route) === 'sequences' && allowRoute('sequences')) return;
+  if (currentRoute === 'sequences' && allowRoute('sequences') && !confirmLeaveSequences()) { history.replaceState(null, '', '#sequences'); return; }
   const id = ++navigationId;
   if (route === 'account') {
     if (currentRoute && pageDestroyers[currentRoute]) pageDestroyers[currentRoute]();

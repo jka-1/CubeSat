@@ -68,3 +68,7 @@
 .seq-register-error { flex-basis: 100%; color: #ff8a80; font-size: .85em; }
 .seq-register-error:empty { display: none; }
 .seq-remote { margin: 0 16px 12px; padding: 8px 12px; border-radius: 8px; background: rgba(255, 196, 0, .12); color: #ffd666; font-size: .85rem; }
+
+.seq-config textarea { width: 100%; min-width: 0; resize: vertical; font: inherit; }
+.seq-config small { flex-basis: 100%; color: var(--white-soft); }
+.seq-events li, #seqProgressLabel { overflow-wrap: anywhere; }

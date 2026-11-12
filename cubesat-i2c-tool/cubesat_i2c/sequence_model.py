@@ -16,7 +16,7 @@ METRIC_UNITS = {m[0]: m[2] for m in METRICS}
 OPERATORS = (">", ">=", "<", "<=", "==", "!=", "&")
 LOGICAL = ("AND", "OR", "NOT")
 BLOCKS = (("command", "Command"), ("registerRead", "Register read"), ("registerWrite", "Register write"),
-          ("delay", "Delay"), ("waitUntil", "Wait for value"), ("if", "IF / ELSE"))
+          ("runSaved", "Run Saved Sequence"), ("message", "Message / log"), ("delay", "Delay"), ("waitUntil", "Wait for value"), ("if", "IF / ELSE"))
 BLOCK_LABELS = dict(BLOCKS)
 COMMAND_TYPES = (("led_control", "LED"), ("debug_control", "Debug mode"), ("sensor_control", "Sensor polling"),
                  ("mppt_acdrv_control", "MPPT ACDRV"), ("i2c_read", "I²C read"), ("i2c_write", "I²C write"),
@@ -75,6 +75,8 @@ def make_block(kind):
     if kind == "command": return {"id": i, "type": kind, "command": default_command("led_control")}
     if kind == "registerRead": return {"id": i, "type": kind, "command": default_command("i2c_read")}
     if kind == "registerWrite": return {"id": i, "type": kind, "command": default_command("i2c_write")}
+    if kind == "runSaved": return {"id": i, "type": kind, "sequenceId": "", "revision": 1}
+    if kind == "message": return {"id": i, "type": kind, "message": ""}
     if kind == "delay": return {"id": i, "type": kind, "durationMs": 1000}
     if kind == "waitUntil": return {"id": i, "type": kind, "condition": comparison(), "timeoutMs": 30000}
     if kind == "if": return {"id": i, "type": kind, "condition": comparison(), "then": [], "else": []}
@@ -280,6 +282,12 @@ def validate_draft(d):
             if not s.get("id") or s["id"] in seen: errors.append("%s: missing or duplicate block ID" % label)
             seen.add(s.get("id"))
             t, cmd = s.get("type"), s.get("command") or {}
+            if t == "message":
+                text = s.get("message")
+                if not isinstance(text, str) or not text.strip() or _len(text.encode("utf-16-le", errors="surrogatepass")) // 2 > 1000 or re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]", text):
+                    errors.append("%s: message must be 1–1000 characters of plain text" % label)
+            if t == "runSaved" and (not re.fullmatch(r"[A-Za-z0-9_-]{1,80}", str(s.get("sequenceId") or "")) or type(s.get("revision")) is not int or not 1 <= s["revision"] <= 1000000):
+                errors.append("%s: choose a saved Branch Definition and revision" % label)
             if t == "delay" and not (isinstance(s.get("durationMs"), int) and 1 <= s["durationMs"] <= 600000):
                 errors.append("%s: delay must be 1–600000 ms" % label)
             if t == "waitUntil":
@@ -352,6 +360,8 @@ def operand_text(o, custom=()):
 
 def block_text(s, custom=()):
     t, cmd = s.get("type"), s.get("command") or {}
+    if t == "message": return "Message: " + s.get("message", "")
+    if t == "runSaved": return "Run %s · r%s" % (s.get("sequenceId") or "(choose definition)", s.get("revision", 1))
     if t == "delay": return "Delay %d ms" % s.get("durationMs", 0)
     if t == "waitUntil": return "Wait until %s (timeout %d ms)" % (condition_text(s.get("condition"), custom), s.get("timeoutMs", 0))
     if t == "if": return "IF %s" % condition_text(s.get("condition"), custom)

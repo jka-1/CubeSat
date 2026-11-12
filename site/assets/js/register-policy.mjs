@@ -1,3 +1,10 @@
+// Project write approval is deliberately independent of the user register catalog.
+export const WRITABLE_REGISTER_WIDTHS = Object.freeze({
+  '0x08': Object.freeze({ '0x3E': 2 }),
+  '0x6B': Object.freeze(Object.fromEntries('0F 10 12 13 14 2E 30'.split(' ').map((reg) => [`0x${reg}`, 1]))),
+  '0x40': Object.freeze(Object.fromEntries('00 05 06 07'.split(' ').map((reg) => [`0x${reg}`, 2])))
+});
+
 export function parseRegisterAddress(input) {
   const text = String(input ?? '').trim();
   if (!/^0x[0-9a-f]{1,2}$/i.test(text)) throw new Error('Register address must be hexadecimal from 0x00 to 0xFF.');

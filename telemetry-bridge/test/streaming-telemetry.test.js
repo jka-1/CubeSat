@@ -96,6 +96,15 @@ test('view formatting: auto-scaled SI units for small PV currents/powers', async
   assert.equal(fmtSI(null, 'A'), '--');
 });
 
+test('INA226 power presentation uses mW below 1000 mW and W at the threshold', async () => {
+  const { fmtPower } = await import('../../site/assets/js/streaming-view.mjs');
+  for (const [powerW, expected] of [[0, '0.00 mW'], [0.0005, '0.50 mW'], [0.999, '999.00 mW'],
+    [1, '1.000 W'], [1.075, '1.075 W'], [12.345, '12.345 W']]) {
+    assert.equal(fmtPower(powerW), expected);
+  }
+  for (const missing of [null, undefined, NaN, Infinity]) assert.equal(fmtPower(missing), '--');
+});
+
 // ---------------------------------------------------------------- v6 Streaming Telemetry packet
 for (const [name, expected] of CASES) {
   test(`v6 ${name}: present-only cards + new fields, absent -> null`, () => {

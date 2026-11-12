@@ -1,3 +1,4 @@
+import { snapshotSequence } from './dependencies.mjs';
 import { randomUUID } from 'node:crypto';
 import { evaluateCondition } from './model.mjs';
 import { CONDITION_REGISTERS, CONDITION_FAULTS } from './condition-fields.mjs';
@@ -66,6 +67,7 @@ export class SequenceEngine {
     this.telemetry = null;
   }
   async event(run, type, details = {}) {
+    details = { definition_id: run.context?.id || run.definition.id, revision: run.context?.revision || run.definition.revision, path: run.path || [], ...details };
     const event = { execution_id: run.id, order: ++run.order, at_ms: this.now(), type, block_id: details.block_id || null, details };
     await this.persist('sequenceEvent', event);
     this.onEvent({ ...event, phase: event.type, type: 'sequence_event' });
@@ -97,6 +99,8 @@ export class SequenceEngine {
   }
   async start({ definition, mode, sessionId = null, operatorName = null, target = null, deviceId = null, recordingEnvelope = null, simulationTelemetry = null, id = randomUUID() }) {
     if (this.active) throw Object.assign(new Error('Another sequence is active'), { statusCode: 409 });
+    const { dependencies = [], ...root } = definition;
+    definition = snapshotSequence(root, (id, revision) => dependencies.find((item) => item.id === id && item.revision === revision));
     const run = { id, definition: structuredClone(definition), mode, sessionId, target, deviceId, state: 'idle', reason: null, order: 0, startedMs: this.now(), lastSeq: mode === 'live' ? this.telemetry?.packet?.seq ?? null : null, uptime: mode === 'live' ? this.telemetry?.packet?.device_uptime_ms ?? null : null, telemetry: mode === 'simulation' ? simulationTelemetry : this.telemetry, abortReason: null, paused: false, canceled: false, inFlight: false, currentBlock: null };
     this.active = run;
     try {
@@ -135,7 +139,7 @@ export class SequenceEngine {
     let lastEnvelope;
     const registerValues = { ...(run.mode === 'simulation' ? run.telemetry?.packet?.register_values || {} : {}),
       ...Object.fromEntries(Object.entries(run.stepValues || {}).map(([id, value]) => [`step:${id}`, value])) };
-    const custom = run.definition?.registers || [];
+    const custom = (run.context || run.definition).registers || [];
     if (run.mode === 'simulation') for (const field of custom) {
       const simulated = run.telemetry?.packet?.register_values || {};
       const value = simulated[field.id] ?? simulated[`${field.addr}:${field.reg}`];
@@ -204,9 +208,11 @@ export class SequenceEngine {
     error.evidence = conditionEvidence(condition, run.telemetry, registerValues, custom);
     throw error;
   }
-  async blocks(run, steps) {
+  async blocks(run, steps, path = []) {
+    run.path = path;
     for (const step of steps) {
       await this.check(run);
+      run.path = path;
       run.currentBlock = step.id;
       await this.event(run, 'block_started', { block_id: step.id, block_type: step.type,
         telemetry_snapshot: telemetrySnapshot(run.telemetry) });
@@ -237,7 +243,7 @@ export class SequenceEngine {
             register_write_read_back: false });
           if (step.command.type === 'i2c_read') {
             // Keep the read value so a later IF / ELSE or Wait block can branch on it.
-            const field = READABLE_REGISTERS.find((item) => item.addr === step.command.addr && item.reg === step.command.reg);
+            const field = [...((run.context || run.definition).registers || []), ...READABLE_REGISTERS].find((item) => item.addr === step.command.addr && item.reg === step.command.reg && item.len === step.command.len);
             const bytes = result.result?.data;
             let value = null;
             if (run.mode === 'simulation') {
@@ -257,6 +263,22 @@ export class SequenceEngine {
             throw new Error(result.status === 'timed_out' ? 'command_outcome_unknown' : 'command_failed');
           }
           await this.check(run);
+        } else if (step.type === 'message') {
+          await this.check(run);
+          await this.event(run, 'message', { block_id: step.id, message: step.message });
+        } else if (step.type === 'runSaved') {
+          const child = run.definition.dependencies.find((item) => item.id === step.sequenceId && item.revision === step.revision);
+          if (!child) throw new Error('Missing saved sequence revision');
+          await this.event(run, 'nested_started', { block_id: step.id, sequence_id: child.id, sequence_name: child.name, sequence_revision: child.revision });
+          const parent = run.context, values = run.stepValues;
+          run.context = child; run.stepValues = {};
+          try { await this.blocks(run, child.steps, [...path, `${step.id}:${child.id}@${child.revision}`]); }
+          catch (error) {
+            await this.event(run, 'nested_failed', { block_id: step.id, sequence_id: child.id, sequence_name: child.name, sequence_revision: child.revision, error: error.message });
+            throw error;
+          }
+          finally { run.context = parent; run.stepValues = values; run.path = path; run.currentBlock = step.id; }
+          await this.event(run, 'nested_completed', { block_id: step.id, sequence_id: child.id, sequence_name: child.name, sequence_revision: child.revision });
         } else if (step.type === 'delay') {
           const deadline = this.now() + step.durationMs;
           while (this.now() < deadline) { await this.check(run); await sleep(Math.min(100, deadline - this.now())); }
@@ -272,10 +294,12 @@ export class SequenceEngine {
         } else if (step.type === 'if') {
           const decision = await this.condition(run, step.id, step.condition, 30_000, true);
           await this.event(run, 'branch', { block_id: step.id, ...decision, selected: decision.result ? 'then' : 'else' });
-          await this.blocks(run, decision.result ? step.then : step.else || []);
+          await this.blocks(run, decision.result ? step.then : step.else || [], [...path, `${step.id}:${decision.result ? 'then' : 'else'}`]);
+          run.path = path; run.currentBlock = step.id;
         }
         await this.event(run, 'block_completed', { block_id: step.id });
       } catch (error) {
+        run.path = path; run.currentBlock = step.id;
         await this.event(run, 'block_failed', { block_id: step.id, error: error.message });
         throw error;
       }

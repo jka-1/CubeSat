@@ -218,7 +218,7 @@ class WirelessSession(Session):
         return self._ok("GET", "/sequences/" + urllib.parse.quote(seq_id, safe="")).get("sequence")
 
     def save_sequence(self, definition):
-        """POST (new) or PUT (existing, with its revision). Raises SequenceConflict on a stale revision."""
+        """POST new or PUT existing with revision and UI-approved confirmed_revision; raise on conflict."""
         if definition.get("id"):
             status, data = self._request("PUT", "/sequences/" + urllib.parse.quote(definition["id"], safe=""), definition)
         else:

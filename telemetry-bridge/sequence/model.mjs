@@ -165,7 +165,14 @@ export function validateSequence(definition, validateCommand) {
         if (step.type === 'registerRead' && step.command.type !== 'i2c_read' || step.type === 'registerWrite' && step.command.type !== 'i2c_write') bad('Register block command mismatch');
         const normalized = validateCommand(step.command);
         if (step.command.type === 'i2c_read') reads.add(step.id);
-        if (step.command.type === 'i2c_read' && !READABLE_REGISTERS.some((item) => item.addr === normalized.expectedResult.addr && item.reg === normalized.expectedResult.reg && item.len === normalized.expectedResult.len)) bad('Unsupported register read or width');
+        if (step.command.type === 'i2c_read' && ![...custom, ...READABLE_REGISTERS].some((item) => item.addr === normalized.expectedResult.addr && item.reg === normalized.expectedResult.reg && item.len === normalized.expectedResult.len)) bad('Unsupported register read or width');
+      } else if (step.type === 'message') {
+        keys(step, ['id', 'type', 'message'], 'message block');
+        if (typeof step.message !== 'string' || !step.message.trim() || step.message.length > 1000 || /[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(step.message)) bad('Message must be 1–1000 characters of plain text');
+      } else if (step.type === 'runSaved') {
+        keys(step, ['id', 'type', 'sequenceId', 'revision'], 'saved sequence block');
+        if (typeof step.sequenceId !== 'string' || !/^[A-Za-z0-9_-]{1,80}$/.test(step.sequenceId)) bad('Invalid saved sequence reference');
+        integer(step.revision, 1, 1_000_000, 'saved sequence revision');
       } else if (step.type === 'delay') {
         keys(step, ['id', 'type', 'durationMs'], 'delay block');
         integer(step.durationMs, 1, 600_000, 'delay');

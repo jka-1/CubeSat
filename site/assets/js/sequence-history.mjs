@@ -28,8 +28,10 @@ function node(tag, content, className = '') {
   if (className) item.className = className;
   return item;
 }
-function summary(event) {
+export function summary(event) {
   const details = event.details || {};
+  if (event.type === 'message') return `Message: ${details.message}`;
+  if (event.type === 'nested_started' || event.type === 'nested_completed' || event.type === 'nested_failed') return `${event.type === 'nested_started' ? 'Running' : event.type === 'nested_failed' ? 'Failed' : 'Completed'} ${details.sequence_name || details.sequence_id} · revision ${details.sequence_revision}`;
   if (event.type === 'branch') return `Branch ${details.result ? 'TRUE' : 'FALSE'} → ${details.selected || 'unknown'}`;
   if (event.type === 'condition') return details.error || `Condition ${details.result === true ? 'TRUE' : details.result === false ? 'FALSE' : 'unknown'}`;
   if (event.type === 'comparison') return `Comparison ${details.result === true ? 'TRUE' : details.result === false ? 'FALSE' : 'unknown'}`;
@@ -63,6 +65,7 @@ export function mountSequenceHistory(container, { onRecording } = {}) {
       detail.append(node('h4', `${execution.definition.name} · revision ${execution.revision}`),
         node('p', `${execution.mode === 'simulation' ? 'Simulation' : 'Live hardware'} · ${execution.state} · ${execution.completed_steps} completed steps`),
         node('p', `Started ${date(execution.started_ms)} · Ended ${date(execution.ended_ms)}`));
+      if (execution.definition.dependencies?.length) detail.append(node('p', `Pinned dependencies: ${execution.definition.dependencies.map((item) => `${item.name} (${item.id}) r${item.revision}`).join(', ')}`));
       if (execution.reason) detail.append(node('p', explanation[execution.reason] || execution.reason, 'seq-history-error'));
       if (execution.recording_run_id && onRecording) {
         const button = node('button', 'Open telemetry recording', 'seq-history-refresh');
@@ -71,9 +74,9 @@ export function mountSequenceHistory(container, { onRecording } = {}) {
       const timeline = document.createElement('ol');
       for (const event of events) {
         const item = document.createElement('li');
-        item.append(node('strong', `${event.block_id ? `${event.block_id} · ` : ''}${summary(event)}`),
+        item.append(node('strong', `${event.details?.definition_id ? `${event.details.definition_id} r${event.details.revision} · ` : ''}${event.details?.path?.length ? `${event.details.path.join(' / ')} · ` : ''}${event.block_id ? `${event.block_id} · ` : ''}${summary(event)}`),
           node('time', date(event.at_ms)));
-        if (['comparison', 'condition', 'branch', 'command_result', 'command_error', 'block_failed', 'block_started'].includes(event.type)) {
+        if (['comparison', 'condition', 'branch', 'command_result', 'command_error', 'block_failed', 'block_started', 'message', 'nested_started', 'nested_completed', 'nested_failed'].includes(event.type)) {
           const evidence = document.createElement('details');
           evidence.append(node('summary', 'Details'), node('pre', JSON.stringify(event.details, null, 2)));
           item.append(evidence);
