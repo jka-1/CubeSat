@@ -72,3 +72,57 @@
 .seq-config textarea { width: 100%; min-width: 0; resize: vertical; font: inherit; }
 .seq-config small { flex-basis: 100%; color: var(--white-soft); }
 .seq-events li, #seqProgressLabel { overflow-wrap: anywhere; }
+
+.seq-library > *, .seq-config > *, .seq-condition, .seq-operand, .seq-logic-part, .seq-workspace > * { min-width: 0; }
+.seq-library > label:first-child { flex: 0 1 310px; }
+.seq-input { width: 100%; }
+.seq-block-title, .seq-validation, .seq-history-item, .seq-order-panel { overflow-wrap: anywhere; }
+.seq-logic-part { flex-wrap: wrap; }
+.seq-logic-part > .seq-condition { flex: 1 1 150px; }
+.seq-library-card { overflow: visible; position: relative; z-index: 2; }
+.seq-order-panel { scroll-margin-top: 150px; position: absolute; z-index: 5; top: calc(100% - 8px); left: 16px; width: min(620px, calc(100% - 32px)); padding: 14px; border: 1px solid var(--gold-deep); border-radius: 12px; background: var(--black); box-shadow: 0 16px 40px rgba(0,0,0,.6); }
+.seq-order-panel[hidden] { display: none; }
+.seq-order-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.seq-order-heading h3 { margin: 0; font-size: 1rem; color: var(--gold-soft); }
+.seq-order-panel p { color: var(--white-soft); font-size: .8rem; line-height: 1.5; margin: 10px 0; }
+.seq-order-panel [data-order-status]:empty { display: none; }
+.seq-order-panel [data-order-status].error { color: var(--danger); }
+.seq-order-panel ol { max-height: min(45vh, 360px); overflow: auto; overscroll-behavior: contain; margin: 0; padding: 4px; list-style: none; }
+.seq-order-panel li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 4px; align-items: center; padding: 6px 2px; border-block: 2px solid transparent; border-radius: 6px; }
+.seq-order-panel li.selected { background: rgba(212,175,55,.14); outline: 1px solid var(--gold-deep); outline-offset: -1px; }
+.seq-order-panel button { min-height: 44px; }
+.seq-order-handle, .seq-order-name { border: 0; background: transparent; color: var(--white-soft); padding: 8px; border-radius: 6px; cursor: pointer; }
+.seq-order-name { text-align: left; overflow-wrap: anywhere; }
+.seq-order-name[aria-pressed=true] { color: var(--gold-soft); font-weight: 700; }
+.seq-order-handle { touch-action: none; cursor: grab; display: grid; place-items: center; }
+.seq-order-actions { display: flex; align-items: center; }
+.seq-order-panel .seq-order-move { display: grid; place-items: center; width: 28px; min-height: 32px; padding: 0; border: 0; border-radius: 5px; background: transparent; color: var(--white-soft); cursor: pointer; }
+.seq-order-panel .seq-order-move:hover { color: var(--gold-soft); background: rgba(212,175,55,.08); }
+@media (hover: hover) and (pointer: fine) {
+  .seq-order-actions { opacity: 0; pointer-events: none; }
+  .seq-order-panel li:hover .seq-order-actions, .seq-order-panel li:focus-within .seq-order-actions { opacity: 1; pointer-events: auto; }
+}
+@media (hover: none), (pointer: coarse) {
+  .seq-order-actions { flex-direction: column; }
+  .seq-order-panel .seq-order-move { width: 44px; min-height: 44px; }
+}
+.seq-order-handle:hover, .seq-order-name:hover { background: rgba(212,175,55,.1); }
+.seq-order-panel .insert-before { border-top-color: var(--gold-soft); }
+.seq-order-panel .insert-after { border-bottom-color: var(--gold-soft); }
+.seq-order-panel .drag-source { opacity: .5; }
+.seq-order-panel .dragging { user-select: none; cursor: grabbing; }
+@media (max-width: 550px) {
+  .seq-library > label:first-child { flex-basis: 100%; }
+  .seq-library > button { flex: 1 1 auto; }
+  .seq-branches { padding: 0 2px 8px; }
+  .seq-branches .seq-list { padding: 3px; }
+  .seq-branches .seq-block-header, .seq-branches .seq-config { padding: 8px 4px; }
+  .seq-condition > label { min-width: 0; max-width: 100%; }
+  .seq-order-control > button { width: 100%; }
+  .seq-order-panel { scroll-margin-top: 220px; }
+}
+@media (forced-colors: active) {
+  .seq-order-panel li.selected { outline-color: Highlight; }
+  .seq-order-panel .insert-before { border-top-color: Highlight; }
+  .seq-order-panel .insert-after { border-bottom-color: Highlight; }
+}

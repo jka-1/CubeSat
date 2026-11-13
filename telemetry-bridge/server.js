@@ -1889,7 +1889,13 @@ const httpServer = http.createServer(async (request, response) => {
       }
       const parts = requestUrl.pathname.split('/').filter(Boolean);
       if (parts[0] === 'sequences') {
-        if (request.method === 'GET' && parts.length === 1) { sendJson(response, 200, { sequences: await recorder.call('sequenceList') }); return; }
+        if (request.method === 'GET' && parts.length === 1) { sendJson(response, 200, await recorder.call('sequenceLibrary')); return; }
+        if (request.method === 'PUT' && parts.length === 2 && parts[1] === 'order') {
+          const body = await readJsonBody(request);
+          assertCurrentOperator(session);
+          const library = await recorder.call('sequenceMove', body);
+          sendJson(response, 200, library); return;
+        }
         if (request.method === 'GET' && parts.length === 2) { sendJson(response, 200, { sequence: await recorder.call('sequenceGet', { id: parts[1] }) }); return; }
         if (request.method === 'POST' && parts.length === 1 || request.method === 'PUT' && parts.length === 2) {
           const body = await readJsonBody(request);

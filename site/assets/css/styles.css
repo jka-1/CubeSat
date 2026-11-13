@@ -26,6 +26,9 @@
   --radius: 22px;
   --shadow: 0 24px 90px rgba(0, 0, 0, 0.45);
   --max-width: 1200px;
+  color-scheme: dark;
+  --scroll-track: #111516;
+  --scroll-thumb: #8c8061;
   --font-ui: "Horizon Design System", Arial, Helvetica, sans-serif;
 }
 
@@ -42,7 +45,6 @@ body {
   font-family: var(--font-ui);
   color: var(--white);
   background: #000 url("../../space_background.png") center/cover fixed no-repeat;
-  overflow-x: hidden;
 }
 
 button,
@@ -130,7 +132,7 @@ a {
   flex: 1;
   min-width: 0;
   overflow-x: auto;
-  scrollbar-width: thin;
+  scrollbar-width: auto;
 }
 .nav-links > * { flex: 0 0 auto; white-space: nowrap; }
 .nav-links .nav-link {
@@ -154,7 +156,7 @@ a {
   overflow-x: auto;
   min-width: 0;
   flex: 1;
-  scrollbar-width: thin;
+  scrollbar-width: auto;
   scroll-padding-inline: 16px;
 }
 .dashboard-tabs > * { flex: 0 0 auto; white-space: nowrap; }
@@ -1716,13 +1718,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
   min-height: 0;
   padding: 16px;
   overflow: auto;
-  scrollbar-color: var(--gold-deep) #111516;
-  scrollbar-width: thin;
 }
-
-.detail-window-body::-webkit-scrollbar { width: 9px; }
-.detail-window-body::-webkit-scrollbar-track { background: #111516; }
-.detail-window-body::-webkit-scrollbar-thumb { background: var(--gold-deep); border-radius: 8px; }
 
 .detail-window-body .metric-tile {
   min-width: 0;
@@ -2197,4 +2193,23 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
 
 @media (max-width: 720px) {
   .page-bank-label .page-bank-title { position: static; transform: none; }
+}
+
+/* Shared native scrolling surfaces, including dialogs and resizable controls. */
+* { scrollbar-color: var(--scroll-thumb) var(--scroll-track); }
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: var(--scroll-track); }
+::-webkit-scrollbar-thumb { background: var(--scroll-thumb); border: 3px solid var(--scroll-track); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: var(--gold-soft); }
+::-webkit-resizer { background: var(--scroll-track); background-image: linear-gradient(135deg, transparent 55%, var(--scroll-thumb) 55%, var(--scroll-thumb) 62%, transparent 62%, transparent 72%, var(--scroll-thumb) 72%, var(--scroll-thumb) 79%, transparent 79%); }
+.page, .page > *, .card, .card-body, .section-header > *, .detail-window-body > * { min-width: 0; }
+.section-header { flex-wrap: wrap; }
+/* The modal layer must also clear the sticky navigation’s stacking context. */
+.page-shell:has(.i2c-detail-layer.is-open) { z-index: 60; }
+input, select, textarea { max-width: 100%; }
+textarea { min-width: 0; }
+@media (forced-colors: active) {
+  * { scrollbar-color: auto; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner, ::-webkit-resizer { background: Canvas; }
+  ::-webkit-scrollbar-thumb, ::-webkit-scrollbar-thumb:hover { background: ButtonText; border-color: Canvas; }
 }

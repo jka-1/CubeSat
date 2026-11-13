@@ -238,6 +238,23 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     assert.equal((await request('/command', operator, { type: 'i2c_write', addr, reg, data }, { 'X-Command-Token': 'test-command' })).status, 400);
   }
   const put = (path, session, body) => fetch(origin + path, { method: 'PUT', headers: { Origin: origin, 'Content-Type': 'application/json', Cookie: session.cookie, 'X-CSRF-Token': session.csrf }, body: JSON.stringify(body) });
+  // Shared library order is available to editing-only operators, with the existing CSRF boundary.
+  const orderWrite = (actor, body, headers = {}) => fetch(origin + '/sequences/order', { method: 'PUT', headers: {
+    Origin: origin, 'Content-Type': 'application/json', ...(actor ? { Cookie: actor.cookie, 'X-CSRF-Token': actor.csrf } : {}), ...headers
+  }, body: JSON.stringify(body) });
+  const beforeOrder = await (await request('/sequences', editor)).json();
+  const moveBody = { id: customSaved.id, before_id: saved.sequence.id, expected_version: beforeOrder.order.version };
+  assert.equal((await orderWrite(null, moveBody)).status, 401);
+  assert.equal((await orderWrite(viewer, moveBody)).status, 403);
+  for (const token of ['', 'wrong']) assert.equal((await orderWrite(editor, moveBody, { 'X-CSRF-Token': token })).status, 403);
+  assert.equal((await orderWrite(editor, moveBody, { Origin: 'https://evil.test' })).status, 403);
+  const moved = await orderWrite(editor, moveBody);
+  assert.equal(moved.status, 200, 'no hardware control lease or command token needed');
+  const movedLibrary = await moved.json();
+  assert.equal(movedLibrary.sequences[0].id, customSaved.id);
+  assert.deepEqual(await (await request('/sequences', operator)).json(), movedLibrary, 'other operator sees shared order');
+  assert.equal((await orderWrite(operator, moveBody)).status, 409, 'stale order write rejected');
+  assert.equal((await (await request(`/sequences/${customSaved.id}`, editor)).json()).sequence.revision, customSaved.revision);
   const base = (await (await request(`/sequences/${saved.sequence.id}`, editor)).json()).sequence;
   const stream2 = await request('/events', editor), reader2 = stream2.body.getReader();
   const editorSave = await put(`/sequences/${base.id}`, editor, { ...base, confirmed_revision: base.revision, name: 'Edited in app' });
@@ -321,12 +338,14 @@ test('HTTP JWT login enforces roles, CSRF and command token; logout closes SSE',
     finishSlow = () => pending.end(commandBody.slice(5));
   });
   await new Promise((resolve) => setTimeout(resolve, 30));
+  const confirmedLibrary = await (await request('/sequences', operator)).json();
   assert.equal((await request('/auth/logout', operator, {})).status, 200);
   finishSlow();
   assert.equal(await slowResponse, 401);
   assert.equal((await request('/command', operator, {}, { 'X-Command-Token': 'test-command' })).status, 401);
   const replacement = await login('operator');
   assert.equal((await request('/latest', replacement)).status, 200);
+  assert.deepEqual(await (await request('/sequences', replacement)).json(), confirmedLibrary, 'library order survives sign-out/sign-in');
 });
 
 test('live branches share a recording, preserve packets and markers, and retain independent runs', async (t) => {

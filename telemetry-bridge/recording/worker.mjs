@@ -10,7 +10,7 @@ const store = new RunStore(workerData.filename);
 chmodSync(workerData.filename, 0o600);
 parentPort.postMessage({ ready: true });
 const operations = new Set(['start', 'stop', 'ingest', 'command', 'marker', 'get', 'list', 'samples', 'events', 'series',
-  'registerList', 'registerAdd', 'sequenceSave', 'sequenceDelete', 'sequenceSnapshot', 'sequenceGet', 'sequenceList', 'sequenceStart', 'sequenceStartLive', 'sequenceFinishRecording', 'sequenceState', 'sequenceEvent',
+  'registerList', 'registerAdd', 'sequenceSave', 'sequenceDelete', 'sequenceSnapshot', 'sequenceGet', 'sequenceList', 'sequenceLibrary', 'sequenceMove', 'sequenceStart', 'sequenceStartLive', 'sequenceFinishRecording', 'sequenceState', 'sequenceEvent',
   'sequenceGetExecution', 'sequenceListExecutions', 'sequenceEvents', 'sequenceUnsafeStatus', 'sequenceRecover']);
 parentPort.on('message', ({ id, operation, args }) => {
   try {

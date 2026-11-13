@@ -37,3 +37,9 @@
 .debug-mode-page button:disabled { opacity: 0.45; cursor: not-allowed; }
 @media (max-width: 1100px) { .dm-row, .dm-source, .dm-reg { grid-template-columns: 1fr; } .dm-tiles { grid-template-columns: repeat(3, 1fr); } }
 @media (max-width: 700px) { .dm-tiles { grid-template-columns: 1fr; } }
+
+.dm-grid > *, .dm-inline > *, .dm-tiles > * { min-width: 0; }
+.dm-inline { flex-wrap: wrap; }
+.dm-inline .input { flex: 1 1 120px; }
+.dm-pre { overflow-wrap: anywhere; }
+.dm-tile, .dm-note { overflow-wrap: anywhere; }

@@ -1,0 +1,50 @@
+[
+  {
+    "width": 320,
+    "parent": {
+      "client": 320,
+      "scroll": 320
+    },
+    "frame": {
+      "client": 320,
+      "scroll": 320,
+      "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)"
+    }
+  },
+  {
+    "width": 390,
+    "parent": {
+      "client": 390,
+      "scroll": 390
+    },
+    "frame": {
+      "client": 390,
+      "scroll": 390,
+      "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)"
+    }
+  },
+  {
+    "width": 768,
+    "parent": {
+      "client": 768,
+      "scroll": 768
+    },
+    "frame": {
+      "client": 768,
+      "scroll": 768,
+      "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)"
+    }
+  },
+  {
+    "width": 1440,
+    "parent": {
+      "client": 1440,
+      "scroll": 1440
+    },
+    "frame": {
+      "client": 1440,
+      "scroll": 1440,
+      "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)"
+    }
+  }
+]

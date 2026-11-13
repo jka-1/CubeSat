@@ -1,0 +1,71 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Library ordering browser regressions</title>
+<link rel="stylesheet" href="../site/assets/css/styles.css"><link rel="stylesheet" href="../site/assets/css/sequences.css">
+<body><main class="page-shell sequence-page"><h1>Library ordering browser regressions</h1><pre id="results" role="status">Running…</pre><div class="seq-library-card"><button id="trigger" aria-controls="panel" aria-expanded="false">Arrange library</button><section id="panel" class="seq-order-panel" hidden><h2>Saved library order</h2><button data-order-close>Close</button><ol data-order-list></ol><p data-order-status role="status"></p><button data-order-retry hidden>Retry move</button></section></div></main>
+<script type="module">
+import { mountLibraryOrder } from '../site/assets/js/sequence-library-order.mjs';
+const output = document.querySelector('#results'), checks = [];
+const assert = (value, label) => { if (!value) throw new Error(label); checks.push('PASS '+label); output.textContent = checks.join('\n'); };
+const tick = () => new Promise(resolve => setTimeout(resolve, 30));
+let current = { sequences: Array.from({length:35},(_,i)=>({id:`id-${i}`,name:`Bench ${i}`,revision:1})), order:{version:1,ids:Array.from({length:35},(_,i)=>`id-${i}`)} };
+let selected = 'id-0', failure = null, calls = [], snapshots = [], disposed = false;
+const draft = {name:'Unfinished name',message:'Unfinished message',pin:1}, before = JSON.stringify(draft);
+const trigger=document.querySelector('#trigger'),panel=document.querySelector('#panel'),list=panel.querySelector('ol');
+const request = async (path, options) => {
+ calls.push(path);
+ if (!options) return structuredClone(current);
+ if (failure) { const error=failure;failure=null;throw error; }
+ const body=JSON.parse(options.body);
+ if(body.expected_version!==current.order.version) throw Object.assign(new Error('Library changed elsewhere'),{status:409});
+ const ids=current.order.ids.filter(id=>id!==body.id);ids.splice(body.before_id===null?ids.length:ids.indexOf(body.before_id),0,body.id);
+ current={order:{version:current.order.version+1,ids},sequences:ids.map(id=>current.sequences.find(item=>item.id===id))};
+ return structuredClone(current);
+};
+const menu=mountLibraryOrder({trigger,panel,request,onLibrary:next=>snapshots.push(next),getSelected:()=>selected,onSelect:id=>{selected=id;}});
+const rendered=()=>[...list.children].map(row=>row.dataset.orderId);
+const row=id=>[...list.children].find(row=>row.dataset.orderId===id);
+try {
+ menu.update(structuredClone(current));trigger.click();
+ assert(calls.length===0,'opening menu makes no API write or load');
+ row('id-1').querySelector('[data-order-select]').click();
+ assert(selected==='id-1'&&calls.length===0,'selecting a name does not load or save');
+ row('id-0').querySelector('[data-order-move=down]').click();await tick();
+ assert(rendered()[1]==='id-0'&&snapshots.length===1,'move saves confirmed shared order');
+ assert(JSON.stringify(draft)===before&&selected==='id-1','draft fields, pin and selection remain intact');
+ const focused=row('id-0').querySelector('[data-order-move=down]');focused.focus();menu.update(structuredClone(current));
+ assert(document.activeElement===focused,'unchanged poll preserves exact focused DOM node');
+ const confirmed=rendered().join();failure=new Error('Fixture storage unavailable');
+ row('id-0').querySelector('[data-order-move=down]').click();await tick();
+ assert(rendered().join()===confirmed&&!panel.querySelector('[data-order-retry]').hidden,'failed save retains confirmed order and offers retry');
+ panel.querySelector('[data-order-retry]').click();await tick();assert(rendered()[2]==='id-0','retry persists intended move');
+ // Concurrent addition/reorder arrives at server before a stale client move.
+ current.sequences.push({id:'added',name:'Concurrent addition',revision:1});current.order.ids.push('added');current.order.version++;
+ row('id-1').querySelector('[data-order-move=down]').click();await tick();
+ assert(rendered().includes('added')&&/not saved/.test(panel.querySelector('[data-order-status]').textContent),'stale move refreshes additions and reports conflict');
+ panel.querySelector('[data-order-retry]').click();await tick();assert(rendered().length===36&&new Set(rendered()).size===36,'explicit conflict retry preserves every definition');
+ // Synthetic touch pointers exercise the same handlers; native capture needs an actual device pointer.
+ const handle=row(rendered()[0]).querySelector('[data-order-handle]');
+ handle.setPointerCapture=()=>{};handle.hasPointerCapture=()=>false;
+ const id=handle.closest('li').dataset.orderId, rect=list.getBoundingClientRect();
+ handle.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:11,pointerType:'touch',button:0,clientY:rect.top+20}));
+ list.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,pointerId:11,pointerType:'touch',clientY:rect.bottom+20}));
+ for(let i=0;i<25;i++)await new Promise(requestAnimationFrame);
+ assert(list.scrollTop>100,'touch drag edge scroll reaches beyond visible library');
+ assert(!!list.querySelector('.insert-before,.insert-after'),'drag exposes insertion feedback');
+ // An addition during drag is preserved by the final move.
+ current.sequences.push({id:'during-drag',name:'Added during drag',revision:1});current.order.ids.push('during-drag');current.order.version++;menu.update(structuredClone(current));
+ list.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:11,pointerType:'touch',clientY:rect.bottom+20}));await tick();
+ assert(rendered().includes('during-drag')&&rendered().indexOf(id)>0,'touch drop reorders by stable ID while retaining concurrent addition');
+ const handle2=row(rendered()[0]).querySelector('[data-order-handle]');handle2.setPointerCapture=()=>{};handle2.hasPointerCapture=()=>false;
+ const removed=handle2.closest('li').dataset.orderId;
+ handle2.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:12,pointerType:'touch',button:0,clientY:rect.top+20}));
+ current.sequences=current.sequences.filter(item=>item.id!==removed);current.order.ids=current.order.ids.filter(id=>id!==removed);current.order.version++;menu.update(structuredClone(current));
+ list.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,pointerId:12,pointerType:'touch',clientY:rect.top+20}));await tick();
+ assert(!rendered().includes(removed)&&/deleted/.test(panel.querySelector('[data-order-status]').textContent),'deleted drag source cancels safely with useful feedback');
+ document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true}));
+ assert(panel.hidden&&document.activeElement===trigger,'Escape dismisses and restores trigger focus');
+ menu.update({sequences:[],order:{version:current.order.version+1,ids:[]}});trigger.click();
+ assert(!panel.hidden&&/No saved definitions/.test(panel.querySelector('[data-order-status]').textContent),'empty library remains accessible');
+ menu.dispose();disposed=true;assert(JSON.stringify(draft)===before,'all interactions leave unfinished editor data intact');
+ output.dataset.result='passed';output.textContent += `\n${checks.length} checks passed.`;
+} catch(error) {output.dataset.result='failed';output.textContent += '\nFAIL '+error.stack;}
+</script></body></html>

@@ -108,3 +108,15 @@
 .st-metric[data-metric="per.light"], .st-small .st-metric[data-metric="per.light"] { grid-template-columns: auto minmax(130px, 1fr) 80px; }
 .st-metric[data-metric="per.light"] .st-value { white-space: normal; overflow-wrap: anywhere; }
 .st-cell { grid-template-columns: 82px 1fr 70px 80px; } .st-cell .st-label { white-space: nowrap; }
+
+.st-root, .st-grid > *, .st-metric > *, .st-cell > * { min-width: 0; }
+.st-grid { grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr)); }
+.st-card header, .st-window, .st-acdrv { flex-wrap: wrap; }
+.st-meta { min-width: 0; flex-basis: 200px; overflow-wrap: anywhere; }
+.st-label, .st-fault { overflow-wrap: anywhere; }
+@media (min-width: 1000px) { .st-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+@media (max-width: 700px) {
+  .st-metric, .st-small .st-metric, .st-metric[data-metric="per.light"], .st-small .st-metric[data-metric="per.light"] { grid-template-columns: minmax(0, 1fr) minmax(0, 100px); }
+  .st-cell { grid-template-columns: 82px minmax(0, 1fr) 70px; }
+  .st-faults { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}

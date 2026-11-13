@@ -72,6 +72,9 @@ export class RunStore {
         id TEXT PRIMARY KEY, revision INTEGER NOT NULL, name TEXT NOT NULL,
         definition_json TEXT NOT NULL, updated_ms INTEGER NOT NULL
       );
+      CREATE TABLE IF NOT EXISTS sequence_library_order (
+        singleton INTEGER PRIMARY KEY CHECK(singleton=1), version INTEGER NOT NULL, ids_json TEXT NOT NULL
+      );
       CREATE TABLE IF NOT EXISTS sequence_revisions (
         id TEXT NOT NULL, revision INTEGER NOT NULL, definition_json TEXT NOT NULL,
         PRIMARY KEY(id,revision)
@@ -135,6 +138,7 @@ export class RunStore {
   }
   sequenceSave({ definition, expectedRevision = null, now = Date.now() }) {
     return this.db.transaction(() => {
+      this.sequenceLibrary();
       const existing = this.db.prepare('SELECT revision FROM sequences WHERE id=?').get(definition.id);
       if (existing && existing.revision !== expectedRevision) fail('Sequence revision conflict', 409);
       if (!existing && expectedRevision !== null) fail('Sequence does not exist', 404);
@@ -144,6 +148,7 @@ export class RunStore {
       this.db.prepare('INSERT INTO sequences(id,revision,name,definition_json,updated_ms) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,name=excluded.name,definition_json=excluded.definition_json,updated_ms=excluded.updated_ms')
         .run(saved.id, saved.revision, saved.name, JSON.stringify(saved), now);
       this.db.prepare('INSERT INTO sequence_revisions(id,revision,definition_json) VALUES(?,?,?)').run(saved.id, saved.revision, JSON.stringify(saved));
+      this.sequenceLibrary();
       return saved;
     })();
   }
@@ -166,12 +171,43 @@ export class RunStore {
         const graph = this.sequenceSnapshot({ definition });
         if ([definition, ...graph.dependencies].some((item) => sequenceReferences(item.steps).some((ref) => ref.sequenceId === id))) fail(`Referenced by saved Branch Definition "${definition.name}" revision ${definition.revision}`, 409);
       }
+      this.sequenceLibrary();
       this.db.prepare('DELETE FROM sequences WHERE id=? AND revision=?').run(id, expectedRevision);
+      this.sequenceLibrary();
       return { id, revision: target.revision };
     })();
   }
   sequenceList() {
-    return this.db.prepare('SELECT id,revision,name,updated_ms FROM sequences ORDER BY updated_ms DESC LIMIT 100').all();
+    return this.sequenceLibrary().sequences;
+  }
+  // Library presentation metadata never touches revisions, references or executions.
+  sequenceLibrary() {
+    return this.db.transaction(() => {
+      const rows = this.db.prepare('SELECT id,revision,name,updated_ms FROM sequences ORDER BY updated_ms DESC,id').all();
+      const metadata = this.db.prepare('SELECT version,ids_json FROM sequence_library_order WHERE singleton=1').get();
+      const byId = new Map(rows.map((row) => [row.id, row]));
+      const oldIds = metadata ? JSON.parse(metadata.ids_json) : [];
+      const ids = oldIds.filter((id) => byId.has(id));
+      const included = new Set(ids);
+      ids.push(...rows.filter((row) => !included.has(row.id)).map((row) => row.id));
+      const changed = JSON.stringify(ids) !== JSON.stringify(oldIds);
+      const version = metadata ? metadata.version + Number(changed) : 1;
+      if (!metadata || changed) this.db.prepare('INSERT INTO sequence_library_order VALUES(1,?,?) ON CONFLICT(singleton) DO UPDATE SET version=excluded.version,ids_json=excluded.ids_json').run(version, JSON.stringify(ids));
+      return { sequences: ids.map((id) => byId.get(id)), order: { version, ids } };
+    })();
+  }
+  sequenceMove({ id, before_id, expected_version }) {
+    if (typeof id !== 'string' || !(before_id === null || typeof before_id === 'string') || !Number.isSafeInteger(expected_version) || expected_version < 1) fail('Invalid library order move');
+    return this.db.transaction(() => {
+      const { order } = this.sequenceLibrary();
+      if (expected_version !== order.version) fail('Library order changed elsewhere. Review the refreshed list and retry your move.', 409);
+      if (!order.ids.includes(id) || before_id !== null && !order.ids.includes(before_id)) fail('A definition in this move was deleted. Choose a new position.', 409);
+      if (id === before_id) return this.sequenceLibrary();
+      const ids = order.ids.filter((value) => value !== id);
+      ids.splice(before_id === null ? ids.length : ids.indexOf(before_id), 0, id);
+      if (JSON.stringify(ids) !== JSON.stringify(order.ids)) this.db.prepare('UPDATE sequence_library_order SET version=?,ids_json=? WHERE singleton=1').run(order.version + 1, JSON.stringify(ids));
+      return this.sequenceLibrary();
+    })();
   }
   sequenceStart({ id, definition, mode, operator_name, recording_session_id, device_id, started_ms }) {
     this.db.prepare('INSERT INTO sequence_executions(id,sequence_id,revision,definition_json,mode,operator_name,recording_session_id,device_id,state,started_ms) VALUES(?,?,?,?,?,?,?,?,?,?)')

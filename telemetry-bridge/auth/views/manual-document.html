@@ -26,6 +26,21 @@
   .warn { border-left:4px solid #b3261e; background:#fdf1f0; padding:8px 12px; margin:12px 0; }
   a { color:#1d4f91; }
   .back { font-size:13px; }
+  /* This document is also embedded: parent dashboard CSS cannot theme its scrollbars. */
+  :root { color-scheme:dark; --scroll-thumb:#8c8061; --scroll-track:#111516; }
+  * { scrollbar-color:var(--scroll-thumb) var(--scroll-track); }
+  ::-webkit-scrollbar { width:12px; height:12px; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background:var(--scroll-track); }
+  ::-webkit-scrollbar-thumb { background:var(--scroll-thumb); border:3px solid var(--scroll-track); border-radius:8px; }
+  ::-webkit-scrollbar-thumb:hover { background:#f0d77a; }
+  pre { white-space:pre-wrap; overflow-wrap:anywhere; }
+  th, td, h1, code { overflow-wrap:anywhere; }
+  @media (max-width:600px) { .wrap { padding:24px 16px 48px; } nav.toc ol { columns:1; } table { table-layout:fixed; } }
+  @media (forced-colors:active) {
+    * { scrollbar-color:auto; }
+    ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background:Canvas; }
+    ::-webkit-scrollbar-thumb, ::-webkit-scrollbar-thumb:hover { background:ButtonText; border-color:Canvas; }
+  }
   @media print {
     body { font-size:11pt; } .wrap { max-width:none; padding:0; } .back { display:none; }
     nav.toc ol { columns:1; } h2 { page-break-before:auto; break-after:avoid; } h3 { break-after:avoid; }

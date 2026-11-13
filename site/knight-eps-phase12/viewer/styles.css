@@ -95,3 +95,19 @@ a{color:#f0d77a;text-underline-offset:3px}
  .sidebar>section{padding:16px 0}
 }
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none}}
+
+/* The Twin is its own document, so it owns its native scroll surfaces. */
+*{scrollbar-color:#8c8061 #101114}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner{background:#101114}
+::-webkit-scrollbar-thumb{background:#8c8061;border:3px solid #101114;border-radius:8px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+::-webkit-resizer{background:#101114}
+.sidebar button,.sidebar label,.readings>div{overflow-wrap:anywhere;min-width:0}
+.action-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.readings>div{flex-wrap:wrap}
+@media(forced-colors:active){
+ *{scrollbar-color:auto}
+ ::-webkit-scrollbar-track,::-webkit-scrollbar-corner,::-webkit-resizer{background:Canvas}
+ ::-webkit-scrollbar-thumb,::-webkit-scrollbar-thumb:hover{background:ButtonText;border-color:Canvas}
+}

@@ -1,5 +1,5 @@
 .sequence-history { margin: 20px 0; padding: 18px; border: 1px solid var(--line); border-radius: 12px; background: #101010; color: var(--white-soft); }
-.sequence-history-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sequence-history-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
 .sequence-history-heading h3 { margin: 0; color: var(--white); }
 .seq-history-refresh, .seq-history-item { border: 1px solid var(--line); border-radius: 8px; background: #171717; color: var(--white-soft); padding: 8px 11px; cursor: pointer; }
 .seq-history-refresh:hover, .seq-history-item:hover, .seq-history-refresh:focus-visible, .seq-history-item:focus-visible { border-color: var(--gold); color: var(--gold-soft); }
@@ -15,8 +15,10 @@
 .seq-history-detail time { display: block; font-size: .75rem; opacity: .75; }
 .seq-history-detail details { margin-top: 5px; }
 .seq-history-detail summary { cursor: pointer; color: var(--gold-soft); }
-.seq-history-detail pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; font-size: .75rem; }
+.seq-history-detail pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: .75rem; }
 .seq-history-error { color: var(--danger); }
 @media (max-width: 720px) { .sequence-history-layout { grid-template-columns: 1fr; } .seq-history-list { max-height: 200px; } }
 
 .seq-history-detail strong, .seq-history-detail p { overflow-wrap: anywhere; }
+
+.sequence-history-layout > * { min-width: 0; }

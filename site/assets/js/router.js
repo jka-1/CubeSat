@@ -2,7 +2,7 @@ import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261112-registers';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109e';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261112-registers';
-import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261112-sequences';
+import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261112-order-scroll';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261112-sequences';
 import { initTwinPage, destroyTwinPage } from './twin.js?v=20261111-sync';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
@@ -18,11 +18,11 @@ const assetVersion = '20261104b';
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
   communication: `./modules/communication.html?v=20261112-registers`,
-  'link-health': `./modules/link-health.html?v=20261104a`,
+  'link-health': `./modules/link-health.html?v=20261112-order-scroll`,
   'debug-mode': '/telemetry/operator-pages/debug-mode',
-  runs: `./modules/runs.html?v=20261109b`,
+  runs: `./modules/runs.html?v=20261112-order-scroll`,
   sequences: '/telemetry/operator-pages/sequences',
-  twin: `./modules/twin.html?v=20261111-sync`,
+  twin: `./modules/twin.html?v=20261112-order-scroll`,
   manual: '/telemetry/operator-pages/manual',
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };

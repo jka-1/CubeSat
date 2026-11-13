@@ -1,0 +1,26 @@
+[
+  {
+    "panel": {
+      "scroll": 244,
+      "width": 244
+    },
+    "parts": {
+      "height": 280,
+      "scroll": 886
+    },
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "panel": {
+      "scroll": 314,
+      "width": 314
+    },
+    "parts": {
+      "height": 280,
+      "scroll": 880
+    },
+    "scroll": 390,
+    "width": 390
+  }
+]

@@ -1,0 +1,58 @@
+[
+  {
+    "client": 320,
+    "parts": {
+      "client": 0,
+      "scroll": 0
+    },
+    "scroll": 320,
+    "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)",
+    "sidebar": {
+      "client": 0,
+      "scroll": 0
+    },
+    "width": 320
+  },
+  {
+    "client": 390,
+    "parts": {
+      "client": 0,
+      "scroll": 0
+    },
+    "scroll": 390,
+    "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)",
+    "sidebar": {
+      "client": 0,
+      "scroll": 0
+    },
+    "width": 390
+  },
+  {
+    "client": 768,
+    "parts": {
+      "client": 280,
+      "scroll": 882
+    },
+    "scroll": 768,
+    "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)",
+    "sidebar": {
+      "client": 284,
+      "scroll": 284
+    },
+    "width": 768
+  },
+  {
+    "client": 1440,
+    "parts": {
+      "client": 280,
+      "scroll": 880
+    },
+    "scroll": 1440,
+    "scrollbar": "rgb(140, 128, 97) rgb(16, 17, 20)",
+    "sidebar": {
+      "client": 358,
+      "scroll": 358
+    },
+    "width": 1440
+  }
+]

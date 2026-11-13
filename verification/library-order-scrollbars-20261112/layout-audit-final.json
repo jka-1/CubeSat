@@ -1,0 +1,564 @@
+[
+  {
+    "route": "home",
+    "client": 305,
+    "document": 305,
+    "scrolls": [],
+    "width": 320
+  },
+  {
+    "route": "dashboard",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "communication",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "link-health",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "debug-mode",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      },
+      {
+        "cls": "input dm-text",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dmSeq",
+        "x": 0,
+        "y": 48
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "runs",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      },
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 6753
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 63540
+      },
+      {
+        "cls": "run-table-wrap",
+        "color": "rgb(143, 106, 22) rgb(17, 17, 17)",
+        "id": "",
+        "x": 534,
+        "y": 3125
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "sequences",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      },
+      {
+        "cls": "seq-input",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "seqSimulationTelemetry",
+        "x": 0,
+        "y": 54
+      },
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 5110
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 63540
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "manual",
+    "client": 305,
+    "document": 305,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 868,
+        "y": 0
+      }
+    ],
+    "width": 320
+  },
+  {
+    "route": "home",
+    "client": 375,
+    "document": 375,
+    "scrolls": [],
+    "width": 390
+  },
+  {
+    "route": "dashboard",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "communication",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "link-health",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "debug-mode",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      },
+      {
+        "cls": "input dm-text",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dmSeq",
+        "x": 0,
+        "y": 13
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "runs",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      },
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 5088
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 47944
+      },
+      {
+        "cls": "run-table-wrap",
+        "color": "rgb(143, 106, 22) rgb(17, 17, 17)",
+        "id": "",
+        "x": 464,
+        "y": 3125
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "sequences",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      },
+      {
+        "cls": "seq-input",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "seqSimulationTelemetry",
+        "x": 0,
+        "y": 18
+      },
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 4413
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 47944
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "manual",
+    "client": 375,
+    "document": 375,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 798,
+        "y": 0
+      }
+    ],
+    "width": 390
+  },
+  {
+    "route": "home",
+    "client": 768,
+    "document": 768,
+    "scrolls": [],
+    "width": 768
+  },
+  {
+    "route": "dashboard",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "communication",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "link-health",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "debug-mode",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "runs",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      },
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 4928
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 39027
+      },
+      {
+        "cls": "run-table-wrap",
+        "color": "rgb(143, 106, 22) rgb(17, 17, 17)",
+        "id": "",
+        "x": 98,
+        "y": 3125
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "sequences",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      },
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 4253
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 39027
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "manual",
+    "client": 753,
+    "document": 753,
+    "scrolls": [
+      {
+        "cls": "dashboard-tabs",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "dashboardTabs",
+        "x": 350,
+        "y": 0
+      }
+    ],
+    "width": 768
+  },
+  {
+    "route": "home",
+    "client": 1440,
+    "document": 1440,
+    "scrolls": [],
+    "width": 1440
+  },
+  {
+    "route": "dashboard",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [],
+    "width": 1440
+  },
+  {
+    "route": "communication",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [],
+    "width": 1440
+  },
+  {
+    "route": "link-health",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [],
+    "width": 1440
+  },
+  {
+    "route": "debug-mode",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [],
+    "width": 1440
+  },
+  {
+    "route": "runs",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 4928
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 19010
+      },
+      {
+        "cls": "run-table-wrap",
+        "color": "rgb(143, 106, 22) rgb(17, 17, 17)",
+        "id": "",
+        "x": 0,
+        "y": 3110
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "route": "sequences",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [
+      {
+        "cls": "seq-history-list",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 4253
+      },
+      {
+        "cls": "seq-history-detail",
+        "color": "rgb(140, 128, 97) rgb(17, 21, 22)",
+        "id": "",
+        "x": 0,
+        "y": 19010
+      }
+    ],
+    "width": 1440
+  },
+  {
+    "route": "manual",
+    "client": 1425,
+    "document": 1425,
+    "scrolls": [],
+    "width": 1440
+  }
+]

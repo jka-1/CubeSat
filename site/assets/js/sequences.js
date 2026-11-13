@@ -1,3 +1,4 @@
+import { mountLibraryOrder } from './sequence-library-order.mjs';
 import { hasUnsavedChanges, confirmDiscard, saveDefinition, deleteDefinition } from './sequence-actions.mjs';
 import { WRITABLE_REGISTER_WIDTHS } from './register-policy.mjs?v=20261112-registers';
 import { operatorRegisters, availableRegisters, registerName } from './operator-registers.mjs';
@@ -26,7 +27,7 @@ const request = async (path, options = {}) => {
 };
 const jsonPost = (path, body, token = '') => request(path, { method: 'POST', headers: { 'Content-Type': 'application/json', ...(token ? { 'X-Command-Token': token } : {}) }, body: JSON.stringify(body) });
 let draft, selectedPath = [], selectedIndex = null, selectedId = null, saved = [], execution = null, timer = null, lastEvent = 0, events = [], alive = false, busy = false, confirmation = null, savedSnapshot = null, polling = false;
-let historyView = null;
+let historyView = null, orderMenu = null, libraryOrder = { version: 0, ids: [] };
 let addingRegister = null;
 let registryUnsubscribe = null;
 window.addEventListener('cubesat-auth-change', () => { if (!canEditSequences()) { draft = undefined; savedSnapshot = null; } else if (alive && draft) render(false); });
@@ -148,7 +149,7 @@ function commandHtml(step) {
 }
 function blockHtml(step, path, index) {
   const selected = selectedId === step.id;
-  const reference = step.type === 'runSaved' ? `<label>Saved Branch Definition <select class="seq-input" data-field="sequenceId">${option('', 'Choose a saved definition', step.sequenceId)}${saved.filter((item) => item.id !== draft.id).map((item) => option(item.id, `${item.name} · r${item.revision}`, step.sequenceId)).join('')}${step.sequenceId && !saved.some((item) => item.id === step.sequenceId && item.id !== draft.id) ? option(step.sequenceId, `${step.sequenceId} (pinned)`, step.sequenceId) : ''}</select></label><label>Pinned revision <input class="seq-input" type="number" min="1" max="1000000" data-field="revision" value="${esc(step.revision)}"></label><small>Changing the selected definition pins its current revision. Later saves do not update this reference.</small>` : '';
+  const reference = step.type === 'runSaved' ? `<label>Saved Branch Definition <select class="seq-input" data-field="sequenceId">${referenceOptions(step)}</select></label><label>Pinned revision <input class="seq-input" type="number" min="1" max="1000000" data-field="revision" value="${esc(step.revision)}"></label><small>Changing the selected definition pins its current revision. Later saves do not update this reference.</small>` : '';
   const options = step.type === 'runSaved' ? reference : step.type === 'message' ? `<label>Operator message <textarea class="seq-input" data-field="message" maxlength="1000" rows="3">${esc(step.message)}</textarea></label><small>Plain text, recorded only when this block executes.</small>` : step.type === 'delay' ? `<label>Duration (ms) <input class="seq-input" type="number" min="1" max="600000" data-field="durationMs" value="${esc(step.durationMs)}"></label>` : step.type === 'waitUntil' ? `${conditionHtml(step.condition, [step.id])}<label>Timeout (ms) <input class="seq-input" type="number" min="1" max="600000" data-field="timeoutMs" value="${esc(step.timeoutMs)}"></label>` : step.type === 'if' ? conditionHtml(step.condition, [step.id]) : commandHtml(step);
   const branches = step.type === 'if' ? `<div class="seq-branches"><div class="seq-branch"><h4>TRUE path</h4>${listHtml(step.then, [...path, { id: step.id, branch: 'then' }])}</div><div class="seq-branch"><h4>FALSE path</h4>${listHtml(step.else, [...path, { id: step.id, branch: 'else' }])}</div></div>` : '';
   return `<article class="seq-block${selected ? ' selected' : ''}${execution?.current_block === step.id ? ' active' : ''}" data-id="${esc(step.id)}" data-path="${pathKey(path)}" draggable="true"><div class="seq-block-header"><button class="seq-block-title" type="button" data-select="${esc(step.id)}" aria-expanded="${selected}">${esc(labelFor(step.type))} <small>${index + 1}</small></button><div class="seq-block-actions"><button type="button" class="seq-mini" data-move="up" aria-label="Move ${esc(labelFor(step.type))} up"${index === 0 ? ' disabled' : ''}>↑</button><button type="button" class="seq-mini" data-move="down" aria-label="Move ${esc(labelFor(step.type))} down">↓</button><button type="button" class="seq-mini" data-remove aria-label="Remove ${esc(labelFor(step.type))}">Remove</button></div></div>${selected ? `<div class="seq-config">${options}</div>` : ''}${branches}</article>`;
@@ -198,16 +199,37 @@ let listTimer = null, remoteNotice = '';
 async function refreshSavedList() {
   if (!alive || document.hidden) return;
   try {
-    const list = (await request('/sequences')).sequences || [];
+    const library = await request('/sequences');
+    if (library.order.version < libraryOrder.version) return;
+    const list = library.sequences || [];
+    libraryOrder = library.order;
     const changed = JSON.stringify(list) !== JSON.stringify(saved);
     const info = remoteChange(draft, list);
     saved = list; if (changed) updateSaved();
+    orderMenu?.update(library);
     const text = info ? `"${info.name}" was saved elsewhere as revision ${info.revision} (you have r${draft.revision}). ${JSON.stringify(draft) === savedSnapshot ? 'Click Load to get it.' : 'Saving will ask how to resolve the conflict.'}` : '';
     if (text !== remoteNotice) { remoteNotice = text; $('seqRemote').textContent = text; $('seqRemote').hidden = !text; }
   } catch { /* transient; next poll retries */ }
 }
-function updateSaved() { const selected = $('seqSaved').value; $('seqSaved').innerHTML = `<option value="">New Branch Definition</option>${saved.map((item) => option(item.id, `${item.name} · r${item.revision}`, draft.id)).join('')}`; if (saved.some((item) => item.id === selected)) $('seqSaved').value = selected; }
-async function loadSaved() { saved = (await request('/sequences')).sequences || []; updateSaved(); render(false); }
+function referenceOptions(step) {
+  return `${option('', 'Choose a saved definition', step.sequenceId)}${saved.filter((item) => item.id !== draft.id).map((item) => option(item.id, `${item.name} · r${item.revision}`, step.sequenceId)).join('')}${step.sequenceId && !saved.some((item) => item.id === step.sequenceId && item.id !== draft.id) ? option(step.sequenceId, `${step.sequenceId} (pinned)`, step.sequenceId) : ''}`;
+}
+function updateSaved() {
+  const selected = $('seqSaved').value;
+  $('seqSaved').innerHTML = `<option value="">New Branch Definition</option>${saved.map((item) => option(item.id, `${item.name} · r${item.revision}`, selected)).join('')}`;
+  $('seqSaved').value = saved.some((item) => item.id === selected) ? selected : '';
+  // Replace only options: preserve unfinished fields, pinned revisions and the editor DOM.
+  document.querySelectorAll('select[data-field="sequenceId"]').forEach((select) => {
+    const step = stepById(select.closest('.seq-block').dataset.id);
+    if (step) select.innerHTML = referenceOptions(step);
+  });
+  orderMenu?.update({ sequences: saved, order: libraryOrder });
+}
+function applyLibrary(library) {
+  if (!alive || library.order.version < libraryOrder.version) return;
+  saved = library.sequences; libraryOrder = library.order; updateSaved(); render(false);
+}
+async function loadSaved() { applyLibrary(await request('/sequences')); }
 async function save() {
   const errors = validateDraft(draft); if (errors.length) { notice('Fix validation issues before saving.', true); render(); return false; }
   if (!canEditSequences()) { notice('An operator account is required to save.', true); return false; }
@@ -221,7 +243,7 @@ async function save() {
     else { draft.id = savedDefinition.id; draft.revision = savedDefinition.revision; }
     savedSnapshot = JSON.stringify(savedDefinition);
     confirmation = null;
-    await loadSaved(); await refreshSavedList(); notice(`Saved revision ${savedDefinition.revision}.`); return true;
+    await loadSaved(); $('seqSaved').value = savedDefinition.id; orderMenu?.selected(); await refreshSavedList(); notice(`Saved revision ${savedDefinition.revision}.`); return true;
   } catch (error) { notice(`Save failed: ${error.message}`, true); return false; }
   finally { busy = false; render(false); }
 }
@@ -413,12 +435,12 @@ export async function initSequencesPage() {
   $('seqCanvas').addEventListener('change', handleChange);
   $('seqCanvas').addEventListener('input', (event) => { if (event.target.matches('input[data-field], textarea[data-field]')) handleChange(event, false); });
   $('seqName').addEventListener('input', handleChange);
-  $('seqNew').addEventListener('click', () => { if (!confirmDiscard(draft, savedSnapshot)) return; confirmation = null; savedSnapshot = null; draft = fresh(); $('seqName').value = ''; selectedPath = []; selectedIndex = null; selectedId = null; updateSaved(); render(); notice('New Branch Definition.'); });
+  $('seqNew').addEventListener('click', () => { if (!confirmDiscard(draft, savedSnapshot)) return; confirmation = null; savedSnapshot = null; draft = fresh(); $('seqName').value = ''; selectedPath = []; selectedIndex = null; selectedId = null; $('seqSaved').value = ''; updateSaved(); render(); notice('New Branch Definition.'); });
   $('seqLoad').addEventListener('click', async () => { const id = $('seqSaved').value; if (!id) return; try { const loaded = (await request(`/sequences/${encodeURIComponent(id)}`)).sequence; if (!confirmDiscard(draft, savedSnapshot)) return; draft = loaded; confirmation = null; savedSnapshot = JSON.stringify(draft); $('seqName').value = draft.name; selectedPath = []; selectedIndex = null; selectedId = null; render(); notice(`Loaded revision ${draft.revision}.`); shareDefinitionRegisters(); refreshSavedList(); } catch (error) { notice(`Load failed: ${error.message}`, true); } });
-  $('seqDuplicate').addEventListener('click', () => { draft = cloneSequence(draft); savedSnapshot = null; $('seqName').value = draft.name; updateSaved(); render(); notice('Copy created. Save to keep it.'); });
+  $('seqDuplicate').addEventListener('click', () => { draft = cloneSequence(draft); savedSnapshot = null; $('seqName').value = draft.name; $('seqSaved').value = ''; updateSaved(); render(); notice('Copy created. Save to keep it.'); });
   $('seqSave').addEventListener('click', save);
   $('seqDelete').addEventListener('click', removeSaved);
-  $('seqSaved').addEventListener('change', () => render(false));
+  $('seqSaved').addEventListener('change', () => { orderMenu?.selected(); render(false); });
   $('seqSimulate').addEventListener('click', () => start('simulation'));
   $('seqLive').addEventListener('click', () => start('live'));
   $('seqConfirmRun').addEventListener('click', runLive);
@@ -431,9 +453,11 @@ export async function initSequencesPage() {
     catch (error) { notice(`Recovery failed: ${error.message}`, true); }
   });
   for (const action of ['pause', 'resume', 'stop']) $(`seq${action[0].toUpperCase()}${action.slice(1)}`).addEventListener('click', () => control(action));
+  orderMenu = mountLibraryOrder({ trigger: $('seqOrder'), panel: $('seqOrderPanel'), request, onLibrary: applyLibrary,
+    getSelected: () => $('seqSaved').value, onSelect: (id) => { $('seqSaved').value = id; render(false); } });
   wireDrag(); render();
   clearInterval(listTimer); listTimer = setInterval(refreshSavedList, 5000);
-  try { await loadSaved(); const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
+  try { await loadSaved(); if (draft.id && saved.some((item) => item.id === draft.id)) { $('seqSaved').value = draft.id; orderMenu?.selected(); } const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
   catch (error) { notice(`Branch Definition service unavailable: ${error.message}`, true); }
 }
-export function destroySequencesPage() { registryUnsubscribe?.(); registryUnsubscribe = null; alive = false; clearInterval(timer); timer = null; clearInterval(listTimer); listTimer = null; remoteNotice = ''; historyView?.dispose(); historyView = null; }
+export function destroySequencesPage() { orderMenu?.dispose(); orderMenu = null; registryUnsubscribe?.(); registryUnsubscribe = null; alive = false; clearInterval(timer); timer = null; clearInterval(listTimer); listTimer = null; remoteNotice = ''; historyView?.dispose(); historyView = null; }
