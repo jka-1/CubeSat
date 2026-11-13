@@ -1,0 +1,31 @@
+✔ cancel overwrite, deletion and discard makes no mutation and preserves edited content (5.934843ms)
+✔ conflict Cancel neither reloads nor changes the draft revision or edits (1.292659ms)
+✔ confirmed conflict retries against exactly the approved revision and rejects another race (1.488098ms)
+✔ delete sends only the explicitly confirmed target revision and no discard prompt (0.524358ms)
+✔ message and reference validation match editor; messages remain bounded plain text (8.614632ms)
+✔ graph rejects recursion, missing references, excessive depth and expanded work before execution (4.924852ms)
+✔ revision pins, deletion guards, stale writes and immutable snapshots survive reopen (30.139398ms)
+✔ logs execute only along selected paths, including repeated nested calls with identical block ids (22.94584ms)
+✔ nested cancellation, timeout, authorization loss and hardware failures use parent lifecycle (3.377497ms)
+✔ transitive references through older revisions still block deletion (7.766362ms)
+✔ nested register metadata and earlier-read results have separate call scopes (3.344381ms)
+✔ missing references on an unselected conditional path are rejected before any run is persisted (0.453071ms)
+✔ editor blocks match bridge shape and validate branches and units (20.29585ms)
+✔ drag move prevents a block entering its own branch and cloning resets IDs (1.417168ms)
+✔ route exposes palette, canvas, persistence and execution controls (13.913014ms)
+✔ editor validates register and fault comparisons with explicit formats (1.146895ms)
+✔ every register read option is also a valid comparison operand (2.955851ms)
+✔ editor adds user registers with hex range checks and validates references (1.316166ms)
+✔ remoteChange flags a newer saved revision of the loaded definition (1.000247ms)
+✔ shared stable-ID order survives revisions, rename, duplication, deletion and bridge reopen (41.915422ms)
+✔ concurrent moves and membership changes reject stale versions without dropping any ID (7.891726ms)
+✔ legacy order seeds once without the former 100-item truncation; revisions and historical snapshots stay byte-identical (13.961838ms)
+✔ storage failure rolls back order and version together (5.925717ms)
+ℹ tests 23
+ℹ suites 0
+ℹ pass 23
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 417.801615

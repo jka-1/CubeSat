@@ -1,7 +1,6 @@
 .sequence-page .card { margin-bottom: 18px; }
-.seq-library, .seq-execution-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
+.seq-execution-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; }
 .seq-library label, .seq-config label, .seq-confirm label, .seq-condition label { display: grid; gap: 6px; color: var(--white-soft); font-size: .82rem; }
-.seq-library .seq-name { flex: 1 1 240px; }
 .seq-input { min-height: 42px; max-width: 100%; padding: 8px 11px; border-radius: 10px; border: 1px solid var(--line); background: #101010; color: var(--white); }
 .seq-workspace { display: grid; grid-template-columns: minmax(200px, 250px) minmax(0, 1fr); gap: 18px; align-items: start; }
 .seq-palette p { margin: 0 0 16px; color: var(--white-soft); font-size: .85rem; line-height: 1.5; }
@@ -53,7 +52,7 @@
 .sequence-page :focus-visible { outline: 2px solid var(--gold-soft); outline-offset: 2px; }
 .sequence-page button:disabled { opacity: .45; cursor: not-allowed; }
 @media (max-width: 850px) { .seq-workspace { grid-template-columns: 1fr; } .seq-branches { grid-template-columns: 1fr; } }
-@media (max-width: 550px) { .seq-library > *, .seq-execution-controls > button { flex: 1 1 100%; } .seq-block-header { align-items: start; flex-direction: column; } }
+@media (max-width: 550px) { .seq-execution-controls > button { flex: 1 1 100%; } .seq-block-header { align-items: start; flex-direction: column; } }
 
 .seq-sim-input { display: grid; gap: 7px; margin-bottom: 12px; color: var(--white-soft); font-size: .82rem; }
 .seq-sim-input textarea { width: 100%; resize: vertical; font: 12px/1.5 ui-monospace, SFMono-Regular, monospace; }
@@ -74,7 +73,6 @@
 .seq-events li, #seqProgressLabel { overflow-wrap: anywhere; }
 
 .seq-library > *, .seq-config > *, .seq-condition, .seq-operand, .seq-logic-part, .seq-workspace > * { min-width: 0; }
-.seq-library > label:first-child { flex: 0 1 310px; }
 .seq-input { width: 100%; }
 .seq-block-title, .seq-validation, .seq-history-item, .seq-order-panel { overflow-wrap: anywhere; }
 .seq-logic-part { flex-wrap: wrap; }
@@ -112,13 +110,10 @@
 .seq-order-panel .drag-source { opacity: .5; }
 .seq-order-panel .dragging { user-select: none; cursor: grabbing; }
 @media (max-width: 550px) {
-  .seq-library > label:first-child { flex-basis: 100%; }
-  .seq-library > button { flex: 1 1 auto; }
   .seq-branches { padding: 0 2px 8px; }
   .seq-branches .seq-list { padding: 3px; }
   .seq-branches .seq-block-header, .seq-branches .seq-config { padding: 8px 4px; }
   .seq-condition > label { min-width: 0; max-width: 100%; }
-  .seq-order-control > button { width: 100%; }
   .seq-order-panel { scroll-margin-top: 220px; }
 }
 @media (forced-colors: active) {
@@ -126,3 +121,33 @@
   .seq-order-panel .insert-before { border-top-color: Highlight; }
   .seq-order-panel .insert-after { border-bottom-color: Highlight; }
 }
+
+/* A compact library selector beside the editor's single primary action. */
+.seq-library { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: end; gap: 24px; }
+.seq-library-source, .seq-library-editor { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 6px; min-width: 0; }
+.seq-saved-field { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; min-width: 0; }
+.seq-library-source > *, .seq-library-editor > * { min-width: 0; }
+.seq-field-label { font-size: .82rem; color: var(--white-soft); }
+.seq-saved-trigger { min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 10px; text-align: left; cursor: pointer; font: inherit; font-size: .85rem; }
+.seq-saved-trigger span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seq-saved-trigger svg { flex: none; color: var(--white-soft); }
+.seq-saved-trigger:hover, .seq-saved-trigger[aria-expanded=true] { border-color: var(--gold); }
+.seq-tool-button, .seq-icon-button { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 42px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: transparent; color: var(--white-soft); font: inherit; font-size: .85rem; font-weight: 600; cursor: pointer; }
+.seq-tool-button:hover, .seq-icon-button:hover { color: var(--gold-soft); border-color: var(--gold); background: rgba(212,175,55,.06); }
+.seq-tool-quiet, .seq-icon-button { border-color: transparent; }
+.seq-icon-button { width: 38px; padding: 0; flex: none; }
+.seq-save { background: var(--gold); border-color: var(--gold); color: var(--black); padding-inline: 18px; }
+.seq-save:hover { background: var(--gold-soft); color: var(--black); }
+.seq-more { position: relative; }
+.seq-more-panel { position: absolute; z-index: 6; top: calc(100% + 8px); right: 0; width: 210px; max-width: calc(100vw - 64px); padding: 5px; border: 1px solid var(--line); border-radius: 10px; background: var(--black); box-shadow: 0 16px 40px rgba(0,0,0,.6); }
+.seq-more-panel[hidden] { display: none; }
+.seq-more-panel button { display: block; width: 100%; min-height: 44px; padding: 9px 12px; text-align: left; border: 0; border-radius: 6px; background: transparent; color: var(--white-soft); font: inherit; font-size: .85rem; cursor: pointer; }
+.seq-more-panel button:hover { background: rgba(212,175,55,.08); }
+.seq-more-panel .seq-delete-action { color: var(--danger); }
+.seq-order-panel.seq-library-menu { top: calc(100% + 8px); left: 0; width: min(560px, calc(100vw - 76px)); }
+.seq-library-menu .seq-library-new { display: block; width: 100%; margin: 0 0 6px; padding: 8px 12px; text-align: left; border: 0; border-bottom: 1px solid var(--line); border-radius: 6px 6px 0 0; background: transparent; color: var(--white-soft); font: inherit; font-size: .85rem; cursor: pointer; }
+.seq-library-new[aria-pressed=true] { color: var(--gold-soft); }
+.seq-library-new:hover { background: rgba(212,175,55,.08); }
+@media (max-width: 960px) { .seq-library { grid-template-columns: 1fr; gap: 16px; } }
+@media (max-width: 550px) { .seq-library-source .seq-saved-field { grid-column: 1 / -1; } .seq-library-source #seqLoad { grid-column: 2; } }
+@media (hover: none), (pointer: coarse) { .seq-tool-button, .seq-icon-button, .seq-saved-trigger { min-height: 44px; } .seq-icon-button { width: 44px; } }

@@ -1,0 +1,24 @@
+PASS opening menu makes no API write or load
+PASS selecting a name does not load or save
+PASS move saves confirmed shared order
+PASS draft fields, pin and selection remain intact
+PASS unchanged poll preserves exact focused DOM node
+PASS failed save retains confirmed order and offers retry
+PASS retry persists intended move
+PASS stale move refreshes additions and reports conflict
+PASS explicit conflict retry preserves every definition
+PASS touch drag edge scroll reaches beyond visible library
+PASS drag exposes insertion feedback
+PASS touch drop reorders by stable ID while retaining concurrent addition
+PASS deleted drag source cancels safely with useful feedback
+PASS Escape dismisses and restores trigger focus
+PASS empty library remains accessible
+PASS all interactions leave unfinished editor data intact
+PASS dropdown choice updates selection, closes and restores focus
+PASS dropdown selection does not load, save or discard the editor
+PASS End navigates choices without selecting or loading
+PASS Home reaches the separate New choice without a write
+PASS moving a definition persists order inside the open dropdown
+PASS New choice is outside shared order and retains saved definitions
+PASS New choice is not a draggable saved item
+23 checks passed.

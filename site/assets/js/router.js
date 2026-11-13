@@ -2,7 +2,7 @@ import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261112-registers';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109e';
 import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261112-registers';
-import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261112-order-scroll';
+import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261112-library-dropdown';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261112-sequences';
 import { initTwinPage, destroyTwinPage } from './twin.js?v=20261111-sync';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';

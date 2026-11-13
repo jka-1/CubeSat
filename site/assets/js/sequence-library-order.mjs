@@ -1,12 +1,14 @@
 // Only shared library presentation order; this module never loads or executes a definition.
-export function mountLibraryOrder({ trigger, panel, request, onLibrary, getSelected, onSelect }) {
+export function mountLibraryOrder({ trigger, panel, request, onLibrary, getSelected, onSelect, closeOnSelect = false }) {
   const list = panel.querySelector('[data-order-list]');
   const status = panel.querySelector('[data-order-status]');
   const retry = panel.querySelector('[data-order-retry]');
+  const newChoice = panel.querySelector('[data-order-new]');
   const controller = new AbortController(), { signal } = controller;
   let library = { sequences: [], order: { version: 0, ids: [] } }, saving = false, failedMove = null, drag = null, frame = null, disposed = false;
   const announce = (text, error = false) => { status.textContent = text; status.classList.toggle('error', error); };
   const selected = () => {
+    newChoice?.setAttribute('aria-pressed', String(!getSelected()));
     for (const row of list.children) {
       const active = row.dataset.orderId === getSelected();
       row.classList.toggle('selected', active);
@@ -107,18 +109,28 @@ export function mountLibraryOrder({ trigger, panel, request, onLibrary, getSelec
   trigger.addEventListener('click', () => {
     if (!panel.hidden) { close(); return; }
     panel.hidden = false; trigger.setAttribute('aria-expanded', 'true'); render();
-    const chosen = list.querySelector('.selected [data-order-select]') || list.querySelector('[data-order-select]') || panel.querySelector('[data-order-close]');
+    const chosen = !getSelected() && newChoice || list.querySelector('.selected [data-order-select]') || list.querySelector('[data-order-select]') || newChoice || panel.querySelector('[data-order-close]');
     const row = chosen.closest('li');
     if (row) list.scrollTop = row.offsetTop - list.offsetTop;
     panel.scrollIntoView({ block: 'nearest', behavior: 'instant' });
     chosen.focus({ preventScroll: true });
   }, { signal });
   panel.querySelector('[data-order-close]').addEventListener('click', close, { signal });
+  const choose = (id) => { onSelect(id); selected(); if (closeOnSelect) close(); };
+  newChoice?.addEventListener('click', () => choose(''), { signal });
+  panel.addEventListener('keydown', (event) => {
+    if (!closeOnSelect || !event.target.matches('[data-order-select], [data-order-new]') || !['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(event.key)) return;
+    event.preventDefault();
+    const choices = [newChoice, ...list.querySelectorAll('[data-order-select]')].filter(Boolean);
+    const index = choices.indexOf(event.target);
+    const next = event.key === 'Home' ? 0 : event.key === 'End' ? choices.length - 1 : Math.max(0, Math.min(choices.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)));
+    choices[next]?.focus();
+  }, { signal });
   document.addEventListener('keydown', (event) => { if (!panel.hidden && event.key === 'Escape') { event.preventDefault(); close(); } }, { signal });
   document.addEventListener('pointerdown', (event) => { if (!panel.hidden && !drag && !panel.contains(event.target) && !trigger.contains(event.target)) close(); }, { signal });
   list.addEventListener('click', (event) => {
     const row = event.target.closest('[data-order-id]'); if (!row) return;
-    if (event.target.closest('[data-order-select]')) { onSelect(row.dataset.orderId); selected(); }
+    if (event.target.closest('[data-order-select]')) choose(row.dataset.orderId);
     const button = event.target.closest('[data-order-move]'); if (!button) return;
     const index = library.order.ids.indexOf(row.dataset.orderId), down = button.dataset.orderMove === 'down';
     move({ id: row.dataset.orderId, before_id: library.order.ids[index + (down ? 2 : -1)] ?? null }, button.dataset.orderMove);

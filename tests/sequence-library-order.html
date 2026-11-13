@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Library ordering browser regressions</title>
 <link rel="stylesheet" href="../site/assets/css/styles.css"><link rel="stylesheet" href="../site/assets/css/sequences.css">
-<body><main class="page-shell sequence-page"><h1>Library ordering browser regressions</h1><pre id="results" role="status">Running…</pre><div class="seq-library-card"><button id="trigger" aria-controls="panel" aria-expanded="false">Arrange library</button><section id="panel" class="seq-order-panel" hidden><h2>Saved library order</h2><button data-order-close>Close</button><ol data-order-list></ol><p data-order-status role="status"></p><button data-order-retry hidden>Retry move</button></section></div></main>
+<body><main class="page-shell sequence-page"><h1>Library ordering browser regressions</h1><pre id="results" role="status">Running…</pre><div class="seq-library-card"><button id="trigger" aria-controls="panel" aria-expanded="false">Arrange library</button><section id="panel" class="seq-order-panel" hidden><h2>Saved library order</h2><button data-order-close>Close</button><button type="button" data-order-new aria-pressed="false">New Branch Definition</button><ol data-order-list></ol><p data-order-status role="status"></p><button data-order-retry hidden>Retry move</button></section></div></main>
 <script type="module">
 import { mountLibraryOrder } from '../site/assets/js/sequence-library-order.mjs';
 const output = document.querySelector('#results'), checks = [];
@@ -66,6 +66,25 @@ try {
  menu.update({sequences:[],order:{version:current.order.version+1,ids:[]}});trigger.click();
  assert(!panel.hidden&&/No saved definitions/.test(panel.querySelector('[data-order-status]').textContent),'empty library remains accessible');
  menu.dispose();disposed=true;assert(JSON.stringify(draft)===before,'all interactions leave unfinished editor data intact');
+ // The integrated selector closes on a choice, while ordering stays in the dropdown.
+ panel.hidden=true;trigger.setAttribute('aria-expanded','false');
+ const dropdown=mountLibraryOrder({trigger,panel,request,onLibrary:next=>snapshots.push(next),getSelected:()=>selected,onSelect:id=>{selected=id;},closeOnSelect:true});
+ dropdown.update(structuredClone(current));trigger.click();
+ const choice=current.order.ids[1],beforeChoices=calls.length;
+ row(choice).querySelector('[data-order-select]').click();
+ assert(panel.hidden&&selected===choice&&document.activeElement===trigger,'dropdown choice updates selection, closes and restores focus');
+ assert(calls.length===beforeChoices&&JSON.stringify(draft)===before,'dropdown selection does not load, save or discard the editor');
+ trigger.click();
+ row(choice).querySelector('[data-order-select]').dispatchEvent(new KeyboardEvent('keydown',{key:'End',bubbles:true}));
+ assert(document.activeElement===row(current.order.ids.at(-1)).querySelector('[data-order-select]')&&selected===choice,'End navigates choices without selecting or loading');
+ document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{key:'Home',bubbles:true}));
+ assert(document.activeElement===panel.querySelector('[data-order-new]')&&calls.length===beforeChoices,'Home reaches the separate New choice without a write');
+ const moved=current.order.ids[0];row(moved).querySelector('[data-order-move=down]').click();await tick();
+ assert(!panel.hidden&&rendered()[1]===moved,'moving a definition persists order inside the open dropdown');
+ const savedIds=current.order.ids.join();panel.querySelector('[data-order-new]').click();
+ assert(panel.hidden&&selected===''&&current.order.ids.join()===savedIds,'New choice is outside shared order and retains saved definitions');
+ assert(!list.contains(panel.querySelector('[data-order-new]')),'New choice is not a draggable saved item');
+ dropdown.dispose();
  output.dataset.result='passed';output.textContent += `\n${checks.length} checks passed.`;
 } catch(error) {output.dataset.result='failed';output.textContent += '\nFAIL '+error.stack;}
 </script></body></html>

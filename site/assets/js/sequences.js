@@ -1,4 +1,4 @@
-import { mountLibraryOrder } from './sequence-library-order.mjs';
+import { mountLibraryOrder } from './sequence-library-order.mjs?v=20261112-library-dropdown';
 import { hasUnsavedChanges, confirmDiscard, saveDefinition, deleteDefinition } from './sequence-actions.mjs';
 import { WRITABLE_REGISTER_WIDTHS } from './register-policy.mjs?v=20261112-registers';
 import { operatorRegisters, availableRegisters, registerName } from './operator-registers.mjs';
@@ -29,7 +29,7 @@ const jsonPost = (path, body, token = '') => request(path, { method: 'POST', hea
 let draft, selectedPath = [], selectedIndex = null, selectedId = null, saved = [], execution = null, timer = null, lastEvent = 0, events = [], alive = false, busy = false, confirmation = null, savedSnapshot = null, polling = false;
 let historyView = null, orderMenu = null, libraryOrder = { version: 0, ids: [] };
 let addingRegister = null;
-let registryUnsubscribe = null;
+let registryUnsubscribe = null, toolbarController = null;
 window.addEventListener('cubesat-auth-change', () => { if (!canEditSequences()) { draft = undefined; savedSnapshot = null; } else if (alive && draft) render(false); });
 function userRegisters() {
   const own = draft.registers || [], ids = new Set(own.map((item) => item.id));
@@ -166,7 +166,7 @@ function render(updateCanvas = true) {
   $('seqValidation').innerHTML = errors.length ? `<strong>${errors.length} validation issue${errors.length === 1 ? '' : 's'}</strong><ul>${errors.map((error) => `<li>${esc(error)}</li>`).join('')}</ul>` : '<span class="seq-valid">Branch Definition is ready to save.</span>';
   $('seqSave').disabled = !canEditSequences() || busy || errors.length > 0;
   $('seqDelete').disabled = !canEditSequences() || busy || !$('seqSaved').value;
-  $('seqLoad').disabled = busy; $('seqNew').disabled = busy;
+  $('seqLoad').disabled = busy || !$('seqSaved').value; $('seqNew').disabled = busy;
   $('seqDuplicate').disabled = !draft.id || !canEditSequences() || busy;
   const dirty = !draft.id || JSON.stringify(draft) !== savedSnapshot;
   $('seqSimulate').disabled = !canOperate() || busy || errors.length > 0 || dirty || !!execution && ['running', 'paused'].includes(execution.state);
@@ -216,14 +216,16 @@ function referenceOptions(step) {
 }
 function updateSaved() {
   const selected = $('seqSaved').value;
-  $('seqSaved').innerHTML = `<option value="">New Branch Definition</option>${saved.map((item) => option(item.id, `${item.name} · r${item.revision}`, selected)).join('')}`;
-  $('seqSaved').value = saved.some((item) => item.id === selected) ? selected : '';
-  // Replace only options: preserve unfinished fields, pinned revisions and the editor DOM.
+  const choice = saved.find((item) => item.id === selected);
+  $('seqSaved').value = choice ? choice.id : '';
+  $('seqSavedLabel').textContent = choice ? `${choice.name} · r${choice.revision}` : 'New Branch Definition';
+  // Refresh choices without replacing unfinished fields, pinned revisions or the editor DOM.
   document.querySelectorAll('select[data-field="sequenceId"]').forEach((select) => {
     const step = stepById(select.closest('.seq-block').dataset.id);
     if (step) select.innerHTML = referenceOptions(step);
   });
   orderMenu?.update({ sequences: saved, order: libraryOrder });
+  orderMenu?.selected();
 }
 function applyLibrary(library) {
   if (!alive || library.order.version < libraryOrder.version) return;
@@ -243,7 +245,7 @@ async function save() {
     else { draft.id = savedDefinition.id; draft.revision = savedDefinition.revision; }
     savedSnapshot = JSON.stringify(savedDefinition);
     confirmation = null;
-    await loadSaved(); $('seqSaved').value = savedDefinition.id; orderMenu?.selected(); await refreshSavedList(); notice(`Saved revision ${savedDefinition.revision}.`); return true;
+    await loadSaved(); $('seqSaved').value = savedDefinition.id; updateSaved(); await refreshSavedList(); notice(`Saved revision ${savedDefinition.revision}.`); return true;
   } catch (error) { notice(`Save failed: ${error.message}`, true); return false; }
   finally { busy = false; render(false); }
 }
@@ -424,6 +426,20 @@ function wireDrag() {
   canvas.addEventListener('drop', (event) => { const point = event.target.closest('[data-insert]'); if (!point || !dragging) return; event.preventDefault(); const path = decodePath(point.dataset.insert), index = Number(point.dataset.index); if (dragging.type) { if (countBlocks(draft.steps) < 200) findList(draft.steps, path).splice(index, 0, makeBlock(dragging.type)); } else moveBlock(draft.steps, dragging.path, dragging.id, path, index); selectedPath = path; selectedIndex = null; dragging = null; render(); });
   canvas.addEventListener('dragend', () => { dragging = null; });
 }
+function wireDefinitionActions() {
+  toolbarController?.abort();
+  toolbarController = new AbortController();
+  const { signal } = toolbarController, trigger = $('seqMore'), panel = $('seqMorePanel');
+  const close = (restoreFocus = false) => { panel.hidden = true; trigger.setAttribute('aria-expanded', 'false'); if (restoreFocus) trigger.focus(); };
+  trigger.addEventListener('click', () => {
+    const opening = panel.hidden;
+    panel.hidden = !opening; trigger.setAttribute('aria-expanded', String(opening));
+    if (opening) panel.querySelector('button:not(:disabled)')?.focus();
+  }, { signal });
+  document.addEventListener('pointerdown', (event) => { if (!event.target.closest('.seq-more')) close(); }, { signal });
+  document.addEventListener('keydown', (event) => { if (event.key === 'Escape' && !panel.hidden) { event.preventDefault(); close(true); } }, { signal });
+  for (const id of ['seqNew', 'seqLoad', 'seqSave', 'seqDuplicate', 'seqDelete', 'seqSavedTrigger']) $(id).addEventListener('click', () => close(panel.contains(document.activeElement)), { signal });
+}
 export async function initSequencesPage() {
   alive = true; draft ||= fresh(); selectedPath = []; selectedIndex = null; selectedId = null; execution = null; events = []; lastEvent = 0; busy = false; confirmation = null; polling = false;
   $('seqName').value = draft.name;
@@ -435,12 +451,13 @@ export async function initSequencesPage() {
   $('seqCanvas').addEventListener('change', handleChange);
   $('seqCanvas').addEventListener('input', (event) => { if (event.target.matches('input[data-field], textarea[data-field]')) handleChange(event, false); });
   $('seqName').addEventListener('input', handleChange);
+  wireDefinitionActions();
   $('seqNew').addEventListener('click', () => { if (!confirmDiscard(draft, savedSnapshot)) return; confirmation = null; savedSnapshot = null; draft = fresh(); $('seqName').value = ''; selectedPath = []; selectedIndex = null; selectedId = null; $('seqSaved').value = ''; updateSaved(); render(); notice('New Branch Definition.'); });
   $('seqLoad').addEventListener('click', async () => { const id = $('seqSaved').value; if (!id) return; try { const loaded = (await request(`/sequences/${encodeURIComponent(id)}`)).sequence; if (!confirmDiscard(draft, savedSnapshot)) return; draft = loaded; confirmation = null; savedSnapshot = JSON.stringify(draft); $('seqName').value = draft.name; selectedPath = []; selectedIndex = null; selectedId = null; render(); notice(`Loaded revision ${draft.revision}.`); shareDefinitionRegisters(); refreshSavedList(); } catch (error) { notice(`Load failed: ${error.message}`, true); } });
   $('seqDuplicate').addEventListener('click', () => { draft = cloneSequence(draft); savedSnapshot = null; $('seqName').value = draft.name; $('seqSaved').value = ''; updateSaved(); render(); notice('Copy created. Save to keep it.'); });
   $('seqSave').addEventListener('click', save);
   $('seqDelete').addEventListener('click', removeSaved);
-  $('seqSaved').addEventListener('change', () => { orderMenu?.selected(); render(false); });
+  $('seqSaved').addEventListener('change', () => { updateSaved(); render(false); });
   $('seqSimulate').addEventListener('click', () => start('simulation'));
   $('seqLive').addEventListener('click', () => start('live'));
   $('seqConfirmRun').addEventListener('click', runLive);
@@ -453,11 +470,11 @@ export async function initSequencesPage() {
     catch (error) { notice(`Recovery failed: ${error.message}`, true); }
   });
   for (const action of ['pause', 'resume', 'stop']) $(`seq${action[0].toUpperCase()}${action.slice(1)}`).addEventListener('click', () => control(action));
-  orderMenu = mountLibraryOrder({ trigger: $('seqOrder'), panel: $('seqOrderPanel'), request, onLibrary: applyLibrary,
-    getSelected: () => $('seqSaved').value, onSelect: (id) => { $('seqSaved').value = id; render(false); } });
+  orderMenu = mountLibraryOrder({ trigger: $('seqSavedTrigger'), panel: $('seqSavedMenu'), request, onLibrary: applyLibrary,
+    getSelected: () => $('seqSaved').value, closeOnSelect: true, onSelect: (id) => { $('seqSaved').value = id; updateSaved(); render(false); } });
   wireDrag(); render();
   clearInterval(listTimer); listTimer = setInterval(refreshSavedList, 5000);
-  try { await loadSaved(); if (draft.id && saved.some((item) => item.id === draft.id)) { $('seqSaved').value = draft.id; orderMenu?.selected(); } const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
+  try { await loadSaved(); if (draft.id && saved.some((item) => item.id === draft.id)) { $('seqSaved').value = draft.id; updateSaved(); } const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
   catch (error) { notice(`Branch Definition service unavailable: ${error.message}`, true); }
 }
-export function destroySequencesPage() { orderMenu?.dispose(); orderMenu = null; registryUnsubscribe?.(); registryUnsubscribe = null; alive = false; clearInterval(timer); timer = null; clearInterval(listTimer); listTimer = null; remoteNotice = ''; historyView?.dispose(); historyView = null; }
+export function destroySequencesPage() { toolbarController?.abort(); toolbarController = null; orderMenu?.dispose(); orderMenu = null; registryUnsubscribe?.(); registryUnsubscribe = null; alive = false; clearInterval(timer); timer = null; clearInterval(listTimer); listTimer = null; remoteNotice = ''; historyView?.dispose(); historyView = null; }
