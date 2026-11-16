@@ -8,8 +8,9 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[2]
-BASE = '13b5de039c86ce263fe4dd9e31b19be193752de6'
-MANIFEST = re.search(r'files=\(\n(.*?)\n\)', (ROOT / 'scripts/deploy-detailed-twin.sh').read_text(), re.S).group(1).split()
+BASE = os.environ.get('TWIN_DEPLOY_BASE', '13b5de039c86ce263fe4dd9e31b19be193752de6')
+SCRIPT = os.environ.get('TWIN_DEPLOY_SCRIPT', 'scripts/deploy-detailed-twin.sh')
+MANIFEST = re.search(r'files=\(\n(.*?)\n\)', (ROOT / SCRIPT).read_text(), re.S).group(1).split()
 FILES = ['site/' + name for name in MANIFEST]
 
 
@@ -30,11 +31,12 @@ class DeploymentTests(unittest.TestCase):
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(result.stdout)
                 self.original[relative] = result.stdout
+        self.check_relative = 'index.html' if 'index.html' in self.original else 'knight-eps-phase12/viewer/rendering/model-loader.mjs'
         (self.root / 'health.json').write_text('{"ok":true}')
         (self.root / 'server.js').write_text('// unchanged backend fixture\n')
         self.environment = dict(os.environ, BASE_REVISION=BASE, SITE_ROOT=str(self.site), BACKUP_ROOT=str(self.root / 'backups'),
                                 BRIDGE_FILE=str(self.root / 'server.js'), HEALTH_URL=(self.root / 'health.json').as_uri(),
-                                SITE_CHECK_URL=(self.site / 'knight-eps-phase12/viewer/index.html').as_uri())
+                                SITE_CHECK_URL=(self.site / self.check_relative).as_uri())
         if shutil.which('sha256sum') is None:
             binary = self.root / 'bin'
             binary.mkdir()
@@ -44,7 +46,7 @@ class DeploymentTests(unittest.TestCase):
             self.environment['PATH'] = str(binary) + os.pathsep + os.environ['PATH']
 
     def deploy(self, *arguments):
-        return subprocess.run(['bash', 'scripts/deploy-detailed-twin.sh', *arguments], cwd=ROOT,
+        return subprocess.run(['bash', SCRIPT, *arguments], cwd=ROOT,
                               env=self.environment, capture_output=True, text=True)
 
     def snapshot(self):
@@ -75,7 +77,7 @@ class DeploymentTests(unittest.TestCase):
         self.assertEqual(self.snapshot(), before)
 
     def test_production_drift_refuses_deployment_before_backup(self):
-        (self.site / 'index.html').write_text('Production-only edit')
+        (self.site / self.check_relative).write_text('Production-only edit')
         before = self.snapshot()
         result = self.deploy()
         self.assertNotEqual(result.returncode, 0)

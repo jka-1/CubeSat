@@ -1,0 +1,454 @@
+{
+  "checks": [
+    {
+      "name": "all 95 components and bound LCD retained",
+      "result": true
+    },
+    {
+      "name": "MCU_Final focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "INA226 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "Regulator_01 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "Regulator_02 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "BMS_BQ76942 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "Charger_BMS034A_EVM focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "LightSensor focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "TemperatureSensor focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "SolarPanel_01 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "SolarPanel_02 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "BatteryPack_4x18650 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "NerdMiner_Heltec_V2 focus, isolate and raycast",
+      "result": true
+    },
+    {
+      "name": "lid opens",
+      "result": true
+    },
+    {
+      "name": "exploded assembly",
+      "result": true
+    },
+    {
+      "name": "top framing",
+      "result": true
+    },
+    {
+      "name": "bottom framing",
+      "result": true
+    },
+    {
+      "name": "front framing",
+      "result": true
+    },
+    {
+      "name": "rear framing",
+      "result": true
+    },
+    {
+      "name": "side framing",
+      "result": true
+    },
+    {
+      "name": "iso framing",
+      "result": true
+    },
+    {
+      "name": "live LCD accepts existing telemetry API, including zero",
+      "result": true
+    },
+    {
+      "name": "mock data provenance",
+      "result": true
+    },
+    {
+      "name": "performance quality",
+      "result": true
+    },
+    {
+      "name": "mobile width and collapsed controls",
+      "result": true
+    },
+    {
+      "name": "mobile panel opens",
+      "result": true
+    }
+  ],
+  "errors": [],
+  "performance": {
+    "loading": {
+      "artworkUnpackMs": 3104.199999988079,
+      "modelDownloadMs": 4227.9000000059605,
+      "modelResponseBytes": 10222122,
+      "modelUnpackMs": 543.8999999761581,
+      "assetsReadyMs": 4771.799999982119,
+      "verifyMs": 310.7000000178814,
+      "parseMs": 524.8000000119209,
+      "totalMs": 5614.199999988079,
+      "readyMs": 15427
+    },
+    "fitCount": 23,
+    "fitMs": 1.5,
+    "resizeCount": 3,
+    "renderCount": 1215,
+    "shadowRefreshCount": 268,
+    "cpuFrameMs": 3.5999999940395355,
+    "firstFrameCpuMs": 2539,
+    "materials": {
+      "references": 271,
+      "unique": 115
+    },
+    "consolidation": {
+      "Chassis_Body_A": {
+        "offline": true
+      },
+      "Chassis_Body_B": {
+        "offline": true
+      },
+      "INA226": {
+        "offline": true
+      },
+      "LightSensor": {
+        "offline": true
+      },
+      "MCU_Final": {
+        "offline": true
+      },
+      "Regulator_01": {
+        "offline": true
+      },
+      "Regulator_02": {
+        "offline": true
+      },
+      "RemovableTop_Front_A": {
+        "offline": true
+      },
+      "SolarPanel_01": {
+        "offline": true
+      },
+      "SolarPanel_02": {
+        "offline": true
+      },
+      "TemperatureSensor": {
+        "offline": true
+      },
+      "WingArm_01": {
+        "offline": true
+      },
+      "WingArm_02": {
+        "offline": true
+      },
+      "WingArm_03": {
+        "offline": true
+      },
+      "WingArm_04": {
+        "offline": true
+      },
+      "BMS_BQ76942": {
+        "offline": true
+      },
+      "Charger_BMS034A_EVM": {
+        "offline": true
+      },
+      "BatteryHolder_4x18650_CAD": {
+        "offline": true
+      },
+      "BatteryCell_01": {
+        "offline": true
+      },
+      "BatteryCell_02": {
+        "offline": true
+      },
+      "BatteryCell_03": {
+        "offline": true
+      },
+      "BatteryCell_04": {
+        "offline": true
+      },
+      "Mount_MCU_Final_01_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_01_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_02_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_02_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_03_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_03_Base": {
+        "offline": true
+      },
+      "Mount_MCU_Final_04_Clip": {
+        "offline": true
+      },
+      "Mount_MCU_Final_04_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_01_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_01_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_02_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_02_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_03_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_03_Base": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_04_Clip": {
+        "offline": true
+      },
+      "Mount_Charger_BMS034A_EVM_04_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_01_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_01_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_02_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_02_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_03_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_03_Base": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_04_Clip": {
+        "offline": true
+      },
+      "Mount_BMS_BQ76942_04_Base": {
+        "offline": true
+      },
+      "Mount_INA226_01_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_01_Base": {
+        "offline": true
+      },
+      "Mount_INA226_02_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_02_Base": {
+        "offline": true
+      },
+      "Mount_INA226_03_Clip": {
+        "offline": true
+      },
+      "Mount_INA226_03_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_01_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_01_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_02_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_02_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_01_03_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_01_03_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_01_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_01_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_02_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_02_Base": {
+        "offline": true
+      },
+      "Mount_Regulator_02_03_Clip": {
+        "offline": true
+      },
+      "Mount_Regulator_02_03_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_01_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_01_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_02_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_02_Base": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_03_Clip": {
+        "offline": true
+      },
+      "Mount_TemperatureSensor_03_Base": {
+        "offline": true
+      },
+      "Mount_LightSensor_01_Clip": {
+        "offline": true
+      },
+      "Mount_LightSensor_01_Base": {
+        "offline": true
+      },
+      "Mount_LightSensor_02_Clip": {
+        "offline": true
+      },
+      "Mount_LightSensor_02_Base": {
+        "offline": true
+      },
+      "RemovableTop_Front_B": {
+        "offline": true
+      },
+      "NerdMiner_Case_Front": {
+        "offline": true
+      },
+      "NerdMiner_Case_Rear": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_1": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_1": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_1": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_1": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_2": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_2": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_2": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_2": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_3": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_3": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_3": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_3": {
+        "offline": true
+      },
+      "NerdMiner_Brass_standoff_4": {
+        "offline": true
+      },
+      "NerdMiner_Front_spacer_4": {
+        "offline": true
+      },
+      "NerdMiner_Screw_front_4": {
+        "offline": true
+      },
+      "NerdMiner_Screw_rear_4": {
+        "offline": true
+      },
+      "NerdMiner_Screen": {
+        "offline": true
+      },
+      "NerdMiner_Board_LCD": {
+        "offline": true
+      }
+    },
+    "instancing": [
+      {
+        "instances": 26
+      },
+      {
+        "instances": 26
+      }
+    ],
+    "rendering": {
+      "depth": {
+        "near": 0.6383426331392531,
+        "far": 3.5856869154211957,
+        "minDepth": 0.7092695923769479,
+        "maxDepth": 1.3517393912199838,
+        "worstStep": 1.4023961848883394e-7,
+        "certified": true,
+        "active": "bounded"
+      },
+      "closedSolids": {
+        "eligibleMeshes": 97,
+        "eligibleTriangles": 247562,
+        "frontMeshes": 97,
+        "shadowFrontMeshes": 97,
+        "doubleSidedFallbacks": 0
+      },
+      "antialiasing": "fxaa",
+      "acrylic": "display-space",
+      "warmMs": 6818.0999999940395,
+      "captureTextures": 2,
+      "warmMaterials": 2132
+    },
+    "drawCalls": 329,
+    "triangles": 896667
+  },
+  "complete": true
+}

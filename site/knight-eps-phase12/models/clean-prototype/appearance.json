@@ -1,0 +1,18 @@
+{
+  "source": "KnightEPS_Orbit_to_Workbench.blend",
+  "sourceSHA256": "bab43c2e2e8364d7a7f802fdd44c718d9bc09b5b20c4bdeb2494d164fdefbebb",
+  "outputSHA256": "c66a1289c1de6512fb9513a10f03ce837fb9186065a12ef23ab1e4d5157b9719",
+  "components": [
+    "Chassis_Body_A",
+    "Chassis_Body_B",
+    "RemovableTop_Front_A",
+    "RemovableTop_Front_B",
+    "WingArm_01",
+    "WingArm_02",
+    "WingArm_03",
+    "WingArm_04",
+    "SolarPanel_01",
+    "SolarPanel_02"
+  ],
+  "policy": "Mechanical appearance only. Original runtime ownership, transforms, electronics and live LCD retained."
+}

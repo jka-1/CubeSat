@@ -3,6 +3,7 @@ import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
 import {CoverageStandardMaterial} from './legacy-coverage.mjs';
 import {LeanAcrylicMaterial} from './lean-acrylic.mjs';
 import {decodeCoverage,decodeGzip} from './decode-coverage.mjs';
+import {loadCleanPrototype,applyCleanPrototype} from './clean-prototype.mjs';
 
 const base=new URL('../../models/display/',import.meta.url);
 const sourceHash='f1ed146e43c7dd3291beed9599d9a4f42f3e54b726dde8600ad978be8ad649c4';
@@ -14,6 +15,7 @@ async function fetchAsset(name,kind){
 
 export async function loadDisplayModel(timing={}){
  const start=performance.now();
+ const appearancePromise=loadCleanPrototype();
  const loader=new GLTFLoader(),coverage=typeof DecompressionStream==='function';
  // Static gzip needs no server configuration. Older browsers keep the GLB
  // and embedded RGBA maps. HTTP-decoded gzip responses work too.
@@ -29,8 +31,8 @@ export async function loadDisplayModel(timing={}){
   const unpackStart=performance.now(),bytes=await decodeCoverage(zipped,info.decodedMaskBytes);
   timing.artworkUnpackMs=performance.now()-unpackStart;return {info,bytes};
  })():null;
- const [bytes,certificate,artwork]=await Promise.all([
-  modelPromise,fetchAsset('closed-primitives-compact.json','json'),artworkPromise
+ const [bytes,certificate,artwork,appearance]=await Promise.all([
+  modelPromise,fetchAsset('closed-primitives-compact.json','json'),artworkPromise,appearancePromise
  ]);
  const maskInfo=artwork?.info,maskBytes=artwork?.bytes;
  timing.assetsReadyMs=performance.now()-start;
@@ -63,6 +65,7 @@ export async function loadDisplayModel(timing={}){
   if(mesh.isMesh&&certified&&association&&rows.has(association.meshes+'/'+association.primitives))mesh.userData.certifiedClosed=true;
   if(mesh.userData.framingPoints)mesh.userData.framingPoints=mesh.userData.framingPoints.map(v=>new Vector3(...v));
  });
+ applyCleanPrototype(gltf.scene,appearance.scene);
  gltf.scene.userData.displayPackage={prepared:true,certified,coverageImages:maskInfo?.records.length||0};
  timing.totalMs=performance.now()-start;
  return gltf;
