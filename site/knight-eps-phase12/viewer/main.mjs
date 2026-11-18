@@ -21,7 +21,7 @@ try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,logarithmicDep
 if(renderer)start();
 function start(){
  qs('#quality').disabled=true;
- let cameraTransition=null,hasFramed=false,studioFloor=null,inspection=null,quality='studio',fitAspect=1;
+ let cameraTransition=null,hasFramed=false,studioFloor=null,groundLight=null,inspection=null,quality='studio',fitAspect=1;
  const loadingStart=performance.now();
  const metrics={loading:{},fitCount:0,fitMs:0,resizeCount:0,renderCount:0,shadowRefreshCount:0,cpuFrameMs:0,firstFrameCpuMs:null};
  let pipeline=null,preparing=null,renderReady=false;const focusReveal=new Set();
@@ -46,7 +46,12 @@ function start(){
  qs('#sidebar-toggle').onclick=()=>showSidebar(qs('#sidebar-toggle').getAttribute('aria-expanded')!=='true');
  narrow.addEventListener('change',onBreakpoint);onBreakpoint();
  const reduced=matchMedia('(prefers-reduced-motion: reduce)');
- renderer.setPixelRatio(Math.min(devicePixelRatio||1,quality==='studio'?2:1));renderer.setClearColor(0x404956);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
+ renderer.setPixelRatio(Math.min(devicePixelRatio||1,quality==='studio'?2:1));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
+ const themeRoot=document.documentElement;
+ const syncBackdrop=()=>renderer.setClearColor(getComputedStyle(themeRoot).backgroundColor);
+ syncBackdrop();
+ const themeObserver=new MutationObserver(()=>{syncBackdrop();invalidate()});
+ themeObserver.observe(themeRoot,{attributeFilter:['data-dashboard-theme']});
  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('role','img');renderer.domElement.setAttribute('aria-label','Knight EPS assembly. Orbit with drag, double-click a part to focus, zoom with scroll; all components are also selectable from the list.');panel.append(renderer.domElement);
  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(38,1,.002,30);camera.up.set(0,1,0);
  const controls=new OrbitControls(camera,renderer.domElement);controls.enabled=false;controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=.035;controls.maxDistance=5;controls.addEventListener('start',()=>{cancelCamera();syncOrbitAxis();invalidate()});controls.addEventListener('change',()=>invalidate());
@@ -231,6 +236,23 @@ function start(){
  // A constant backdrop has no edge or underside. A transparent receiver
  // adds ground shadows only when seen from above.
  const floorBounds=new THREE.Box3().setFromObject(model);const floor=new THREE.Mesh(new THREE.PlaneGeometry(4,4),new THREE.ShadowMaterial({opacity:.5}));floor.rotation.x=-Math.PI/2;floor.position.y=floorBounds.min.y-.004;floor.name='Display_ShadowFloor';floor.receiveShadow=true;scene.add(floor);studioFloor=floor;
+ // Lift the ground locally so the Studio shadow has contrast against dark chrome.
+ const lightMask=document.createElement('canvas');
+ lightMask.width=lightMask.height=128;
+ const context=lightMask.getContext('2d');
+ const fade=context.createRadialGradient(64,64,0,64,64,64);
+ fade.addColorStop(0,'white');fade.addColorStop(.24,'#d0d0d0');fade.addColorStop(1,'black');
+ context.fillStyle=fade;context.fillRect(0,0,128,128);
+ const lightTexture=new THREE.CanvasTexture(lightMask);
+ const lightSize=radius*2.5;
+ groundLight=new THREE.Mesh(
+  new THREE.PlaneGeometry(lightSize,lightSize),
+  new THREE.MeshBasicMaterial({color:0x38414e,alphaMap:lightTexture,transparent:true,depthWrite:false,toneMapped:false})
+ );
+ groundLight.position.set(center.x,-center.z,-.001);
+ groundLight.renderOrder=-1;
+ groundLight.visible=themeRoot.dataset.dashboardTheme==='dark';
+ floor.add(groundLight);
  display.bind(model.getObjectByName(metadata.display.mesh_name),{supplied:true});
  const grouped=new Map();for(const m of meshes){const key=info(m.name).assembly_id;if(!grouped.has(key))grouped.set(key,new THREE.Box3());grouped.get(key).expandByObject(m)}
  for(const [key,b] of grouped){let v=b.getCenter(new THREE.Vector3()).sub(center);if(v.length()<.01)v.set(0,0,1);assemblyVectors.set(key,v.transformDirection(cadFromWorldRotation).multiplyScalar(.085))}
@@ -253,7 +275,7 @@ function start(){
   if(disposed)return;
   stopMock();disposed=true;loaded=false;renderReady=false;imageReadyResolve({disposed:true});
   cancelAnimationFrame(frameHandle);document.removeEventListener('visibilitychange',onVisibility);
-  observer.disconnect();narrow.removeEventListener('change',onBreakpoint);
+  themeObserver.disconnect();observer.disconnect();narrow.removeEventListener('change',onBreakpoint);
   window.removeEventListener('resize',resize);document.removeEventListener('keydown',onKeyDown);
   controls.enabled=false;controls.dispose();display.dispose();instances?.dispose();
   qs('#parts').replaceChildren();qs('#visibility').replaceChildren();
@@ -263,11 +285,12 @@ function start(){
    for(const variants of materialVariants.values())for(const mat of variants.values())mat.dispose();
    for(const mat of new Set([...baseMaterials.values()].flat()))mat.dispose();
    disposeModel(model);scene.traverse(object=>object.shadow?.dispose?.());
+   groundLight?.geometry.dispose();groundLight?.material.alphaMap.dispose();groundLight?.material.dispose();
    studioFloor?.geometry.dispose();studioFloor?.material.dispose();scene.clear();scene.environment=null;
    env.dispose();renderer.dispose();baseMaterials.clear();materialVariants.clear();initial.clear();
    assemblyVectors.clear();partVis.clear();vis.clear();focusReveal.clear();inspection=null;
    for(const key of Object.keys(coverPivots))delete coverPivots[key];
-   instances=null;studioFloor=null;meshes.length=0;selected=null;model=null;
+   instances=null;studioFloor=null;groundLight=null;meshes.length=0;selected=null;model=null;
   };
   // Keep objects alive until asynchronous shader compilation stops reading them.
   if(preparing)preparing.finally(release).catch(()=>{});else release();
@@ -320,6 +343,7 @@ function start(){
  let shadowProperties=null;
  function renderScene(){
   if (studioFloor) studioFloor.visible = orbitMode !== 'focus';
+  if (groundLight) groundLight.visible = themeRoot.dataset.dashboardTheme === 'dark';
   if(model&&!renderReady)return;
   lamp.updateWorldMatrix(true,false);lamp.target.updateWorldMatrix(true,false);
   const c=lamp.shadow.camera,key=JSON.stringify([lamp.matrixWorld.elements,lamp.target.matrixWorld.elements,lamp.visible,lamp.castShadow,c.left,c.right,c.top,c.bottom,c.near,c.far,lamp.shadow.mapSize.toArray(),lamp.shadow.bias,lamp.shadow.normalBias,lamp.shadow.radius]);

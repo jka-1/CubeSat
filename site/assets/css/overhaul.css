@@ -238,7 +238,7 @@ body .st-grid {grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)
 body .st-cell {grid-template-columns:64px minmax(20px,1fr) 80px 70px}
 body .st-cell .st-spark {width:70px}
 body .twin-page {padding:0}
-body .knight-eps-frame {width:100%;height:calc(100dvh - 150px);min-height:600px;border:1px solid var(--hairline);border-radius:8px;background:#eee}
+body .knight-eps-frame {width:100%;height:calc(100dvh - 150px);min-height:600px;border:1px solid var(--hairline);border-radius:8px;background:var(--dash-canvas,var(--paper))}
 body .manual-frame {background:#fff;border-radius:6px}
 body .tooltip-bubble {background:#15191f;color:#fff;border-color:#15191f;box-shadow:0 6px 24px #15191f22}
 body .info-tip-popup {background:#15191f;color:#fff;border-color:#15191f;box-shadow:0 6px 24px #15191f22}

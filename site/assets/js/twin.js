@@ -36,11 +36,17 @@ export function twinPacketFromModel(model) {
   return packet;
 }
 
+function syncTwinTheme() {
+  const root = activeFrame?.contentDocument?.documentElement;
+  if (root) root.dataset.dashboardTheme = document.body.dataset.dashboardTheme || 'dark';
+}
+
 export function initTwinPage() {
   const frame = document.getElementById('knight-eps-twin');
   const status = document.getElementById('twinIntegrationStatus');
   if (!frame) return;
   activeFrame = frame;
+  window.addEventListener('dashboard-theme-change', syncTwinTheme);
   document.body.classList.add('twin-active');
   const header = document.querySelector('.site-header');
   const measureNavigation = () => document.documentElement.style.setProperty('--twin-nav-height', `${header?.getBoundingClientRect().height || 0}px`);
@@ -51,7 +57,7 @@ export function initTwinPage() {
   const connect = async () => {
     if (connecting || activeFrame !== frame) return;
     connecting = true;
-    if (frame.contentDocument) frame.contentDocument.documentElement.dataset.dashboardTheme = document.body.dataset.dashboardTheme || 'dark';
+    syncTwinTheme();
     try {
       const twin = frame.contentWindow?.knightEPSTwin;
       if (!twin) throw new Error('Viewer API unavailable');
@@ -88,6 +94,7 @@ export function initTwinPage() {
 }
 
 export function destroyTwinPage() {
+  window.removeEventListener('dashboard-theme-change', syncTwinTheme);
   unsubscribe?.();
   unsubscribe = null;
   activeFrame?.contentWindow?.knightEPSTwin?.dispose();

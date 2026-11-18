@@ -36,20 +36,24 @@ function harness({ ready = Promise.resolve() } = {}) {
     setTelemetryTransport(value) { transports.push(value); },
     dispose() { disposals++; }
   };
+  const viewerRoot = { dataset: {} };
+  const dashboardTheme = { dashboardTheme: 'dark' };
+  const window = new EventTarget();
   const frame = {
+    contentDocument: { documentElement: viewerRoot },
     contentWindow: {},
     addEventListener(name, handler) { listeners.set(name, handler); }
   };
   const status = { hidden: false, textContent: '' };
   const context = vm.createContext({
-    Date: Clock, EventSource, ResizeObserver, normalizePeripheralTelemetry,
+    Date: Clock, EventSource, ResizeObserver, normalizePeripheralTelemetry, window,
     console: { error(error) { errors.push(error); } },
     setInterval(callback) { const id = timers.size + 1; timers.set(id, callback); return id; },
     clearInterval(id) { timers.delete(id); },
     document: {
       getElementById(id) { return id === 'knight-eps-twin' ? frame : status; },
       querySelector() { return { getBoundingClientRect: () => ({ height: 75 }) }; },
-      body: { classList: { add: name => classes.add(name), remove: name => classes.delete(name) } },
+      body: { dataset: dashboardTheme, classList: { add: name => classes.add(name), remove: name => classes.delete(name) } },
       documentElement: { style: { setProperty: (key, value) => properties.set(key, value), removeProperty: key => properties.delete(key) } }
     }
   });
@@ -67,11 +71,30 @@ function harness({ ready = Promise.resolve() } = {}) {
     clock, streams, updates, transports, errors, timers, observers, classes, properties, status, send,
     get disposals() { return disposals; },
     init() { context.initTwinPage(); },
+    get theme() { return viewerRoot.dataset.dashboardTheme; },
+    setTheme(theme) {
+      dashboardTheme.dashboardTheme = theme;
+      window.dispatchEvent(new Event('dashboard-theme-change'));
+    },
     async load() { frame.contentWindow.knightEPSTwin = api; await listeners.get('load')(); },
     destroy() { context.destroyTwinPage(); },
     tick() { for (const callback of timers.values()) callback(); }
   };
 }
+
+test('the embedded viewer follows appearance changes while mounted', async () => {
+  const h = harness();
+  h.init(); await h.load();
+  try {
+    assert.equal(h.theme, 'dark');
+    h.setTheme('light');
+    assert.equal(h.theme, 'light');
+  } finally {
+    h.destroy();
+  }
+  h.setTheme('dark');
+  assert.equal(h.theme, 'light');
+});
 
 test('opening the SSE connection alone does not create live measurements', async t => {
   const h = harness(); t.after(() => h.destroy());

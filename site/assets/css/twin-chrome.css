@@ -1,4 +1,5 @@
-:root{font-family:'Manrope',sans-serif;color:#15191f;color-scheme:light;background:#f4f4f3;--line:#dce0e6;--muted:#4c5664;--accent:#a95c00;scrollbar-color:#929ba6 #eef0f3}
+:root{font-family:'Manrope',sans-serif;color:#15191f;color-scheme:light;background:#f5f6f8;--line:#dce0e6;--muted:#4c5664;--accent:#a95c00;scrollbar-color:#929ba6 #eef0f3}
+.viewport{background:transparent}
 .sidebar{background:#fff;border-color:#dce0e6}
 .sidebar h2{font-weight:800;letter-spacing:-.01em;font-size:15px}
 .sidebar :is(p,summary,#detail,#detail strong,#telemetry-status){color:#15191f}
