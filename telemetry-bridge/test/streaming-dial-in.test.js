@@ -29,12 +29,9 @@ test('live cards carry register addresses and no explanatory notes', async () =>
   assert.doesNotMatch(src, /need v6 firmware|st-note|ADC off|not in packet/);
 });
 
-test('I²C page never starts simulated data when the bridge reports live', async () => {
-  const src = await read('site/assets/js/i2c.js');
-  assert.match(src, /health\.live_mode === true \|\| health\.telemetry_connected === true/);
-  assert.match(src, /if \(live\) connectTelemetryStream\(\);\s*else startMockData\(\);/);
-  assert.match(src, /state = blankTelemetry\(\);/);
-});
+// Live-first initialization and explicit mock selection are covered behaviorally by
+// dashboard.mock-mode.test.js, including late events from closed live connections.
+// The former source-pattern test expected an automatic mock fallback that no longer exists.
 
 test('user-visible text uses I²C', async () => {
   for (const f of ['site/index.html', 'site/modules/home.html', 'site/modules/communication.html', 'site/modules/debug-mode.html']) {

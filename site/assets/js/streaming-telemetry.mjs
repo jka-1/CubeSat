@@ -98,7 +98,7 @@ export function decodeDevices(packet) {
       reg13: Number.isInteger(raw.mppt?.reg13) ? raw.mppt.reg13 : null,
       fault20,
       faults,
-      activeFaults: faults.filter((f) => f.active).length,
+      activeFaults: fault20 !== null || Array.isArray(m.faults) ? faults.filter((f) => f.active).length : null,
       // BQ25798 power path ADC (v6 packets only): REG31 IBUS, REG35 VBUS, REG37 VAC1, REG3B VBAT, REG3D VSYS, REG41 TDIE
       ibusMa: num(m.ibusA) === null ? null : +(num(m.ibusA) * 1000).toFixed(0),
       vbusV: num(m.vbusV), vac1V: num(m.vac1V), vbatV: num(m.vbatV), vsysV: num(m.vsysV),

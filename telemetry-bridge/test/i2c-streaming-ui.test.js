@@ -91,7 +91,7 @@ test('I²C streaming preserves panels, readings, availability and power units', 
     window.__emit = (value) => __streams.filter(s => !s.closed).forEach(s => s.emit('message', { data: JSON.stringify(value) }));
   ` });
   await send('Page.navigate', { url: `http://127.0.0.1:${server.address().port}/site/index.html#communication` });
-  await waitFor('!!document.querySelector("#i2cStreamToggle") && __streams.length === 1');
+  await waitFor('!!document.querySelector("#telemetryOverview") && __streams.length === 1');
   await checkWaiting();
   async function checkWaiting() {
     await t.test('waiting readings are unavailable rather than a clear fault report', async () => {
@@ -105,31 +105,32 @@ test('I²C streaming preserves panels, readings, availability and power units', 
   })()`);
   const text = (selector) => evaluate(`document.querySelector(${JSON.stringify(selector)}).textContent`);
   const check = async (name, expression) => t.test(name, async () => assert.equal(await evaluate(expression), true));
+  await check('Simple limits the telemetry view to the interactive bus', 'document.querySelector(".i2c-workspace").checkVisibility() && document.querySelector("[data-advanced-view]").hidden && !document.querySelector("#i2cStreamCard")');
+  await evaluate('localStorage.setItem("cubesat.streamingTelemetry","on"); location.hash="home"');
+  await waitFor('!!document.querySelector(".ke-stage")');
+  await evaluate('location.hash="communication"');
+  await waitFor('!!document.querySelector("#telemetryOverview") && __streams.filter(s => !s.closed).length === 1');
   await sample(1);
-  await evaluate('document.querySelector("[data-detail-target=bms]").click(); document.querySelector("#i2cStreamToggle").click()');
-  await waitFor('__streams.filter(s => !s.closed).length === 1 && !!document.querySelector("[data-toggle=pv]")');
+  await evaluate('document.querySelector("[data-detail-target=bms]").click()');
+  await waitFor('__streams.filter(s => !s.closed).length === 1');
   await sample(2, 'f.packet.telemetry.bms.packVoltageV = 15.42; f.packet.telemetry.bms.internalTempC = 29.5; f.packet.telemetry.mppt.vbusV = 6.123; f.packet.telemetry.mppt.ibusA = .321; f.packet.telemetry.mppt.dieTempC = 22.5;');
   await check('streaming keeps the open detail panel and all tiles available', 'document.querySelector("#i2cDetailLayer").classList.contains("is-open") && !document.querySelector("[data-detail-panel=bms]").hidden && [...document.querySelectorAll(".topology-tile")].every(e => !e.hidden)');
   await check('streaming retains fresh BMS and MPPT extension readings', 'document.querySelector("#bmsPackVoltage").textContent === "15.42 V" && document.querySelector("#bmsCells").textContent.includes("29.5 °C") && document.querySelector("#mpptFaults").textContent.includes("6.123 V") && document.querySelector("#mpptFaults").textContent.includes("321 mA") && document.querySelector("#mpptFaults").textContent.includes("22.5 °C")');
-  await evaluate('document.querySelector("[data-toggle=pv]").click(); document.querySelector("[data-toggle=bms]").click()');
   await sample(3, 'f.packet.telemetry.pv.powerW = 1.075; f.packet.telemetry.bms.packVoltageV = 15.67;');
-  await check('card toggles only hide their own cards and other panels keep updating', 'document.querySelector("[data-card=pv]").hidden && document.querySelector("[data-card=bms]").hidden && !document.querySelector("[data-card=mppt]").hidden && [...document.querySelectorAll(".topology-tile")].every(e => !e.hidden) && document.querySelector("#bmsPackVoltage").textContent === "15.67 V" && document.querySelector("#pvPowerValue").textContent === "1.075 W"');
-  await evaluate('document.querySelector("[data-toggle=pv]").click()');
-  await evaluate('document.querySelector("[data-toggle=mcp9700]").click(); document.querySelector("[data-toggle=temt6000]").click()');
-  await sample(30, 'f.packet.telemetry.pv.powerW = 1.075; f.packet.telemetry.peripheral.temperatureC = 28.4; f.packet.telemetry.peripheral.lightVoltageMv = 1900;');
-  await check('ADC card toggles leave the environment detail updating', 'document.querySelector("[data-card=peripheral]").hidden && document.querySelector("#peripheralTemperatureValue").textContent === "28.4 °C" && document.querySelector("#lightVoltageValue").textContent === "1900 mV" && !document.querySelector("[data-detail-target=environment]").hidden');
-  await t.test('1075 mW is 1.075 W in register 0x03 and the overview', async () => {
-    assert.equal(await text('[data-v="pv.powerMw"]'), '1.075 W');
-    assert.equal(await text('#summaryPvPower'), '1.075 W');
+  await evaluate('document.querySelector("#i2cDetailLayer .detail-close").click(); document.querySelector("[data-telemetry-view=advanced]").click()');
+  await t.test('Advanced opens the readout and charts with the same packet', async () => {
+    assert.equal(await text('[data-reading-key="pv.powerW"]'), '1.075 W');
+    assert.equal(await text('[data-reading-key="bms.packV"]'), '15.670 V');
+    assert.equal(await evaluate('document.querySelector("[data-advanced-view]").checkVisibility() && !document.querySelector(".i2c-workspace").checkVisibility() && document.querySelector("[data-main-chart]").checkVisibility()'), true);
   });
   await sample(4, 'f.packet.telemetry.pv.powerW = .999;');
-  await check('below 1000 mW stays in mW', 'document.querySelector("[data-v=\\"pv.powerMw\\"]").textContent === "999.00 mW" && document.querySelector("#summaryPvPower").textContent === "999.00 mW"');
+  assert.equal(await text('[data-reading-key="pv.powerW"]'), '999.00 mW');
   await sample(5, 'f.packet.telemetry.pv.powerW = 1;');
-  await check('1000 mW switches to W', 'document.querySelector("[data-v=\\"pv.powerMw\\"]").textContent === "1.000 W" && document.querySelector("#summaryPvPower").textContent === "1.000 W"');
+  assert.equal(await text('[data-reading-key="pv.powerW"]'), '1.000 W');
   await sample(6, 'f.packet.debug.devices.pv.state = "error"; f.packet.debug.devices.bms.state = "paused"; f.packet.telemetry.mppt.available = false; f.packet.telemetry.peripheral.temperatureC = null; f.packet.telemetry.peripheral.temperatureVoltageMv = null;');
   await check('unavailable devices remain reachable without fresh numbers or ACK labels', '[...document.querySelectorAll(".device-tile")].every(e => !e.hidden && !e.textContent.includes("ACK · live")) && document.querySelector("#pvPowerValue").textContent.includes("--") && document.querySelector("#bmsPackVoltage").textContent.includes("--") && document.querySelector("#mpptFaults").textContent.includes("UNAVAILABLE") && document.querySelector("#mpptFaultCount").textContent === "--" && document.querySelector("#peripheralTemperatureStatus").textContent === "UNAVAILABLE"');
   await sample(7, '', 6000);
-  await check('stale age is reflected outside streaming cards without a status event', 'document.querySelector("#i2cBusStatus").textContent.includes("stale") && [...document.querySelectorAll(".device-ack")].every(e => !e.textContent.includes("ACK · live")) && document.querySelector("[data-st=indicator]").classList.contains("stale")');
+  await check('stale age is reflected outside streaming cards without a status event', 'document.querySelector("#i2cBusStatus").textContent.includes("stale") && [...document.querySelectorAll(".device-ack")].every(e => !e.textContent.includes("ACK · live")) && document.querySelector("[data-health]").dataset.state === "stale"');
   await sample(8);
   await evaluate('__emit({type: "status", telemetry_connected: true, telemetry_stale_after_ms: 100})');
   await waitFor('document.querySelector("#i2cBusStatus").textContent.includes("stale")');
@@ -138,9 +139,15 @@ test('I²C streaming preserves panels, readings, availability and power units', 
   await sample(80);
   await evaluate('__streams.find(s => !s.closed).emit("error", {})');
   await check('a disconnected stream does not label retained readings live', '!document.querySelector("#i2cBusStatus").classList.contains("online") && [...document.querySelectorAll(".device-ack")].every(e => !e.textContent.includes("ACK · live"))');
-  await evaluate('document.querySelector("#i2cStreamToggle").click()');
+  await evaluate('localStorage.setItem("cubesat.streamingTelemetry","off"); location.hash="home"');
+  await waitFor('!!document.querySelector(".ke-stage")');
+  await evaluate('location.hash="communication"');
+  await waitFor('!!document.querySelector("#telemetryOverview") && __streams.filter(s => !s.closed).length === 1');
   await sample(9, 'f.packet.telemetry.pv.powerW = .875;');
-  await check('turning streaming off resumes normal updates with one connection', '__streams.filter(s => !s.closed).length === 1 && !document.querySelector("#i2cStreamToggle").checked && document.querySelector("#summaryPvPower").textContent === "875.00 mW" && [...document.querySelectorAll(".topology-tile")].every(e => !e.hidden)');
+  await check('turning streaming off resumes normal updates with one connection', '__streams.filter(s => !s.closed).length === 1 && !document.querySelector("#i2cStreamToggle") && document.querySelector("#summaryPvPower").textContent === "875.00 mW" && [...document.querySelectorAll(".topology-tile")].every(e => !e.hidden)');
   await check('stream subscribers never open overlapping SSE connections', '__maxActiveStreams === 1 && __streams.length === 3');
+  await sample(99, 'f.packet.telemetry.pv.powerW = .000005; f.packet.telemetry.pv.currentA = .000001;');
+  assert.equal(await text('[data-reading-key="pv.powerW"]'), '5.0 µW');
+  assert.equal(await text('[data-reading-key="pv.currentA"]'), '1.0 µA');
   assert.deepEqual(errors, [], 'browser exceptions');
 });

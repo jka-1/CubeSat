@@ -124,7 +124,7 @@
 
           <div id="seriesLoading" class="chart-skeleton" aria-label="Loading graph" hidden><i></i><i></i><i></i><i></i><i></i></div>
           <div id="seriesEmpty" class="runs-empty chart-empty" hidden><strong>No numeric samples</strong><p>Try another metric or time window.</p></div>
-          <div id="chartFrame" class="chart-frame" hidden>
+          <div id="chartFrame" class="chart-frame" role="region" tabindex="0" aria-label="Measurement timeline; scroll horizontally to read the full chart" hidden>
             <svg id="seriesChart" viewBox="0 0 960 360" role="img" tabindex="0" aria-labelledby="chartTitle chartDescription">
               <title id="chartTitle">Telemetry measurement timeline</title>
               <desc id="chartDescription">Use left and right arrow keys to select a time bucket and show its packets.</desc>

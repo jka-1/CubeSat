@@ -40,6 +40,27 @@ def test_present_only(fmt, name, expected):
         assert (m.series[sk][-1][1] is None) == (k not in expected), k
 
 
+def test_mcu_card_tracks_temperature_availability():
+    from PySide6.QtWidgets import QApplication
+    from cubesat_i2c.streaming_page import StreamingPage
+
+    app = QApplication.instance() or QApplication([])
+    page = StreamingPage()
+    try:
+        for seq, temperature in enumerate((26, None, 0), start=1):
+            event = at(FX["v6_all"], T0 + seq)
+            event["packet"]["seq"] = seq
+            event["packet"]["telemetry"]["mcu"]["temperatureC"] = temperature
+            assert page.model.ingest(event, T0 + seq)
+            page.refresh()
+            card = page.cards["mcu"]
+            assert card.isHidden() == (temperature is None)
+            if temperature is not None:
+                assert float(card.rows["tempC"][0].text().split()[0]) == temperature
+    finally:
+        page.close()
+
+
 def test_conversions_match_js():
     d = decode_devices(FX["v5_all"]["packet"])
     assert d["pv"]["busV"] == 4003 * 0.00125
@@ -137,7 +158,9 @@ def test_tab_against_real_bridge(bridge, present, expected, debug, tmp_path, mon
         assert ok, "no %s packets" % fmt
         snap = pg.model.snapshot()
         assert [d["key"] for d in snap["devices"]] == expected
-        assert pg._layout_key == tuple(expected + ["mcu", "peripheral"])
+        # The sender uses the firmware sentinel for an unavailable on-die temperature.
+        assert snap["mcu"] is None
+        assert pg._layout_key == tuple(expected + ["peripheral"])
         assert all(pg.cards[k].isVisible() == (k in pg._layout_key) for k in pg.cards)
         assert "LIVE" in pg.indicator.text()
         if "pv" in expected:
@@ -179,7 +202,7 @@ def test_wireless_connect_starts_streaming_tab(bridge, tmp_path, monkeypatch):
         w = MainWindow(); w.source.setCurrentIndex(1); w.bridge_url.setText(base)
         time.sleep(0.8); w.toggle_wireless()
         assert w.stream_page.running() and w.stream_page.url.text() == base
-        assert wait(app, lambda: (w.stream_page.refresh() or True) and w.stream_page._layout_key == ("pv", "mppt", "mcu", "peripheral"))
+        assert wait(app, lambda: (w.stream_page.refresh() or True) and w.stream_page._layout_key == ("pv", "mppt", "peripheral"))
         w.toggle_wireless(); assert not w.stream_page.running()
         w.close()
     finally:

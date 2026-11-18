@@ -1,5 +1,5 @@
-import { operatorRegisters } from './operator-registers.mjs';
-import { apiFetch, canOperate } from './auth.js?v=20261109e';
+import { operatorRegisters } from './operator-registers.mjs?v=20261118-telemetry';
+import { apiFetch, canOperate } from './auth.js?v=20261118-telemetry';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a';
 import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261112-registers';
@@ -247,14 +247,14 @@ function drawRssi(r) {
   const c = $('dmLhChart'); if (!c) return;
   const dpr = window.devicePixelRatio || 1; const w = c.clientWidth || 600; const h = c.clientHeight || 120;
   c.width = w * dpr; c.height = h * dpr; const g = c.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-  g.clearRect(0, 0, w, h); g.font = '11px Arial'; g.fillStyle = '#ede8d9';
+  g.clearRect(0, 0, w, h); g.font = '11px Manrope'; g.fillStyle = getComputedStyle(document.body).getPropertyValue('--white-soft').trim() || '#4c5664';
   const pts = r.rows.filter((x) => x.inter_arrival_ms !== '').map((x) => [x.arrival_ms, x.inter_arrival_ms]);
   g.fillText('packet inter-arrival (ms), last 5 min', 8, 12);
   if (!pts.length) { g.fillText('no data', 8, h / 2); return; }
   const hi = Math.max(...pts.map((p) => p[1])) * 1.1 || 1;
   const x = (t) => 40 + ((t - r.start) / (r.end - r.start)) * (w - 50); const y = (v) => 18 + (1 - v / hi) * (h - 30);
   g.fillText(hi.toFixed(0), 4, 24); g.fillText('0', 4, h - 10);
-  g.strokeStyle = '#d4af37'; g.lineWidth = 1.5; g.beginPath();
+  g.strokeStyle = getComputedStyle(document.body).getPropertyValue('--gold').trim() || '#a95c00'; g.lineWidth = 1.5; g.beginPath();
   pts.forEach(([t, v], i) => (i ? g.lineTo(x(t), y(v)) : g.moveTo(x(t), y(v)))); g.stroke();
 }
 

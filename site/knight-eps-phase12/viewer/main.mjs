@@ -49,7 +49,7 @@ function start(){
  renderer.setPixelRatio(Math.min(devicePixelRatio||1,quality==='studio'?2:1));renderer.setClearColor(0x404956);renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.92;
  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('role','img');renderer.domElement.setAttribute('aria-label','Knight EPS assembly. Orbit with drag, double-click a part to focus, zoom with scroll; all components are also selectable from the list.');panel.append(renderer.domElement);
  const scene=new THREE.Scene(), camera=new THREE.PerspectiveCamera(38,1,.002,30);camera.up.set(0,1,0);
- const controls=new OrbitControls(camera,renderer.domElement);controls.enabled=false;controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=.035;controls.maxDistance=5;controls.addEventListener('start',()=>{cancelCamera();invalidate()});controls.addEventListener('change',()=>invalidate());
+ const controls=new OrbitControls(camera,renderer.domElement);controls.enabled=false;controls.enableDamping=true;controls.dampingFactor=.09;controls.minDistance=.035;controls.maxDistance=5;controls.addEventListener('start',()=>{cancelCamera();syncOrbitAxis();invalidate()});controls.addEventListener('change',()=>invalidate());
  function cancelCamera(){cameraTransition=null;pendingFit=false;}
  const pmrem=new THREE.PMREMGenerator(renderer),room=new RoomEnvironment();const env=pmrem.fromScene(room,.04);scene.environment=env.texture;scene.environmentIntensity=.8;room.dispose();pmrem.dispose();
  scene.add(new THREE.HemisphereLight(0xffffff,0x6b7785,.4));const lamp=new THREE.DirectionalLight(0xffffff,2.0);lamp.position.set(.5,.9,.4);scene.add(lamp);const fill=new THREE.DirectionalLight(0xdce8ff,.8);fill.position.set(-.6,.25,-.6);scene.add(fill);renderer.shadowMap.enabled=false;renderer.shadowMap.autoUpdate=false;renderer.info.autoReset=false;renderer.transmissionResolutionScale=1;renderer.shadowMap.type=THREE.PCFSoftShadowMap;lamp.castShadow=true;lamp.shadow.mapSize.set(1024,1024);Object.assign(lamp.shadow.camera,{left:-.65,right:.65,top:.65,bottom:-.65,near:.1,far:3});lamp.shadow.bias=-.00015;lamp.shadow.normalBias=.0006;lamp.shadow.radius=3;
@@ -67,7 +67,7 @@ function start(){
    cancelCamera();flushDamping();
    const before={position:camera.position.clone(),target:controls.target.clone(),up:camera.up.clone(),shift:[camera.view?.offsetX/(camera.view?.fullWidth||1)||0,camera.view?.offsetY/(camera.view?.fullHeight||1)||0]};
    const pose=satelliteOrbitPose(before,center);
-   if(reduced.matches){camera.position.copy(pose.position);camera.up.copy(pose.up);controls.target.copy(pose.target);controls.update()}
+   if(reduced.matches){camera.position.copy(pose.position);camera.up.copy(pose.up);controls.target.copy(pose.target);syncOrbitAxis();controls.update()}
    else cameraTransition={start:performance.now(),before,...pose,shift:before.shift};
    invalidate();
   }
@@ -101,7 +101,12 @@ function start(){
  function visibleBounds(){scene.updateMatrixWorld(true);const b=new THREE.Box3();for(const m of meshes)if(m.visible)b.expandByObject(m);return b}
  // Orbit target is a stable physical anchor. Projection offset composes the silhouette
  // independently, without moving any model geometry or making selection change the pivot.
- function flushDamping(){const old=controls.enableDamping;controls.enableDamping=false;controls.update();controls.enableDamping=old}
+ function syncOrbitAxis(){
+  // OrbitControls caches the up axis at construction. Focus and presets can change it.
+  controls._quat.setFromUnitVectors(camera.up, new THREE.Vector3(0,1,0));
+  controls._quatInverse.copy(controls._quat).invert();
+ }
+ function flushDamping(){syncOrbitAxis();const old=controls.enableDamping;controls.enableDamping=false;controls.update();controls.enableDamping=old}
  // Cached local mesh bounds: conservative framing without scanning a million vertices.
  function geometryPoints(parts=meshes.filter(m=>m.visible)){
   scene.updateMatrixWorld(true);const points=[];
@@ -127,8 +132,8 @@ function start(){
   camera.zoom=1;
   const framed=frameCamera(camera,points,c,dir,panel.clientWidth,panel.clientHeight);fitAspect=camera.aspect;if(!framed)return;
   controls.maxDistance=Math.max(5,framed.extent*20);const [sx,sy]=framed.shift;
-  controls.update();camera.updateMatrixWorld(true);
-  if(hasFramed&&!reduced.matches){cameraTransition={start:performance.now(),before,position:camera.position.clone(),target:controls.target.clone(),up:camera.up.clone(),shift:[sx,sy]};camera.position.copy(before.position);camera.up.copy(before.up);controls.target.copy(before.target);camera.setViewOffset(panel.clientWidth,panel.clientHeight,before.shift[0]*panel.clientWidth,before.shift[1]*panel.clientHeight,panel.clientWidth,panel.clientHeight);controls.update()}
+  syncOrbitAxis();controls.update();camera.updateMatrixWorld(true);
+  if(hasFramed&&!reduced.matches){cameraTransition={start:performance.now(),before,position:camera.position.clone(),target:controls.target.clone(),up:camera.up.clone(),shift:[sx,sy]};camera.position.copy(before.position);camera.up.copy(before.up);controls.target.copy(before.target);camera.setViewOffset(panel.clientWidth,panel.clientHeight,before.shift[0]*panel.clientWidth,before.shift[1]*panel.clientHeight,panel.clientWidth,panel.clientHeight);syncOrbitAxis();controls.update()}
   hasFramed=true;metrics.fitCount++;metrics.fitMs=performance.now()-fitStart;invalidate();
  }
  function fitModel(kind=null){clearFocus();fit(kind)}
@@ -188,6 +193,10 @@ function start(){
  function focusSelected(){
   if(!selected)return;
   focusReveal.clear();applyMaterials();orbitMode='focus';
+  if (info(selected.name).group === 'floor_electronics') {
+   // A floor board stays visible from either side even as the camera crosses the chassis.
+   for (const part of meshes) if (part.visible && info(part.name).group === 'chassis') focusReveal.add(part);
+  }
   const box=inspection.bounds(selected),pose=inspection.view(selected,center);
   fit('iso',box,pose);
   // Reveal actual intervening components at the destination. Keep visibility,
@@ -280,7 +289,7 @@ function start(){
  bindDisplay:(name,options)=>{const mesh=model?.getObjectByName(name);if(!mesh)throw Error(`Screen mesh not found: ${name}`);return display.bind(mesh,options)},
  select:id=>{const m=inspection?.items.find(x=>x.name===id)||meshes.find(x=>x.name===id);if(!m)throw Error(`Unknown component ${id}`);return select(m)},
  setVisible:(id,value)=>{if(typeof value!=='boolean')throw new TypeError('Visibility must be boolean');const part=inspection?.items.find(m=>m.name===id)||meshes.find(m=>m.name===id);if(!part)throw Error(`Unknown component ${id}`);for(const member of selectionMembers(canonical(part)))partVis.set(member.name,value);syncVisibility();listParts()},
- focusMount:id=>{const members=meshes.filter(m=>info(m.name).mounting_id===id&&info(m.name).fixture_instance===1);if(!members.length)throw Error('No candidate fixtures for '+id);const box=new THREE.Box3();for(const m of members)box.expandByObject(m);const clip=members.find(m=>info(m.name).fixture_role==='clip')||members[0];select(clip);orbitMode='focus';fit('iso',box);cameraTransition=null;const target=box.getCenter(new THREE.Vector3()),distance=camera.position.distanceTo(target);const dir=new THREE.Vector3(.4,-1.8,.65).transformDirection(clip.matrixWorld);camera.up.copy(new THREE.Vector3(0,0,1).transformDirection(clip.matrixWorld));camera.position.copy(target).addScaledVector(dir,distance);controls.target.copy(target);controls.update()},
+ focusMount:id=>{const members=meshes.filter(m=>info(m.name).mounting_id===id&&info(m.name).fixture_instance===1);if(!members.length)throw Error('No candidate fixtures for '+id);const box=new THREE.Box3();for(const m of members)box.expandByObject(m);const clip=members.find(m=>info(m.name).fixture_role==='clip')||members[0];select(clip);orbitMode='focus';fit('iso',box);cameraTransition=null;const target=box.getCenter(new THREE.Vector3()),distance=camera.position.distanceTo(target);const dir=new THREE.Vector3(.4,-1.8,.65).transformDirection(clip.matrixWorld);camera.up.copy(new THREE.Vector3(0,0,1).transformDirection(clip.matrixWorld));camera.position.copy(target).addScaledVector(dir,distance);controls.target.copy(target);syncOrbitAxis();controls.update()},
  capture:()=>{if(instancesDirty){instances?.sync(selected,focusReveal);instancesDirty=false}renderScene();return renderer.domElement.toDataURL('image/png')},
  inspectMounts,reset,fit:()=>fitModel(),focus:()=>qs('#focus-selected').click(),view:kind=>{if(kind==='miner')return viewMiner();if(!['iso','top','bottom','side','front','rear'].includes(kind))throw Error('Unknown camera view');fitModel(kind)},
  projectedBounds:()=>projectionBounds(geometryPoints()),
@@ -294,7 +303,7 @@ function start(){
  qs('#fit-model').onclick=()=>fitModel();qs('#zoom-in').onclick=()=>{cancelCamera();flushDamping();camera.position.sub(controls.target).multiplyScalar(.82).add(controls.target);controls.update()};qs('#zoom-out').onclick=()=>{cancelCamera();flushDamping();camera.position.sub(controls.target).multiplyScalar(1.22).add(controls.target);controls.update()};const onKeyDown=e=>{if(e.key.toLowerCase()==='f'&&!['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)){e.preventDefault();fitModel()}};document.addEventListener('keydown',onKeyDown);
  let lastSize=[0,0,0];
  function resize(){const w=panel.clientWidth,h=panel.clientHeight,dpr=Math.min(devicePixelRatio||1,quality==='studio'?2:1);if(!w||!h||lastSize[0]===w&&lastSize[1]===h&&lastSize[2]===dpr)return;
-  lastSize=[w,h,dpr];metrics.resizeCount++;cancelCamera();
+  lastSize=[w,h,dpr];metrics.resizeCount++;
   let sx=camera.view?.offsetX/(camera.view?.fullWidth||1)||0,sy=camera.view?.offsetY/(camera.view?.fullHeight||1)||0;
   const previousAspect=camera.aspect,previousZoom=camera.zoom;
   renderer.setPixelRatio(dpr);renderer.setSize(w,h,false);camera.aspect=w/h;
@@ -310,6 +319,7 @@ function start(){
  function localOffset(m,cadVector){const length=cadVector.length();const inv=new THREE.Matrix4().copy(m.parent.matrixWorld).invert();return cadVector.clone().transformDirection(model.getObjectByName('world').matrixWorld).transformDirection(inv).multiplyScalar(length)}
  let shadowProperties=null;
  function renderScene(){
+  if (studioFloor) studioFloor.visible = orbitMode !== 'focus';
   if(model&&!renderReady)return;
   lamp.updateWorldMatrix(true,false);lamp.target.updateWorldMatrix(true,false);
   const c=lamp.shadow.camera,key=JSON.stringify([lamp.matrixWorld.elements,lamp.target.matrixWorld.elements,lamp.visible,lamp.castShadow,c.left,c.right,c.top,c.bottom,c.near,c.far,lamp.shadow.mapSize.toArray(),lamp.shadow.bias,lamp.shadow.normalBias,lamp.shadow.radius]);

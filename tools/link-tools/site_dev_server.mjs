@@ -10,7 +10,7 @@ const a = {}; const av = process.argv.slice(2);
 for (let i = 0; i < av.length; i += 2) a[av[i].replace(/^--/, '')] = av[i + 1];
 const root = path.resolve(a.site || fileURLToPath(new URL('../../site', import.meta.url)));
 const bridge = new URL(a.bridge || 'http://127.0.0.1:8080');
-const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2' };
+const types = { '.html': 'text/html', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.png': 'image/png', '.jpg':'image/jpeg', '.webp':'image/webp', '.mp4':'video/mp4', '.svg': 'image/svg+xml', '.json': 'application/json', '.woff2': 'font/woff2', '.ttf':'font/ttf' };
 http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/telemetry/')) {
@@ -24,6 +24,18 @@ http.createServer((req, res) => {
   let f = path.join(root, decodeURIComponent(u.pathname));
   if (!f.startsWith(root)) { res.writeHead(403); return res.end(); }
   if (u.pathname.endsWith('/')) f = path.join(f, 'index.html');
+  if (path.extname(f) === '.mp4') {
+    fs.stat(f, (error, stat) => {
+      if(error){res.writeHead(404);res.end('not found');return;}
+      const range=req.headers.range?.match(/^bytes=(\d+)-(\d*)$/);
+      const start=range?Number(range[1]):0,end=range&&range[2]?Math.min(Number(range[2]),stat.size-1):stat.size-1;
+      if(start>end||start>=stat.size){res.writeHead(416,{'Content-Range':`bytes */${stat.size}`});res.end();return;}
+      res.writeHead(range?206:200,{'Content-Type':'video/mp4','Accept-Ranges':'bytes','Content-Length':end-start+1,...(range?{'Content-Range':`bytes ${start}-${end}/${stat.size}`}:{})});
+      if(req.method==='HEAD'){res.end();return;}
+      const stream=fs.createReadStream(f,{start,end});res.on('close',()=>stream.destroy());stream.pipe(res);
+    });
+    return;
+  }
   fs.readFile(f, (e, d) => {
     if (e) { res.writeHead(404); return res.end('not found'); }
     res.writeHead(200, { 'Content-Type': types[path.extname(f)] || 'application/octet-stream' }); res.end(d);

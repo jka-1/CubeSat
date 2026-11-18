@@ -22,6 +22,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('source/bridge/package-lock.json', '{}');
   write('source/bridge/telemetry-auth.mjs', 'new telemetry auth');
   write('source/bridge/aps.mjs', 'new APS');
+  write('source/bridge/contact.mjs', 'new contact');
   write('source/bridge/register-registry.mjs', 'new register registry');
   write('source/bridge/recording/client.mjs', 'new module');
   write('source/bridge/sequence/engine.mjs', 'new sequence');
@@ -34,6 +35,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   write('live/bridge/package-lock.json', '{}');
   write('live/bridge/telemetry-auth.mjs', 'old telemetry auth');
   write('live/bridge/aps.mjs', 'old APS');
+  write('live/bridge/contact.mjs', 'old contact');
   write('live/bridge/register-registry.mjs', 'old register registry');
   write('live/bridge/recording/client.mjs', 'old module');
   write('live/bridge/sequence/engine.mjs', 'old sequence');
@@ -67,6 +69,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'old telemetry auth');
   assert.equal(readFileSync(join(live, 'bridge/sequence/engine.mjs'), 'utf8'), 'old sequence');
   assert.equal(readFileSync(join(live, 'bridge/aps.mjs'), 'utf8'), 'old APS');
+  assert.equal(readFileSync(join(live, 'bridge/contact.mjs'), 'utf8'), 'old contact');
   assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'old register registry');
   writeFileSync(join(root, 'bin/curl'), '#!/bin/sh\nprintf \'{"status":"ok"}\'\n');
   execFileSync('bash', [deploy], { env });
@@ -74,6 +77,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(readFileSync(join(live, 'bridge/sequence/engine.mjs'), 'utf8'), 'new sequence');
   assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'new auth');
   assert.equal(readFileSync(join(live, 'bridge/aps.mjs'), 'utf8'), 'new APS');
+  assert.equal(readFileSync(join(live, 'bridge/contact.mjs'), 'utf8'), 'new contact');
   assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'new register registry');
   assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'new account tool');
   assert.equal(readFileSync(join(live, 'bridge/telemetry-auth.mjs'), 'utf8'), 'new telemetry auth');
@@ -84,6 +88,7 @@ test('deployment preflights dependencies and backs up/restores bridge modules wi
   assert.equal(readFileSync(join(live, 'bridge/recording/client.mjs'), 'utf8'), 'old module');
   assert.equal(readFileSync(join(live, 'bridge/sequence/engine.mjs'), 'utf8'), 'old sequence');
   assert.equal(readFileSync(join(live, 'bridge/aps.mjs'), 'utf8'), 'old APS');
+  assert.equal(readFileSync(join(live, 'bridge/contact.mjs'), 'utf8'), 'old contact');
   assert.equal(readFileSync(join(live, 'bridge/register-registry.mjs'), 'utf8'), 'old register registry');
   assert.equal(readFileSync(join(live, 'bridge/auth/session.mjs'), 'utf8'), 'old auth');
   assert.equal(readFileSync(join(live, 'bridge/tools/auth-user.mjs'), 'utf8'), 'old account tool');

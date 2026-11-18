@@ -1,34 +1,44 @@
-import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v=20261109e';
-import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261112-registers';
-import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261109e';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261112-registers';
-import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261112-library-dropdown';
-import { initRunsPage, destroyRunsPage } from './runs.js?v=20261112-sequences';
-import { initTwinPage, destroyTwinPage } from './twin.js?v=20261111-sync';
+import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v=20261118-telemetry';
+import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261118-telemetry';
+import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261118-telemetry';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261118-telemetry';
+import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261118-telemetry';
+import { initRunsPage, destroyRunsPage } from './runs.js?v=20261118-telemetry';
+import { initTwinPage, destroyTwinPage } from './twin.js?v=20261118-revision';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
+import { initPublicPage, destroyPublicPage } from './public-pages.mjs?v=20261118-telemetry';
 
 function updateStreamingBadge() {
   const badge = document.getElementById('streamingNavBadge');
-  if (badge) badge.hidden = !isStreamingMode();
+  if (badge) badge.hidden = currentRoute === 'communication' || !isStreamingMode();
 }
 window.addEventListener('streaming-telemetry-mode', updateStreamingBadge);
 
-const assetVersion = '20261104b';
+const assetVersion = '20261118-revision';
 
 const routes = {
   home: `./modules/home.html?v=${assetVersion}`,
-  communication: `./modules/communication.html?v=20261112-registers`,
+  privacy: './modules/privacy.html',
+  accessibility: './modules/accessibility.html',
+  credits: './modules/credits.html',
+  team: './modules/team.html?v=20261118',
+  resources: './modules/resources.html?v=20261118',
+  contact: './modules/contact.html?v=20261118',
+  communication: `./modules/communication.html?v=20261118-telemetry`,
   'link-health': `./modules/link-health.html?v=20261112-order-scroll`,
   'debug-mode': '/telemetry/operator-pages/debug-mode',
   runs: `./modules/runs.html?v=20261112-order-scroll`,
   sequences: '/telemetry/operator-pages/sequences',
-  twin: `./modules/twin.html?v=20261112-order-scroll`,
+  twin: `./modules/twin.html?v=20261118-revision`,
   manual: '/telemetry/operator-pages/manual',
   partners: `./modules/partners.html?v=${assetVersion}` // unlinked from nav; reachable only by #partners
 };
 
 const pageInitializers = {
-  home: () => {},
+  home: () => initPublicPage('home'),
+  team: () => initPublicPage('team'),
+  resources: () => initPublicPage('resources'),
+  contact: () => initPublicPage('contact'),
   communication: initI2CPage,
   'link-health': initLinkHealthPage,
   'debug-mode': initDebugModePage,
@@ -39,7 +49,10 @@ const pageInitializers = {
 };
 
 const pageDestroyers = {
-  home: () => {},
+  home: destroyPublicPage,
+  team: destroyPublicPage,
+  resources: destroyPublicPage,
+  contact: destroyPublicPage,
   communication: destroyI2CPage,
   'link-health': destroyLinkHealthPage,
   'debug-mode': destroyDebugModePage,
@@ -59,7 +72,7 @@ function updateSectionScroll() {
   const next = document.getElementById('dashboardNext');
   if (navigation.hidden) return;
   // Compare with the full available strip so the arrows do not sustain overflow themselves.
-  const overflowing = tabs.scrollWidth > navigation.clientWidth - 16 + 1;
+  const overflowing = tabs.scrollWidth > tabs.clientWidth + 1 && getComputedStyle(navigation).position !== 'fixed';
   previous.hidden = next.hidden = !overflowing;
   previous.disabled = tabs.scrollLeft <= 1;
   next.disabled = tabs.scrollLeft + tabs.clientWidth >= tabs.scrollWidth - 1;
@@ -85,7 +98,16 @@ function resolveRoute(route) {
 }
 
 function updateNav(route) {
-  const dashboard = !['home', 'partners', 'account'].includes(route);
+  const dashboard = !['home', 'team', 'resources', 'contact', 'privacy', 'accessibility', 'credits', 'partners', 'account'].includes(route);
+  document.body.dataset.surface = dashboard ? 'dashboard' : 'public';
+  const account = document.querySelector('.account-control');
+  if (account) document.getElementById(dashboard ? 'dashboardAccount' : 'publicAccount')?.append(account);
+  // The same identity link lives in the sidebar at desktop widths.
+  placeDashboardBrand();
+  document.body.dataset.page = route;
+  document.getElementById('publicFooter').hidden = dashboard;
+  const titles = {home:'The project',team:'Our team',resources:'Resources',contact:'Contact us',privacy:'Privacy',accessibility:'Accessibility',credits:'Credits & Licenses',account:'Sign in',communication:'Telemetry','link-health':'Network statistics',runs:'Logged telemetry',twin:'Digital twin','debug-mode':'Programming',sequences:'Branch definition',manual:'Manual'};
+  document.title = `${titles[route] || 'Dashboard'} · ${dashboard ? 'Orbital Address' : 'KnightEPS'}`;
   document.getElementById('dashboardTabs').hidden = !dashboard;
   document.getElementById('dashboardNavigation').hidden = !dashboard;
   document.querySelectorAll('#dashboardTabs [data-operator-only]').forEach((node) => { node.hidden = !isOperator(); });
@@ -108,8 +130,15 @@ function showOperatorDenied(route) {
 
 async function loadRoute(route) {
   if (currentRoute === 'sequences' && resolveRoute(route) === 'sequences' && allowRoute('sequences')) return;
-  if (currentRoute === 'sequences' && allowRoute('sequences') && !confirmLeaveSequences()) { history.replaceState(null, '', '#sequences'); return; }
   const id = ++navigationId;
+  if (currentRoute === 'sequences' && allowRoute('sequences')) {
+    const mayLeave = await confirmLeaveSequences();
+    if (id !== navigationId) return;
+    if (!mayLeave) {
+      history.replaceState(null, '', '#sequences');
+      return;
+    }
+  }
   if (route === 'account') {
     if (currentRoute && pageDestroyers[currentRoute]) pageDestroyers[currentRoute]();
     currentRoute = null;
@@ -141,7 +170,14 @@ async function loadRoute(route) {
   root.replaceChildren();
   updateNav(safeRoute);
   root.hidden = false;
-  const response = await fetch(routes[safeRoute]);
+  let response;
+  try { response = await fetch(routes[safeRoute]); }
+  catch {
+    if (id !== navigationId) return;
+    root.innerHTML = '<section class="page"><h1>Page unavailable</h1><p>Check your connection and reload this page.</p><button class="button" type="button" id="routeRetry">Retry</button></section>';
+    document.getElementById('routeRetry').addEventListener('click', () => loadRoute(safeRoute));
+    return;
+  }
   const html = await response.text();
   if (id !== navigationId || !allowRoute(safeRoute)) return;
 
@@ -157,8 +193,8 @@ async function loadRoute(route) {
   if (!isOperator()) root.querySelectorAll('[data-operator-only]').forEach((node) => node.remove());
   root.querySelectorAll('[data-operator-controls]').forEach((node) => { node.hidden = !isOperator(); });
   updateNav(safeRoute);
-  updateStreamingBadge();
   currentRoute = safeRoute;
+  updateStreamingBadge();
 
   if (window.location.hash !== `#${safeRoute}`) {
     history.replaceState(null, '', `#${safeRoute}`);
@@ -167,9 +203,20 @@ async function loadRoute(route) {
   if (pageInitializers[safeRoute]) {
     pageInitializers[safeRoute]();
   }
+  window.scrollTo({top:0, behavior:'instant'});
+  root.focus({preventScroll:true});
+}
+
+const sidebarDesktop = typeof matchMedia === 'function' ? matchMedia('(min-width: 1001px)') : null;
+function placeDashboardBrand() {
+  const brand = document.querySelector('.brand');
+  const target = document.body.dataset.surface === 'dashboard' && sidebarDesktop?.matches
+    ? document.getElementById('sidebarTop') : document.querySelector('.site-header .nav');
+  if (brand && target && brand.parentElement !== target) target.prepend(brand);
 }
 
 export function initRouter() {
+  sidebarDesktop?.addEventListener('change', placeDashboardBrand);
   const tabs = document.getElementById('dashboardTabs');
   document.getElementById('dashboardPrevious').addEventListener('click', () => { tabs.scrollLeft -= Math.max(160, tabs.clientWidth * 0.75); updateSectionScroll(); });
   document.getElementById('dashboardNext').addEventListener('click', () => { tabs.scrollLeft += Math.max(160, tabs.clientWidth * 0.75); updateSectionScroll(); });

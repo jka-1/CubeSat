@@ -1,21 +1,20 @@
-<section id="communication" class="page active i2c-page">
+<section id="communication" class="page active i2c-page" data-view="simple">
   <header class="i2c-page-header">
     <div>
-      <h1>I²C Power System</h1>
+      <h1>Telemetry</h1>
+      <p class="telemetry-subtitle">Power system · I²C devices &amp; ADC sensors</p>
     </div>
     <div class="i2c-mode-key" aria-label="Bus view legend">
+      <div class="mode-switch" role="group" aria-label="Telemetry detail level"><button type="button" data-telemetry-view="simple" aria-pressed="true">Simple</button><button type="button" data-telemetry-view="advanced" aria-pressed="false">Advanced</button></div>
       <span><i class="legend-line sda"></i>SDA data</span>
       <span><i class="legend-line scl"></i>SCL clock</span>
-      <div class="i2c-mock-control" data-tooltip="Mock Telemetry uses locally generated values. Turn it off to view packets from the ESP32." data-tooltip-icon>
-        <label class="status-pill i2c-mock-toggle" for="mockModeToggle">
-          <input id="mockModeToggle" type="checkbox" />
-          Mock Telemetry
-        </label>
-      </div>
+      <label for="mockModeToggle" hidden>Mock Telemetry</label>
+      <input id="mockModeToggle" type="checkbox" hidden />
     </div>
   </header>
 
   <p id="detailDataNote" class="i2c-data-note" hidden></p>
+  <div id="telemetryOverview" data-telemetry-overview></div>
 
   <section class="i2c-workspace" aria-label="Interactive I²C bus topology">
     <div class="telemetry-page-bank" aria-label="Telemetry and peripheral pages">
@@ -89,12 +88,11 @@
 
     </div>
 
-    <div id="i2cDetailLayer" class="i2c-detail-layer" aria-hidden="true">
+  </section>
+
+    <dialog id="i2cDetailLayer" class="i2c-detail-layer" aria-labelledby="i2cDetailTitle">
       <section
         class="i2c-detail-window"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="i2cDetailTitle"
         tabindex="-1"
       >
         <header class="detail-window-header">
@@ -224,12 +222,5 @@
           </div>
         </div>
       </section>
-    </div>
-  </section>
-
-  <section class="card st-i2c-section" id="i2cStreamCard">
-    <div class="card-header"><h3 class="card-title">Streaming Telemetry</h3>
-      <label class="st-section-toggle"><input type="checkbox" id="i2cStreamToggle" /><span class="st-switch"></span><span id="i2cStreamToggleText">Off</span></label></div>
-    <div class="card-body"><div id="i2cStreamRoot"></div></div>
-  </section>
+    </dialog>
 </section>

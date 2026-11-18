@@ -1,4 +1,4 @@
-import { availableRegisters, operatorRegisters, registerName } from './operator-registers.mjs';
+import { availableRegisters, operatorRegisters, registerName } from './operator-registers.mjs?v=20261118-telemetry';
 import { WRITABLE_REGISTER_WIDTHS } from './register-policy.mjs?v=20261112-registers';
 
 // Suggestions preserve manual free-text commands. Selecting a known read also restores its width.

@@ -96,7 +96,7 @@
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
         "name": "Chassis · Body A",
-        "model": "6U XL prototype chassis",
+        "model": "6U prototype chassis",
         "purpose": "Holds the electronics and provides the frame for the cover and solar-panel supports.",
         "links": [],
         "fields": []
@@ -172,7 +172,7 @@
       "active_source": "sources/UserRevision/Revised_Phase7.glb",
       "display_info": {
         "name": "Chassis · Body B",
-        "model": "6U XL prototype chassis",
+        "model": "6U prototype chassis",
         "purpose": "Holds the electronics and provides the frame for the cover and solar-panel supports.",
         "links": [],
         "fields": []

@@ -121,13 +121,13 @@ class RecordingsPage(QWidget):
         ig.setColumnStretch(1, 1); ig.setColumnStretch(3, 1)
         rv.addWidget(info)
         gb = QHBoxLayout()
-        self.metric = QComboBox()
-        for mid, label, unit, _ in M.RUN_METRICS: self.metric.addItem("%s (%s)" % (label, unit), mid)
-        self.window = QComboBox()
-        for k, label in M.WINDOW_PRESETS: self.window.addItem(label, k)
-        self.metric.currentIndexChanged.connect(self.load_series); self.window.currentIndexChanged.connect(self.load_series)
+        self.metric_combo = QComboBox()
+        for mid, label, unit, _ in M.RUN_METRICS: self.metric_combo.addItem("%s (%s)" % (label, unit), mid)
+        self.window_combo = QComboBox()
+        for k, label in M.WINDOW_PRESETS: self.window_combo.addItem(label, k)
+        self.metric_combo.currentIndexChanged.connect(self.load_series); self.window_combo.currentIndexChanged.connect(self.load_series)
         self.export_btn = QPushButton("Export CSV…"); self.export_btn.clicked.connect(self.export_csv)
-        for x in (QLabel("Metric"), self.metric, QLabel("Window"), self.window): gb.addWidget(x)
+        for x in (QLabel("Metric"), self.metric_combo, QLabel("Window"), self.window_combo): gb.addWidget(x)
         gb.addStretch(1); gb.addWidget(self.export_btn)
         rv.addLayout(gb)
         self.chart = SeriesChart(); rv.addWidget(self.chart, 3)
@@ -250,10 +250,10 @@ class RecordingsPage(QWidget):
 
     # ---------------------------------------------------------------- series/events
     def _window(self):
-        return M.window_for_preset(self.selected, self.window.currentData(), time.time() * 1000)
+        return M.window_for_preset(self.selected, self.window_combo.currentData(), time.time() * 1000)
 
     def _metric(self):
-        mid = self.metric.currentData()
+        mid = self.metric_combo.currentData()
         return next(m for m in M.RUN_METRICS if m[0] == mid)
 
     def load_series(self):

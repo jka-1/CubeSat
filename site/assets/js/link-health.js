@@ -1,4 +1,4 @@
-import { apiFetch, telemetryUrl } from './auth.js?v=20261109e';
+import { apiFetch, telemetryUrl } from './auth.js?v=20261118-telemetry';
 import { analyzeWindow } from './link-stats.mjs?v=20261013a';
 
 const MAX_AGE_MS = 3_600_000;
@@ -8,7 +8,7 @@ const state = { es: null, events: [], commands: [], lastEndpoint: null, portChan
 const $ = (id) => document.getElementById(id);
 
 function css(name, fallback) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
+  return getComputedStyle(document.body).getPropertyValue(name).trim() || fallback;
 }
 
 function drawChart(canvas, datasets, { yLabel = '', bars = false, start, end, yMin = null } = {}) {
@@ -19,14 +19,14 @@ function drawChart(canvas, datasets, { yLabel = '', bars = false, start, end, yM
   const g = canvas.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
   const L = 44, R = 10, T = 10, B = 22;
   const pts = datasets.flatMap((d) => d.points.filter((p) => p[1] !== null && Number.isFinite(p[1])));
-  g.font = '11px Arial'; g.fillStyle = css('--white-soft', '#ede8d9');
+  g.font = '11px Manrope'; g.fillStyle = css('--white-soft', '#ede8d9');
   if (!pts.length) { g.fillText('no data in window', L + 8, h / 2); return; }
   let lo = yMin ?? Math.min(...pts.map((p) => p[1])); let hi = Math.max(...pts.map((p) => p[1]));
   if (hi === lo) { hi += 1; lo -= yMin === null ? 1 : 0; }
   const pad = (hi - lo) * 0.08; hi += pad; if (yMin === null) lo -= pad;
   const x = (t) => L + ((t - start) / (end - start)) * (w - L - R);
   const y = (v) => T + (1 - (v - lo) / (hi - lo)) * (h - T - B);
-  g.strokeStyle = 'rgba(212,175,55,0.18)'; g.lineWidth = 1;
+  g.strokeStyle = css('--hairline', '#dce0e6'); g.lineWidth = 1;
   for (let i = 0; i <= 3; i++) {
     const v = lo + ((hi - lo) * i) / 3; const yy = y(v);
     g.beginPath(); g.moveTo(L, yy); g.lineTo(w - R, yy); g.stroke();

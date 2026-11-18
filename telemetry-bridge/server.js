@@ -10,8 +10,10 @@ import { SequenceEngine } from './sequence/engine.mjs';
 import { snapshotSequence } from './sequence/dependencies.mjs';
 import { validateSequence } from './sequence/model.mjs';
 import { ApsClient } from './aps.mjs';
+import { ContactService } from './contact.mjs';
 
 const sessions = new Sessions();
+const contactService = new ContactService();
 
 const httpPort = readPort('HTTP_PORT', 8080);
 const udpPort = readPort('UDP_PORT', 3333);
@@ -1800,6 +1802,18 @@ const httpServer = http.createServer(async (request, response) => {
   try {
     response.setHeader('Cache-Control', 'no-store');
     response.setHeader('X-Content-Type-Options', 'nosniff');
+    if (requestUrl.pathname === '/contact') {
+      if (request.method !== 'POST') { response.setHeader('Allow','POST'); sendJson(response,405,{error:'Use the contact form to send a message.'}); return; }
+      try {
+        contactService.authorize(request);
+        const body = await readJsonBody(request, 24 * 1024);
+        sendJson(response,200,await contactService.send(body));
+      } catch (error) {
+        if(error.statusCode===429)response.setHeader('Retry-After','900');
+        sendJson(response,error.statusCode||400,{error:error.statusCode?error.message:'The contact form could not be read.',...(error.fields?{fields:error.fields}:{})});
+      }
+      return;
+    }
     if (request.method === 'GET' && requestUrl.pathname === '/auth/status') {
       sendJson(response, 200, { enabled: sessions.enabled });
       return;

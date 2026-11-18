@@ -1,0 +1,440 @@
+{
+  "browser": {
+    "results": [
+      {
+        "name": "public hero has no horizontal overflow",
+        "pass": true
+      },
+      {
+        "name": "hero uses supplied film with decoded frames",
+        "pass": true
+      },
+      {
+        "name": "hero reverses to the correct film frame and has no manual stills switch",
+        "pass": true
+      },
+      {
+        "name": "mobile hero fits width",
+        "pass": true
+      },
+      {
+        "name": "team desktop fits width",
+        "pass": true
+      },
+      {
+        "name": "team mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "Resources navigation stays under the header and tracks the selection",
+        "pass": true
+      },
+      {
+        "name": "resources desktop fits width",
+        "pass": true
+      },
+      {
+        "name": "resources mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "software details dock below the chart on mobile and iframe expands",
+        "pass": true
+      },
+      {
+        "name": "contact desktop fits width",
+        "pass": true
+      },
+      {
+        "name": "contact mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "contact rejects invalid email before submission",
+        "pass": true
+      },
+      {
+        "name": "contact reports an honest unconfigured state",
+        "pass": true
+      },
+      {
+        "name": "sign-in is separate from dashboard navigation",
+        "pass": true
+      },
+      {
+        "name": "Simple shows the bus with mock data and no streaming card",
+        "pass": true
+      },
+      {
+        "name": "telemetry simple mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "advanced mode exposes measurement charts and complete packet evidence",
+        "pass": true
+      },
+      {
+        "name": "Advanced renders five focused component charts",
+        "pass": true
+      },
+      {
+        "name": "kit readout has inline trends, cell meters and charger rails",
+        "pass": true
+      },
+      {
+        "name": "Pause holds the Advanced readout while the UTC clock remains present",
+        "pass": true
+      },
+      {
+        "name": "paused trend can inspect the selected frozen series",
+        "pass": true
+      },
+      {
+        "name": "Resume catches up to buffered telemetry",
+        "pass": true
+      },
+      {
+        "name": "sidebar account shows the signed-in identity and role",
+        "pass": true
+      },
+      {
+        "name": "battery details open above the dashboard",
+        "pass": true
+      },
+      {
+        "name": "battery details close and restore focus",
+        "pass": true
+      },
+      {
+        "name": "telemetry advanced mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "desktop sidebar houses the product identity and active route",
+        "pass": true
+      },
+      {
+        "name": "sidebar collapses with accessible icon links",
+        "pass": true
+      },
+      {
+        "name": "light mode preserves the mounted instrument and route",
+        "pass": true
+      },
+      {
+        "name": "dashboard logo switches foreground with appearance",
+        "pass": true
+      },
+      {
+        "name": "mobile account can switch back to dark",
+        "pass": true
+      },
+      {
+        "name": "returning to live removes simulated snapshot values",
+        "pass": true
+      },
+      {
+        "name": "viewer cannot open branch definitions",
+        "pass": true
+      },
+      {
+        "name": "saved conditional reloads with both paths",
+        "pass": true
+      },
+      {
+        "name": "simulation follows TRUE path",
+        "pass": true
+      },
+      {
+        "name": "simulation follows FALSE path",
+        "pass": true
+      },
+      {
+        "name": "cancel sign-out keeps the operator draft",
+        "pass": true
+      },
+      {
+        "name": "branch definition persists through the unchanged backend API",
+        "pass": true
+      },
+      {
+        "name": "saved definition delete opens native dialog focused on Cancel",
+        "pass": true
+      },
+      {
+        "name": "cancel keeps the saved definition",
+        "pass": true
+      },
+      {
+        "name": "branch editor mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "UDP packet values reach the I\u00b2C readout through SSE",
+        "pass": true
+      },
+      {
+        "name": "saved runs remain searchable above the selected run",
+        "pass": true
+      },
+      {
+        "name": "recorded run has selectable metrics and CSV controls",
+        "pass": true
+      },
+      {
+        "name": "link-health mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "debug-mode mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "manual mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "drag orbits the focused component after a double click",
+        "pass": true
+      },
+      {
+        "name": "floor PCB can be orbited from beneath without losing the target",
+        "pass": true
+      },
+      {
+        "name": "twin mobile fits width",
+        "pass": true
+      },
+      {
+        "name": "telemetry fits 1024px",
+        "pass": true
+      },
+      {
+        "name": "resources fit 1024px",
+        "pass": true
+      },
+      {
+        "name": "telemetry fits 768px",
+        "pass": true
+      },
+      {
+        "name": "resources fit 768px",
+        "pass": true
+      },
+      {
+        "name": "privacy page loads through the public router",
+        "pass": true
+      },
+      {
+        "name": "Privacy fits at 1440",
+        "pass": true
+      },
+      {
+        "name": "Privacy fits at 768",
+        "pass": true
+      },
+      {
+        "name": "Privacy fits at 390",
+        "pass": true
+      },
+      {
+        "name": "accessibility page loads through the public router",
+        "pass": true
+      },
+      {
+        "name": "credits page loads through the public router",
+        "pass": true
+      },
+      {
+        "name": "reduced motion uses still images without a scroll trap",
+        "pass": true
+      },
+      {
+        "name": "sign-out releases the session from the public account menu",
+        "pass": true
+      },
+      {
+        "name": "no browser exceptions",
+        "pass": true
+      }
+    ],
+    "errors": [],
+    "failures": []
+  },
+  "nestedEditor": {
+    "results": [
+      {
+        "name": "nested branch operands fit 320",
+        "pass": true
+      },
+      {
+        "name": "menu accessible in viewport 320",
+        "pass": true
+      },
+      {
+        "name": "theme change preserves expanded nested draft 320",
+        "pass": true
+      },
+      {
+        "name": "nested branch operands fit 390",
+        "pass": true
+      },
+      {
+        "name": "menu accessible in viewport 390",
+        "pass": true
+      },
+      {
+        "name": "theme change preserves expanded nested draft 390",
+        "pass": true
+      },
+      {
+        "name": "nested branch operands fit 768",
+        "pass": true
+      },
+      {
+        "name": "menu accessible in viewport 768",
+        "pass": true
+      },
+      {
+        "name": "theme change preserves expanded nested draft 768",
+        "pass": true
+      },
+      {
+        "name": "nested branch operands fit 1024",
+        "pass": true
+      },
+      {
+        "name": "menu accessible in viewport 1024",
+        "pass": true
+      },
+      {
+        "name": "theme change preserves expanded nested draft 1024",
+        "pass": true
+      },
+      {
+        "name": "nested branch operands fit 1440",
+        "pass": true
+      },
+      {
+        "name": "menu accessible in viewport 1440",
+        "pass": true
+      },
+      {
+        "name": "theme change preserves expanded nested draft 1440",
+        "pass": true
+      }
+    ],
+    "errors": [],
+    "failures": []
+  },
+  "sequenceLibrary": [
+    "PASS opening menu makes no API write or load",
+    "PASS selecting a name does not load or save",
+    "PASS move saves confirmed shared order",
+    "PASS draft fields, pin and selection remain intact",
+    "PASS unchanged poll preserves exact focused DOM node",
+    "PASS failed save retains confirmed order and offers retry",
+    "PASS retry persists intended move",
+    "PASS stale move refreshes additions and reports conflict",
+    "PASS explicit conflict retry preserves every definition",
+    "PASS touch drag edge scroll reaches beyond visible library",
+    "PASS drag exposes insertion feedback",
+    "PASS touch drop reorders by stable ID while retaining concurrent addition",
+    "PASS deleted drag source cancels safely with useful feedback",
+    "PASS Escape dismisses and restores trigger focus",
+    "PASS empty library remains accessible",
+    "PASS all interactions leave unfinished editor data intact",
+    "PASS dropdown choice updates selection, closes and restores focus",
+    "PASS dropdown selection does not load, save or discard the editor",
+    "PASS End navigates choices without selecting or loading",
+    "PASS Home reaches the separate New choice without a write",
+    "PASS moving a definition persists order inside the open dropdown",
+    "PASS New choice is outside shared order and retains saved definitions",
+    "PASS New choice is not a draggable saved item",
+    "23 checks passed."
+  ],
+  "liveRehearsal": {
+    "results": [
+      {
+        "name": "preflight identifies the loopback device and saved revision",
+        "pass": true
+      },
+      {
+        "name": "live register-read command completes through the emulator",
+        "pass": true
+      },
+      {
+        "name": "pausing preserves the packet on screen",
+        "pass": true
+      },
+      {
+        "name": "UDP outage clears automatically with fresh data",
+        "pass": true
+      },
+      {
+        "name": "appearance change keeps live chart during interval 4",
+        "pass": true
+      },
+      {
+        "name": "appearance change keeps live chart during interval 8",
+        "pass": true
+      },
+      {
+        "name": "advanced telemetry progresses in every 15-second interval",
+        "pass": true,
+        "seconds": 180,
+        "firstSeq": 434,
+        "lastSeq": 2208
+      },
+      {
+        "name": "exported full recorded run",
+        "pass": true,
+        "exported": "Exported 1,794 packets from the current graph interval.",
+        "runName": "Rehearsal 1795011096126"
+      }
+    ],
+    "errors": [],
+    "failures": []
+  },
+  "emulator": {
+    "sent": 1826,
+    "dropped": 0,
+    "acks": 1826,
+    "cmds": 1,
+    "cmd_dropped": 0,
+    "ack_rtt_max_ms": 37,
+    "present_mask": 7,
+    "debug": true
+  },
+  "exportVerification": {
+    "run": "67dc67cf-070d-427f-9b9b-fd9b47468bfc",
+    "csvRows": 1794,
+    "storedCount": 1794,
+    "status": "completed",
+    "sha256": "9097292d73bc06b75b13776a4dd11609c09335f284173120b25dbbfad35d9e03",
+    "fieldsChecked": [
+      "sequence in raw UDP payload and decoded packet",
+      "raw_base64",
+      "received_at",
+      "power_source",
+      "mode",
+      "packet_order",
+      "envelope_json",
+      "pv.powerW"
+    ]
+  },
+  "browserReconnection": {
+    "results": [
+      {
+        "name": "viewer data stream reconnects and operator session survives client outage",
+        "pass": true
+      }
+    ],
+    "errors": [],
+    "failures": [],
+    "observations": [
+      "Disconnected browser SSE while UDP continued. Last displayed packet 403",
+      "SSE restored. New packet 433"
+    ]
+  }
+}

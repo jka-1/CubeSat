@@ -1,0 +1,49 @@
+/* The supplied four camera renditions share a stable stage below site navigation. */
+:root{--site-header-height:104px}
+.ke{--pad:40px;--hero-ink:#0d1113;color:#fff;background:var(--hero-ink)}
+.ke-story{position:relative;height:385svh;isolation:isolate;overflow-anchor:none}
+.ke-stage{position:sticky;top:var(--site-header-height);height:calc(100svh - var(--site-header-height));width:100%;overflow:hidden;background:#04090c;isolation:isolate}
+.ke-video,.ke-poster,.ke-poster img,.ke-frame,.ke-glint,.ke-vignette{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:none}
+.ke-video,.ke-poster img,.ke-frame,.ke-glint{object-fit:cover;object-position:center;transform-origin:50% 50%}
+.ke-vignette{background:linear-gradient(0deg,#060b10b5,transparent 45%),linear-gradient(70deg,#060b1055,transparent 60%)}
+.ke-title{position:absolute;left:var(--pad);bottom:clamp(68px,9vh,106px);right:var(--pad);color:#fff}
+.ke-title h1{font-family:'Barlow Condensed',sans-serif;font-size:clamp(80px,9.5vw,154px);font-weight:700;letter-spacing:-.03em;line-height:.95;margin:0;color:#fff}
+.ke-copy{display:flex;align-items:center;margin-top:12px;gap:28px;font-size:16px;font-weight:500}
+.ke-copy p{margin:0;max-width:42ch}
+.ke-copy button{min-height:44px;display:inline-flex;align-items:center;gap:14px;width:max-content;border:0;border-bottom:1px solid #c9c9bc;color:#fff;background:none;padding:6px 0;font-size:14px;font-weight:600}
+.ke-copy button:hover{border-color:#f2a33a}
+.ke-rail{position:absolute;bottom:max(22px,env(safe-area-inset-bottom));left:var(--pad);right:var(--pad);display:flex;align-items:center;gap:15px;font:11px/1.4 var(--font-ui);color:#fff;z-index:1}
+.ke-scroll{margin-left:auto}.ke-scroll b{color:#f2a33a;font-size:16px;font-weight:400;margin-left:6px}
+.ke-anchor{position:absolute;bottom:0;height:1px;pointer-events:none}
+.ke-nowrap{white-space:nowrap}
+.ke-arrow{display:inline-block;width:.63em;height:.63em;border-right:1px solid currentColor;border-bottom:1px solid currentColor;position:relative}
+.ke-arrow:after{content:'';position:absolute;right:0;bottom:0;width:.82em;border-top:1px solid currentColor;transform:rotate(45deg);transform-origin:right}
+.ke-glint{opacity:0;mix-blend-mode:screen;pointer-events:none}
+.ke-veiling{position:absolute;inset:0;pointer-events:none;background:#fff8e9;opacity:var(--solar-veil,0)}
+.ke-stills.ke-story{height:160svh}.ke-stills .ke-glint,.ke-stills .ke-veiling{display:none}.ke-stills .ke-title{transform:none!important}
+.ke .project-purpose{color:#0d1113}
+@media(max-width:720px){:root{--site-header-height:84px}.ke{--pad:20px}.ke-title{bottom:68px}.ke-title h1{font-size:clamp(68px,17vw,120px)}.ke-copy{display:block;font-size:14px;margin-top:16px;max-width:34ch}.ke-copy button{margin-top:6px}.ke-rail{font-size:10px;gap:10px}}
+@media(max-width:460px){:root{--site-header-height:134px}.ke-story{height:345svh}}
+@media(prefers-reduced-motion:reduce){.ke-story{height:160svh}.ke-glint,.ke-veiling{display:none}.ke-title{transform:none!important}}
+
+.ke-film {position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none}
+.ke-video[aria-hidden="true"]:not([hidden]) {pointer-events:none}
+.project-secondary {display:flex;flex-wrap:wrap;gap:4px 22px;margin-top:14px}
+.project-secondary a {display:inline-flex;align-items:center;min-height:44px;text-underline-offset:5px;font-weight:700}
+
+
+.ke-title {animation:ke-arrive .55s ease-out both}
+.ke-stage .ke-copy p {color:#f2f4f5;font-size:clamp(14px,1.15vw,18px);line-height:1.5}
+.ke-rail {border-top:1px solid #ffffff38;padding-top:9px;font-size:12px}
+.ke-scroll {display:flex;align-items:center}
+.ke-copy .ke-arrow {transition:transform .16s ease}
+.ke-copy button:hover .ke-arrow {transform:translate(2px,2px)}
+@keyframes ke-arrive {from {transform:translateY(8px)}to {transform:translateY(0)}}
+@media(max-height:520px) {
+  .ke-title {bottom:46px}
+  .ke-title h1 {font-size:clamp(42px,12vh,68px)}
+  .ke-copy {display:flex;max-width:none;gap:14px;margin-top:2px}
+  .ke-copy button {margin-top:0}
+  .ke-rail {bottom:8px;padding-top:4px}
+}
+@media(prefers-reduced-motion:reduce){.ke-title {animation:none}}

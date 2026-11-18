@@ -1,5 +1,5 @@
-import { apiFetch, canOperate, isOperator, isSignedIn } from './auth.js?v=20261109e';
-import { mountSequenceHistory } from './sequence-history.mjs?v=20261112-sequences';
+import { apiFetch, canOperate, isOperator, isSignedIn } from './auth.js?v=20261118-telemetry';
+import { mountSequenceHistory } from './sequence-history.mjs?v=20261118-telemetry';
 import {
   RUN_METRICS, MAX_SERIES_WINDOW_MS, csvCell, formatDuration, formatRelativeTime, metricValue,
   nearestBucket, responseSummary, responseWindow, runEnd, runMatches, seriesExtent, seriesSegments,

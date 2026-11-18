@@ -110,7 +110,7 @@ a {
   place-items: center;
   border: 1px solid var(--line);
   background: linear-gradient(145deg, rgba(212,175,55,0.16), rgba(255,255,255,0.05));
-  box-shadow: 0 0 30px rgba(212,175,55,0.18);
+  box-shadow: none;
   color: var(--gold);
 }
 
@@ -278,12 +278,7 @@ h1 {
   margin-bottom: 22px;
 }
 
-.gradient-text {
-  background: linear-gradient(100deg, #ffffff 0%, #f2e6b0 52%, #d4af37 100%);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-}
+.gradient-text { color: var(--white); }
 
 .lead {
   color: var(--white-soft);
@@ -318,7 +313,7 @@ h1 {
 
 .button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px rgba(212,175,55,0.16);
+  box-shadow: none;
 }
 
 .button.secondary {
@@ -392,7 +387,7 @@ h1 {
   width: 100%;
   max-width: 520px;
   height: auto;
-  filter: drop-shadow(0 0 22px rgba(212,175,55,0.25));
+  filter: none;
   animation: satelliteSpin 16s linear infinite;
   transform-origin: center center;
   user-select: none;
@@ -772,7 +767,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
 .input:focus,
 .select:focus {
   border-color: rgba(212,175,55,0.55);
-  box-shadow: 0 0 0 3px rgba(212,175,55,0.08);
+  box-shadow: none;
 }
 
 .telemetry-log {
@@ -876,13 +871,13 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
 .switch input:checked + .switch-track {
   background: rgba(84,239,120,0.18);
   border-color: rgba(84,239,120,0.48);
-  box-shadow: 0 0 20px rgba(84,239,120,0.12);
+  box-shadow: none;
 }
 
 .switch input:checked + .switch-track::after {
   transform: translateX(30px);
   background: var(--success);
-  box-shadow: 0 0 15px rgba(84,239,120,0.65);
+  box-shadow: none;
 }
 
 .transaction-form {
@@ -925,7 +920,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
   height: 4px;
   border-radius: 999px;
   background: linear-gradient(90deg, #8d171d, var(--bus-red), #ff6267);
-  box-shadow: 0 0 8px rgba(210,35,42,0.44);
+  box-shadow: none;
   transition: 160ms ease;
   z-index: 1;
 }
@@ -934,7 +929,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
 .bus-trace.scl { top: 51%; }
 
 .bus-trace.active {
-  box-shadow: 0 0 18px rgba(84,239,120,0.72);
+  box-shadow: none;
   outline: 1px solid rgba(84,239,120,0.18);
 }
 
@@ -957,13 +952,13 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
   width: 3px;
   border-radius: 999px;
   background: linear-gradient(#8d171d, #ff6b6f);
-  box-shadow: 0 0 8px rgba(210,35,42,0.46);
+  box-shadow: none;
   z-index: 1;
   transition: 160ms ease;
 }
 
 .vertical-trace.active {
-  box-shadow: 0 0 18px rgba(84,239,120,0.72);
+  box-shadow: none;
   outline: 1px solid rgba(84,239,120,0.12);
 }
 
@@ -1020,10 +1015,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
 
 .device-card.transaction-active {
   border-color: rgba(84,239,120,0.72);
-  box-shadow:
-    0 0 0 1px rgba(84,239,120,0.17),
-    0 0 34px rgba(84,239,120,0.19),
-    0 18px 54px rgba(0,0,0,0.42);
+  box-shadow: none;
   transform: translateY(-2px);
 }
 
@@ -1165,9 +1157,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
 .comm-led.on {
   background: var(--success);
   border-color: #caffd5;
-  box-shadow:
-    0 0 7px rgba(84,239,120,0.95),
-    0 0 18px rgba(84,239,120,0.68);
+  box-shadow: none;
 }
 
 .device-ack {
@@ -1196,7 +1186,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
   height: 10px;
   border-radius: 50%;
   background: var(--success);
-  box-shadow: 0 0 12px rgba(84,239,120,0.7);
+  box-shadow: none;
 }
 
 .i2c-log-grid {
@@ -1318,11 +1308,7 @@ body.twin-active .page-shell { width: 100%; height: calc(100dvh - var(--twin-nav
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, 0.3);
   border-radius: 16px;
-  background:
-    linear-gradient(rgba(242, 240, 232, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(242, 240, 232, 0.025) 1px, transparent 1px),
-    rgba(3, 5, 6, 0.94);
-  background-size: 32px 32px;
+  background: var(--black-card);
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.38);
   isolation: isolate;
 }

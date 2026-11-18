@@ -151,3 +151,54 @@
 @media (max-width: 960px) { .seq-library { grid-template-columns: 1fr; gap: 16px; } }
 @media (max-width: 550px) { .seq-library-source .seq-saved-field { grid-column: 1 / -1; } .seq-library-source #seqLoad { grid-column: 2; } }
 @media (hover: none), (pointer: coarse) { .seq-tool-button, .seq-icon-button, .seq-saved-trigger { min-height: 44px; } .seq-icon-button { width: 44px; } }
+
+/* The palette adds blocks to the marked position in the code path. */
+.sequence-page .seq-workspace {gap:16px;grid-template-columns:minmax(172px,210px) minmax(0,1fr)}
+.sequence-page .seq-palette .card-body {padding:6px}
+.seq-palette .seq-palette-item {padding:0;border:none}
+.seq-add {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:42px;
+  padding:8px 12px;border:0;border-radius:5px;background:transparent;color:var(--ink);
+  text-align:left;font:600 13px/1.4 var(--font-ui);cursor:pointer;
+}
+.seq-add svg {width:15px;height:15px;flex:none;fill:none;stroke:var(--muted);stroke-width:1.5}
+.seq-add:is(:hover,:focus-visible) {background:var(--dash-raised)}
+.seq-add:hover svg {stroke:var(--dash-action)}
+.sequence-page .seq-canvas {min-height:0;container-type:inline-size}
+.sequence-page .seq-list {background:var(--dash-canvas);border:1px solid var(--hairline);padding:6px;border-radius:8px}
+.sequence-page .seq-list.target {background:var(--dash-canvas);border-color:var(--dash-border)}
+.sequence-page .seq-insert {display:flex;align-items:center;justify-content:center;gap:8px;min-height:34px;font:600 11px/1.4 var(--font-ui)}
+.seq-insert[aria-pressed=true] {color:var(--dash-selection-ink);background:var(--dash-selection)}
+.seq-insert[aria-pressed=true]::before,.seq-insert[aria-pressed=true]::after {content:"";width:22px;border-top:1px solid currentColor}
+.sequence-page .seq-block {border-radius:7px;background:var(--dash-surface)}
+.sequence-page .seq-block.selected {border-color:var(--dash-action)}
+.seq-block-title {display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-height:40px;min-width:0;max-width:100%;font:700 14px/1.35 var(--font-ui)}
+.seq-block-title small {display:grid;place-items:center;min-width:24px;min-height:24px;margin:0;border-radius:4px;background:var(--dash-raised);font:500 12px var(--font-data);color:var(--muted)}
+.seq-preview {font:500 12px/1.5 var(--font-data);color:var(--muted);max-width:32ch;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.sequence-page .seq-block-actions .seq-mini {min-height:36px;border-color:transparent;background:transparent}
+.sequence-page .seq-block-actions .seq-mini:is(:hover,:focus-visible):enabled {background:var(--dash-raised);border-color:var(--hairline)}
+.seq-branch {container-type:inline-size}
+.seq-branch h4 {font:750 12px/1.5 var(--font-ui)}
+.seq-branches .seq-block-header {flex-wrap:wrap}
+.seq-validation {padding-top:12px;border-top:1px solid var(--hairline)}
+.sequence-page .seq-progress progress {height:6px}
+.sequence-page .seq-events time,.sequence-page .seq-sim-input textarea {font-family:var(--font-data)}
+.sequence-page .seq-validation ul {list-style:disc}
+@container (max-width:640px) { .seq-branches {grid-template-columns:1fr} }
+@media(max-width:850px) {
+  .sequence-page .seq-workspace {grid-template-columns:minmax(0,1fr)}
+  .seq-palette #seqPaletteList {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr))}
+  .seq-add {min-height:44px}
+  .seq-block-actions .seq-mini {min-width:40px}
+}
+
+.seq-start-modes {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.seq-start-modes>div {display:flex;flex-direction:column;align-items:flex-start;justify-content:space-between;gap:10px}
+.seq-start-modes>div+div {padding-left:18px;border-left:1px solid var(--hairline)}
+.seq-start-modes label {margin:0;width:100%}
+.seq-start-modes input {max-width:none}
+.seq-progress {padding-block:12px;border-top:1px solid var(--hairline)}
+@media(max-width:720px) {
+  .seq-start-modes {grid-template-columns:minmax(0,1fr)}
+  .seq-start-modes>div+div {padding:16px 0 0;border-left:0;border-top:1px solid var(--hairline)}
+}

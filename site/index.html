@@ -1,75 +1,127 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="knight" data-type="product">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>CubeSat Power System Controller</title>
+  <title>KnightEPS · Orbital Address</title>
+  <meta name="page-type" content="product" />
+  <meta name="site-kind" content="tech" />
+  <meta name="theme-color" content="#0d1113" />
+  <meta property="og:title" content="KnightEPS · CubeSat electrical power system" />
+  <meta property="og:description" content="The KnightEPS engineering project and Orbital Address telemetry dashboard, built at UCF." />
+  <meta property="og:type" content="website" />
+  <meta property="og:image" content="https://orbitaladdress.com/assets/brand/prototype.jpg" />
+  <link rel="preload" href="./assets/fonts/manrope-latin.woff2" as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href="./assets/fonts/barlow-condensed-bold.ttf" as="font" type="font/ttf" crossorigin />
   <meta
     name="description"
     content="CubeSat power system dashboard with telemetry, register tools, and saved runs."
   />
   <link rel="icon" type="image/png" href="./favicon.png?v=20261026a" />
-  <link rel="stylesheet" href="./assets/css/styles.css?v=20261112-order-scroll" />
-  <link rel="stylesheet" href="./assets/css/streaming.css?v=20261112-order-scroll" />
+  <link rel="stylesheet" href="./assets/css/styles.css?v=20261118-revision" />
+  <link rel="stylesheet" href="./assets/css/streaming.css?v=20261118-revision" />
+  <link rel="stylesheet" href="./assets/css/fonts.css?v=20261118-telemetry" />
+  <link rel="stylesheet" href="./assets/vendor/daisy-button.css" />
+  <link rel="stylesheet" href="./assets/vendor/daisy-input.css" />
+  <link rel="stylesheet" href="./assets/vendor/daisy-select.css" />
+  <link rel="stylesheet" href="./assets/vendor/daisy-table.css" />
+  <link rel="stylesheet" href="./assets/vendor/daisy-textarea.css" />
+  <link rel="stylesheet" href="./assets/css/overhaul.css?v=20261118-telemetry" />
+  <link rel="stylesheet" href="./assets/css/hero.css?v=20261118-revision" />
+  <link rel="stylesheet" href="./assets/css/dashboard.css?v=20261118-telemetry" />
 </head>
-<body>
+<body data-surface="public" data-page="home">
+  <a class="skip-link" href="#page-root">Skip to content</a>
   <header class="site-header">
     <nav class="nav" aria-label="Main navigation">
-      <a class="brand" href="#home" data-route="home" aria-label="CubeSat Power System Controller home">
-        <span class="brand-mark">🛰️</span>
-        <span>
-          CubeSat Power System Controller
-        </span>
+      <a class="brand" href="#home" data-route="home" aria-label="KnightEPS project home">
+        <span class="brand-public">KNIGHTEPS</span>
+        <span class="brand-product"><svg class="orbital-mark" viewBox="0 0 100 100" width="36" height="36" aria-hidden="true"><g transform="rotate(-12 50 60)"><ellipse cx="50" cy="60" rx="45" ry="13" fill="none" stroke="var(--mark-accent)" stroke-width="4"/></g><path d="M24 88L50 14L76 88" fill="none" stroke="currentColor" stroke-width="10"/><g transform="rotate(-12 50 60)"><path d="M5 60A45 13 0 0 0 95 60" fill="none" stroke="var(--dash-surface)" stroke-width="9"/><path d="M5 60A45 13 0 0 0 95 60" fill="none" stroke="var(--mark-accent)" stroke-width="4"/><circle cx="28" cy="71" r="5.5" fill="var(--mark-accent)"/></g></svg><span>Orbital Address<small>by KnightEPS</small></span></span>
       </a>
 
       <div class="nav-links">
-        <a class="nav-link active" href="#home" data-route="home">Home</a>
-        <a class="nav-link" href="#dashboard" data-route="dashboard">Dashboard</a>
-        <div class="account-control">
-          <button id="accountButton" class="nav-link" type="button">Sign in</button>
-        </div>
+        <a class="nav-link public-link active" href="#home" data-route="home">The project</a>
+        <a class="nav-link public-link" href="#team" data-route="team">Our team</a>
+        <a class="nav-link public-link" href="#resources" data-route="resources">Resources</a>
+        <a class="nav-link dashboard-entry" href="#dashboard" data-route="dashboard">Dashboard</a>
+        <a class="nav-link project-return" href="#home" data-route="home">KnightEPS website ↗</a>
+        <div id="publicAccount"><div class="account-control">
+          <button id="accountButton" class="nav-link" type="button">
+            <span class="account-avatar" data-account-avatar aria-hidden="true"></span>
+            <span class="account-copy"><strong data-account-name>Sign in</strong><span data-account-role></span><span data-account-session></span></span>
+            <svg class="account-chevron" viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg>
+          </button>
+          <div id="accountMenu" class="dropdown" popover="auto" aria-label="Account actions">
+            <button class="btn btn-ghost" id="menuTheme" type="button" autofocus>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1.5 1.5m11 11L19 19M5 19l1.5-1.5m11-11L19 5"/></svg>
+              <span>Switch to light mode</span>
+            </button>
+            <button class="btn btn-ghost" id="menuLogout" type="button">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v16h6m5-4 4-4-4-4m-7 4h11"/></svg>
+              Sign out
+            </button>
+            <p id="menuError" role="status"></p>
+          </div>
+        </div></div>
       </div>
     </nav>
     <div id="dashboardNavigation" class="dashboard-navigation" hidden>
       <button id="dashboardPrevious" class="dashboard-scroll" type="button" aria-label="Scroll dashboard sections left" aria-controls="dashboardTabs" hidden>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m14 6-6 6 6 6" /></svg>
       </button>
+      <div id="sidebarTop" class="sidebar-top"></div>
       <nav id="dashboardTabs" class="dashboard-tabs" aria-label="Dashboard sections" hidden>
+        <span class="sidebar-section">Monitor</span>
         <a class="nav-link" href="#communication" data-route="communication">I²C Telemetry</a>
         <a class="nav-link" href="#link-health" data-route="link-health">Network Statistics</a>
         <a class="nav-link" href="#runs" data-route="runs">Logged Telemetry</a>
         <a class="nav-link" href="#twin" data-route="twin">Digital Twin</a>
+        <span class="sidebar-section" data-operator-only hidden>Operate</span>
         <a class="nav-link" href="#debug-mode" data-route="debug-mode" data-operator-only hidden>Programming</a>
         <a class="nav-link" href="#sequences" data-route="sequences" data-operator-only hidden>Branch Definition</a>
         <a class="nav-link" href="#manual" data-route="manual" data-operator-only hidden>Manual</a>
         <a id="streamingNavBadge" class="st-nav-badge" href="#communication" title="Streaming Telemetry mode is on" hidden><i></i>Streaming</a>
       </nav>
+      <div class="sidebar-footer"><button id="sidebarToggle" type="button" aria-controls="dashboardTabs" aria-expanded="true">Collapse sidebar</button><div id="dashboardAccount"></div></div>
       <button id="dashboardNext" class="dashboard-scroll" type="button" aria-label="Scroll dashboard sections right" aria-controls="dashboardTabs" hidden>
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m10 6 6 6-6 6" /></svg>
       </button>
     </div>
   </header>
 
-  <main id="accountPanel" class="account-panel" aria-labelledby="accountTitle" hidden>
-    <p class="account-kicker">OrbitalAddress account</p>
+  <main id="accountPanel" class="account-panel access-layout" aria-labelledby="accountTitle" hidden>
+    <aside class="access-statement"><p>ORBITAL ADDRESS<br>WHERE THE TELEMETRY<br>LIVES.</p></aside>
+    <div class="access-form">
     <div class="account-heading"><h1 id="accountTitle">Sign in</h1><button id="accountBack" type="button" aria-label="Back to previous page">← Back</button></div>
     <p id="accountHelp">Sign in to access the dashboard. Your assigned role determines which sections are available.</p>
     <form id="accountForm">
       <label for="accountUsername">Username</label>
-      <input id="accountUsername" name="username" autocomplete="username" maxlength="64" required>
+      <input id="accountUsername" class="input" name="username" autocomplete="username" maxlength="64" required>
       <label for="accountPassword">Password</label>
-      <input id="accountPassword" name="password" type="password" autocomplete="current-password" maxlength="256" required>
-      <button id="accountSubmit" type="submit">Sign in</button>
+      <input id="accountPassword" class="input" name="password" type="password" autocomplete="current-password" maxlength="256" required>
+      <button id="accountSubmit" class="btn" type="submit">Sign in</button>
     </form>
     <p id="accountMessage" role="status" aria-live="polite"></p>
+    <div id="dashboardAppearance" class="dashboard-appearance" hidden><label for="dashboardTheme">Dashboard appearance</label><select id="dashboardTheme" class="input"><option value="dark">Dark</option><option value="light">Light</option></select></div>
     <button id="accountLogout" type="button" hidden>Sign out</button>
     <button id="accountRetry" type="button" hidden>Retry connection</button>
+    <a href="#resources">Browse project resources</a>
+    <p class="access-contact">Need access? <a href="#contact">Contact the project team.</a></p>
+    </div>
   </main>
 
-  <main id="page-root" class="page-shell" aria-live="polite">
+  <main id="page-root" class="page-shell" tabindex="-1">
     <noscript>Please enable JavaScript to load the modular pages.</noscript>
   </main>
+  <footer id="publicFooter" class="public-footer">
+    <div class="footer-grid"><p>Built at SPACE U.</p><nav aria-label="Footer navigation"><a href="#home">The project</a><a href="#team">Our team</a><a href="#resources">Resources</a><a href="#contact">Contact us</a></nav><div><p>University of Central Florida<br>Senior Design · Group 4</p><a href="#dashboard">Dashboard sign in</a></div></div>
+    <div class="footer-legal">
+      <p>Independent UCF student engineering project. Flight-concept visuals are illustrative.</p>
+      <nav aria-label="Site information"><a href="#privacy">Privacy</a><a href="#accessibility">Accessibility</a><a href="#credits">Credits &amp; Licenses</a></nav>
+    </div>
+    <div class="footer-wordmark" aria-hidden="true">KNIGHTEPS</div>
+  </footer>
 
-  <script type="module" src="./assets/js/app.js?v=20261112-library-dropdown"></script>
+  <script type="module" src="./assets/js/app.js?v=20261118-telemetry"></script>
 </body>
 </html>

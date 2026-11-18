@@ -5,7 +5,7 @@
   font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid var(--line); color: var(--white-soft); background: rgba(0,0,0,0.45); }
 .st-indicator i { width: 9px; height: 9px; border-radius: 50%; background: var(--white-soft); opacity: 0.5; }
 .st-indicator.live { color: var(--success); border-color: rgba(84,239,120,0.55); }
-.st-indicator.live i { background: var(--success); opacity: 1; box-shadow: 0 0 10px var(--success); animation: st-pulse 1.6s infinite; }
+.st-indicator.live i { background: var(--success); opacity: 1; box-shadow: none; animation: st-pulse 1.6s infinite; }
 .st-indicator.stale { color: var(--warning); border-color: rgba(255,214,107,0.5); }
 .st-indicator.stale i { background: var(--warning); opacity: 1; }
 @keyframes st-pulse { 50% { opacity: 0.35; } }
@@ -47,7 +47,7 @@
 .st-faults { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .st-fault { font-size: 0.66rem; text-align: center; padding: 5px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);
   color: rgba(237,232,217,0.45); background: rgba(0,0,0,0.35); transition: all 0.3s; }
-.st-fault.lit { color: #fff; background: rgba(210,35,42,0.85); border-color: var(--danger); box-shadow: 0 0 12px rgba(255,123,123,0.6); }
+.st-fault.lit { color: #fff; background: rgba(210,35,42,0.85); border-color: var(--danger); box-shadow: none; }
 .st-small .st-metric { grid-template-columns: 1fr 100px 120px; }
 .st-is-stale .st-card { opacity: 0.45; filter: grayscale(0.8); }
 .st-section-toggle { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; color: var(--white-soft); font-size: 0.85rem; }
@@ -63,7 +63,7 @@
 .st-header-badge { margin-top: 10px; }
 .st-nav-badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.68rem; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--success); border: 1px solid rgba(84,239,120,0.5); border-radius: 999px; padding: 4px 10px; text-decoration: none; }
-.st-nav-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: 0 0 8px var(--success); }
+.st-nav-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--success); box-shadow: none; }
 .st-nav-badge[hidden] { display: none; }
 /* v6 Streaming Telemetry additions */
 .st-sub { margin: .6rem 0 .2rem; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; opacity: .8; }

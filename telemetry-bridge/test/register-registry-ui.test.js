@@ -25,7 +25,12 @@ async function port(udp = false) {
 
 test('register menus propagate across live tabs, navigation, reload and independent operator sessions', { skip: !available, timeout: 60000 }, async (t) => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'register-ui-'));
-  t.after(() => rm(dir, { recursive: true, force: true }));
+  let bridge, browser;
+  t.after(async () => {
+    // Close writers before removing their profile/database, even when an assertion fails.
+    for(const child of [browser,bridge])if(child&&child.exitCode===null){child.kill();await once(child,'exit');}
+    await rm(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
+  });
   const bridgePort = await port(), udpPort = await port(true);
   const web = http.createServer(async (req, res) => {
     const pathname = new URL(req.url, 'http://localhost').pathname;
@@ -49,7 +54,7 @@ test('register menus propagate across live tabs, navigation, reload and independ
   const origin = `http://127.0.0.1:${web.address().port}`;
   const authFile = path.join(dir, 'auth.json');
   await writeFile(authFile, JSON.stringify({ key: 'ab'.repeat(32), users: [{ username: 'operator', role: 'operator', ...await passwordRecord('test-registers') }] }), { mode: 0o600 });
-  const bridge = spawn(process.execPath, [path.join(root, 'telemetry-bridge/server.js')], { env: {
+  bridge = spawn(process.execPath, [path.join(root, 'telemetry-bridge/server.js')], { env: {
     ...process.env, HTTP_PORT: String(bridgePort), UDP_PORT: String(udpPort), HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1',
     AUTH_CONFIG_PATH: authFile, AUTH_ORIGIN: origin, AUTH_ALLOW_LOCAL_HTTP: 'true', RECORDING_DB_PATH: path.join(dir, 'runs.sqlite'), COMMAND_TOKEN: 'test-only'
   }, stdio: ['ignore', 'ignore', 'pipe'] });
@@ -59,7 +64,7 @@ test('register menus propagate across live tabs, navigation, reload and independ
     try { if ((await fetch(origin + '/telemetry/auth/status')).ok) break; } catch {}
     if (i === 149) throw Error(bridgeLogs); await pause(20);
   }
-  const browser = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(dir, 'chrome')}`, '--no-first-run', '--disable-background-networking', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
+  browser = spawn(chrome, ['--headless=new', '--remote-debugging-port=0', `--user-data-dir=${path.join(dir, 'chrome')}`, '--no-first-run', '--disable-background-networking', 'about:blank'], { stdio: ['ignore', 'ignore', 'pipe'] });
   t.after(async () => { if (browser.exitCode === null) { browser.kill(); await once(browser, 'exit'); } });
   let stderr = '';
   const wsUrl = await new Promise((resolve, reject) => {
@@ -71,11 +76,21 @@ test('register menus propagate across live tabs, navigation, reload and independ
   socket.onmessage = ({ data }) => {
     const message = JSON.parse(data);
     if (message.id) { const p = pending.get(message.id); pending.delete(message.id); if (message.error) p.reject(Error(JSON.stringify(message.error))); else p.resolve(message.result); }
+    // This fixture deliberately leaves the editor and verifies its unsaved draft on return.
+    // A real browser requires accepting the existing leave/reload confirmation.
+    else if (message.method === 'Page.javascriptDialogOpening') {
+      void send('Page.handleJavaScriptDialog',{accept:true},message.sessionId).catch(error=>errors.push(error.message));
+    }
     else if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
   };
   const send = (method, params = {}, sessionId) => new Promise((resolve, reject) => { pending.set(++id, { resolve, reject }); socket.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) })); });
   const evaluate = async (session, expression) => {
-    const result = await send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, session);
+    if(process.env.REGISTRY_UI_TRACE) console.log('evaluate',expression.slice(0,200));
+    let timer;
+    const result = await Promise.race([
+      send('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true }, session),
+      new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error(`Browser did not respond: ${expression}`)),12000);})
+    ]).finally(()=>clearTimeout(timer));
     if (result.exceptionDetails) throw Error(result.exceptionDetails.exception?.description || result.exceptionDetails.text);
     return result.result.value;
   };
@@ -95,7 +110,7 @@ test('register menus propagate across live tabs, navigation, reload and independ
   const change = (session, selector, value, event = 'change') => evaluate(session, `(() => { const e = document.querySelector(${JSON.stringify(selector)}); e.value = ${JSON.stringify(value)}; e.dispatchEvent(new Event(${JSON.stringify(event)}, { bubbles: true })); })()`);
   const click = (session, selector) => evaluate(session, `document.querySelector(${JSON.stringify(selector)}).click()`);
   const tabA = await page(); assert.equal(await login(tabA, true), 200);
-  await send('Page.reload', {}, tabA); await wait(tabA, 'document.querySelector("#accountButton")?.textContent === "operator"');
+  await send('Page.reload', {}, tabA); await wait(tabA, 'document.querySelector("[data-account-name]")?.textContent === "operator"');
   await route(tabA, 'debug-mode', '#dmRegister');
   const tabB = await page(); await route(tabB, 'sequences', '#seqName');
   await change(tabB, '#seqName', 'Unsaved bench sequence', 'input');
@@ -134,7 +149,14 @@ test('register menus propagate across live tabs, navigation, reload and independ
   await wait(tabB, 'document.querySelector("#seqState").textContent.includes("Added register")');
   await change(tabA, '#dmDevice', '0x40');
   await wait(tabA, 'document.querySelector("#dmRegister").textContent.includes("unfinished register label")');
-  await route(tabB, 'communication', '#debugRegInput');
+  await evaluate(tabB, 'location.hash = "communication"');
+  await wait(tabB, '!!document.querySelector(".app-confirm[open]")');
+  await click(tabB, '.app-confirm [value="cancel"]');
+  await wait(tabB, 'location.hash === "#sequences" && !document.querySelector(".app-confirm")');
+  await evaluate(tabB, 'location.hash = "communication"');
+  await wait(tabB, '!!document.querySelector(".app-confirm[open]")');
+  await click(tabB, '.app-confirm [value="confirm"]');
+  await wait(tabB, '!!document.querySelector("#debugRegInput")');
   await change(tabB, '#debugAddrInput', '0x6B', 'input');
   await wait(tabB, 'document.querySelector("#operatorRegisterSuggestions").textContent.includes("Shared <bench>")');
   await change(tabB, '#debugRegInput', '0x2A');

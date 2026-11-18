@@ -20,13 +20,32 @@ function update(next) {
   const changed = JSON.stringify(state.user) !== JSON.stringify(next.user) ||
     state.enabled !== next.enabled || state.control_active !== next.control_active;
   state = next;
+  document.body.dataset.signedIn = String(Boolean(state.user));
   $('accountButton').hidden = false;
-  $('accountButton').textContent = state.user?.username || 'Sign in';
+  const accountName = document.querySelector('[data-account-name]');
+  if (accountName) {
+    const username = state.user?.username || '';
+    accountName.textContent = username || 'Sign in';
+    document.querySelector('[data-account-avatar]').textContent = username
+      .split(/[\s._-]+/).filter(Boolean).slice(0,2).map(part => part[0].toUpperCase()).join('');
+    document.querySelector('[data-account-role]').textContent = state.user
+      ? (state.user.role === 'operator' ? 'Operator' : 'Viewer') : '';
+    const expiry = Date.parse(state.expires_at);
+    const utc = Number.isFinite(expiry) ? new Date(expiry).toISOString().slice(11,16) : null;
+    document.querySelector('[data-account-session]').textContent = !state.user ? ''
+      : utc ? `Signed in · ends ${utc} UTC` : 'Signed in';
+  } else $('accountButton').textContent = state.user?.username || 'Sign in';
   $('accountButton').setAttribute('aria-label', state.user
-    ? `Open account for ${state.user.username}`
+    ? `Open account and settings for ${state.user.username}`
     : 'Sign in');
+  if (state.user) $('accountButton').setAttribute('popovertarget', 'accountMenu');
+  else {
+    $('accountButton').removeAttribute('popovertarget');
+    $('accountMenu').hidePopover?.();
+  }
   const switchingOperator = operatorLogin && !isOperator();
   $('accountForm').hidden = (!!state.user && !switchingOperator) || state.enabled !== true;
+  if ($('dashboardAppearance')) $('dashboardAppearance').hidden = !state.user || switchingOperator;
   $('accountLogout').hidden = !state.user;
   $('accountRetry').hidden = state.enabled !== null;
   $('accountTitle').textContent = switchingOperator ? 'Sign in as operator' : state.user ? 'Your account' : 'Sign in';
@@ -60,7 +79,7 @@ export function canEditSequences() { return isOperator(); }
 export function controlActive() { return isOperator() && Boolean(state.control_active); }
 export function canOperate() { return controlActive(); }
 export function allowRoute(route) {
-  return route === 'home' || (isSignedIn() && (['dashboard', 'communication', 'link-health', 'runs', 'twin'].includes(route) || isOperator()));
+  return ['home', 'team', 'resources', 'contact', 'privacy', 'accessibility', 'credits'].includes(route) || (isSignedIn() && (['dashboard', 'communication', 'link-health', 'runs', 'twin'].includes(route) || isOperator()));
 }
 export function telemetryUrl(url) {
   const target = new URL(url, location.href);
@@ -83,8 +102,20 @@ export async function apiFetch(url, options = {}) {
   if (response.status === 401 && state.enabled !== false) await refreshSession();
   return response;
 }
-export async function initAuth() {
-  $('accountButton').addEventListener('click', () => showAccount());
+export async function initAuth({ beforeSignOut = () => true } = {}) {
+  const trigger = $('accountButton'), menu = $('accountMenu');
+  trigger.addEventListener('click', () => { if (!isSignedIn()) showAccount(); });
+  function positionMenu() {
+    if (!menu.matches(':popover-open')) return;
+    const rect = trigger.getBoundingClientRect();
+    const left = Math.min(rect.left, document.documentElement.clientWidth - menu.offsetWidth - 8);
+    const below = rect.bottom + 6;
+    menu.style.left = Math.max(8, left) + 'px';
+    menu.style.top = (below + menu.offsetHeight <= window.innerHeight ? below : Math.max(8, rect.top - menu.offsetHeight - 6)) + 'px';
+  }
+  menu.addEventListener('toggle', positionMenu);
+  window.addEventListener('resize', positionMenu);
+  window.addEventListener('hashchange', () => menu.hidePopover?.());
   $('accountBack').addEventListener('click', leaveAccount);
   $('accountRetry').addEventListener('click', refreshSession);
   $('accountForm').addEventListener('submit', async (event) => {
@@ -110,8 +141,10 @@ export async function initAuth() {
     } catch (error) { notice(error.message); }
     finally { button.disabled = false; button.textContent = 'Sign in'; }
   });
-  $('accountLogout').addEventListener('click', async () => {
-    $('accountLogout').disabled = true;
+  async function signOut() {
+    if (!await beforeSignOut()) return;
+    $('menuError').textContent = '';
+    $('accountLogout').disabled = $('menuLogout').disabled = true;
     try {
       await jsonRequest('logout', { method: 'POST', headers: { 'X-CSRF-Token': state.csrf } });
       update({ enabled: true, user: null }); notice('You are signed out.');
@@ -119,9 +152,11 @@ export async function initAuth() {
       window.dispatchEvent(new Event('cubesat-session-ended'));
     } catch (error) {
       if (error.status === 401) { update({ enabled: true, user: null }); location.hash = 'home'; notice('You are signed out.'); }
-      else notice(error.message);
-    } finally { $('accountLogout').disabled = false; }
-  });
+      else { notice(error.message); $('menuError').textContent = error.message; positionMenu(); }
+    } finally { $('accountLogout').disabled = $('menuLogout').disabled = false; }
+  }
+  $('accountLogout').addEventListener('click', signOut);
+  $('menuLogout').addEventListener('click', signOut);
   await refreshSession();
   window.addEventListener('focus', refreshSession);
   window.addEventListener('pageshow', (event) => {

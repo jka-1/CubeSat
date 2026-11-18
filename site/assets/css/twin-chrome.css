@@ -1,0 +1,34 @@
+:root{font-family:'Manrope',sans-serif;color:#15191f;color-scheme:light;background:#f4f4f3;--line:#dce0e6;--muted:#4c5664;--accent:#a95c00;scrollbar-color:#929ba6 #eef0f3}
+.sidebar{background:#fff;border-color:#dce0e6}
+.sidebar h2{font-weight:800;letter-spacing:-.01em;font-size:15px}
+.sidebar :is(p,summary,#detail,#detail strong,#telemetry-status){color:#15191f}
+.sidebar .help,.sidebar .minor-toggle{color:#4c5664}
+.sidebar :is(button,input:not([type=checkbox]),select){background:#fff;color:#15191f;border-color:#b5bdc6;border-radius:4px;font-family:inherit}
+.sidebar button:hover,#parts button:hover{background:#f4f5f7;border-color:#b5bdc6}
+.sidebar button[aria-pressed=true],#parts button[aria-pressed=true]{background:#fff4e4;border-color:#d5b586;color:#805000}
+.sidebar #telemetry-status[data-state=fresh]{color:#21724a}
+.sidebar #telemetry-status[data-state=stale],.sidebar #telemetry-status[data-state=mock]{color:#805e00}
+.sidebar #telemetry-status[data-state=error],.sidebar #telemetry-status[data-state=disconnected]{color:#b32d27}
+.sidebar a,.sidebar .part-model{color:#805000}
+.viewport{color:#f4f3ed}
+.viewport h1{font-family:'Manrope',sans-serif;font-weight:700;letter-spacing:-.02em}
+.viewport h1 span,.viewport .instructions,.viewport #loader-status{color:#c5cbd3}
+.viewport button{background:#15191f;color:#f4f4f3;border-color:#606875;border-radius:4px;font-family:'Manrope',sans-serif}
+.viewport button:hover{background:#303943}
+*{scrollbar-color:#929ba6 #eef0f3}
+::-webkit-scrollbar-track,::-webkit-scrollbar-corner,::-webkit-resizer{background:#eef0f3}
+::-webkit-scrollbar-thumb{background:#929ba6;border-color:#eef0f3}
+::selection{background:#fce3bd;color:#15191f}
+@media(max-width:760px){.sidebar{box-shadow:-12px 0 32px #15191f1f}}
+:root[data-dashboard-theme="dark"] {color-scheme:dark;color:#f1f3f6;background:#0c0e12;--line:#343e4c;--muted:#b0bdcc;--accent:#f2a33a}
+:root[data-dashboard-theme="dark"] .sidebar {background:#14181f;border-color:#343e4c}
+:root[data-dashboard-theme="dark"] .sidebar :is(p,summary,#detail,#detail strong,#telemetry-status){color:#f1f3f6}
+:root[data-dashboard-theme="dark"] .sidebar :is(.help,.minor-toggle){color:#b0bdcc}
+:root[data-dashboard-theme="dark"] .sidebar :is(button,input:not([type=checkbox]),select){background:#1d242e;color:#f1f3f6;border-color:#556171}
+:root[data-dashboard-theme="dark"] .sidebar button:hover {background:#29323e}
+:root[data-dashboard-theme="dark"] .sidebar :is(button[aria-pressed=true],#parts button[aria-pressed=true]){background:#362a1c;color:#ffbf6a;border-color:#a37338}
+:root[data-dashboard-theme="dark"] .sidebar :is(a,.part-model){color:#ffbf6a}
+:root[data-dashboard-theme="dark"] .sidebar #telemetry-status[data-state="fresh"]{color:#70d7a4}
+:root[data-dashboard-theme="dark"] .sidebar #telemetry-status:is([data-state="stale"],[data-state="mock"]){color:#f4cf79}
+:root[data-dashboard-theme="dark"] .sidebar #telemetry-status:is([data-state="error"],[data-state="disconnected"]){color:#ff9991}
+:root[data-dashboard-theme="dark"],:root[data-dashboard-theme="dark"] * {scrollbar-color:#536174 #0c0e12}

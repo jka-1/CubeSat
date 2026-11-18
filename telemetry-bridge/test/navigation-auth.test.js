@@ -13,6 +13,7 @@ async function harness(role = null, route = 'dashboard') {
   };
   let hash = '#' + route, serverRole = role;
   const window = {
+    scrollTo() {},
     addEventListener(type, handler) { if (!events.has(type)) events.set(type, []); events.get(type).push(handler); },
     dispatchEvent(event) { for (const handler of events.get(event.type) || []) handler(event); }
   };
@@ -23,10 +24,11 @@ async function harness(role = null, route = 'dashboard') {
   window.location = location;
   const session = () => ({ enabled: true, user: serverRole ? { username: serverRole, role: serverRole } : null, control_active: serverRole === 'operator', csrf: 'test' });
   const context = vm.createContext({ window, location, URL, Headers, Event, console,
-    document: { hidden: false, getElementById: node, querySelectorAll: () => [] },
+    document: { body: {dataset:{}}, hidden: false, getElementById: node, querySelector: () => null, querySelectorAll: () => [] },
     history: { replaceState(_state, _unused, value) { hash = value; } },
     requestAnimationFrame: queueMicrotask, setInterval: () => 0,
     ResizeObserver: class { observe() {} }, isStreamingMode: () => false,
+    initPublicPage() {}, destroyPublicPage() {},
     fetch: async (url, options = {}) => {
       requests.push(url);
       if (url.endsWith('/login')) serverRole = JSON.parse(options.body).username;
@@ -51,6 +53,16 @@ async function harness(role = null, route = 'dashboard') {
   };
   return { node, context, requests, location, login, flush, expire: () => { serverRole = null; } };
 }
+
+test('public website routes are available without weakening dashboard sign-in', async () => {
+  for(const route of ['home','team','resources','contact','privacy','accessibility','credits']){
+    const h=await harness(null,route);
+    assert.equal(h.location.hash,`#${route}`);
+    assert.ok(h.requests.some(url=>url.includes(`/modules/${route}.html`)));
+    assert.ok(!h.requests.some(url=>url.includes('/operator-pages/')));
+    assert.equal(h.context.document.body.dataset.surface,'public');
+  }
+});
 
 test('dashboard requires login and resumes the requested viewer section after sign-in', async () => {
   const h = await harness();

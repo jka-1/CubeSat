@@ -1,13 +1,16 @@
-import { mountRegisterSuggestions } from './register-controls.mjs';
+import { confirmDialog } from './confirm-dialog.mjs';
+import { mountRegisterSuggestions } from './register-controls.mjs?v=20261118-telemetry';
 let disposeRegisterSuggestions = null;
-import { apiFetch, canOperate, telemetryUrl } from './auth.js?v=20261109e';
+import { apiFetch, canOperate, telemetryUrl } from './auth.js?v=20261118-telemetry';
 import {
   normalizePeripheralTelemetry,
   peripheralTelemetryForMode,
   lightLevelFromMv
 } from './telemetry-model.mjs?v=20261019b';
 import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261109b';
-import { mountStreamingView, fmtPower } from './streaming-view.mjs?v=20261112-registers';
+import { fmtPower } from './streaming-view.mjs?v=20261112-registers';
+import { mountTelemetryOverview } from './telemetry-overview.mjs?v=20261118-telemetry';
+let overviewView = null;
 
 const initialTelemetry = {
   pv: {
@@ -147,6 +150,7 @@ function writeCommandResult(message) {
 }
 
 function setStreamStatus(text, online = false) {
+  overviewView?.status(text, online);
   const streamStatus = document.getElementById('i2cBusStatus');
   if (!streamStatus) return;
   streamStatus.textContent = text;
@@ -273,7 +277,7 @@ function closeDetailPanel() {
   if (!layer?.classList.contains('is-open')) return;
 
   layer.classList.remove('is-open');
-  layer.setAttribute('aria-hidden', 'true');
+  layer.close();
   layer.querySelectorAll('[data-detail-panel]').forEach((panel) => {
     panel.hidden = true;
   });
@@ -295,7 +299,7 @@ function openDetailPanel(target, trigger) {
   document.getElementById('i2cDetailContext').textContent = panel.dataset.context || 'I²C module';
   activeDetailTrigger = trigger;
   layer.classList.add('is-open');
-  layer.setAttribute('aria-hidden', 'false');
+  if (!layer.open) layer.showModal();
   layer.querySelector('[data-close-detail]')?.focus();
 }
 
@@ -760,7 +764,8 @@ function renderBmsCard(telemetry) {
   }).join('') + bmsExtraRows(telemetry.bms);
 }
 
-function renderTelemetry(telemetry, metadata = streamMetadata) {
+function renderTelemetry(telemetry, metadata = streamMetadata, envelope = null) {
+  overviewView?.update(telemetry, metadata, dataMode, envelope);
   renderSystemSummary(telemetry);
   renderMetadata(metadata);
   renderPeripheralCard(telemetry);
@@ -904,6 +909,7 @@ export function normalizePacket(envelope) {
 function applyTelemetryPacket(packetEnvelope) {
   if (dataMode !== 'live') return;
   if (packetEnvelope?.type === 'status') {
+    overviewView?.bridgeStatus();
     const telemetryConnected = Boolean(packetEnvelope.telemetry_connected);
     bridgeCommandReady = Boolean(packetEnvelope.command_ready);
     commandAuthRequired = packetEnvelope.command_auth_required !== false;
@@ -1053,7 +1059,7 @@ function applyTelemetryPacket(packetEnvelope) {
 
   state = normalizedPacket.telemetry;
   streamMetadata = normalizedPacket.metadata;
-  renderTelemetry(state, streamMetadata);
+  renderTelemetry(state, streamMetadata, packetEnvelope);
   if (packetEnvelope?.network?.remote_address && packetEnvelope?.network?.remote_port) {
     setNodeAddressNote(
       `ESP32 node: ${packetEnvelope.network.remote_address}:${packetEnvelope.network.remote_port}`
@@ -1222,12 +1228,11 @@ function onMockToggle(event) {
   }
 }
 
-function applyStreamingStatus(model, info, badge) {
+function applyStreamingStatus(model, info) {
   const snap = model.snapshot();
   const live = info.open && snap.hasData && !snap.stale;
   const status = !info.open ? 'Stream disconnected' : !snap.hasData ? 'Streaming: waiting' : snap.stale ? 'Telemetry stale' : 'Live telemetry';
   setStreamStatus(status, live);
-  badge.className = `st-indicator ${live ? 'live' : snap.hasData ? 'stale' : ''} st-header-badge`;
   for (const key of ['pv', 'bms', 'mppt']) {
     const indicator = communicationRoot?.querySelector(`[data-detail-target="${key}"] .device-ack`);
     const device = model.visibility?.[key];
@@ -1253,22 +1258,10 @@ function applyStreamingTelemetry(model) {
   state.pv.busVoltageV = model.visibility?.pv?.visible ? model.decoded.pv.busV : null;
   if (state.mppt.available) state.mppt.faults = model.decoded.mppt.faults.filter((fault) => fault.active).map((fault) => fault.name);
   streamMetadata = extractMetadata(envelope);
-  renderTelemetry(state, streamMetadata);
+  renderTelemetry(state, streamMetadata, envelope);
   if (envelope.network?.remote_address && envelope.network?.remote_port) {
     setNodeAddressNote(`ESP32 node: ${envelope.network.remote_address}:${envelope.network.remote_port}`);
   }
-}
-
-function setStreamToggleUi(on) {
-  const toggle = document.getElementById('i2cStreamToggle');
-  if (toggle) toggle.checked = on;
-  const text = document.getElementById('i2cStreamToggleText');
-  if (text) text.textContent = on ? 'On' : 'Off';
-}
-
-function onStreamToggleChange(event) {
-  if (event.target.checked) { setStreamingMode(true); startStreamingMode(); }
-  else { stopStreamingMode(true); connectTelemetryStream(); }
 }
 
 function startStreamingMode() {
@@ -1280,30 +1273,19 @@ function startStreamingMode() {
   state = blankTelemetry();
   renderTelemetry(state, { deviceId: 'Waiting for streaming telemetry', sequence: '--', transmittedAt: 'Not supplied', receivedAt: 'Not supplied' });
   setStreamStatus('Streaming: waiting', false);
-  const header = communicationRoot?.querySelector('.i2c-page-header');
-  const section = document.getElementById('i2cStreamCard');
-  setStreamToggleUi(true);
-  const badge = document.createElement('span');
-  badge.className = 'st-indicator live st-header-badge';
-  badge.innerHTML = '<i></i>Streaming Telemetry';
-  header?.querySelector('div')?.appendChild(badge);
-  const view = mountStreamingView(section.querySelector('#i2cStreamRoot'), { url: streamingUrl() });
   let seenPackets = -1; let seenStatus = null;
   const unsubscribe = subscribeStreaming((model, info) => {
     if (model.status && model.status !== seenStatus) { seenStatus = model.status; applyTelemetryPacket(model.status); }
     if (model.latest && model.packets !== seenPackets) { seenPackets = model.packets; applyStreamingTelemetry(model); }
-    applyStreamingStatus(model, info, badge);
-  });
-  streaming = { section, badge, view, unsubscribe };
+    applyStreamingStatus(model, info);
+  }, streamingUrl());
+  streaming = { unsubscribe };
   writeLog('Streaming Telemetry mode active (shared stream, all detail panels available).');
 }
 
 function stopStreamingMode(persistOff = false) {
   if (!streaming) return;
   streaming.unsubscribe();
-  streaming.view.destroy();
-  streaming.badge.remove();
-  setStreamToggleUi(false);
   streaming = null;
   if (persistOff) setStreamingMode(false);
 }
@@ -1462,16 +1444,17 @@ function onResumeSensorClick() {
   sendSensorControl(true);
 }
 
-function onApplyAcdrvClick() {
+async function onApplyAcdrvClick() {
   const requestedState =
     document.getElementById('acdrvControlSelect')?.value || 'acdrv1';
   const label = requestedState === 'disabled'
     ? 'disable both ACDRV power paths'
     : `select ${requestedState.toUpperCase()}`;
 
-  if (!window.confirm(
+  if (!await confirmDialog(
     `Confirm ${label}. The ESP32 will preserve unrelated charger bits and verify register readback, ` +
-    'but PACK voltage must still be measured at the hardware.'
+    'but PACK voltage must still be measured at the hardware.',
+    {title:'Change charger input?', action:'Apply input'}
   )) {
     return;
   }
@@ -1507,6 +1490,8 @@ export function initI2CPage() {
   pendingCommandIds.clear();
   finishedCommandIds.clear();
   communicationRoot = document.getElementById('communication');
+  const overviewRoot = document.getElementById('telemetryOverview');
+  if (overviewRoot?.hasAttribute?.('data-telemetry-overview')) overviewView = mountTelemetryOverview(overviewRoot);
   renderTelemetry(state, streamMetadata);
 
   const streamUrlElement = document.getElementById('streamUrl');
@@ -1536,7 +1521,6 @@ export function initI2CPage() {
   document.getElementById('ledOffButton')?.addEventListener('click', onLedOffClick);
   communicationRoot?.addEventListener('click', onCommunicationClick);
   window.addEventListener('keydown', onDetailKeydown);
-  document.getElementById('i2cStreamToggle')?.addEventListener('change', onStreamToggleChange);
 
   if (isStreamingMode()) {
     startStreamingMode();
@@ -1546,6 +1530,7 @@ export function initI2CPage() {
 }
 
 export function destroyI2CPage() {
+  overviewView?.destroy(); overviewView = null;
   disposeRegisterSuggestions?.(); disposeRegisterSuggestions = null;
 
   document.getElementById('connectButton')?.removeEventListener('click', onConnectClick);
@@ -1561,7 +1546,6 @@ export function destroyI2CPage() {
   document.getElementById('ledOffButton')?.removeEventListener('click', onLedOffClick);
   communicationRoot?.removeEventListener('click', onCommunicationClick);
   window.removeEventListener('keydown', onDetailKeydown);
-  document.getElementById('i2cStreamToggle')?.removeEventListener('change', onStreamToggleChange);
   stopStreamingMode(false);
   communicationRoot = null;
   activeDetailTrigger = null;

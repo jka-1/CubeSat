@@ -51,6 +51,7 @@ export function initTwinPage() {
   const connect = async () => {
     if (connecting || activeFrame !== frame) return;
     connecting = true;
+    if (frame.contentDocument) frame.contentDocument.documentElement.dataset.dashboardTheme = document.body.dataset.dashboardTheme || 'dark';
     try {
       const twin = frame.contentWindow?.knightEPSTwin;
       if (!twin) throw new Error('Viewer API unavailable');

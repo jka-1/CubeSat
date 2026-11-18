@@ -191,9 +191,9 @@ export function mountStreamingView(root, { url } = {}) {
         a.className = `st-pill ${x.acdrv === 'off' ? 'off' : x.acdrv === 'both' ? 'warn' : 'on'}`;
         set('mppt.reg13', x.reg13 === null ? 'REG13 --' : `REG13 0x${x.reg13.toString(16).toUpperCase().padStart(2, '0')}`);
         const fbox = $('[data-v="mppt.faults"]');
-        const html = x.faults.map((f) => `<span class="st-fault ${f.active ? 'lit' : ''}">${esc(f.name.replace(/_STAT$/, ''))}</span>`).join('');
+        const html = x.activeFaults === null ? 'Fault state unavailable' : x.faults.map((f) => `<span class="st-fault ${f.active ? 'lit' : ''}">${esc(f.name.replace(/_STAT$/, ''))}</span>`).join('');
         if (fbox.innerHTML !== html) fbox.innerHTML = html;
-        set('mppt.activeFaults', String(x.activeFaults));
+        set('mppt.activeFaults', x.activeFaults === null ? '--' : String(x.activeFaults));
         for (const [k, v] of [['vac1', x.vac1V], ['vbus', x.vbusV], ['vsys', x.vsysV], ['vbat', x.vbatV]]) set(`mppt.${k}`, fmt(v, 2, ' V'));
         set('mppt.vbusV', fmt(x.vbusV, 3, ' V')); set('mppt.vac1V', fmt(x.vac1V, 3, ' V')); set('mppt.vbatV', fmt(x.vbatV, 3, ' V'));
         set('mppt.vsysV', fmt(x.vsysV, 3, ' V')); set('mppt.ibusMa', fmt(x.ibusMa, 0, ' mA')); set('mppt.dieTempC', fmt(x.dieTempC, 1, ' °C'));

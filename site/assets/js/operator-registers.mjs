@@ -1,4 +1,4 @@
-import { apiFetch, isOperator } from './auth.js?v=20261109e';
+import { apiFetch, isOperator } from './auth.js?v=20261118-telemetry';
 import { createRegisterRegistry } from './register-registry.mjs';
 import { READABLE_REGISTERS } from './sequence-register-catalog.mjs?v=20261112-registers';
 import { mergeRegisters } from './register-definition.mjs';

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f5f4">
+<title>KnightEPS — Software Architecture</title>
+<link rel="stylesheet" href="./css/fonts.css">
+<style>
+:root {color-scheme:light}
+* {box-sizing:border-box}
+html,body {margin:0;min-height:100%;background:#f5f5f4}
+#ke-chart {
+ --ink:#111514;--text:#2c3330;--muted:#757c77;--hair:#dce0dc;--bg:#f5f5f4;
+ background:var(--bg);color:var(--ink);position:relative;isolation:isolate;overflow:hidden;
+ font-family:Manrope,ui-sans-serif,system-ui,-apple-system,sans-serif;
+ font-optical-sizing:auto;width:100%;max-width:1360px;height:clamp(665px,60vw,805px);min-height:665px;margin:0 auto;
+}
+#ke-chart button{font:inherit;background:none;color:inherit;border:none;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#ke-chart :focus-visible {outline:2px solid #191e1b;outline-offset:3px}
+#ke-chart .ke-header {position:absolute;z-index:7;top:28px;left:clamp(18px,4vw,54px);pointer-events:none}
+#ke-chart .ke-kicker {font-size:10px;font-weight:800;letter-spacing:.095em}
+#ke-chart .ke-descriptor {font-size:11px;color:var(--muted);margin-top:9px;font-weight:500;line-height:1.6;max-width:375px}
+#ke-chart .ke-stats {position:absolute;z-index:7;right:clamp(18px,4vw,54px);top:26px;text-align:right;font-size:10px;font-weight:800;letter-spacing:.035em;line-height:1.7}
+#ke-chart .ke-stats span {display:block;font-size:10px;font-weight:550;letter-spacing:0;color:#87908b}
+#ke-chart .ke-trail {position:absolute;top:96px;left:clamp(18px,4vw,54px);right:clamp(18px,4vw,54px);z-index:8;display:flex;gap:9px;align-items:center;min-height:30px;max-width:calc(100% - 40px);font-size:10px;line-height:1.4;flex-wrap:wrap}
+#ke-chart .ke-trail button {padding:4px 0;font-weight:750;color:#6e7670;transition:color .25s ease,transform .35s cubic-bezier(.2,1.5,.3,1)}
+#ke-chart .ke-trail button:hover{color:#101513;transform:translateY(-2px)}
+#ke-chart .ke-trail button[aria-current="page"] {color:#151918;pointer-events:none}
+#ke-chart .ke-trail .sep{color:#b8c0b9;font-size:13px}
+#ke-chart .ke-svg{width:100%;height:100%;display:block;position:absolute;inset:0;touch-action:manipulation;user-select:none}
+#ke-chart .ke-world {will-change:transform}
+#ke-chart .ke-node {cursor:pointer;outline:none;transition:opacity .35s cubic-bezier(.2,.7,.3,1);}
+#ke-chart .ke-node .disk {stroke-width:1.15;vector-effect:non-scaling-stroke;transform-box:fill-box;transform-origin:center;
+ transition:transform .52s cubic-bezier(.17,1.42,.24,1),fill .32s ease,stroke .35s ease,stroke-width .35s ease,filter .6s ease;
+ filter:drop-shadow(0 2px 3px rgba(18,29,23,.036));}
+#ke-chart .ke-root .disk {fill:#eff1ee;stroke:#d5d9d4;stroke-width:1;filter:none;}
+#ke-chart .ke-system .disk {fill:#e6e9e6;stroke:#c2cac3;filter:drop-shadow(0 2px 5px rgba(18,29,23,.043));}
+#ke-chart .ke-module .disk {fill:#fafbfa;stroke:#cdd3cd;}
+#ke-chart .ke-file .disk {fill:white;stroke:#d3d9d2;}
+#ke-chart .ke-node .rim {fill:none;stroke:#838c83;stroke-width:1.25;vector-effect:non-scaling-stroke;opacity:0;pointer-events:none;
+ transform-box:fill-box;transform-origin:center;transform:scale(.99);transition:opacity .3s ease,transform .55s cubic-bezier(.13,1.25,.3,1)}
+#ke-chart .ke-node:hover .disk, #ke-chart .ke-node.is-hover .disk, #ke-chart .ke-node:focus-visible .disk {transform:scale(1.045);fill:#fff;stroke:#9ba69c;stroke-width:1.7;filter:drop-shadow(0 7px 12px rgba(19,29,23,.088));}
+#ke-chart .ke-node:hover .rim,#ke-chart .ke-node.is-hover .rim,#ke-chart .ke-node:focus-visible .rim{opacity:.47;transform:scale(1.084);}
+#ke-chart .ke-node.is-selected .disk {stroke:#28352d;stroke-width:2;filter:drop-shadow(0 6px 10px rgba(17,28,21,.075))}
+#ke-chart .ke-node.is-selected .rim {opacity:.4;transform:scale(1.065)}
+#ke-chart .ke-node .ke-label {text-anchor:middle;dominant-baseline:middle;fill:#2a312c;font-family:Manrope,ui-sans-serif,system-ui,sans-serif;font-weight:750;
+ letter-spacing:-.025em;pointer-events:none;transition:opacity .18s ease,fill .26s ease,transform .42s cubic-bezier(.2,1.5,.3,1);}
+#ke-chart .ke-node:hover .ke-label,#ke-chart .ke-node.is-hover .ke-label {fill:#121814;transform:translateY(-1.5px)}
+#ke-chart .ke-outer-caption {position:absolute;z-index:5;left:50%;top:137px;transform:translateX(-50%);font-size:9px;letter-spacing:.12em;font-weight:800;color:#a1a9a2;white-space:nowrap;pointer-events:none;transition:opacity .3s}
+#ke-chart[data-depth="1"] .ke-outer-caption,#ke-chart[data-depth="2"] .ke-outer-caption {opacity:0}
+#ke-chart .ke-bottom {position:absolute;z-index:7;bottom:0;left:clamp(18px,4vw,54px);right:clamp(18px,4vw,54px);
+ min-height:83px;border-top:1px solid #dcdedb;display:flex;align-items:center;justify-content:space-between;gap:30px;background:var(--bg)}
+#ke-chart .ke-legend {display:flex;align-items:center;flex-wrap:wrap;gap:5px clamp(13px,2vw,25px)}
+#ke-chart .ke-legend button {padding:10px 0;font-size:10px;letter-spacing:.02em;font-weight:800;color:#848a85;transition:transform .35s cubic-bezier(.2,1.45,.25,1), color .25s ease;border-bottom:1px solid transparent}
+#ke-chart .ke-legend button:hover {transform:translateY(-2px);color:#131815}
+#ke-chart .ke-legend button.active {color:#151a16;border-bottom-color:#515950}
+#ke-chart .ke-legend button span {font-weight:550;font-size:10px;margin-left:5px;color:#a2a9a2}
+#ke-chart .ke-hint {font-size:10px;font-weight:550;line-height:1.65;color:#565e58;text-align:right}
+#ke-chart .ke-tooltip {position:absolute;z-index:20;pointer-events:none;opacity:0;visibility:hidden;transform:translateY(9px) scale(.982);
+ padding:15px 18px 15px;max-width:290px;width:250px;background:rgba(255,255,255,.98);border:1px solid #e4e7e3;border-radius:3px;
+ box-shadow:0 9px 29px rgba(19,29,24,.065);transition:opacity .22s ease,transform .33s cubic-bezier(.17,1.3,.22,1),visibility .22s}
+#ke-chart .ke-tooltip.show {opacity:1;visibility:visible;transform:translateY(0) scale(1)}
+#ke-chart .ke-tooltip .tip-eyebrow {font-size:9px;font-weight:800;letter-spacing:.09em;color:#929a92;text-transform:uppercase;margin-bottom:8px}
+#ke-chart .ke-tooltip .tip-name {font-size:14px;font-weight:800;line-height:1.4;letter-spacing:-.035em;color:#17201a;overflow-wrap:anywhere}
+#ke-chart .ke-tooltip .tip-description {font-size:11px;color:#6d776f;line-height:1.65;margin:7px 0 10px;max-height:89px;overflow:hidden}
+#ke-chart .ke-tooltip .tip-meta{display:flex;gap:15px;border-top:1px solid #eef0ed;padding-top:10px;font-size:10px;color:#7e8780;font-weight:750}
+#ke-chart .ke-panel {position:absolute;z-index:15;right:clamp(18px,4vw,54px);top:27%;width:min(325px,calc(100% - 35px));max-height:58%;overflow:auto;
+ padding:27px 26px 24px;border:1px solid #dde2dc;background:#fff;opacity:0;visibility:hidden;pointer-events:none;transform:translateX(14px);
+ box-shadow:0 12px 36px rgba(22,29,24,.063);transition:opacity .35s,transform .46s cubic-bezier(.19,1,.22,1),visibility .35s}
+#ke-chart .ke-panel.open {opacity:1;visibility:visible;pointer-events:auto;transform:translateX(0)}
+#ke-chart .ke-close {position:absolute;top:9px;right:12px;padding:4px 8px;font-size:23px!important;font-weight:400!important;color:#8d9890!important;transition:transform .35s ease,color .2s ease}
+#ke-chart .ke-close:hover {color:#141b15!important;transform:rotate(90deg)}
+#ke-chart .panel-kicker {font-size:9px;font-weight:800;letter-spacing:.1em;color:#8e968f;text-transform:uppercase;margin:0 20px 12px 0}
+#ke-chart .panel-title {font-size:24px;line-height:1.15;font-weight:800;letter-spacing:-.052em;margin:0 0 12px;overflow-wrap:anywhere}
+#ke-chart .panel-desc {font-size:12px;font-weight:500;color:#656f67;line-height:1.78;margin:0 0 20px}
+#ke-chart .panel-metrics {display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1px solid #e9ece8;border-bottom:1px solid #e9ece8;padding:14px 0;margin-bottom:19px}
+#ke-chart .panel-metrics strong {display:block;font-size:17px;letter-spacing:-.04em;font-weight:800;color:#182018}
+#ke-chart .panel-metrics span {display:block;font-size:9px;font-weight:650;color:#89928a;margin-top:4px;text-transform:uppercase;letter-spacing:.04em}
+#ke-chart .panel-files-title {font-weight:800;font-size:10px;letter-spacing:.04em;margin-bottom:12px}
+#ke-chart .panel-file {border-top:1px solid #edf0ed;padding:10px 0;display:flex;justify-content:space-between;gap:13px;font-size:10px;line-height:1.5;color:#637068}
+#ke-chart .panel-file code{font-family:ui-monospace,SFMono-Regular,monospace;font-size:10px;overflow-wrap:anywhere;color:#34433a}
+#ke-chart .panel-file span {white-space:nowrap;color:#909a92}
+#ke-chart .panel-note {margin-top:15px;font-size:10px;line-height:1.7;color:#9aa29a}
+@media(max-width:900px){
+ #ke-chart {height:720px}
+ #ke-chart .ke-bottom{display:block;min-height:100px;padding-top:7px}
+ #ke-chart .ke-hint{text-align:left;font-size:9px;margin-bottom:6px}
+ #ke-chart .ke-legend button{font-size:9px;padding:6px 0}
+ #ke-chart .ke-panel{top:auto;bottom:107px;max-height:49%;width:min(325px,calc(100% - 35px))}
+}
+@media(max-width:560px){
+ #ke-chart {height:670px;min-height:640px}
+ #ke-chart .ke-header {top:20px;left:18px}
+ #ke-chart .ke-descriptor {max-width:200px;font-size:10px;margin-top:6px}
+ #ke-chart .ke-stats {top:20px;right:18px;font-size:9px}
+ #ke-chart .ke-stats span{font-size:9px}
+ #ke-chart .ke-trail{top:81px;left:18px;right:18px;font-size:9px;gap:6px}
+ #ke-chart .ke-outer-caption{top:122px;font-size:8px}
+ #ke-chart .ke-bottom{left:18px;right:18px;min-height:115px}
+ #ke-chart .ke-legend{gap:0 11px}
+ #ke-chart .ke-legend button{font-size:8px;padding:6px 0}
+ #ke-chart .ke-legend button span{font-size:8px;margin-left:2px}
+ #ke-chart .ke-hint{font-size:8px}
+ #ke-chart .ke-panel{left:14px;right:14px;bottom:118px;width:auto;max-height:43%;padding:21px 19px}
+ #ke-chart .panel-title{font-size:20px}
+ #ke-chart .ke-tooltip{display:none}
+}
+@media(prefers-reduced-motion:reduce){#ke-chart *,#ke-chart *::before,#ke-chart *::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Embedded layout: native document scroll and the complete file list. */
+html,body{overflow-x:hidden}#ke-chart{height:805px;max-width:none;min-height:0}
+#ke-chart .ke-panel{scrollbar-width:auto;scrollbar-color:#8e9992 #eef0ed;overscroll-behavior:auto;max-height:62%;top:23%;font-size:12px}
+#ke-chart .panel-title{letter-spacing:-.03em}#ke-chart .ke-close{min-width:44px;min-height:44px}
+#ke-chart .ke-trail button{min-height:44px}#ke-chart .panel-file{font-size:12px}#ke-chart .panel-file code{font-size:11px}
+#ke-chart .panel-note{color:#647168}#ke-chart .ke-stats span{color:#647168}
+@media(max-width:700px){#ke-chart{height:760px}#ke-chart.has-detail{height:1200px}#ke-chart .ke-panel{top:auto;bottom:24px;left:16px;right:16px;width:auto;max-height:420px}#ke-chart .ke-bottom{bottom:auto;top:640px}#ke-chart.has-detail .ke-bottom{top:640px}#ke-chart .ke-tooltip{display:none}}
+</style>
+</head>
+<body>
+<section id="ke-chart" data-depth="0" aria-label="Interactive circle-packing visualization of KnightEPS source code">
+ <header class="ke-header"><div class="ke-kicker">SOFTWARE ARCHITECTURE</div><div class="ke-descriptor">Explore the systems, modules, and files behind KnightEPS.</div></header>
+ <div class="ke-stats"><div>23,407 SOURCE LINES</div><span>132 FILES · 28 MODULES</span></div>
+ <nav class="ke-trail" id="ke-trail" aria-label="Current chart level"></nav>
+ <div class="ke-outer-caption">KNIGHT EPS / ORBITALADDRESS</div>
+ <svg class="ke-svg" id="ke-svg" aria-label="Zoomable hierarchy of measured software source lines"><g id="ke-world" class="ke-world"></g></svg>
+ <div class="ke-bottom"><nav class="ke-legend" id="ke-legend" aria-label="Software systems"></nav><div class="ke-hint">Click a circle to explore · Esc to go back</div></div>
+ <div class="ke-tooltip" id="ke-tip" role="tooltip"><div class="tip-eyebrow" id="ke-tip-kind"></div><div class="tip-name" id="ke-tip-name"></div><div class="tip-description" id="ke-tip-desc"></div><div class="tip-meta" id="ke-tip-meta"></div></div>
+ <aside class="ke-panel" id="ke-panel" aria-label="Selected software information" aria-live="polite" tabindex="0">
+   <button class="ke-close" id="ke-close" aria-label="Close details" type="button">×</button>
+   <div class="panel-kicker" id="ke-panel-kicker"></div>
+   <h2 class="panel-title" id="ke-panel-title"></h2>
+   <p class="panel-desc" id="ke-panel-desc"></p>
+   <div class="panel-metrics"><div><strong id="ke-panel-lines"></strong><span>Source lines</span></div><div><strong id="ke-panel-count"></strong><span>Files</span></div></div>
+   <div class="panel-files-title" id="ke-panel-files-title"></div><div id="ke-panel-files"></div>
+   <p class="panel-note" id="ke-panel-note"></p>
+ </aside>
+</section>
+<script>
+(()=>{'use strict';
+const INPUT_DATA = {"id":"project","name":"Knight EPS / OrbitalAddress software","metric":"Nonblank physical source lines, including comments","source_revision":"b30d705008729c0364dafbc7135ee02b1391ff50","children":[{"id":"firmware","name":"ESP32 firmware","color":"#B7791F","description":"C / ESP-IDF; acquisition, device commands and UDP transport","children":[{"id":"firmware:application-orchestration","name":"Application orchestration","description":"Firmware startup, initialization and main telemetry loop.","source_lines":267,"file_count":1,"children":[{"id":"file:main/main.c","name":"main.c","path":"main/main.c","value":267,"source_bytes":9018}]},{"id":"firmware:debug-and-console","name":"Debug and console","description":"Device debug state and console command input.","source_lines":796,"file_count":4,"children":[{"id":"file:main/console_input.c","name":"console_input.c","path":"main/console_input.c","value":405,"source_bytes":11333},{"id":"file:main/console_input.h","name":"console_input.h","path":"main/console_input.h","value":8,"source_bytes":183},{"id":"file:main/debug_mode.c","name":"debug_mode.c","path":"main/debug_mode.c","value":310,"source_bytes":12689},{"id":"file:main/debug_mode.h","name":"debug_mode.h","path":"main/debug_mode.h","value":73,"source_bytes":3526}]},{"id":"firmware:i2c-acquisition","name":"I2C acquisition","description":"I2C bus polling and acquisition of power-system device measurements.","source_lines":1426,"file_count":2,"children":[{"id":"file:pass/i2c_bus_monitor.c","name":"i2c_bus_monitor.c","path":"pass/i2c_bus_monitor.c","value":1178,"source_bytes":38346},{"id":"file:pass/i2c_bus_monitor.h","name":"i2c_bus_monitor.h","path":"pass/i2c_bus_monitor.h","value":248,"source_bytes":8450}]},{"id":"firmware:led-status","name":"LED status","description":"Board status LED control.","source_lines":107,"file_count":2,"children":[{"id":"file:main/board_led.c","name":"board_led.c","path":"main/board_led.c","value":93,"source_bytes":2479},{"id":"file:main/board_led.h","name":"board_led.h","path":"main/board_led.h","value":14,"source_bytes":293}]},{"id":"firmware:packet-formats","name":"Packet formats","description":"Versioned telemetry encoding and raw packet layouts.","source_lines":268,"file_count":5,"children":[{"id":"file:main/telemetry_types.h","name":"telemetry_types.h","path":"main/telemetry_types.h","value":18,"source_bytes":526},{"id":"file:pass/telemetry_packet_v3.c","name":"telemetry_packet_v3.c","path":"pass/telemetry_packet_v3.c","value":95,"source_bytes":3240},{"id":"file:pass/telemetry_packet_v3.h","name":"telemetry_packet_v3.h","path":"pass/telemetry_packet_v3.h","value":33,"source_bytes":1066},{"id":"file:pass/telemetry_packet_v4.c","name":"telemetry_packet_v4.c","path":"pass/telemetry_packet_v4.c","value":80,"source_bytes":2649},{"id":"file:pass/telemetry_packet_v4.h","name":"telemetry_packet_v4.h","path":"pass/telemetry_packet_v4.h","value":42,"source_bytes":1452}]},{"id":"firmware:peripheral-sensing","name":"Peripheral sensing","description":"Sensor abstraction, ADC peripheral acquisition and conversion math.","source_lines":549,"file_count":6,"children":[{"id":"file:main/peripheral_sensor_math.c","name":"peripheral_sensor_math.c","path":"main/peripheral_sensor_math.c","value":37,"source_bytes":1029},{"id":"file:main/peripheral_sensor_math.h","name":"peripheral_sensor_math.h","path":"main/peripheral_sensor_math.h","value":17,"source_bytes":841},{"id":"file:main/peripheral_sensors.c","name":"peripheral_sensors.c","path":"main/peripheral_sensors.c","value":262,"source_bytes":8928},{"id":"file:main/peripheral_sensors.h","name":"peripheral_sensors.h","path":"main/peripheral_sensors.h","value":24,"source_bytes":829},{"id":"file:main/sensor_provider.c","name":"sensor_provider.c","path":"main/sensor_provider.c","value":175,"source_bytes":4249},{"id":"file:main/sensor_provider.h","name":"sensor_provider.h","path":"main/sensor_provider.h","value":34,"source_bytes":802}]},{"id":"firmware:wi-fi-and-udp-transport","name":"Wi-Fi and UDP transport","description":"Network connectivity, packet transmission and device-side command dispatch.","source_lines":1678,"file_count":4,"children":[{"id":"file:main/udp_transport.c","name":"udp_transport.c","path":"main/udp_transport.c","value":1469,"source_bytes":47532},{"id":"file:main/udp_transport.h","name":"udp_transport.h","path":"main/udp_transport.h","value":37,"source_bytes":1221},{"id":"file:main/wifi_station.c","name":"wifi_station.c","path":"main/wifi_station.c","value":160,"source_bytes":5403},{"id":"file:main/wifi_station.h","name":"wifi_station.h","path":"main/wifi_station.h","value":12,"source_bytes":450}]}]},{"id":"web","name":"OrbitalAddress web interface","color":"#2563EB","description":"Static HTML, CSS and browser ES modules; includes the Three.js viewer","children":[{"id":"web:application-shell-and-account-ui","name":"Application shell and account UI","description":"Page shell, route loading, navigation and browser account state.","source_lines":388,"file_count":4,"children":[{"id":"file:site/assets/js/app.js","name":"app.js","path":"site/assets/js/app.js","value":6,"source_bytes":227},{"id":"file:site/assets/js/auth.js","name":"auth.js","path":"site/assets/js/auth.js","value":139,"source_bytes":7961},{"id":"file:site/assets/js/router.js","name":"router.js","path":"site/assets/js/router.js","value":172,"source_bytes":8484},{"id":"file:site/index.html","name":"index.html","path":"site/index.html","value":71,"source_bytes":4269}]},{"id":"web:branch-definition-editor","name":"Branch Definition editor","description":"Visual sequence editing, condition configuration, ordering, history and action helpers.","source_lines":1128,"file_count":10,"children":[{"id":"file:site/assets/css/sequence-history.css","name":"sequence-history.css","path":"site/assets/css/sequence-history.css","value":22,"source_bytes":1916},{"id":"file:site/assets/css/sequences.css","name":"sequences.css","path":"site/assets/css/sequences.css","value":147,"source_bytes":13265},{"id":"file:site/assets/js/sequence-actions.mjs","name":"sequence-actions.mjs","path":"site/assets/js/sequence-actions.mjs","value":28,"source_bytes":2480},{"id":"file:site/assets/js/sequence-condition-fields.mjs","name":"sequence-condition-fields.mjs","path":"site/assets/js/sequence-condition-fields.mjs","value":15,"source_bytes":1187},{"id":"file:site/assets/js/sequence-editor-model.mjs","name":"sequence-editor-model.mjs","path":"site/assets/js/sequence-editor-model.mjs","value":162,"source_bytes":12135},{"id":"file:site/assets/js/sequence-history.mjs","name":"sequence-history.mjs","path":"site/assets/js/sequence-history.mjs","value":107,"source_bytes":7611},{"id":"file:site/assets/js/sequence-library-order.mjs","name":"sequence-library-order.mjs","path":"site/assets/js/sequence-library-order.mjs","value":155,"source_bytes":11081},{"id":"file:site/assets/js/sequence-register-catalog.mjs","name":"sequence-register-catalog.mjs","path":"site/assets/js/sequence-register-catalog.mjs","value":10,"source_bytes":806},{"id":"file:site/assets/js/sequences.js","name":"sequences.js","path":"site/assets/js/sequences.js","value":478,"source_bytes":47158},{"id":"file:site/modules/sequences.html","name":"sequences.html","path":"site/modules/sequences.html","value":4,"source_bytes":214}]},{"id":"web:content-styles-and-legacy-pages","name":"Content, styles and legacy pages","description":"Shared styling and content pages, including retained legacy/non-routed files.","source_lines":2547,"file_count":8,"children":[{"id":"file:site/assets/css/styles.css","name":"styles.css","path":"site/assets/css/styles.css","value":1943,"source_bytes":47444},{"id":"file:site/assets/js/dashboard.js","name":"dashboard.js","path":"site/assets/js/dashboard.js","value":294,"source_bytes":11695},{"id":"file:site/assets/js/tooltips.js","name":"tooltips.js","path":"site/assets/js/tooltips.js","value":103,"source_bytes":4756},{"id":"file:site/manual.htm","name":"manual.htm","path":"site/manual.htm","value":4,"source_bytes":213},{"id":"file:site/modules/dashboard.html","name":"dashboard.html","path":"site/modules/dashboard.html","value":105,"source_bytes":4356},{"id":"file:site/modules/home.html","name":"home.html","path":"site/modules/home.html","value":16,"source_bytes":629},{"id":"file:site/modules/manual.html","name":"manual.html","path":"site/modules/manual.html","value":4,"source_bytes":208},{"id":"file:site/modules/partners.html","name":"partners.html","path":"site/modules/partners.html","value":78,"source_bytes":4273}]},{"id":"web:digital-twin","name":"Digital twin","description":"Three.js assembly visualization, inspection, rendering, embedded telemetry and display integration.","source_lines":1389,"file_count":22,"children":[{"id":"file:site/assets/js/twin.js","name":"twin.js","path":"site/assets/js/twin.js","value":94,"source_bytes":4341},{"id":"file:site/knight-eps-phase12/viewer/dashboard-integration.mjs","name":"dashboard-integration.mjs","path":"site/knight-eps-phase12/viewer/dashboard-integration.mjs","value":22,"source_bytes":1260},{"id":"file:site/knight-eps-phase12/viewer/display.mjs","name":"display.mjs","path":"site/knight-eps-phase12/viewer/display.mjs","value":81,"source_bytes":8530},{"id":"file:site/knight-eps-phase12/viewer/framing.mjs","name":"framing.mjs","path":"site/knight-eps-phase12/viewer/framing.mjs","value":21,"source_bytes":1746},{"id":"file:site/knight-eps-phase12/viewer/index.html","name":"index.html","path":"site/knight-eps-phase12/viewer/index.html","value":8,"source_bytes":7290},{"id":"file:site/knight-eps-phase12/viewer/inspection.mjs","name":"inspection.mjs","path":"site/knight-eps-phase12/viewer/inspection.mjs","value":61,"source_bytes":4890},{"id":"file:site/knight-eps-phase12/viewer/main.mjs","name":"main.mjs","path":"site/knight-eps-phase12/viewer/main.mjs","value":348,"source_bytes":42960},{"id":"file:site/knight-eps-phase12/viewer/render-optimizations.mjs","name":"render-optimizations.mjs","path":"site/knight-eps-phase12/viewer/render-optimizations.mjs","value":72,"source_bytes":6361},{"id":"file:site/knight-eps-phase12/viewer/rendering/certified-culling.mjs","name":"certified-culling.mjs","path":"site/knight-eps-phase12/viewer/rendering/certified-culling.mjs","value":33,"source_bytes":2277},{"id":"file:site/knight-eps-phase12/viewer/rendering/cheap-occlusion.mjs","name":"cheap-occlusion.mjs","path":"site/knight-eps-phase12/viewer/rendering/cheap-occlusion.mjs","value":30,"source_bytes":2312},{"id":"file:site/knight-eps-phase12/viewer/rendering/clean-prototype.mjs","name":"clean-prototype.mjs","path":"site/knight-eps-phase12/viewer/rendering/clean-prototype.mjs","value":45,"source_bytes":2985},{"id":"file:site/knight-eps-phase12/viewer/rendering/decode-coverage.mjs","name":"decode-coverage.mjs","path":"site/knight-eps-phase12/viewer/rendering/decode-coverage.mjs","value":12,"source_bytes":546},{"id":"file:site/knight-eps-phase12/viewer/rendering/depth-guard.mjs","name":"depth-guard.mjs","path":"site/knight-eps-phase12/viewer/rendering/depth-guard.mjs","value":44,"source_bytes":2660},{"id":"file:site/knight-eps-phase12/viewer/rendering/fxaa-pass.mjs","name":"fxaa-pass.mjs","path":"site/knight-eps-phase12/viewer/rendering/fxaa-pass.mjs","value":20,"source_bytes":1810},{"id":"file:site/knight-eps-phase12/viewer/rendering/lean-acrylic.mjs","name":"lean-acrylic.mjs","path":"site/knight-eps-phase12/viewer/rendering/lean-acrylic.mjs","value":80,"source_bytes":5587},{"id":"file:site/knight-eps-phase12/viewer/rendering/legacy-coverage.mjs","name":"legacy-coverage.mjs","path":"site/knight-eps-phase12/viewer/rendering/legacy-coverage.mjs","value":14,"source_bytes":1047},{"id":"file:site/knight-eps-phase12/viewer/rendering/model-loader.mjs","name":"model-loader.mjs","path":"site/knight-eps-phase12/viewer/rendering/model-loader.mjs","value":101,"source_bytes":5993},{"id":"file:site/knight-eps-phase12/viewer/rendering/orthographic-shadow.mjs","name":"orthographic-shadow.mjs","path":"site/knight-eps-phase12/viewer/rendering/orthographic-shadow.mjs","value":36,"source_bytes":2183},{"id":"file:site/knight-eps-phase12/viewer/rendering/pipeline.mjs","name":"pipeline.mjs","path":"site/knight-eps-phase12/viewer/rendering/pipeline.mjs","value":91,"source_bytes":5401},{"id":"file:site/knight-eps-phase12/viewer/styles.css","name":"styles.css","path":"site/knight-eps-phase12/viewer/styles.css","value":112,"source_bytes":7420},{"id":"file:site/knight-eps-phase12/viewer/telemetry.mjs","name":"telemetry.mjs","path":"site/knight-eps-phase12/viewer/telemetry.mjs","value":58,"source_bytes":4153},{"id":"file:site/modules/twin.html","name":"twin.html","path":"site/modules/twin.html","value":6,"source_bytes":395}]},{"id":"web:logged-telemetry-explorer","name":"Logged telemetry explorer","description":"Recorded-run browsing, graph models, events and export presentation.","source_lines":1054,"file_count":4,"children":[{"id":"file:site/assets/css/runs.css","name":"runs.css","path":"site/assets/css/runs.css","value":216,"source_bytes":16094},{"id":"file:site/assets/js/runs-model.mjs","name":"runs-model.mjs","path":"site/assets/js/runs-model.mjs","value":149,"source_bytes":7746},{"id":"file:site/assets/js/runs.js","name":"runs.js","path":"site/assets/js/runs.js","value":535,"source_bytes":32423},{"id":"file:site/modules/runs.html","name":"runs.html","path":"site/modules/runs.html","value":154,"source_bytes":10649}]},{"id":"web:programming-and-register-tools","name":"Programming and register tools","description":"Register discovery, definitions, conversion, read/write controls and debug tools.","source_lines":739,"file_count":10,"children":[{"id":"file:site/assets/css/debug-mode.css","name":"debug-mode.css","path":"site/assets/css/debug-mode.css","value":44,"source_bytes":3058},{"id":"file:site/assets/js/debug-commands.mjs","name":"debug-commands.mjs","path":"site/assets/js/debug-commands.mjs","value":88,"source_bytes":4945},{"id":"file:site/assets/js/debug-mode.js","name":"debug-mode.js","path":"site/assets/js/debug-mode.js","value":329,"source_bytes":21017},{"id":"file:site/assets/js/operator-registers.mjs","name":"operator-registers.mjs","path":"site/assets/js/operator-registers.mjs","value":24,"source_bytes":1636},{"id":"file:site/assets/js/register-controls.mjs","name":"register-controls.mjs","path":"site/assets/js/register-controls.mjs","value":30,"source_bytes":2132},{"id":"file:site/assets/js/register-conversions.mjs","name":"register-conversions.mjs","path":"site/assets/js/register-conversions.mjs","value":85,"source_bytes":4058},{"id":"file:site/assets/js/register-definition.mjs","name":"register-definition.mjs","path":"site/assets/js/register-definition.mjs","value":24,"source_bytes":1813},{"id":"file:site/assets/js/register-policy.mjs","name":"register-policy.mjs","path":"site/assets/js/register-policy.mjs","value":47,"source_bytes":2863},{"id":"file:site/assets/js/register-registry.mjs","name":"register-registry.mjs","path":"site/assets/js/register-registry.mjs","value":64,"source_bytes":2990},{"id":"file:site/modules/debug-mode.html","name":"debug-mode.html","path":"site/modules/debug-mode.html","value":4,"source_bytes":216}]},{"id":"web:telemetry-and-network-statistics","name":"Telemetry and network statistics","description":"Live measurement presentation, shared streaming model and wireless link statistics.","source_lines":2603,"file_count":10,"children":[{"id":"file:site/assets/css/link-health.css","name":"link-health.css","path":"site/assets/css/link-health.css","value":25,"source_bytes":1725},{"id":"file:site/assets/css/streaming.css","name":"streaming.css","path":"site/assets/css/streaming.css","value":121,"source_bytes":10045},{"id":"file:site/assets/js/i2c.js","name":"i2c.js","path":"site/assets/js/i2c.js","value":1373,"source_bytes":56827},{"id":"file:site/assets/js/link-health.js","name":"link-health.js","path":"site/assets/js/link-health.js","value":161,"source_bytes":11234},{"id":"file:site/assets/js/link-stats.mjs","name":"link-stats.mjs","path":"site/assets/js/link-stats.mjs","value":146,"source_bytes":8579},{"id":"file:site/assets/js/streaming-telemetry.mjs","name":"streaming-telemetry.mjs","path":"site/assets/js/streaming-telemetry.mjs","value":224,"source_bytes":13515},{"id":"file:site/assets/js/streaming-view.mjs","name":"streaming-view.mjs","path":"site/assets/js/streaming-view.mjs","value":210,"source_bytes":16317},{"id":"file:site/assets/js/telemetry-model.mjs","name":"telemetry-model.mjs","path":"site/assets/js/telemetry-model.mjs","value":71,"source_bytes":2669},{"id":"file:site/modules/communication.html","name":"communication.html","path":"site/modules/communication.html","value":215,"source_bytes":14072},{"id":"file:site/modules/link-health.html","name":"link-health.html","path":"site/modules/link-health.html","value":57,"source_bytes":3825}]}]},{"id":"backend","name":"Telemetry backend","color":"#7C3AED","description":"Node.js HTTP/UDP bridge, authentication, sequencing and private SQLite persistence","children":[{"id":"backend:account-and-backup-utilities","name":"Account and backup utilities","description":"Backend account administration and recording backup source.","source_lines":43,"file_count":2,"children":[{"id":"file:telemetry-bridge/tools/auth-user.mjs","name":"auth-user.mjs","path":"telemetry-bridge/tools/auth-user.mjs","value":25,"source_bytes":1844},{"id":"file:telemetry-bridge/tools/backup-recordings.mjs","name":"backup-recordings.mjs","path":"telemetry-bridge/tools/backup-recordings.mjs","value":18,"source_bytes":964}]},{"id":"backend:backend-sequence-execution","name":"Backend sequence execution","description":"Definition validation, dependency snapshots, condition/register catalog and authoritative execution scheduling.","source_lines":594,"file_count":5,"children":[{"id":"file:telemetry-bridge/sequence/condition-fields.mjs","name":"condition-fields.mjs","path":"telemetry-bridge/sequence/condition-fields.mjs","value":14,"source_bytes":824},{"id":"file:telemetry-bridge/sequence/dependencies.mjs","name":"dependencies.mjs","path":"telemetry-bridge/sequence/dependencies.mjs","value":38,"source_bytes":1986},{"id":"file:telemetry-bridge/sequence/engine.mjs","name":"engine.mjs","path":"telemetry-bridge/sequence/engine.mjs","value":341,"source_bytes":20559},{"id":"file:telemetry-bridge/sequence/model.mjs","name":"model.mjs","path":"telemetry-bridge/sequence/model.mjs","value":191,"source_bytes":13491},{"id":"file:telemetry-bridge/sequence/register-catalog.mjs","name":"register-catalog.mjs","path":"telemetry-bridge/sequence/register-catalog.mjs","value":10,"source_bytes":698}]},{"id":"backend:bridge-and-api-orchestration","name":"Bridge and API orchestration","description":"server.js combines UDP decoding, HTTP routing, SSE observation and command dispatch; it is not several independent services.","source_lines":2241,"file_count":1,"children":[{"id":"file:telemetry-bridge/server.js","name":"server.js","path":"telemetry-bridge/server.js","value":2241,"source_bytes":95290}]},{"id":"backend:legacy-aps-integration","name":"Legacy APS integration","description":"Retained Autodesk APS adapter; current routed twin uses local Three.js assets.","source_lines":51,"file_count":1,"children":[{"id":"file:telemetry-bridge/aps.mjs","name":"aps.mjs","path":"telemetry-bridge/aps.mjs","value":51,"source_bytes":2716}]},{"id":"backend:protected-operator-html","name":"Protected operator HTML","description":"Server-held Programming, Branch Definition and Manual documents returned only through authorized routes.","source_lines":474,"file_count":4,"children":[{"id":"file:telemetry-bridge/auth/views/debug-mode.html","name":"debug-mode.html","path":"telemetry-bridge/auth/views/debug-mode.html","value":122,"source_bytes":8524},{"id":"file:telemetry-bridge/auth/views/manual-document.html","name":"manual-document.html","path":"telemetry-bridge/auth/views/manual-document.html","value":309,"source_bytes":29911},{"id":"file:telemetry-bridge/auth/views/manual.html","name":"manual.html","path":"telemetry-bridge/auth/views/manual.html","value":5,"source_bytes":391},{"id":"file:telemetry-bridge/auth/views/sequences.html","name":"sequences.html","path":"telemetry-bridge/auth/views/sequences.html","value":38,"source_bytes":6360}]},{"id":"backend:recording-and-persistence","name":"Recording and persistence","description":"Worker communication, SQLite storage, packet evidence, run boundaries, queries and events.","source_lines":632,"file_count":5,"children":[{"id":"file:telemetry-bridge/recording/client.mjs","name":"client.mjs","path":"telemetry-bridge/recording/client.mjs","value":80,"source_bytes":4413},{"id":"file:telemetry-bridge/recording/raw.mjs","name":"raw.mjs","path":"telemetry-bridge/recording/raw.mjs","value":11,"source_bytes":502},{"id":"file:telemetry-bridge/recording/state.mjs","name":"state.mjs","path":"telemetry-bridge/recording/state.mjs","value":52,"source_bytes":3100},{"id":"file:telemetry-bridge/recording/store.mjs","name":"store.mjs","path":"telemetry-bridge/recording/store.mjs","value":454,"source_bytes":29103},{"id":"file:telemetry-bridge/recording/worker.mjs","name":"worker.mjs","path":"telemetry-bridge/recording/worker.mjs","value":35,"source_bytes":1944}]},{"id":"backend:sessions-and-telemetry-verification","name":"Sessions and telemetry verification","description":"JWT sessions, roles, active operator lease, CSRF checks and optional signed telemetry validation.","source_lines":228,"file_count":2,"children":[{"id":"file:telemetry-bridge/auth/session.mjs","name":"session.mjs","path":"telemetry-bridge/auth/session.mjs","value":171,"source_bytes":9773},{"id":"file:telemetry-bridge/telemetry-auth.mjs","name":"telemetry-auth.mjs","path":"telemetry-bridge/telemetry-auth.mjs","value":57,"source_bytes":3000}]},{"id":"backend:shared-register-metadata","name":"Shared register metadata","description":"Backend metadata for built-in and user-added registers.","source_lines":28,"file_count":1,"children":[{"id":"file:telemetry-bridge/register-registry.mjs","name":"register-registry.mjs","path":"telemetry-bridge/register-registry.mjs","value":28,"source_bytes":1993}]}]},{"id":"desktop","name":"Windows I2C tool","color":"#0F766E","description":"Python / PySide6 desktop client; serial and authenticated wireless operation","children":[{"id":"desktop:desktop-branch-definition","name":"Desktop Branch Definition","description":"Desktop editor and schema/model for the same backend sequence API.","source_lines":998,"file_count":2,"children":[{"id":"file:cubesat-i2c-tool/cubesat_i2c/branch_page.py","name":"branch_page.py","path":"cubesat-i2c-tool/cubesat_i2c/branch_page.py","value":687,"source_bytes":43104},{"id":"file:cubesat-i2c-tool/cubesat_i2c/sequence_model.py","name":"sequence_model.py","path":"cubesat-i2c-tool/cubesat_i2c/sequence_model.py","value":311,"source_bytes":20363}]},{"id":"desktop:desktop-logged-telemetry","name":"Desktop logged telemetry","description":"Recorded-run browser and data models.","source_lines":451,"file_count":2,"children":[{"id":"file:cubesat-i2c-tool/cubesat_i2c/runs_model.py","name":"runs_model.py","path":"cubesat-i2c-tool/cubesat_i2c/runs_model.py","value":160,"source_bytes":9256},{"id":"file:cubesat-i2c-tool/cubesat_i2c/runs_page.py","name":"runs_page.py","path":"cubesat-i2c-tool/cubesat_i2c/runs_page.py","value":291,"source_bytes":17146}]},{"id":"desktop:desktop-shell-and-local-storage","name":"Desktop shell and local storage","description":"Main Qt interface, entry point, settings and saved profiles; gui.py also contains substantial feature logic.","source_lines":772,"file_count":4,"children":[{"id":"file:cubesat-i2c-tool/cubesat_i2c/__init__.py","name":"__init__.py","path":"cubesat-i2c-tool/cubesat_i2c/__init__.py","value":0,"source_bytes":0},{"id":"file:cubesat-i2c-tool/cubesat_i2c/gui.py","name":"gui.py","path":"cubesat-i2c-tool/cubesat_i2c/gui.py","value":675,"source_bytes":42599},{"id":"file:cubesat-i2c-tool/cubesat_i2c/storage.py","name":"storage.py","path":"cubesat-i2c-tool/cubesat_i2c/storage.py","value":94,"source_bytes":4102},{"id":"file:cubesat-i2c-tool/run.py","name":"run.py","path":"cubesat-i2c-tool/run.py","value":3,"source_bytes":71}]},{"id":"desktop:desktop-simulation","name":"Desktop simulation","description":"Mock serial source for development without a connected device.","source_lines":65,"file_count":1,"children":[{"id":"file:cubesat-i2c-tool/cubesat_i2c/mock_serial.py","name":"mock_serial.py","path":"cubesat-i2c-tool/cubesat_i2c/mock_serial.py","value":65,"source_bytes":2887}]},{"id":"desktop:serial-and-register-tools","name":"Serial and register tools","description":"Serial console protocol/session handling, register metadata and engineering conversions.","source_lines":380,"file_count":4,"children":[{"id":"file:cubesat-i2c-tool/cubesat_i2c/conversions.py","name":"conversions.py","path":"cubesat-i2c-tool/cubesat_i2c/conversions.py","value":29,"source_bytes":1428},{"id":"file:cubesat-i2c-tool/cubesat_i2c/protocol.py","name":"protocol.py","path":"cubesat-i2c-tool/cubesat_i2c/protocol.py","value":130,"source_bytes":4807},{"id":"file:cubesat-i2c-tool/cubesat_i2c/registers.py","name":"registers.py","path":"cubesat-i2c-tool/cubesat_i2c/registers.py","value":101,"source_bytes":6902},{"id":"file:cubesat-i2c-tool/cubesat_i2c/session.py","name":"session.py","path":"cubesat-i2c-tool/cubesat_i2c/session.py","value":120,"source_bytes":4789}]},{"id":"desktop:wireless-telemetry-and-network-statistics","name":"Wireless telemetry and network statistics","description":"Authenticated wireless session, SSE link source, network statistics and streaming presentation.","source_lines":1511,"file_count":6,"children":[{"id":"file:cubesat-i2c-tool/cubesat_i2c/link_page.py","name":"link_page.py","path":"cubesat-i2c-tool/cubesat_i2c/link_page.py","value":186,"source_bytes":13304},{"id":"file:cubesat-i2c-tool/cubesat_i2c/link_source.py","name":"link_source.py","path":"cubesat-i2c-tool/cubesat_i2c/link_source.py","value":176,"source_bytes":9169},{"id":"file:cubesat-i2c-tool/cubesat_i2c/link_stats.py","name":"link_stats.py","path":"cubesat-i2c-tool/cubesat_i2c/link_stats.py","value":180,"source_bytes":9096},{"id":"file:cubesat-i2c-tool/cubesat_i2c/streaming_model.py","name":"streaming_model.py","path":"cubesat-i2c-tool/cubesat_i2c/streaming_model.py","value":252,"source_bytes":14867},{"id":"file:cubesat-i2c-tool/cubesat_i2c/streaming_page.py","name":"streaming_page.py","path":"cubesat-i2c-tool/cubesat_i2c/streaming_page.py","value":299,"source_bytes":18995},{"id":"file:cubesat-i2c-tool/cubesat_i2c/wireless_session.py","name":"wireless_session.py","path":"cubesat-i2c-tool/cubesat_i2c/wireless_session.py","value":418,"source_bytes":23213}]}]}]};
+const SVGNS='http://www.w3.org/2000/svg', shell=document.querySelector('#ke-chart'),svg=document.querySelector('#ke-svg'),world=document.querySelector('#ke-world');
+const tip=document.querySelector('#ke-tip'),panel=document.querySelector('#ke-panel');
+const systems=INPUT_DATA.children;
+const fmt=new Intl.NumberFormat('en-US');
+const motionOff=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const index=new Map();let focusId='project',selectedId=null,view={w:0,h:0};let camera=null,camFrame=null,hoveredId=null;let resizeFrame=null;
+const byId=id=>index.get(id),el=(tag,attrs={})=>{const n=document.createElementNS(SVGNS,tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);return n};
+const h=(s)=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function buildTree(data,parent=null,depth=0){
+ const n={id:data.id,name:data.name,description:data.description||'',path:data.path||'',raw:data,parent,depth,children:[],files:0,lines:0,x:0,y:0,r:0,wx:0,wy:0};
+ index.set(n.id,n);
+ n.children=(data.children||[]).map(child=>buildTree(child,n,depth+1));
+ if(n.children.length){n.lines=n.children.reduce((a,b)=>a+b.lines,0);n.files=n.children.reduce((a,b)=>a+b.files,0)}
+ else {n.lines=data.value||0;n.files=depth===3?1:data.file_count||0}
+ return n;
+}
+const root=buildTree(INPUT_DATA);
+function enclosureCenter(items){
+ // iterative min-max-centre optimization for an enclosing circle around positioned discs
+ let cx=items.reduce((a,b)=>a+b.x,0)/items.length,cy=items.reduce((a,b)=>a+b.y,0)/items.length;
+ let step=4;
+ for(let i=0;i<260;i++){
+  let far=null,val=-Infinity;
+  for(const p of items){const d=Math.hypot(p.x-cx,p.y-cy)+p.r;if(d>val){val=d;far=p}}
+  const dx=far.x-cx,dy=far.y-cy,dist=Math.hypot(dx,dy);
+  if(dist>1e-6){let amount=step*(1-i/280);cx+=amount*dx/dist;cy+=amount*dy/dist}
+  if((i+1)%60===0)step*=.65;
+ }
+ return[cx,cy];
+}
+function packSiblings(ary,gap){
+ const items=[...ary].sort((a,b)=>b.r-a.r||a.name.localeCompare(b.name));
+ const placed=[];
+ for(const node of items){
+  if(!placed.length){node.x=0;node.y=0;placed.push(node);continue}
+  let best=null,score=Infinity;
+  function check(x,y){
+   for(const q of placed)if(Math.hypot(x-q.x,y-q.y)+1e-5<node.r+q.r+gap)return;
+   let extent=Math.hypot(x,y)+node.r;
+   for(const q of placed)extent=Math.max(extent,Math.hypot(q.x,q.y)+q.r);
+   const cost=extent+.002*Math.hypot(x,y);
+   if(cost<score){score=cost;best={x,y}};
+  }
+  for(let a=0;a<placed.length;a++){
+    const p=placed[a],pa=p.r+node.r+gap;
+    for(let k=0;k<40;k++){const ang=Math.PI*2*k/40;check(p.x+Math.cos(ang)*pa,p.y+Math.sin(ang)*pa)}
+    for(let b=a+1;b<placed.length;b++){
+     const q=placed[b],qb=q.r+node.r+gap,dx=q.x-p.x,dy=q.y-p.y,d=Math.hypot(dx,dy);
+     if(d<1e-7||d>pa+qb||d<Math.abs(pa-qb))continue;
+     const z=(pa*pa-qb*qb+d*d)/(2*d),v=Math.sqrt(Math.max(0,pa*pa-z*z)),ux=dx/d,uy=dy/d;
+     check(p.x+z*ux-v*uy,p.y+z*uy+v*ux);check(p.x+z*ux+v*uy,p.y+z*uy-v*ux);
+    }
+  }
+  if(!best){const p=placed[0];best={x:p.x+p.r+node.r+gap,y:p.y}}
+  node.x=best.x;node.y=best.y;placed.push(node);
+ }
+ const[cx,cy]=enclosureCenter(placed);
+ let radius=0;for(const p of placed){p.x-=cx;p.y-=cy;radius=Math.max(radius,Math.hypot(p.x,p.y)+p.r)}
+ return radius;
+}
+function compute(node){
+ if(!node.children.length){node.r=Math.max(1.05,Math.sqrt(node.lines/Math.PI));return}
+ node.children.forEach(compute);
+ const gap=node.depth===0?5.1:node.depth===1?2.3:1.0;
+ const pad=node.depth===0?8:node.depth===1?5.4:2.8;
+ node.r=packSiblings(node.children,gap)+pad;
+}
+function absPos(node,x=0,y=0){node.wx=x+node.x;node.wy=y+node.y;node.children.forEach(c=>absPos(c,node.wx,node.wy))}
+compute(root);absPos(root);
+const flat=[...index.values()];
+function create(){
+ // Parents first so every child is painted on top of its container.
+ for(const node of flat){
+  const g=el('g',{'class':'ke-node ke-'+(['root','system','module','file'][node.depth]),'data-id':node.id,tabindex:node.depth?'0':'-1',role:node.depth?'button':'presentation',
+ 'aria-label':node.depth?node.name+', '+fmt.format(node.lines)+' nonblank source lines':''});
+  g.setAttribute('transform',`translate(${node.wx} ${node.wy})`);
+  const c=el('circle',{class:'disk',r:node.r,cx:0,cy:0});const rim=el('circle',{class:'rim',r:node.r,cx:0,cy:0});
+  const lbl=el('text',{'class':'ke-label'});g.append(c,rim,lbl);world.appendChild(g);node.g=g;node.label=lbl;
+  if(node.depth){
+   g.addEventListener('click',e=>{e.stopPropagation();activate(node)});
+   g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();activate(node)}});
+   g.addEventListener('pointerenter',e=>{hoveredId=node.id;g.classList.add('is-hover');tipShow(node,e)});
+   g.addEventListener('pointermove',e=>tipShow(node,e));
+   g.addEventListener('pointerleave',()=>{hoveredId=null;g.classList.remove('is-hover');tipHide()});
+   g.addEventListener('focus',()=>{g.classList.add('is-hover')});
+   g.addEventListener('blur',()=>g.classList.remove('is-hover'));
+  }
+ }
+}
+function permitted(node,focus){
+ if(focus.depth===0) return node.depth<=2;
+ if(focus.depth===1) return node===focus||(node.depth===2&&node.parent===focus);
+ return node===focus||(node.depth===3&&node.parent===focus);
+}
+function labelLines(str,maxChars){
+ const clean=String(str).replace(/\\/g,'/');
+ if(clean.length<=maxChars)return[clean];
+ const words=clean.split(/(?<=[-_ /])|(?=[A-Z])/).filter(Boolean);
+ if(words.length<=1) return [clean.slice(0,Math.max(3,maxChars-1))+'…'];
+ let best=null,score=Infinity;
+ for(let i=1;i<words.length;i++){
+   const a=words.slice(0,i).join('').trim(),b=words.slice(i).join('').trim();
+   const penalty=Math.max(a.length,b.length) + Math.abs(a.length-b.length)*.18;
+   if(a.length<=maxChars+2&&b.length<=maxChars+2&&penalty<score){score=penalty;best=[a,b]}
+ }
+ return best||[clean.slice(0,Math.max(3,maxChars-1))+'…'];
+}
+function labelNode(node,focus,k){
+ const label=node.label;label.replaceChildren();let on=false;
+ const screenR=node.r*k;
+ if(focus.depth===0){on=node.depth===1&&screenR>35}
+ else if(focus.depth===1){on=node.depth===2&&node.parent===focus&&screenR>28}
+ else {on=node.depth===3&&node.parent===focus&&screenR>27}
+ label.style.opacity=on?'1':'0';if(!on)return;
+ const isSystem=node.depth===1;
+ const px=isSystem?(view.w<560?9.4:11.5):screenR>75?12.2:screenR>48?11.3:10;
+ const systemLower=isSystem && focus.depth===0 && node.id==='firmware';
+ const labelY=isSystem?(systemLower?node.r+12/k:-node.r-13/k):0;
+ const fm=px/k;
+ label.setAttribute('font-size',fm);label.setAttribute('font-weight',isSystem?'800':'750');
+ label.setAttribute('y',labelY);
+ label.setAttribute('x','0');
+ const text=isSystem?node.name.toUpperCase():(node.depth===3?node.name:node.name);
+ const maxChars=Math.min(32,Math.max(7,Math.floor((2*screenR-17)/(px*.61))));
+ let lines=isSystem?[text]:labelLines(text,maxChars);
+ if(lines.length===1&&lines[0].length>maxChars &&!isSystem)lines=[lines[0].slice(0,maxChars-1)+'…'];
+ if(lines.length>2)lines=lines.slice(0,2);
+ for(let i=0;i<lines.length;i++){
+  const span=el('tspan',{x:0,y:isSystem?labelY:(i-(lines.length-1)/2)*fm*1.31});
+  span.textContent=lines[i];label.appendChild(span);
+ }
+}
+function cameraFor(focus,details=false){
+ const mobile=view.w<700,plotTop=mobile?133:143,plotBottom=mobile?(details?580:132):100;
+ const availH=Math.max(140,view.h-plotTop-plotBottom);
+ let availW=Math.max(130,view.w-(mobile?38:104));
+ let x=view.w/2;
+ if(details&&view.w>940){availW=Math.min(availW,view.w-405);x=Math.max(170,(view.w-365)/2)}
+ const k=Math.min(availW/(2*focus.r),availH/(2*focus.r))*(focus.depth===0?.91:.90);
+ const cy=plotTop+availH/2;
+ return{k,tx:x-focus.wx*k,ty:cy-focus.wy*k};
+}
+function applyCamera(c){camera=c;world.setAttribute('transform',`translate(${c.tx} ${c.ty}) scale(${c.k})`)}
+function animateCamera(target,initial=false){
+ if(camFrame!==null)cancelAnimationFrame(camFrame);
+ const from=camera||{...target,k:target.k*.75,ty:target.ty+35};
+ const t0=performance.now();const duration=motionOff?0:initial?1100:840;
+ function tick(now){
+  const raw=duration?Math.max(0,Math.min(1,(now-t0)/duration)):1;
+  const t=raw<.5?4*raw*raw*raw:1-Math.pow(-2*raw+2,3)/2;
+  applyCamera({k:from.k+(target.k-from.k)*t,tx:from.tx+(target.tx-from.tx)*t,ty:from.ty+(target.ty-from.ty)*t});
+  if(raw<1)camFrame=requestAnimationFrame(tick);else camFrame=null;
+ }
+ camFrame=requestAnimationFrame(tick);
+}
+function updateTrail(focus){
+ const nav=document.querySelector('#ke-trail');nav.replaceChildren();
+ const path=[];let n=focus;while(n){path.unshift(n);n=n.parent}
+ for(let i=0;i<path.length;i++){
+  if(i){const sep=document.createElement('span');sep.className='sep';sep.textContent='/';nav.appendChild(sep)}
+  const step=path[i],btn=document.createElement('button');btn.type='button';btn.textContent=step===root?'All systems':step.name;
+  if(step===focus)btn.setAttribute('aria-current','page');else btn.addEventListener('click',()=>navigate(step.id));
+  nav.appendChild(btn);
+ }
+}
+function updateLegend(){
+ const nav=document.querySelector('#ke-legend');nav.replaceChildren();
+ for(const item of root.children){
+  const btn=document.createElement('button');btn.type='button';btn.classList.toggle('active',focusId===item.id);
+  btn.innerHTML=h(item.name)+' <span>'+fmt.format(item.lines)+'</span>';btn.title='Explore '+item.name;
+  btn.addEventListener('click',()=>navigate(focusId===item.id?'project':item.id));nav.appendChild(btn);
+ }
+}
+function renderVisibility(){
+ const focus=byId(focusId);const target=cameraFor(focus,!!selectedId);
+ shell.dataset.depth=focus.depth;
+ for(const node of flat){
+   const show=permitted(node,focus);node.g.style.opacity=show?(node.depth===0?'.75':'1'):'0';
+   node.g.style.pointerEvents=show && node.depth?'auto':'none';node.g.setAttribute('tabindex',show && node.depth?'0':'-1');
+   node.g.classList.toggle('is-selected',node.id===selectedId);
+   labelNode(node,focus,target.k);
+ }
+ updateTrail(focus);updateLegend();animateCamera(target,!camera);
+}
+function tipHide(){tip.classList.remove('show')}
+function tipShow(node,e){
+ if(e.pointerType==='touch'||!permitted(node,byId(focusId)))return;
+ document.querySelector('#ke-tip-kind').textContent= node.depth===1?'SYSTEM':node.depth===2?'FUNCTIONAL MODULE':'SOURCE FILE';
+ document.querySelector('#ke-tip-name').textContent=node.name;
+ document.querySelector('#ke-tip-desc').textContent=node.description||(node.depth===3?node.path:node.raw.description)||'';
+ document.querySelector('#ke-tip-meta').innerHTML=`<span>${fmt.format(node.lines)} lines</span><span>${fmt.format(node.files)} ${node.files===1?'file':'files'}</span>`;
+ const rect=shell.getBoundingClientRect();let x=e.clientX-rect.left+19,y=e.clientY-rect.top+16;
+ if(x+272>view.w)x=e.clientX-rect.left-274;if(y+170>view.h)y=e.clientY-rect.top-181;
+ tip.style.left=Math.max(9,x)+'px';tip.style.top=Math.max(9,y)+'px';tip.classList.add('show');
+}
+function listFiles(node){return node.depth===3?[node]:node.children.flatMap(listFiles)}
+function detail(node){
+ selectedId=node.id;
+ document.querySelector('#ke-panel-kicker').textContent=node.depth===1?'SOFTWARE SYSTEM':node.depth===2?'FUNCTIONAL MODULE':'SOURCE FILE';
+ document.querySelector('#ke-panel-title').textContent=node.name;
+ document.querySelector('#ke-panel-desc').textContent=node.description||(node.depth===3?node.path:'');
+ document.querySelector('#ke-panel-lines').textContent=fmt.format(node.lines);
+ document.querySelector('#ke-panel-count').textContent=fmt.format(node.files);
+ const listing=document.querySelector('#ke-panel-files');listing.replaceChildren();
+ const files=listFiles(node);
+ const section=document.querySelector('#ke-panel-files-title');section.textContent=node.depth===3?'FILE PATH':'INCLUDED FILES';
+ if(node.depth===3){const row=document.createElement('div');row.className='panel-file';row.innerHTML='<code>'+h(node.path)+'</code>';listing.appendChild(row)}
+ else {
+  files.sort((a,b)=>b.lines-a.lines).forEach(f=>{const row=document.createElement('div');row.className='panel-file';row.innerHTML='<code>'+h(f.path)+'</code><span>'+fmt.format(f.lines)+'</span>';listing.appendChild(row)});
+ }
+ const note=document.querySelector('#ke-panel-note');
+ note.textContent='Source snapshot '+INPUT_DATA.source_revision.slice(0,8)+'. Scroll to inspect every included file.';
+ panel.classList.add('open');shell.classList.add('has-detail');resize();panel.focus({preventScroll:true});
+ renderVisibility();
+}
+function clearDetail(){if(!selectedId)return;selectedId=null;panel.classList.remove('open');shell.classList.remove('has-detail');resize();renderVisibility()}
+function navigate(id){
+ const node=byId(id);if(!node)return;
+ tipHide();selectedId=null;panel.classList.remove('open');shell.classList.remove('has-detail');resize();focusId=id;
+ for(const n of flat)n.g.classList.remove('is-hover');hoveredId=null;
+ renderVisibility();
+}
+function activate(node){
+ tipHide();if(node.depth===1)navigate(node.id);
+ else if(node.depth===2){focusId=node.id;detail(node)}
+ else if(node.depth===3){focusId=node.parent.id;detail(node)}
+}
+function resize(){
+ const w=Math.round(shell.clientWidth),h=Math.round(shell.clientHeight);
+ if(view.w===w&&view.h===h)return;view={w,h};svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+ if(camera&&camFrame!==null){cancelAnimationFrame(camFrame);camFrame=null}
+ renderVisibility();if(camFrame!==null){cancelAnimationFrame(camFrame);camFrame=null;}applyCamera(cameraFor(byId(focusId),!!selectedId));parent.postMessage({type:'knight-software-height',height:Math.ceil(shell.getBoundingClientRect().height)},location.origin);
+}
+function init(){
+ create();
+ document.querySelector('#ke-close').addEventListener('click',clearDetail);
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'){if(selectedId)clearDetail();else if(focusId!=='project')navigate(byId(focusId).parent.id)}});
+ svg.addEventListener('click',e=>{if(e.target===svg)clearDetail()});
+ resize();
+ if('ResizeObserver' in window)new ResizeObserver(()=>{if(resizeFrame)cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(resize)}).observe(shell);
+ else window.addEventListener('resize',resize);
+}
+init();
+})();
+</script>
+</body>
+</html>
