@@ -11,6 +11,6 @@
   "dependencies": {
     "better-sqlite3": "12.8.0",
     "jose": "6.1.3",
-    "nodemailer": "^7.0.13"
+    "nodemailer": "10.6.0"
   }
 }

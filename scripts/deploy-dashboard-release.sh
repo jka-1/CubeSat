@@ -39,4 +39,4 @@ if (env.RECORDING_DB_PATH) {
 console.log('Recording and authentication preflight passed.');
 JS
 SERVICE_NAME=cubesat-telemetry.service bash scripts/deploy-live.sh
-curl --fail --silent --show-error http://127.0.0.1:8080/public/health
+curl --fail --silent --show-error http://127.0.0.1:8080/healthz
