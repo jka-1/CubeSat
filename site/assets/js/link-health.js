@@ -95,7 +95,7 @@ function render() {
   $('lhEndpoint').textContent = ep ? `${ep.address}:${ep.port}` : '--';
   $('lhEndpointChanges').textContent = `port changes ${state.portChanges} · reboots ${s.seq_resets}`;
   $('lhRssi').textContent = state.lastRssi === null ? 'n/a' : `${state.lastRssi} dBm`;
-  $('lhRssiDetail').textContent = s.rssi_dbm ? `min ${s.rssi_dbm.min} · mean ${s.rssi_dbm.mean}` : 'needs v5 packets';
+  $('lhRssiDetail').textContent = s.rssi_dbm ? `min ${s.rssi_dbm.min} · mean ${s.rssi_dbm.mean}` : 'awaiting debug link data';
   $('lhPending').textContent = fmt(st?.pending_commands);
   $('lhCmdSummary').textContent = `${s.commands.completed} ok · ${s.commands.failed} failed · ${s.commands.timed_out} timeout`;
   $('lhCmdReady').textContent = st ? (st.command_ready ? 'Ready' : 'Not ready') : '--';

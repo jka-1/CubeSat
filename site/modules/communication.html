@@ -30,7 +30,7 @@
       <button class="topology-tile page-tile" type="button" data-detail-target="overview">
         <strong>Overview</strong>
         <span class="tile-meta">System telemetry</span>
-        <span id="overviewPreview" class="tile-value">PV -- W</span>
+        <span id="overviewPreview" class="tile-value">Payload -- W</span>
         <span class="tile-action">
           Open page
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M5 11L11 5M6 5h5v5" /></svg>
@@ -65,7 +65,7 @@
       <button class="topology-tile device-tile" type="button" data-detail-target="pv">
         <span class="device-port" aria-hidden="true"><i></i><i></i></span>
         <strong>INA226</strong>
-        <span class="tile-meta">PV monitor · 0x40 follower</span>
+        <span class="tile-meta">Payload current sensor · 0x40 follower</span>
         <span id="pvPreview" class="tile-value">-- W · -- A</span>
         <span class="device-ack">ACK · --</span>
       </button>
@@ -113,7 +113,7 @@
               <div class="metric-tile"><span>Peripheral Temperature</span><strong id="summaryPeripheralTemp">Unavailable</strong></div>
               <div class="metric-tile"><span>Light Level</span><strong id="summaryRelativeLight">Unavailable</strong></div>
               <div class="metric-tile"><span>Input Selection</span><strong id="summaryMpptState">--</strong></div>
-              <div class="metric-tile"><span>PV Power</span><strong id="summaryPvPower">-- W</strong></div>
+              <div class="metric-tile"><span>Payload power</span><strong id="summaryPvPower">-- W</strong></div>
             </div>
             <div class="panel-meta summary-meta">
               <span>Device: <strong id="summaryDeviceId">Waiting for live data</strong></span>
@@ -148,13 +148,13 @@
             </p>
           </div>
 
-          <div class="detail-panel" data-detail-panel="pv" data-title="PV current monitor" data-context="INA226 · address 0x40" hidden>
+          <div class="detail-panel" data-detail-panel="pv" data-title="Payload current sensor" data-context="INA226 · address 0x40" hidden>
             <div class="pack-summary">
             <div class="metric-tile"><span data-tooltip="Voltage across the INA226 current-sense shunt, used to derive current.">Shunt Voltage</span><strong id="pvShuntValue">-- mV</strong></div>
               <div class="metric-tile"><span>Power</span><strong id="pvPowerValue">-- W</strong></div>
               <div class="metric-tile"><span>Current</span><strong id="pvCurrentValue">-- A</strong></div>
             </div>
-            <div id="pvMeters" class="cells" aria-label="PV telemetry"></div>
+            <div id="pvMeters" class="cells" aria-label="Payload telemetry"></div>
           </div>
 
           <div class="detail-panel" data-detail-panel="mppt" data-title="MPPT switch" data-context="BQ25798 / BQ25 · address 0x6B" hidden>
@@ -195,7 +195,7 @@
               </div>
               <div class="telemetry-toolbar">
                 <select id="sensorControlSelect" class="input" aria-label="Sensor polling control">
-                  <option value="pv">PV / INA226</option>
+                  <option value="pv">Payload / INA226</option>
                   <option value="bms">BMS / BQ76942</option>
                   <option value="mppt">MPPT / BQ25798</option>
                   <option value="all">All sensors</option>

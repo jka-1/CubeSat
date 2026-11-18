@@ -192,7 +192,7 @@ export function mountTelemetryOverview(root) {
     $('[data-metric-select]').value=selected;
     if ($('[data-readout]').hasChildNodes()) return;
     const groups = [
-      ['Solar monitor', 'INA226 · 0x40', ['pv']],
+      ['Payload current sensor', 'INA226 · 0x40', ['pv']],
       ['Battery monitor', 'BQ76942 · 0x08', ['bms']],
       ['Charger & power path', 'BQ25798 · 0x6B', ['mppt']],
       ['Environmental sensors', 'ESP32-S3 · ADC1', ['per']]
@@ -292,7 +292,8 @@ export function mountTelemetryOverview(root) {
     const {latest, packets} = model.stream;
     const device = model.metadata?.deviceId || latest?.packet?.device_id || 'ESP32';
     const seq = latest?.packet?.seq ?? model.metadata?.sequence;
-    $('[data-readout-packet]').textContent = latest ? `${device} · Seq ${seq ?? '—'} · ${packets} packets` : 'No packets received';
+    const packetFormat = latest?.source === 'udp' ? latest.packet?.packet_format : null;
+    $('[data-readout-packet]').textContent = latest ? `${device}${packetFormat ? ' · ' + packetFormat : ''} · Seq ${seq ?? '—'} · ${packets} packets` : 'No packets received';
     const cells = d.bms.cells.map((_, i) => model.value(`bms.cell${i}`));
     set('path', sourceText[d.mppt.acdrv] || d.mppt.acdrv || 'Not reported');
     set('faultNames', model.value('mppt.faults') === null ? 'Unavailable' : d.mppt.faults.filter(fault => fault.active).map(fault => fault.name.replace(/_STAT$/, '')).join(', ') || 'None active');

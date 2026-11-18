@@ -10,7 +10,7 @@ export const MAX_HISTORY_MS = 60 * 60 * 1000;
 export const WINDOWS = [{ ms: 60_000, label: '1 min' }, { ms: 300_000, label: '5 min' }, { ms: 900_000, label: '15 min' }, { ms: 3_600_000, label: '60 min' }];
 
 export const DEVICES = Object.freeze([
-  { key: 'pv', label: 'PV / INA226', addr: '0x40', mask: 0x01 },
+  { key: 'pv', label: 'Payload / INA226', addr: '0x40', mask: 0x01 },
   { key: 'bms', label: 'BMS / BQ76942', addr: '0x08', mask: 0x02 },
   { key: 'mppt', label: 'MPPT / BQ25798', addr: '0x6B', mask: 0x04 }
 ]);
@@ -100,6 +100,7 @@ export function decodeDevices(packet) {
       faults,
       activeFaults: fault20 !== null || Array.isArray(m.faults) ? faults.filter((f) => f.active).length : null,
       // BQ25798 power path ADC (v6 packets only): REG31 IBUS, REG35 VBUS, REG37 VAC1, REG3B VBAT, REG3D VSYS, REG41 TDIE
+      ibatMa: num(m.ibatA) === null ? null : Math.round(m.ibatA * 1000),
       ibusMa: num(m.ibusA) === null ? null : +(num(m.ibusA) * 1000).toFixed(0),
       vbusV: num(m.vbusV), vac1V: num(m.vac1V), vbatV: num(m.vbatV), vsysV: num(m.vsysV),
       dieTempC: num(m.dieTempC), adcEnabled: typeof m.adcEnabled === 'boolean' ? m.adcEnabled : null,
@@ -120,7 +121,7 @@ export const SERIES = {
   'pv.busV': (d) => d.pv.busV, 'pv.currentA': (d) => d.pv.currentA, 'pv.powerW': (d) => d.pv.powerW, 'pv.shuntMv': (d) => d.pv.shuntMv,
   'pv.currentMa': (d) => d.pv.currentMa, 'pv.powerMw': (d) => d.pv.powerMw,
   'bms.packV': (d) => d.bms.packV, 'bms.intTempC': (d) => d.bms.intTempC,
-  'mppt.ibusMa': (d) => d.mppt.ibusMa, 'mppt.vbusV': (d) => d.mppt.vbusV, 'mppt.vac1V': (d) => d.mppt.vac1V,
+  'mppt.ibatMa': (d) => d.mppt.ibatMa, 'mppt.ibusMa': (d) => d.mppt.ibusMa, 'mppt.vbusV': (d) => d.mppt.vbusV, 'mppt.vac1V': (d) => d.mppt.vac1V,
   'mppt.vbatV': (d) => d.mppt.vbatV, 'mppt.vsysV': (d) => d.mppt.vsysV, 'mppt.dieTempC': (d) => d.mppt.dieTempC,
   'per.tempMv': (d) => d.adc.temp.mv, 'per.lightMv': (d) => d.adc.light.mv,
   'bms.cell0': (d) => d.bms.cells[0].v, 'bms.cell1': (d) => d.bms.cells[1].v, 'bms.cell2': (d) => d.bms.cells[2].v,

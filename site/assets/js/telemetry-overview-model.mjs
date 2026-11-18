@@ -1,12 +1,12 @@
 import { StreamingModel, SERIES, decodeDevices } from './streaming-telemetry.mjs?v=20261109b';
 
 export const METRICS = [
-  ['pv.powerW','Solar power','W',3,'INA226','0x03'],['pv.busV','Bus voltage','V',3,'INA226','0x02'],
-  ['pv.currentA','PV current','A',3,'INA226','0x04'],['pv.shuntMv','Shunt voltage','mV',3,'INA226','0x01'],
+  ['pv.powerW','Payload power','W',3,'INA226','0x03'],['pv.busV','Bus voltage','V',3,'INA226','0x02'],
+  ['pv.currentA','Payload current','A',3,'INA226','0x04'],['pv.shuntMv','Shunt voltage','mV',3,'INA226','0x01'],
   ['bms.packV','Pack voltage','V',3,'BQ76942','0x36'],['bms.intTempC','BMS internal temperature','°C',1,'BQ76942','0x68'],
   ...[0,1,2,3].map(i=>[`bms.cell${i}`,`Cell ${i+1} voltage`,'V',3,'BQ76942',['0x14','0x16','0x18','0x1A'][i]]),
   ['bms.deltaMv','Cell spread','mV',0,'BQ76942','derived'],
-  ['mppt.ibusMa','Charger bus current','mA',0,'BQ25798','0x31'],['mppt.vbusV','Charger VBUS','V',3,'BQ25798','0x35'],
+  ['mppt.ibatMa','IBAT · Battery current','mA',0,'BQ25798','0x33'],['mppt.ibusMa','Charger bus current','mA',0,'BQ25798','0x31'],['mppt.vbusV','Charger VBUS','V',3,'BQ25798','0x35'],
   ['mppt.vac1V','Charger VAC1','V',3,'BQ25798','0x37'],['mppt.vbatV','Charger VBAT','V',3,'BQ25798','0x3B'],
   ['mppt.vsysV','Charger VSYS','V',3,'BQ25798','0x3D'],['mppt.dieTempC','Charger die temperature','°C',1,'BQ25798','0x41'],
   ['mppt.faults','Active charger faults','',0,'BQ25798','0x20'],['per.tempC','Peripheral temperature','°C',1,'MCP9700','ADC1'],
@@ -35,7 +35,7 @@ export class TelemetryOverviewModel {
     if(!this.stream.ingest(event,now))return false;
     const time=this.stream.lastReceivedAt;
     const numeric=flattenFields(packet.telemetry).filter(([,v])=>typeof v==='number'&&Number.isFinite(v));
-    const standardPaths=new Set(['pv.powerW','pv.busVoltageV','pv.currentA','pv.shuntVoltageMv','bms.packVoltageV','bms.internalTempC','mppt.ibusA','mppt.vbusV','mppt.vac1V','mppt.vbatV','mppt.vsysV','mppt.dieTempC','peripheral.temperatureC','peripheral.temperatureVoltageMv','peripheral.lightVoltageMv',...[0,1,2,3].map(i=>`bms.cellVoltagesV.${i}`)]);
+    const standardPaths=new Set(['pv.powerW','pv.busVoltageV','pv.currentA','pv.shuntVoltageMv','bms.packVoltageV','bms.internalTempC','mppt.ibusA','mppt.ibatA','mppt.vbusV','mppt.vac1V','mppt.vbatV','mppt.vsysV','mppt.dieTempC','peripheral.temperatureC','peripheral.temperatureVoltageMv','peripheral.lightVoltageMv',...[0,1,2,3].map(i=>`bms.cellVoltagesV.${i}`)]);
     const values=new Map(numeric);
     for(const [path] of numeric)if(!standardPaths.has(path)&&!this.extra.has(path)){
       const group=path.split('.')[0];

@@ -154,6 +154,8 @@ body[data-surface="dashboard"] .rail::before {display:none}
   body[data-surface="dashboard"] #accountButton::before {width:26px;height:26px;mask-size:17px}
   body[data-surface="dashboard"] #accountButton::after {content:"Settings";font-size:10px;color:var(--muted);margin-left:auto}
   body[data-sidebar="compact"] :is(.sidebar-top .brand-product>span,.sidebar-section,#accountButton::after) {display:none}
+  body[data-sidebar="compact"] #streamingNavBadge {align-self:center;justify-content:center;margin:0;padding:0;width:32px;height:32px;gap:0}
+  body[data-sidebar="compact"] #streamingNavBadge span {display:none}
   body[data-sidebar="compact"] .sidebar-top {justify-content:center;padding:0}
   body[data-sidebar="compact"] .sidebar-top .brand {justify-content:center}
   body[data-surface="dashboard"][data-sidebar="compact"] .dashboard-tabs .nav-link {justify-content:center;padding:10px 0}

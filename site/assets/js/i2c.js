@@ -55,7 +55,7 @@ const sensorDefaults = {
   all: ''
 };
 const sensorGroups = [
-  { key: 'pv', label: 'PV / INA226', mask: 0x01 },
+  { key: 'pv', label: 'Payload / INA226', mask: 0x01 },
   { key: 'bms', label: 'BMS / BQ76942', mask: 0x02 },
   { key: 'mppt', label: 'MPPT / BQ25798', mask: 0x04 }
 ];
@@ -257,7 +257,7 @@ function renderTopologyPreviews(telemetry) {
 
   setPreviewText(
     'overviewPreview',
-    `PV ${fmtPower(pvPower)}`
+    `Payload ${fmtPower(pvPower)}`
   );
   setPreviewText(
     'environmentPreview',
@@ -710,6 +710,7 @@ function mpptPowerPathRows(mppt) {
     ['VAC1', mppt?.vac1V, 'V', 3, { min: 0, max: 30 }, 'REG37 VAC1_ADC'],
     ['VBAT', mppt?.vbatV, 'V', 3, { min: 0, max: 20 }, 'REG3B VBAT_ADC'],
     ['VSYS', mppt?.vsysV, 'V', 3, { min: 0, max: 20 }, 'REG3D VSYS_ADC'],
+    ['IBAT', numericValue(mppt?.ibatA) === null ? null : mppt.ibatA * 1000, 'mA', 0, { min: -5000, max: 5000 }, 'REG33 IBAT_ADC'],
     ['IBUS', numericValue(mppt?.ibusA) === null ? null : numericValue(mppt.ibusA) * 1000, 'mA', 0, { min: 0, max: 3000 }, 'REG31 IBUS_ADC'],
     ['Die Temp', mppt?.dieTempC, '°C', 1, { min: -20, max: 120 }, 'REG41 TDIE_ADC']
   ];
@@ -869,6 +870,7 @@ function normalizeFromCandidate(candidate) {
       switchState: normalizeSwitchState(mpptSwitchState),
       faults: normalizeFaults(mpptFaults),
       // v6 Streaming Telemetry power path (null / absent on older packets)
+      ibatA: numericValue(candidate?.mppt?.ibatA),
       ibusA: numericValue(candidate?.mppt?.ibusA),
       vbusV: numericValue(candidate?.mppt?.vbusV),
       vac1V: numericValue(candidate?.mppt?.vac1V),

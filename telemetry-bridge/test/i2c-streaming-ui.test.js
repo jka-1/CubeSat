@@ -65,7 +65,7 @@ test('I²C streaming preserves panels, readings, availability and power units', 
     if (message.id) {
       const p = pending.get(message.id); pending.delete(message.id);
       if (message.error) p.reject(Error(JSON.stringify(message.error))); else p.resolve(message.result);
-    } else if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.text);
+    } else if (message.method === 'Runtime.exceptionThrown') errors.push(message.params.exceptionDetails.exception?.description || message.params.exceptionDetails.text);
     else if (message.method === 'Runtime.consoleAPICalled' && message.params.type === 'error') errors.push(JSON.stringify(message.params.args));
   };
   const evaluate = async (expression) => {
@@ -75,7 +75,7 @@ test('I²C streaming preserves panels, readings, availability and power units', 
   };
   const waitFor = async (expression) => {
     for (let i = 0; i < 100; i++) { if (await evaluate(expression)) return; await pause(25); }
-    throw Error(`Timed out: ${expression}`);
+    throw Error(`Timed out: ${expression}; errors=${errors.join(' ')}`);
   };
   const targets = await send('Target.getTargets');
   session = (await send('Target.attachToTarget', { targetId: targets.targetInfos.find((item) => item.type === 'page').targetId, flatten: true })).sessionId;
@@ -108,6 +108,17 @@ test('I²C streaming preserves panels, readings, availability and power units', 
   await check('Simple limits the telemetry view to the interactive bus', 'document.querySelector(".i2c-workspace").checkVisibility() && document.querySelector("[data-advanced-view]").hidden && !document.querySelector("#i2cStreamCard")');
   await evaluate('localStorage.setItem("cubesat.streamingTelemetry","on"); location.hash="home"');
   await waitFor('!!document.querySelector(".ke-stage")');
+  await evaluate('location.hash="runs"');
+  await waitFor('document.body.dataset.surface === "dashboard" && !document.querySelector("#streamingNavBadge").hidden');
+  await send('Emulation.setDeviceMetricsOverride', { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await evaluate('document.querySelector("#sidebarToggle").click()');
+  await check('collapsed streaming badge retains its dot and fits the sidebar', `(() => {
+    const badge = document.querySelector('#streamingNavBadge');
+    const rail = document.querySelector('#dashboardNavigation').getBoundingClientRect();
+    return badge.checkVisibility() && badge.querySelector('i').checkVisibility() &&
+      !badge.querySelector('span').checkVisibility() && badge.getBoundingClientRect().right <= rail.right;
+  })()`);
+  await evaluate('document.querySelector("#sidebarToggle").click()');
   await evaluate('location.hash="communication"');
   await waitFor('!!document.querySelector("#telemetryOverview") && __streams.filter(s => !s.closed).length === 1');
   await sample(1);
@@ -123,8 +134,10 @@ test('I²C streaming preserves panels, readings, availability and power units', 
     assert.equal(await text('[data-reading-key="bms.packV"]'), '15.670 V');
     assert.equal(await evaluate('document.querySelector("[data-advanced-view]").checkVisibility() && !document.querySelector(".i2c-workspace").checkVisibility() && document.querySelector("[data-main-chart]").checkVisibility()'), true);
   });
-  await sample(4, 'f.packet.telemetry.pv.powerW = .999;');
+  assert.equal(await text('[data-reading-key="mppt.ibatMa"]'), 'Unavailable');
+  await sample(4, 'f.packet.telemetry.pv.powerW = .999; f.packet.telemetry.mppt.ibatA = -.120;');
   assert.equal(await text('[data-reading-key="pv.powerW"]'), '999.00 mW');
+  assert.equal(await text('[data-reading-key="mppt.ibatMa"]'), '-120 mA');
   await sample(5, 'f.packet.telemetry.pv.powerW = 1;');
   assert.equal(await text('[data-reading-key="pv.powerW"]'), '1.000 W');
   await sample(6, 'f.packet.debug.devices.pv.state = "error"; f.packet.debug.devices.bms.state = "paused"; f.packet.telemetry.mppt.available = false; f.packet.telemetry.peripheral.temperatureC = null; f.packet.telemetry.peripheral.temperatureVoltageMv = null;');

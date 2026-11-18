@@ -75,6 +75,7 @@ const MPPT_PATH = [metric('mppt.vbusV', 'VBUS · 0x35', ' V', 3, 'BQ25798 bus vo
   metric('mppt.vac1V', 'VAC1 · 0x37', ' V', 3, 'BQ25798 input voltage register.'),
   metric('mppt.vbatV', 'VBAT · 0x3B', ' V', 3, 'BQ25798 battery voltage register.'),
   metric('mppt.vsysV', 'VSYS · 0x3D', ' V', 3, 'BQ25798 system voltage register.'),
+  metric('mppt.ibatMa', 'IBAT · 0x33', ' mA', 0, 'BQ25798 signed battery current.'),
   metric('mppt.ibusMa', 'IBUS · 0x31', ' mA', 0, 'BQ25798 bus current register.'),
   metric('mppt.dieTempC', 'Die temp · 0x41', ' °C', 1, 'BQ25798 die temperature register.')];
 
@@ -96,7 +97,7 @@ function template() {
   <div class="st-empty" data-st="empty">No data</div>
   <div class="st-grid">
     <section class="st-card" data-card="pv" hidden>
-      <header><h4 data-tooltip="Photovoltaic (PV) voltage, current, and power from the INA226 monitor.">PV · INA226</h4><small>0x40</small><span class="st-age" data-age></span></header>
+      <header><h4 data-tooltip="Payload bus voltage, current, and power measured by the INA226.">Payload · INA226</h4><small>0x40</small><span class="st-age" data-age></span></header>
       ${PV_METRICS.map(metricRow).join('')}
     </section>
     <section class="st-card" data-card="bms" hidden>
@@ -196,7 +197,7 @@ export function mountStreamingView(root, { url } = {}) {
         set('mppt.activeFaults', x.activeFaults === null ? '--' : String(x.activeFaults));
         for (const [k, v] of [['vac1', x.vac1V], ['vbus', x.vbusV], ['vsys', x.vsysV], ['vbat', x.vbatV]]) set(`mppt.${k}`, fmt(v, 2, ' V'));
         set('mppt.vbusV', fmt(x.vbusV, 3, ' V')); set('mppt.vac1V', fmt(x.vac1V, 3, ' V')); set('mppt.vbatV', fmt(x.vbatV, 3, ' V'));
-        set('mppt.vsysV', fmt(x.vsysV, 3, ' V')); set('mppt.ibusMa', fmt(x.ibusMa, 0, ' mA')); set('mppt.dieTempC', fmt(x.dieTempC, 1, ' °C'));
+        set('mppt.vsysV', fmt(x.vsysV, 3, ' V')); set('mppt.ibatMa', fmt(x.ibatMa, 0, ' mA')); set('mppt.ibusMa', fmt(x.ibusMa, 0, ' mA')); set('mppt.dieTempC', fmt(x.dieTempC, 1, ' °C'));
       }
     }
     if (snap.peripheral) {

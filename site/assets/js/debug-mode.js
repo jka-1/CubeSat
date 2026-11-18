@@ -217,7 +217,8 @@ function renderTiles() {
   }).join('');
   const pill = $('dmDebugPill');
   if (!d) { pill.textContent = 'debug --'; $('dmDebugDetail').textContent = 'waiting for telemetry'; return; }
-  pill.textContent = d.enabled ? 'debug ON (v5)' : 'debug OFF';
+  const format = state.status?.telemetry_packet_format;
+  pill.textContent = `debug ${d.enabled ? 'ON' : 'OFF'}${format ? ' · ' + format : ''}`;
   pill.className = `status-pill ${d.enabled ? 'online' : ''}`;
   $('dmDebugDetail').textContent = d.enabled
     ? `scan ${d.scan_period_ms} ms · probe every ${d.probe_period_ms} ms · I²C cycle ${d.i2c_cycle_ms ?? '--'} ms · present mask 0x${d.present_mask.toString(16)}`
@@ -233,7 +234,7 @@ function renderLink() {
   $('dmLhJitter').textContent = `jitter ${f(s.rfc3550_jitter_ms, ' ms')}`;
   const l = state.link;
   $('dmLhRssi').textContent = l?.rssi_dbm === null || l?.rssi_dbm === undefined ? 'n/a' : `${l.rssi_dbm} dBm`;
-  $('dmLhRssiDetail').textContent = s.rssi_dbm ? `min ${s.rssi_dbm.min} · mean ${s.rssi_dbm.mean}` : 'needs debug (v5) packets';
+  $('dmLhRssiDetail').textContent = s.rssi_dbm ? `min ${s.rssi_dbm.min} · mean ${s.rssi_dbm.mean}` : 'awaiting debug link data';
   $('dmLhAck').textContent = l ? (l.last_ack_rtt_ms === null ? 'timeout' : `${l.last_ack_rtt_ms} ms`) : '--';
   $('dmLhLinkErr').textContent = l ? `tx err ${l.tx_errors} · ack timeouts ${l.ack_timeouts}` : '--';
   $('dmLhCmd').textContent = f(s.commands.rtt_ms.p50, ' ms');
