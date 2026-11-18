@@ -309,6 +309,19 @@ async function pollExecution() {
   } catch (error) { notice(`Execution status unavailable: ${error.message}`, true); }
   finally { polling = false; }
 }
+async function restoreControlExecution() {
+  const [recent] = (await request('/sequence-executions?control=1')).executions || [];
+  if (!alive || !recent) return false;
+  execution = recent;
+  events = [];
+  lastEvent = 0;
+  await pollExecution();
+  if (alive && ['running', 'paused'].includes(execution?.state)) {
+    clearInterval(timer);
+    timer = setInterval(pollExecution, 750);
+  }
+  return true;
+}
 async function start(mode) {
   if (!draft.id || !canOperate() || JSON.stringify(draft) !== savedSnapshot) { notice('Save the current sequence before execution.', true); return; }
   if (mode === 'live') {
@@ -493,7 +506,9 @@ export async function initSequencesPage() {
   $('seqReviewed').addEventListener('change', () => render(false));
   $('seqRecover').addEventListener('click', async () => {
     if (!execution || !canOperate() || !$('seqReviewed').checked) return;
-    try { await jsonPost(`/sequence-executions/${encodeURIComponent(execution.id)}/recover`, {}, $('seqToken').value.trim()); $('seqReviewed').checked = false; $('seqToken').value = ''; await pollExecution(); notice('Device review acknowledged; live lock cleared.'); }
+    try { await jsonPost(`/sequence-executions/${encodeURIComponent(execution.id)}/recover`, {}, $('seqToken').value.trim()); $('seqReviewed').checked = false; $('seqToken').value = ''; await pollExecution();
+      const another = await restoreControlExecution();
+      notice(another ? 'Device review acknowledged. Review the next execution shown below.' : 'Device review acknowledged; live lock cleared.'); }
     catch (error) { notice(`Recovery failed: ${error.message}`, true); }
   });
   for (const action of ['pause', 'resume', 'stop']) $(`seq${action[0].toUpperCase()}${action.slice(1)}`).addEventListener('click', () => control(action));
@@ -501,7 +516,15 @@ export async function initSequencesPage() {
     getSelected: () => $('seqSaved').value, closeOnSelect: true, onSelect: (id) => { $('seqSaved').value = id; updateSaved(); render(false); } });
   wireDrag(); render();
   clearInterval(listTimer); listTimer = setInterval(refreshSavedList, 5000);
-  try { await loadSaved(); if (draft.id && saved.some((item) => item.id === draft.id)) { $('seqSaved').value = draft.id; updateSaved(); } const recent = (await request('/sequence-executions')).executions?.find((item) => ['running', 'paused'].includes(item.state)); if (recent) { execution = recent; await pollExecution(); timer = setInterval(pollExecution, 750); } }
+  try {
+    await loadSaved();
+    if (!alive) return;
+    if (draft.id && saved.some(item => item.id === draft.id)) {
+      $('seqSaved').value = draft.id;
+      updateSaved();
+    }
+    await restoreControlExecution();
+  }
   catch (error) { notice(`Branch Definition service unavailable: ${error.message}`, true); }
 }
 export function destroySequencesPage() { toolbarController?.abort(); toolbarController = null; orderMenu?.dispose(); orderMenu = null; registryUnsubscribe?.(); registryUnsubscribe = null; alive = false; clearInterval(timer); timer = null; clearInterval(listTimer); listTimer = null; remoteNotice = ''; historyView?.dispose(); historyView = null; }

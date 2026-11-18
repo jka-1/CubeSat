@@ -32,5 +32,7 @@ test('write feedback distinguishes accepted, ESP32 acknowledgment, rejection, an
   assert.doesNotMatch(registerWriteFeedback({ status: 'completed' }), /acknowledged/);
   assert.match(registerWriteFeedback({ status: 'failed', result: { error: 'ESP_FAIL' } }), /ESP_FAIL/);
   assert.match(registerWriteFeedback({ status: 'timed_out' }), /outcome is unknown/);
+  assert.match(commandErrorDetail('Live sequence owns command control'), /live Branch Definition owns/);
+  assert.match(commandErrorDetail('Review unknown command outcome before another write'), /needs device review/);
   assert.doesNotMatch(commandErrorDetail('/private/config/secret'), /private|secret/);
 });

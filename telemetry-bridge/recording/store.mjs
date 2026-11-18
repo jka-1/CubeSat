@@ -253,7 +253,16 @@ export class RunStore {
     const { definition_json, ...other } = row;
     return { ...other, definition: JSON.parse(definition_json), completed_steps: this.db.prepare("SELECT COUNT(*) AS count FROM sequence_events WHERE execution_id=? AND type='block_completed'").get(id).count };
   }
-  sequenceListExecutions() {
+  sequenceListExecutions({ controlOnly = false } = {}) {
+    if (controlOnly) {
+      return this.db.prepare(`
+        SELECT id, state FROM sequence_executions
+        WHERE state IN ('running', 'paused')
+          OR (mode='live' AND recovery_ms IS NULL AND reason IN ('command_outcome_unknown','bridge_restart'))
+        ORDER BY (state IN ('running', 'paused')) DESC, started_ms DESC, id
+        LIMIT 1
+      `).all();
+    }
     return this.db.prepare("SELECT e.id,e.sequence_id,e.revision,json_extract(e.definition_json,'$.name') AS name,e.mode,e.device_id,e.state,e.reason,e.started_ms,e.ended_ms,e.recording_run_id,(SELECT COUNT(*) FROM sequence_events v WHERE v.execution_id=e.id AND v.type='block_completed') AS completed_steps FROM sequence_executions e ORDER BY e.started_ms DESC LIMIT 100").all();
   }
   sequenceEvents({ id, after = 0, limit = 100 }) {

@@ -2003,7 +2003,7 @@ const httpServer = http.createServer(async (request, response) => {
           } finally { liveStartReserved = false; }
         }
       } else if (parts[0] === 'sequence-executions') {
-        if (request.method === 'GET' && parts.length === 1) { sendJson(response, 200, { executions: await recorder.call('sequenceListExecutions') }); return; }
+        if (request.method === 'GET' && parts.length === 1) { sendJson(response, 200, { executions: await recorder.call('sequenceListExecutions', { controlOnly: requestUrl.searchParams.get('control') === '1' }) }); return; }
         if (request.method === 'GET' && parts.length === 2) { sendJson(response, 200, { execution: await recorder.call('sequenceGetExecution', { id: parts[1] }) }); return; }
         if (request.method === 'GET' && parts.length === 3 && parts[2] === 'events') { sendJson(response, 200, { events: await recorder.call('sequenceEvents', { id: parts[1], after: Number(requestUrl.searchParams.get('after') || 0) }) }); return; }
         if (request.method === 'POST' && parts.length === 3) {

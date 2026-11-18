@@ -353,7 +353,7 @@ test('live branches share a recording, preserve packets and markers, and retain 
   const http = await freePort(), udp = await freePort(true), origin = `http://127.0.0.1:${http}`;
   const server = spawn(process.execPath, [fileURLToPath(new URL('../server.js', import.meta.url))], { env: {
     ...process.env, ...settings(file), AUTH_ORIGIN: origin, HTTP_PORT: String(http), UDP_PORT: String(udp),
-    HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1', COMMAND_TOKEN: 'test-command',
+    HTTP_BIND_ADDRESS: '127.0.0.1', UDP_BIND_ADDRESS: '127.0.0.1', COMMAND_TOKEN: 'test-command', COMMAND_TIMEOUT_MS: '300',
     RECORDING_DB_PATH: join(dir, 'runs.sqlite')
   }, stdio: ['ignore', 'ignore', 'pipe'] });
   let logs = ''; server.stderr.on('data', (d) => { logs += d; });
@@ -381,12 +381,13 @@ test('live branches share a recording, preserve packets and markers, and retain 
   t.after(async () => { await publicReader.cancel(); await observing; });
   const device = dgram.createSocket('udp4'); device.bind(0, '127.0.0.1'); await once(device, 'listening');
   t.after(() => device.close());
-  let commands = 0, seq = 0, failNext = false;
+  let commands = 0, seq = 0, failNext = false, dropCommand = false;
   const emitted = [];
   device.on('message', (bytes, peer) => {
     let command; try { command = JSON.parse(bytes); } catch { return; }
     if (command.type !== 'led_control') return;
     commands++;
+    if (dropCommand) return;
     const ok = !failNext; failNext = false;
     device.send(JSON.stringify({ type: 'debug_result', device_id: 'esp32-telemetry', request_id: command.request_id,
       command_type: 'led_control', ok, enabled: true, gpio: 38 }), peer.port, peer.address);
@@ -462,6 +463,19 @@ test('live branches share a recording, preserve packets and markers, and retain 
   assert.notEqual(after.recording_run_id, run.id);
   assert.equal((await json('/runs')).recording.active_run_id, null);
   assert.equal(commands, 5);
+  dropCommand = true;
+  const interrupted = await execute();
+  assert.equal(interrupted.reason, 'command_outcome_unknown');
+  await send();
+  assert.deepEqual((await json('/sequence-executions?control=1')).executions, [{ id: interrupted.id, state: 'failed' }]);
+  const blocked = await request('/command?wait=1', { type: 'debug_control', enabled: true });
+  assert.equal(blocked.status, 409);
+  assert.equal((await blocked.json()).error, 'Review unknown command outcome before another write');
+  await json(`/sequence-executions/${interrupted.id}/recover`, {});
+  assert.deepEqual((await json('/sequence-executions?control=1')).executions, []);
+  dropCommand = false;
+  const resumed = await json('/command?wait=1', { type: 'led_control', enabled: true });
+  assert.equal(resumed.status, 'completed');
   await publicReader.cancel(); await observing;
   const publicEvents = observerText.split('\n').filter((line) => line.startsWith('data: ')).map((line) => JSON.parse(line.slice(6)));
   assert.ok(publicEvents.some((event) => event.type === 'telemetry'));

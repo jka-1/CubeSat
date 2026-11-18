@@ -1,8 +1,8 @@
 import { allowRoute, isOperator, showAccount, refreshSession } from './auth.js?v=20261118-telemetry';
 import { initI2CPage, destroyI2CPage } from './i2c.js?v=20261118-telemetry';
 import { initLinkHealthPage, destroyLinkHealthPage } from './link-health.js?v=20261118-telemetry';
-import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261118-telemetry';
-import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261118-telemetry';
+import { initDebugModePage, destroyDebugModePage } from './debug-mode.js?v=20261118-debug-recovery';
+import { initSequencesPage, destroySequencesPage, confirmLeaveSequences } from './sequences.js?v=20261118-debug-recovery';
 import { initRunsPage, destroyRunsPage } from './runs.js?v=20261118-telemetry';
 import { initTwinPage, destroyTwinPage } from './twin.js?v=20261118-twin-theme';
 import { isStreamingMode } from './streaming-telemetry.mjs?v=20261109b';

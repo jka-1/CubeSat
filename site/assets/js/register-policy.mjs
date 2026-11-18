@@ -33,6 +33,12 @@ export function validateRegisterWrite(map, deviceAddress, registerAddress, data)
 
 export function commandErrorDetail(error) {
   const text = String(error || '').trim();
+  if (text === 'Live sequence owns command control') {
+    return 'A live Branch Definition owns command control. Let it finish or stop it in Branch Definition.';
+  }
+  if (text === 'Review unknown command outcome before another write') {
+    return 'A live Branch Definition needs device review. Open Branch Definition to review the previous execution.';
+  }
   if (/^ESP_(?:ERR_[A-Z0-9_]+|FAIL|OK)$/.test(text) ||
       /^(?:An operator account is required|A valid command token is required|Sign in to continue|Session expired or invalid|Session verification failed)/.test(text) ||
       /^(?:Register 0x[0-9A-F]{2}|BQ25798 register 0x14|addr |reg |data\[\d+\] |i2c_write data)/i.test(text)) {

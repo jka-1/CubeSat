@@ -214,10 +214,12 @@ test('saved revisions, execution events, and recovery state are durable store re
   store.sequenceEvent({ execution_id: 'execution-1', order: 1, at_ms: 2, type: 'command_intent', block_id: 'one', details: { command: 'led_control' } });
   store.sequenceState({ id: 'execution-1', state: 'failed', reason: 'command_outcome_unknown', ended_ms: 3 });
   assert.equal(store.sequenceUnsafeStatus(), true);
+  assert.deepEqual(store.sequenceListExecutions({ controlOnly: true }), [{ id: 'execution-1', state: 'failed' }]);
   assert.equal(store.sequenceGetExecution({ id: 'execution-1' }).recording_session_id, 'run-session');
   assert.equal(store.sequenceEvents({ id: 'execution-1' })[0].details.command, 'led_control');
   store.sequenceRecover({ id: 'execution-1' });
   assert.equal(store.sequenceUnsafeStatus(), false);
+  assert.deepEqual(store.sequenceListExecutions({ controlOnly: true }), []);
   const liveEnvelope = telemetry(6);
   liveEnvelope.type = 'telemetry';
   liveEnvelope.packet.debug = { enabled: false };
