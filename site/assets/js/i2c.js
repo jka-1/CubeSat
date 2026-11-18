@@ -8,8 +8,8 @@ import {
   lightLevelFromMv
 } from './telemetry-model.mjs?v=20261019b';
 import { isStreamingMode, setStreamingMode, subscribe as subscribeStreaming, streamUrl as streamingUrl } from './streaming-telemetry.mjs?v=20261109b';
-import { fmtPower } from './streaming-view.mjs?v=20261112-registers';
-import { mountTelemetryOverview } from './telemetry-overview.mjs?v=20261118-telemetry';
+import { fmtPower } from './streaming-view.mjs?v=20261118-power-path';
+import { mountTelemetryOverview } from './telemetry-overview.mjs?v=20261118-power-path';
 let overviewView = null;
 
 const initialTelemetry = {
@@ -710,7 +710,6 @@ function mpptPowerPathRows(mppt) {
     ['VAC1', mppt?.vac1V, 'V', 3, { min: 0, max: 30 }, 'REG37 VAC1_ADC'],
     ['VBAT', mppt?.vbatV, 'V', 3, { min: 0, max: 20 }, 'REG3B VBAT_ADC'],
     ['VSYS', mppt?.vsysV, 'V', 3, { min: 0, max: 20 }, 'REG3D VSYS_ADC'],
-    ['IBAT', numericValue(mppt?.ibatA) === null ? null : mppt.ibatA * 1000, 'mA', 0, { min: -5000, max: 5000 }, 'REG33 IBAT_ADC'],
     ['IBUS', numericValue(mppt?.ibusA) === null ? null : numericValue(mppt.ibusA) * 1000, 'mA', 0, { min: 0, max: 3000 }, 'REG31 IBUS_ADC'],
     ['Die Temp', mppt?.dieTempC, '°C', 1, { min: -20, max: 120 }, 'REG41 TDIE_ADC']
   ];

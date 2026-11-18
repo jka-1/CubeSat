@@ -134,10 +134,10 @@ test('I²C streaming preserves panels, readings, availability and power units', 
     assert.equal(await text('[data-reading-key="bms.packV"]'), '15.670 V');
     assert.equal(await evaluate('document.querySelector("[data-advanced-view]").checkVisibility() && !document.querySelector(".i2c-workspace").checkVisibility() && document.querySelector("[data-main-chart]").checkVisibility()'), true);
   });
-  assert.equal(await text('[data-reading-key="mppt.ibatMa"]'), 'Unavailable');
   await sample(4, 'f.packet.telemetry.pv.powerW = .999; f.packet.telemetry.mppt.ibatA = -.120;');
   assert.equal(await text('[data-reading-key="pv.powerW"]'), '999.00 mW');
-  assert.equal(await text('[data-reading-key="mppt.ibatMa"]'), '-120 mA');
+  assert.equal(await evaluate(`document.querySelectorAll('[data-reading-key="mppt.ibatMa"],[data-instrument-value="mppt.ibatMa"]').length`), 0);
+  assert.equal(await evaluate(`document.querySelector('[data-metric-select] option[value="mppt.ibatMa"]').textContent`), 'IBAT · Battery current · mA');
   await sample(5, 'f.packet.telemetry.pv.powerW = 1;');
   assert.equal(await text('[data-reading-key="pv.powerW"]'), '1.000 W');
   await sample(6, 'f.packet.debug.devices.pv.state = "error"; f.packet.debug.devices.bms.state = "paused"; f.packet.telemetry.mppt.available = false; f.packet.telemetry.peripheral.temperatureC = null; f.packet.telemetry.peripheral.temperatureVoltageMv = null;');

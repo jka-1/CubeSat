@@ -5,7 +5,7 @@ import { convert, parseValueInput } from './register-conversions.mjs?v=20261014a
 import { parseRegisterAddress, validateRegisterWrite, commandErrorDetail, registerWriteFeedback } from './register-policy.mjs?v=20261118-debug-recovery';
 import { parseSequenceLine, formatScanGrid, describeResult } from './debug-commands.mjs?v=20261027c';
 import { isStreamingMode, setStreamingMode } from './streaming-telemetry.mjs?v=20261109b';
-import { mountStreamingView } from './streaming-view.mjs?v=20261112-registers';
+import { mountStreamingView } from './streaming-view.mjs?v=20261118-power-path';
 
 let streamView = null, registryUnsubscribe = null, baseMap = null, mountGeneration = 0;
 function applyStreamingToggle(on) {

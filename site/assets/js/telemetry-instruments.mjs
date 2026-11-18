@@ -6,7 +6,7 @@ const instruments = [
     supplements:[['bms.packV','Pack pin'],['bms.deltaMv','Cell spread']] },
   { id:'rails', title:'Charger voltage rails', device:'BQ25798 · 0x6B', unit:'V',
     metrics:[['mppt.vac1V','VAC1'],['mppt.vbusV','VBUS'],['mppt.vsysV','VSYS'],['mppt.vbatV','VBAT']],
-    supplements:[['mppt.ibusMa','IBUS · Bus current'],['mppt.ibatMa','IBAT · Battery current'],['mppt.faults','Active faults']] },
+    supplements:[['mppt.ibusMa','IBUS · Bus current'],['mppt.faults','Active faults']] },
   { id:'temperature', title:'Temperature', device:'MCP9700 · BMS · Charger', unit:'°C',
     metrics:[['per.tempC','Peripheral'],['bms.intTempC','BMS internal'],['mppt.dieTempC','Charger die']],
     supplements:[['per.tempMv','MCP9700 output']] },

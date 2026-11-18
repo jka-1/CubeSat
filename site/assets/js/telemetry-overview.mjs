@@ -1,7 +1,7 @@
-import { instrumentMarkup, renderInstruments } from './telemetry-instruments.mjs';
+import { instrumentMarkup, renderInstruments } from './telemetry-instruments.mjs?v=20261118-power-path';
 import { TelemetryOverviewModel, flattenFields } from './telemetry-overview-model.mjs';
 import { WINDOWS, getStoredWindowMs, setStoredWindowMs } from './streaming-telemetry.mjs?v=20261109b';
-import { fmtSI, fmtPower } from './streaming-view.mjs?v=20261112-registers';
+import { fmtSI, fmtPower } from './streaming-view.mjs?v=20261118-power-path';
 
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const finite=v=>typeof v==='number'&&Number.isFinite(v);
@@ -200,7 +200,7 @@ export function mountTelemetryOverview(root) {
     const extra = (label, key) => `<div class="readout-context"><dt>${label}</dt><dd data-overview="${key}">Unavailable</dd></div>`;
     $('[data-readout]').innerHTML = groups.map(([label, device, prefixes]) => {
       const subsystem = prefixes[0];
-      const readings = model.metrics.filter(m => m.register !== 'packet' && prefixes.includes(m.key.split('.')[0]));
+      const readings = model.metrics.filter(m => m.register !== 'packet' && m.key !== 'mppt.ibatMa' && prefixes.includes(m.key.split('.')[0]));
       const leadKey = {pv:'pv.powerW', bms:'bms.deltaMv', mppt:'mppt.faults', per:'per.tempC'}[subsystem];
       const row = m => {
         const cell = /^bms\.cell([0-3])$/.exec(m.key);
